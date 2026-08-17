@@ -22,3 +22,6 @@ supabase/.temp
 # sistema
 .DS_Store
 *.log
+
+# claude code (config pessoal, não compartilhada)
+.claude/settings.local.json
