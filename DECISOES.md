@@ -273,3 +273,11 @@ Reescrevi `excluir_usuario()`: antes de excluir, checa se a pessoa tem leads (co
 Na tela, o botão "Excluir acesso" tenta direto; se vier o erro específico de "tem vínculo", em vez de mostrar só a mensagem, abre um seletinho "Transferir leads e atividades de [nome] pra:" com os outros usuários da org, e o botão vira "Transferir e excluir". Segunda tentativa já manda o destino junto.
 
 Testado: criei dois usuários de teste, um lead vinculado a um deles, tentei excluir — apareceu certinho o aviso pedindo pra escolher destino; escolhi o segundo usuário, cliquei em "Transferir e excluir" e confirmei no banco que o lead passou pro segundo (usuario_id e responsavel_id) e o primeiro usuário sumiu de `usuarios` e `auth.users`, sem erro de chave estrangeira. Dados de teste removidos no final. Build de produção limpo, 15 rotas.
+
+## 2026-08-17 — Filtro "por usuário" no Funil
+
+Pedido simples: um dropdown "Filtrar por usuário" do lado do botão "+ Novo lead", que quando escolhido só mostra no Kanban os leads daquele responsável. Implementado como um `<select>` que navega pra `/leads?usuario=<id>` (ou volta pra `/leads` limpo se escolher "Filtrar por usuário" de novo) — o filtro vira parte da URL, então dá pra recarregar a página ou mandar o link pra alguém que o filtro continua aplicado. A consulta dos leads ganha um `.eq("responsavel_id", ...)` quando o filtro tá ativo.
+
+Disponível pra todo mundo com acesso ao Funil (não só admin) — visualizar já era liberado geral, isso é só um jeito de focar a visão, não muda quem pode editar o quê.
+
+Testado: com dois leads (um de cada dono), filtrando por um usuário sobrou só o lead dele; voltando pro "sem filtro" os dois reapareceram. Dados de teste removidos no final. Build de produção limpo.
