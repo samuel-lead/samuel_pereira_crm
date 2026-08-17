@@ -139,3 +139,19 @@ Depois de ver o filtro "Mostrar Base e Vendas" funcionando, o Samuel decidiu que
 3. **Filtro por período na Lista de leads** (`/leads/lista?de=...&ate=...`): dois campos de data ("Entrou de" / "até"), filtrando por `declarado_em`, junto dos filtros que já existiam (nome e nível).
 
 Testado no navegador: as duas telas novas abrem com estado vazio correto; a gramática nova aparece em todo canto que usa `rotuloNivel` (dropdown de editar, badge da lista); o filtro de data com um período de 2020 zera a lista (prova que filtra de verdade). Build de produção limpo, 12 rotas.
+
+## 2026-08-17 — Tela de Usuários (ver e revogar acesso) + dashboard e Vendas com cores de verdade
+
+Três pedidos:
+
+1. **Página `/usuarios`** — lista quem tem acesso ao CRM (nome, e-mail, desde quando) e deixa excluir o acesso de alguém que saiu da empresa. O detalhe técnico: `usuarios` não guarda e-mail (isso vive em `auth.users`, gerenciado pelo Supabase Auth). A regra do `CLAUDE.md` proíbe `service_role` fora de Edge Function, então em vez de usar a API admin do Supabase no painel (Vercel), criei duas funções SQL `SECURITY DEFINER` no banco — o mesmo padrão que já usávamos pra `current_org_id()`:
+   - `listar_usuarios_da_org()`: junta `usuarios` com `auth.users` e devolve só quem é da mesma organização de quem chamou.
+   - `excluir_usuario(usuario_id_alvo)`: confere que o alvo é da mesma organização, bloqueia autoexclusão, apaga a linha de `usuarios` e depois a de `auth.users` (nessa ordem, por causa da referência entre as duas tabelas). O painel só chama essas funções via `supabase.rpc(...)` como usuário autenticado comum — nunca vê nem usa a chave `service_role`.
+   
+   Botão de excluir pede confirmação (`confirm()` do navegador) antes de mandar, e o próprio usuário logado não vê o botão na própria linha (dá pra tentar mesmo assim direto na função, mas ela também bloqueia).
+
+2. **Dashboard com cores de verdade** — o Samuel achou o primeiro dashboard "morto, preto e branco". Redesenhei: um card grande em gradiente roxo→azul destacando a receita do período, e os 4 números principais (leads trabalhados, reuniões marcadas/realizadas, no show) cada um com sua cor e ícone (violeta, azul-céu, esmeralda, rosa). As taxas viraram barrinhas de progresso coloridas em vez de só texto. Toda a parte visual ficou num componente novo `components/dashboard-ui.tsx`, separado da página que só busca dado.
+
+3. **Vendas e Base também ganharam um "hero" colorido** no topo (verde-esmeralda pra Vendas, ardósia escura pra Base), mostrando o número principal (receita total / quantidade na base) em destaque, no mesmo estilo do dashboard — resolve o "não gostei daquilo lá" do Samuel sobre a tela de Vendas.
+
+Testado com o banco real: criei um usuário de teste (via Admin API, fora do painel) e confirmei direto no banco, simulando a sessão autenticada do Samuel, que `excluir_usuario` apaga o usuário de teste (some de `usuarios` e de `auth.users`) e bloqueia a autoexclusão do próprio Samuel — a chamada pelo navegador em si não deu pra testar de ponta a ponta porque o `confirm()` do navegador é bloqueado pela automação headless, mas a lógica no banco (que é onde a segurança realmente mora) está provada. Dashboard e Vendas conferidos visualmente. Build de produção limpo, 13 rotas.

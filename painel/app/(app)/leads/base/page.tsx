@@ -39,10 +39,16 @@ export default async function BasePage() {
       />
 
       <main className="px-6 py-6">
-        <p className="mb-4 text-sm text-neutral-500">
-          {leads.length} lead{leads.length === 1 ? "" : "s"} pra reaquecer — passaram por
-          tudo e não viraram nada, ou estouraram os 5 dias sem engatar.
-        </p>
+        <div className="mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-stone-600 via-stone-600 to-neutral-800 p-6 text-white shadow-md">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-200">
+            Base pra reaquecer
+          </p>
+          <p className="mt-1 text-4xl font-extrabold">{leads.length}</p>
+          <p className="mt-1 text-sm text-stone-200">
+            Passaram por tudo e não viraram nada, ou estouraram os 5 dias sem
+            engatar.
+          </p>
+        </div>
 
         {leads.length === 0 ? (
           <div className="rounded-lg border border-dashed border-neutral-300 bg-white px-6 py-16 text-center">

@@ -45,9 +45,16 @@ export default async function VendasPage() {
       />
 
       <main className="px-6 py-6">
-        <p className="mb-4 text-sm text-neutral-500">
-          {leads.length} venda{leads.length === 1 ? "" : "s"} · {formatarMoeda(totalReceita)} no total
-        </p>
+        <div className="mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-sky-500 p-6 text-white shadow-md">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100">
+            Receita total em vendas
+          </p>
+          <p className="mt-1 text-4xl font-extrabold">{formatarMoeda(totalReceita)}</p>
+          <p className="mt-1 text-sm text-emerald-100">
+            {leads.length} venda{leads.length === 1 ? "" : "s"} fechada
+            {leads.length === 1 ? "" : "s"}
+          </p>
+        </div>
 
         {leads.length === 0 ? (
           <div className="rounded-lg border border-dashed border-neutral-300 bg-white px-6 py-16 text-center">
