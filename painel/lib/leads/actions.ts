@@ -117,6 +117,7 @@ export async function criarLead(
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
+  const responsavelId = String(formData.get("responsavel_id") ?? "").trim() || null;
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
@@ -128,6 +129,7 @@ export async function criarLead(
     nome,
     telefone_e164: telefone,
     origem,
+    responsavel_id: responsavelId,
   });
 
   if (error) {
@@ -158,6 +160,7 @@ export async function atualizarLead(
   );
   const novoNivel = Number(formData.get("nivel_ordem"));
   const reuniaoData = String(formData.get("reuniao_data") ?? "").trim() || null;
+  const responsavelId = String(formData.get("responsavel_id") ?? "").trim() || null;
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
@@ -199,6 +202,7 @@ export async function atualizarLead(
       criterio_urgencia: criterioUrgencia,
       criterio_capacidade: criterioCapacidade,
       nivel_ordem: novoNivel,
+      responsavel_id: responsavelId,
       ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString() } : {}),
     })
     .eq("id", leadId);

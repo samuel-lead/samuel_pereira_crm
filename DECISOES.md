@@ -179,3 +179,11 @@ Dois pedidos pequenos e rápidos:
 2. **Excluir lead**: não existia jeito nenhum de remover um lead pelo painel. Adicionei o botão "Excluir lead" no fim da página de detalhe do lead. Segue a regra do `CLAUDE.md` de "nada é apagado automaticamente, nunca — use soft delete": o botão não apaga a linha do banco, só marca `arquivado_em = agora` (a mesma coluna que todas as listas já ignoram desde a Fase 1). Antes de gravar, aparece o alerta nativo do navegador (`confirm()`) perguntando "Tem certeza que quer excluir o lead '<nome>'? Ele vai sumir de todas as telas." — só segue adiante se a pessoa confirmar.
 
 Testado no navegador de ponta a ponta (com o `confirm()` forçado a "sim" via script, já que a automação headless normalmente bloqueia esse alerta nativo): o lead "teste" sumiu do Funil depois do clique, a contagem de leads caiu de 3 pra 2, e o cancelamento (clicando em "Cancelar" no alerta) mantém o lead intacto. Build de produção limpo, 13 rotas.
+
+## 2026-08-17 — Responsável pelo lead (opcional)
+
+O Samuel quer atribuir um responsável a cada lead (pensando em cadastrar SDRs). Adicionei a coluna `leads.responsavel_id`, nula (não obriga escolher ninguém), referenciando `usuarios`. Aparece como um dropdown "Responsável" tanto no formulário de criar lead (`/leads/novo`) quanto na página de editar lead — junto dos outros campos, dentro do mesmo card. A lista de nomes vem de `usuarios` (select direto, permitido pela RLS já existente de "todo mundo da mesma org enxerga os usuários da org").
+
+Descobri no caminho que **ainda não existe nenhuma forma de criar um novo usuário pelo painel** — hoje só dá pra listar e excluir em `/usuarios`. Conferi direto no banco e só existe o próprio Samuel em `usuarios` e `auth.users`; o SDR que ele mencionou ter cadastrado não chegou a ser criado em lugar nenhum. Isso vai precisar de uma tela própria — combinei com ele de tratar como próxima etapa, junto com o pedido de permissões por usuário.
+
+Testado: criei um lead de teste com "Samuel Pereira" como responsável, confirmei no banco que `responsavel_id` gravou certo, reabri a página de edição e o dropdown já veio com "Samuel Pereira" pré-selecionado. Lead de teste removido depois. Build de produção limpo, 13 rotas.

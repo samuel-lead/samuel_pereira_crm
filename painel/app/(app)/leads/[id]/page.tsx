@@ -20,6 +20,7 @@ type Lead = {
   status: string;
   valor_venda: number | null;
   vendido_em: string | null;
+  responsavel_id: string | null;
 };
 
 type Interacao = {
@@ -61,27 +62,33 @@ export default async function EditarLeadPage({
   const { marcarReuniao } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: lead }, { data: niveisData }, { data: interacoesData }, { data: reunioesData }] =
-    await Promise.all([
-      supabase
-        .from("leads")
-        .select(
-          "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, vendido_em"
-        )
-        .eq("id", id)
-        .single(),
-      supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
-      supabase
-        .from("interacoes")
-        .select("id, tipo, canal, conteudo, ocorreu_em")
-        .eq("lead_id", id)
-        .order("ocorreu_em", { ascending: false }),
-      supabase
-        .from("reunioes")
-        .select("id, agendada_para, status, resultado")
-        .eq("lead_id", id)
-        .order("agendada_para", { ascending: false }),
-    ]);
+  const [
+    { data: lead },
+    { data: niveisData },
+    { data: interacoesData },
+    { data: reunioesData },
+    { data: usuariosData },
+  ] = await Promise.all([
+    supabase
+      .from("leads")
+      .select(
+        "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, vendido_em, responsavel_id"
+      )
+      .eq("id", id)
+      .single(),
+    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
+    supabase
+      .from("interacoes")
+      .select("id, tipo, canal, conteudo, ocorreu_em")
+      .eq("lead_id", id)
+      .order("ocorreu_em", { ascending: false }),
+    supabase
+      .from("reunioes")
+      .select("id, agendada_para, status, resultado")
+      .eq("lead_id", id)
+      .order("agendada_para", { ascending: false }),
+    supabase.from("usuarios").select("id, nome").order("nome"),
+  ]);
 
   if (!lead) {
     notFound();
@@ -91,6 +98,7 @@ export default async function EditarLeadPage({
   const niveis = (niveisData ?? []) as NivelResumo[];
   const interacoes = (interacoesData ?? []) as Interacao[];
   const reunioes = (reunioesData ?? []) as Reuniao[];
+  const usuarios = usuariosData ?? [];
   const registrarNotaComId = registrarNota.bind(null, leadTipado.id);
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
 
@@ -113,6 +121,7 @@ export default async function EditarLeadPage({
           lead={leadTipado}
           niveis={niveis}
           numerosVisiveis={numerosVisiveis}
+          usuarios={usuarios}
           preSelecionarReuniao={marcarReuniao === "1"}
         />
 

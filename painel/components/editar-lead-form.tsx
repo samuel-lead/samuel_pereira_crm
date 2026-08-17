@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
+import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
 const NIVEL_REUNIAO_MARCADA = "4";
@@ -16,6 +17,7 @@ type Lead = {
   criterio_problema: string | null;
   criterio_urgencia: string;
   criterio_capacidade: string;
+  responsavel_id: string | null;
 };
 
 const campoClasse =
@@ -27,11 +29,13 @@ export function EditarLeadForm({
   lead,
   niveis,
   numerosVisiveis,
+  usuarios,
   preSelecionarReuniao = false,
 }: {
   lead: Lead;
   niveis: NivelResumo[];
   numerosVisiveis: Record<number, number>;
+  usuarios: { id: string; nome: string }[];
   preSelecionarReuniao?: boolean;
 }) {
   const acaoComId = atualizarLead.bind(null, lead.id);
@@ -73,6 +77,13 @@ export function EditarLeadForm({
         <div className="space-y-1">
           <label className={labelClasse}>Origem</label>
           <OrigemSelect valorInicial={lead.origem ?? ""} />
+        </div>
+
+        <div className="space-y-1">
+          <label className={labelClasse} htmlFor="responsavel_id">
+            Responsável
+          </label>
+          <ResponsavelSelect usuarios={usuarios} valorInicial={lead.responsavel_id} />
         </div>
 
         <div className="space-y-1">
