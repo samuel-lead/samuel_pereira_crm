@@ -163,3 +163,9 @@ O Samuel reclamou que o nome de nível comprido ("Topou reunião, mas ainda não
 Também renomeou o nível "Fez a reunião, mas ainda não comprou" (ordem 6, "Nível 5" na tela) pra **"Oportunidades para o fim do mês"** — mais curto e resolve a quebra de linha por si só nesse caso.
 
 Testado no navegador: nível 3 agora corta com "..." numa linha só; nível 5 mostra o nome novo inteiro, cabendo bem. Build de produção limpo.
+
+## 2026-08-17 — Nível 3: texto completo em vez de cortado
+
+O Samuel não gostou de ver "..." no nível 3 — queria a frase inteira legível dentro do quadrado, não cortada. Encurtei o texto mantendo o sentido e a gramática: "Topou reunião, mas ainda não definiu o horário" → **"Topou reunião, horário a definir"** (33 → 33 caracteres nominalmente parecido, mas sem a parte "mas ainda não" que empurrava a frase pra fora da largura da coluna). Cabe inteiro numa linha, sem reticências. O `truncate` genérico do commit anterior continua no lugar como rede de segurança pra nomes futuros mais compridos.
+
+Testado no navegador: "Topou reunião, horário a definir" aparece completo, sem cortar. Build de produção limpo.
