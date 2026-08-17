@@ -7,15 +7,17 @@ export const CORES_NIVEL: Record<
     header: string;
     borda: string;
     pilula: string;
+    solido: string;
   }
 > = {
   0: {
-    faixa: "bg-neutral-400",
-    texto: "text-neutral-600",
-    badge: "bg-neutral-200 text-neutral-600",
+    faixa: "bg-neutral-800",
+    texto: "text-neutral-700",
+    badge: "bg-neutral-300 text-neutral-800",
     header: "bg-neutral-100",
-    borda: "border-neutral-300",
-    pilula: "bg-neutral-500 text-white",
+    borda: "border-neutral-400",
+    pilula: "bg-neutral-800 text-white",
+    solido: "bg-gradient-to-br from-neutral-800 to-black",
   },
   1: {
     faixa: "bg-slate-500",
@@ -24,6 +26,7 @@ export const CORES_NIVEL: Record<
     header: "bg-slate-50",
     borda: "border-slate-200",
     pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
   },
   2: {
     faixa: "bg-sky-500",
@@ -32,6 +35,7 @@ export const CORES_NIVEL: Record<
     header: "bg-sky-50",
     borda: "border-sky-200",
     pilula: "bg-sky-600 text-white",
+    solido: "bg-gradient-to-br from-sky-500 to-sky-600",
   },
   3: {
     faixa: "bg-violet-500",
@@ -40,6 +44,7 @@ export const CORES_NIVEL: Record<
     header: "bg-violet-50",
     borda: "border-violet-200",
     pilula: "bg-violet-600 text-white",
+    solido: "bg-gradient-to-br from-violet-500 to-violet-600",
   },
   4: {
     faixa: "bg-emerald-500",
@@ -48,6 +53,7 @@ export const CORES_NIVEL: Record<
     header: "bg-emerald-50",
     borda: "border-emerald-200",
     pilula: "bg-emerald-600 text-white",
+    solido: "bg-gradient-to-br from-emerald-500 to-emerald-600",
   },
   5: {
     faixa: "bg-red-500",
@@ -56,6 +62,7 @@ export const CORES_NIVEL: Record<
     header: "bg-red-50",
     borda: "border-red-200",
     pilula: "bg-red-600 text-white",
+    solido: "bg-gradient-to-br from-red-500 to-red-600",
   },
   6: {
     faixa: "bg-amber-500",
@@ -64,6 +71,7 @@ export const CORES_NIVEL: Record<
     header: "bg-amber-50",
     borda: "border-amber-200",
     pilula: "bg-amber-600 text-white",
+    solido: "bg-gradient-to-br from-amber-500 to-amber-600",
   },
   7: {
     faixa: "bg-stone-500",
@@ -72,6 +80,7 @@ export const CORES_NIVEL: Record<
     header: "bg-stone-50",
     borda: "border-stone-200",
     pilula: "bg-stone-600 text-white",
+    solido: "bg-gradient-to-br from-stone-500 to-stone-600",
   },
 };
 

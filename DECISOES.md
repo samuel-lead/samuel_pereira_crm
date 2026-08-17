@@ -84,6 +84,15 @@ Depois de ver a estrutura do Pipedrive, o Samuel pediu três ajustes:
 2. **Novo estágio "Leads" (ordem 0), sem número, antes do Nível 1** — diferente do Nível 1 ("mandei mensagem, não engatou"), esse é "cadastrado, ainda não abordado" (nenhuma mensagem mandada). Todo lead novo agora nasce aqui (mudei o `default` da coluna `leads.nivel_ordem` de 1 pra 0), não mais direto no Nível 1. Precisou abrir o `check` de `niveis.ordem` pra aceitar 0.
 3. **Arrastar os cartões entre colunas** — antes só dava pra mudar o nível editando o lead. Adicionei uma ação `moverLeadNivel` e transformei os cartões do Kanban em arrastáveis (`draggable`, API nativa do HTML5 — sem biblioteca externa). Registra `nivel_historico` igual as outras formas de mudar nível, com motivo "Arrastado no Kanban".
 
-Um efeito colateral do item 2: agora **duas** colunas ficam sem a pílula "Nível X" (Leads e Reunião marcada), mas só "Reunião marcada" deve ficar com o destaque visual verde. Separei os dois conceitos que antes eram a mesma coisa: `niveis.numerado` (mostra "Nível X" ou não) e `niveis.destacado` (ganha o estilo verde reforçado ou não) — colunas novas.
+Um efeito colateral do item 2: agora **duas** colunas ficam sem a pílula "Nível X" (Leads e Reunião marcada). Separei dois conceitos que antes eram a mesma coisa: `niveis.numerado` (mostra "Nível X" ou não) e `niveis.destacado` (ganha o estilo de cor sólida reforçada ou não) — inicialmente só "Reunião marcada" era destacada, mas isso mudou logo em seguida (ver entrada abaixo).
 
-Testado no navegador: coluna "Leads" aparece cinza, sem número, primeira da fila; "Reunião marcada" continua verde destacada; arrastar um lead de uma coluna pra outra funcionou e gravou o histórico. Build de produção limpo.
+Testado no navegador: coluna "Leads" aparece sem número, primeira da fila; arrastar um lead de uma coluna pra outra funcionou e gravou o histórico. Build de produção limpo.
+
+## 2026-08-17 — Menu recolhível + coluna "Leads" também com cor sólida
+
+Dois ajustes rápidos depois de ver a tela:
+
+1. **Menu lateral recolhível** — botão "«" ao lado da logo esconde os rótulos e deixa só os ícones (menu vai de 240px pra 64px de largura). Botão vira "»" pra expandir de novo. O botão de recolher/expandir precisou ficar perto da logo, no topo — a primeira versão ficava embaixo, no canto inferior esquerdo, exatamente onde o indicador de desenvolvimento do próprio Next.js (a bolinha "N") fica por cima, tornando o botão impossível de clicar durante `next dev`. Isso não apareceria em produção (o indicador do Next só existe em desenvolvimento), mas ainda assim era ruim pra testar agora.
+2. **Coluna "Leads" ganhou o mesmo estilo de cor sólida da "Reunião marcada"**, só que preta (gradiente `neutral-800` → preto) em vez de verde — imitando a cor do Nível 1. Generalizei o `solido` (antes só existia hardcoded como verde no componente do Kanban) pra virar um campo por nível em `lib/niveis.ts`, e cada nível ganhou seu próprio gradiente sólido (usado só quando `destacado = true`).
+
+Testado no navegador: menu recolhe e expande sem conflito com o indicador do Next, coluna "Leads" aparece preta sólida. Build de produção limpo.

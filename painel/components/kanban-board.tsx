@@ -104,14 +104,14 @@ export function KanbanBoard({
                   recebendoArrasto
                     ? "border-2 border-violet-400 ring-2 ring-violet-200"
                     : destacado
-                      ? `border-2 ${cor.borda} shadow-md ring-1 ring-emerald-200`
+                      ? `border-2 ${cor.borda} shadow-md ring-1 ring-black/10`
                       : `border ${cor.borda}`
                 }`}
               >
                 <div
                   className={
                     destacado
-                      ? "rounded-t-lg bg-gradient-to-br from-emerald-500 to-emerald-600 px-3 py-3"
+                      ? `rounded-t-lg ${cor.solido} px-3 py-3`
                       : `rounded-t-lg border-b-2 ${cor.borda} ${cor.header} px-3 py-3`
                   }
                 >

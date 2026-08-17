@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { IconeFunil, IconeLista, IconeAtividade, IconeConfig } from "@/components/icons";
@@ -14,17 +15,49 @@ const ITENS = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [colapsado, setColapsado] = useState(false);
 
   return (
-    <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-neutral-200 bg-white">
-      <Link href="/leads" className="flex items-center gap-2 px-5 py-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-violet-600 to-sky-500 text-sm font-bold text-white shadow-sm">
-          MV
-        </span>
-        <span className="text-base font-semibold text-neutral-900">
-          Meu Vendedor
-        </span>
-      </Link>
+    <aside
+      className={`flex h-screen shrink-0 flex-col border-r border-neutral-200 bg-white transition-all duration-200 ${
+        colapsado ? "w-16" : "w-60"
+      }`}
+    >
+      <div className="flex items-center justify-between px-3 py-5">
+        <Link href="/leads" className="flex min-w-0 items-center gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-violet-600 to-sky-500 text-sm font-bold text-white shadow-sm">
+            MV
+          </span>
+          {!colapsado && (
+            <span className="truncate text-base font-semibold text-neutral-900">
+              Meu Vendedor
+            </span>
+          )}
+        </Link>
+        {!colapsado && (
+          <button
+            type="button"
+            onClick={() => setColapsado(true)}
+            title="Recolher menu"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600"
+          >
+            «
+          </button>
+        )}
+      </div>
+
+      {colapsado && (
+        <div className="px-3 pb-2">
+          <button
+            type="button"
+            onClick={() => setColapsado(false)}
+            title="Expandir menu"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600"
+          >
+            »
+          </button>
+        </div>
+      )}
 
       <nav className="flex-1 space-y-1 px-3">
         {ITENS.map(({ href, label, Icone }) => {
@@ -33,21 +66,24 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
+              title={colapsado ? label : undefined}
               className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition ${
+                colapsado ? "justify-center" : ""
+              } ${
                 ativo
                   ? "bg-violet-50 text-violet-700"
                   : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
               }`}
             >
               <Icone className="h-4 w-4 shrink-0" />
-              {label}
+              {!colapsado && label}
             </Link>
           );
         })}
       </nav>
 
       <div className="border-t border-neutral-200 p-3">
-        <LogoutButton />
+        <LogoutButton compacto={colapsado} />
       </div>
     </aside>
   );

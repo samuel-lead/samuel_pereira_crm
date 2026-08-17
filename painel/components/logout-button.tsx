@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function LogoutButton() {
+export function LogoutButton({ compacto = false }: { compacto?: boolean }) {
   const router = useRouter();
 
   async function sair() {
@@ -16,9 +16,14 @@ export function LogoutButton() {
   return (
     <button
       onClick={sair}
-      className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+      title="Sair"
+      className={
+        compacto
+          ? "flex w-full items-center justify-center rounded-md border border-neutral-300 bg-white py-2 text-neutral-700 transition hover:bg-neutral-50"
+          : "w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+      }
     >
-      Sair
+      {compacto ? "⏻" : "Sair"}
     </button>
   );
 }
