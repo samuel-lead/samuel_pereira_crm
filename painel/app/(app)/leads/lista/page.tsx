@@ -76,7 +76,7 @@ export default async function ListaLeadsPage({
       />
 
       <main className="px-6 py-6">
-        <form className="mb-4 flex flex-wrap items-end gap-3">
+        <form className="mb-4 flex flex-wrap items-end gap-6">
           <div className="space-y-1">
             <label className="text-xs font-medium text-neutral-500" htmlFor="busca">
               Buscar por nome
