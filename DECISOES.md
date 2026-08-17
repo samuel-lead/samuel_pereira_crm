@@ -96,3 +96,13 @@ Dois ajustes rápidos depois de ver a tela:
 2. **Coluna "Leads" ganhou o mesmo estilo de cor sólida da "Reunião marcada"**, só que preta (gradiente `neutral-800` → preto) em vez de verde — imitando a cor do Nível 1. Generalizei o `solido` (antes só existia hardcoded como verde no componente do Kanban) pra virar um campo por nível em `lib/niveis.ts`, e cada nível ganhou seu próprio gradiente sólido (usado só quando `destacado = true`).
 
 Testado no navegador: menu recolhe e expande sem conflito com o indicador do Next, coluna "Leads" aparece preta sólida. Build de produção limpo.
+
+## 2026-08-17 — Menu de origem fixo + erro de telefone duplicado tratado direito
+
+Duas coisas nessa rodada:
+
+1. **Menu de origem pré-definido** — troca o campo de texto livre "Origem" por um `<select>` com as origens reais do Samuel (Indicação Closer, Networking, SS IG, Treinamento presencial, Tráfego pago, Indicação base, Base de leads, Base de clientes, HUNTER IG SAMUEL, Parceria (aula semanal), Renovação, Meu grupo do Wpp), mais "Outro..." que abre um campo de texto livre. Componente `components/origem-select.tsx`, usado tanto em criar quanto editar lead.
+
+2. **Bug real encontrado pelo Samuel** ("texto livre deu erro"): ao investigar, não era bug do campo "Outro" — era a trava de telefone duplicado do banco (`unique (usuario_id, telefone_e164)`) sendo violada e o erro cru do Postgres (`duplicate key value violates unique constraint...`) subindo sem tratamento, quebrando a página com uma tela de erro feia do Next.js em vez de uma mensagem legível. Corrigido trocando `criarLead`/`atualizarLead` de "lança exceção" pra "retorna `{ erro }`", usando `useActionState` do React nos formulários (padrão igual ao da tela de login) — agora mostra "Já existe um lead com esse telefone." embaixo do formulário, sem crash, e sem perder o que a pessoa já tinha digitado. Isso exigiu separar o formulário de editar lead num componente cliente próprio (`components/editar-lead-form.tsx`), já que a página em si continua sendo um Server Component (busca dados no servidor).
+
+Testado no navegador: telefone duplicado mostra a mensagem certa e não deixa criar; telefone único cria e redireciona normal; editar sem mudar nada salva normal. Build de produção limpo.

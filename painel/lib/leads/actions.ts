@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+export type EstadoFormulario = { erro: string | null };
+
 async function contextoUsuario() {
   const supabase = await createClient();
   const {
@@ -27,7 +29,17 @@ async function contextoUsuario() {
   return { supabase, usuario };
 }
 
-export async function criarLead(formData: FormData) {
+function mensagemAmigavel(codigo: string | undefined, mensagemOriginal: string) {
+  if (codigo === "23505") {
+    return "Já existe um lead com esse telefone.";
+  }
+  return mensagemOriginal;
+}
+
+export async function criarLead(
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
   const { supabase, usuario } = await contextoUsuario();
 
   const nome = String(formData.get("nome") ?? "").trim();
@@ -35,7 +47,7 @@ export async function criarLead(formData: FormData) {
   const origem = String(formData.get("origem") ?? "").trim() || null;
 
   if (!nome) {
-    throw new Error("Nome é obrigatório");
+    return { erro: "Nome é obrigatório" };
   }
 
   const { error } = await supabase.from("leads").insert({
@@ -47,14 +59,18 @@ export async function criarLead(formData: FormData) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    return { erro: mensagemAmigavel(error.code, error.message) };
   }
 
   revalidatePath("/leads");
   redirect("/leads");
 }
 
-export async function atualizarLead(leadId: string, formData: FormData) {
+export async function atualizarLead(
+  leadId: string,
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
   const { supabase, usuario } = await contextoUsuario();
 
   const nome = String(formData.get("nome") ?? "").trim();
@@ -71,7 +87,7 @@ export async function atualizarLead(leadId: string, formData: FormData) {
   const novoNivel = Number(formData.get("nivel_ordem"));
 
   if (!nome) {
-    throw new Error("Nome é obrigatório");
+    return { erro: "Nome é obrigatório" };
   }
 
   const { data: leadAtual, error: erroAtual } = await supabase
@@ -81,7 +97,7 @@ export async function atualizarLead(leadId: string, formData: FormData) {
     .single();
 
   if (erroAtual || !leadAtual) {
-    throw new Error("Lead não encontrado");
+    return { erro: "Lead não encontrado" };
   }
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
@@ -101,7 +117,7 @@ export async function atualizarLead(leadId: string, formData: FormData) {
     .eq("id", leadId);
 
   if (error) {
-    throw new Error(error.message);
+    return { erro: mensagemAmigavel(error.code, error.message) };
   }
 
   if (nivelMudou) {
@@ -117,7 +133,7 @@ export async function atualizarLead(leadId: string, formData: FormData) {
       });
 
     if (erroHistorico) {
-      throw new Error(erroHistorico.message);
+      return { erro: erroHistorico.message };
     }
   }
 
@@ -152,7 +168,7 @@ export async function moverLeadNivel(leadId: string, novoNivel: number) {
     .eq("id", leadId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(mensagemAmigavel(error.code, error.message));
   }
 
   const { error: erroHistorico } = await supabase.from("nivel_historico").insert({

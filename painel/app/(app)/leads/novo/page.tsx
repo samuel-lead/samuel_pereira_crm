@@ -1,9 +1,16 @@
+"use client";
+
+import { useActionState } from "react";
 import Link from "next/link";
-import { criarLead } from "@/lib/leads/actions";
+import { criarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { PageHeader } from "@/components/page-header";
 import { OrigemSelect } from "@/components/origem-select";
 
+const estadoInicial: EstadoFormulario = { erro: null };
+
 export default function NovoLeadPage() {
+  const [estado, acaoFormulario] = useActionState(criarLead, estadoInicial);
+
   return (
     <>
       <PageHeader titulo="Novo lead" />
@@ -19,7 +26,7 @@ export default function NovoLeadPage() {
             </Link>
           </div>
 
-          <form action={criarLead} className="space-y-4">
+          <form action={acaoFormulario} className="space-y-4">
             <div className="space-y-1">
               <label
                 className="text-sm font-medium text-neutral-700"
@@ -63,6 +70,12 @@ export default function NovoLeadPage() {
               critérios de qualificação você preenche depois, editando o
               lead.
             </p>
+
+            {estado.erro && (
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+                {estado.erro}
+              </p>
+            )}
 
             <button
               type="submit"
