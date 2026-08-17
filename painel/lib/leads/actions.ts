@@ -445,3 +445,35 @@ export async function arquivarLead(leadId: string) {
   revalidatePath("/leads/vendas");
   redirect("/leads");
 }
+
+// Lead sem responsável (ex.: chegou de uma campanha, sem dono definido)
+// pode ser "pego" por qualquer usuário com acesso ao Funil.
+export async function reivindicarLead(leadId: string) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const { data: lead, error: erroAtual } = await supabase
+    .from("leads")
+    .select("responsavel_id")
+    .eq("id", leadId)
+    .single();
+
+  if (erroAtual || !lead) {
+    throw new Error("Lead não encontrado");
+  }
+
+  if (lead.responsavel_id !== null) {
+    throw new Error("Esse lead já tem responsável.");
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ responsavel_id: usuario.id })
+    .eq("id", leadId);
+
+  if (error) {
+    throw new Error(mensagemAmigavel(error.code, error.message));
+  }
+
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
+}

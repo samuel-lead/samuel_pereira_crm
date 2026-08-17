@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
+import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
 type Lead = {
@@ -109,6 +110,7 @@ export default async function EditarLeadPage({
   const usuarios = usuariosData ?? [];
   const souAdmin = usuarioAtual?.papel === "admin";
   const podeEditar = souAdmin || leadTipado.responsavel_id === user?.id;
+  const podeReivindicar = !souAdmin && leadTipado.responsavel_id === null;
   const nomeResponsavel = usuarios.find((u) => u.id === leadTipado.responsavel_id)?.nome;
   const registrarNotaComId = registrarNota.bind(null, leadTipado.id);
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
@@ -129,7 +131,14 @@ export default async function EditarLeadPage({
 
       <main className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex flex-col gap-4">
-          {!podeEditar && (
+          {podeReivindicar && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <span>Esse lead ainda não tem responsável.</span>
+              <ReivindicarLeadButton leadId={leadTipado.id} />
+            </div>
+          )}
+
+          {!podeEditar && !podeReivindicar && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               Você só pode visualizar este lead — o responsável é{" "}
               <strong>{nomeResponsavel ?? "outra pessoa"}</strong>. Quem edita, move
