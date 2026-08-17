@@ -233,3 +233,9 @@ Detalhe técnico: pra caber um link clicável dentro do card sem quebrar o HTML 
 Aproveitei e liguei o campo `wpp_comercial_e164` que já existia no banco desde o início do projeto (mas nunca tinha uma tela pra preencher): agora o formulário de "Novo usuário" pede também o WhatsApp comercial da pessoa — o número que ela usa pra atender os leads. Ainda não é usado por nada além de ficar registrado (é a base pra quando o WhatsApp automático entrar em cena, mais pra frente).
 
 Testado no navegador logado (usuário de teste, sem mexer na conta do Samuel): o selo do WhatsApp aparece no card, o link gerado bate certinho com o telefone do lead (`https://wa.me/556283223116`), clicar nele não abre o lead por baixo, e clicar no resto do card continua abrindo o lead normalmente. Cadastrei um usuário de teste com WhatsApp comercial preenchido e confirmei que salvou certo no banco. Usuários de teste removidos no final. Build de produção limpo, 15 rotas.
+
+## 2026-08-17 — Botão do WhatsApp: pop-up em vez de aba nova
+
+O Samuel não gostou do clique no WhatsApp abrir outra aba do navegador — queria uma janela pop-up, mais leve, sem sair de vista do CRM. Troquei `target="_blank"` (aba) por `window.open(url, "whatsapp", "width=420,height=680,noopener,noreferrer")` — passar tamanho fixo pro `window.open` é o que faz o navegador abrir como janela pop-up (sem barra de endereço, sem abas) em vez de uma aba normal.
+
+Testado: confirmei que o clique chama `window.open` com a URL certa (`https://wa.me/<telefone>`) e os parâmetros de tamanho, e que a tela do Funil continua no lugar (não navega pro lead nem sai da página). Build de produção limpo.
