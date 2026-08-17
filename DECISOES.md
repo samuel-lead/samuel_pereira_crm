@@ -310,3 +310,15 @@ Dois ajustes finos depois de ver as telas no ar:
 2. **Clientes**: ele voltou atrás do "sem Kanban por enquanto" — viu a lista simples e achou o valor da venda "estranho" no rodapé do card. Troquei pelo mesmo Kanban do funil (coluna única verde-esmeralda, cor de sucesso). O valor da venda + data viram o selo que normalmente mostra a origem do lead (reaproveitando o mesmo espaço/estilo já pronto do card) — fica um selo arredondado, igual a "SS IG" aparece nos outros cards, só que com "R$ 2.500,00 · 17/08/2026". O card de receita total no topo continua do jeito que estava.
 
 Testado no navegador com dados de teste nas duas telas — cores batendo com o esperado, valor da venda aparecendo como selo limpo. Dados de teste removidos no final. Build de produção limpo.
+
+## 2026-08-17 — Foto de perfil do usuário
+
+O Samuel quer que cada usuário possa colocar uma foto real no lugar da bolinha com a inicial do nome.
+
+**Onde fica**: criei uma tela nova, `/perfil` ("Meu perfil"), acessível por **qualquer usuário logado** — admin ou membro, mesmo um membro com quase nenhuma permissão marcada. Ela fica de propósito fora do sistema de permissões por página (o `paginaDaRota()` do `proxy.ts` só reconhece rotas específicas; `/perfil` não bate com nenhuma, então passa direto) — faz sentido, porque é a própria conta da pessoa, não um dado do CRM. Também adicionei um atalho "Meu perfil" fixo no rodapé do menu lateral (acima do "Sair"), com a foto/inicial de quem está logado, sempre visível independente das permissões.
+
+**Como funciona**: a foto vai pro Supabase Storage, num bucket público chamado `avatars` (é só avatar, não tem nada sensível — bucket público evita ter que gerar link assinado toda hora). O nome do arquivo é sempre o próprio `id` do usuário (sem extensão, sempre sobrescreve) — RLS no `storage.objects` garante que cada um só sobe/troca/apaga o arquivo com o **próprio** id, embora qualquer um consiga ler qualquer avatar (é público mesmo, como foto de perfil normalmente é). Ao salvar, a Server Action grava a URL pública em `usuarios.foto_url` com um `?v=timestamp` no final, pra o navegador não mostrar a foto antiga em cache depois de trocar.
+
+**Onde aparece**: criei um componente `AvatarUsuario` que mostra a foto se tiver, senão cai pra inicial (mesmo visual de sempre) — usado na tela de Usuários (lista da equipe) e no menu lateral ("Meu perfil"). `listar_usuarios_da_org()` também passou a devolver `foto_url`.
+
+Testado direto via API (a automação de navegador não consegue simular escolher um arquivo num `<input type="file">` — é bloqueado pelo próprio navegador por segurança): logei como usuário de teste via API do Supabase, subi uma imagem de verdade pro bucket, confirmei que funcionou; testei que outro usuário **não** consegue subir arquivo no lugar de alguém (bloqueado, RLS funcionando); confirmei leitura pública sem autenticação; depois simulei a gravação do `foto_url` e vi a foto aparecer certinho na tela de perfil, no menu lateral e na lista de Usuários, substituindo a inicial. Removi o arquivo e o usuário de teste no final. Build de produção limpo, 16 rotas.

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { ExcluirUsuarioButton } from "@/components/excluir-usuario-button";
+import { AvatarUsuario } from "@/components/avatar-usuario";
 
 type UsuarioLinha = {
   id: string;
@@ -10,14 +11,8 @@ type UsuarioLinha = {
   criado_em: string;
   papel: string;
   paginas_permitidas: string[];
+  foto_url: string | null;
 };
-
-function iniciais(nome: string) {
-  const partes = nome.trim().split(/\s+/);
-  const primeira = partes[0]?.[0] ?? "";
-  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : "";
-  return (primeira + ultima).toUpperCase();
-}
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR");
@@ -59,9 +54,7 @@ export default async function UsuariosPage() {
               className="flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
             >
               <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-sky-500 text-sm font-bold text-white">
-                  {iniciais(usuario.nome)}
-                </span>
+                <AvatarUsuario nome={usuario.nome} fotoUrl={usuario.foto_url} />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="truncate font-medium text-neutral-900">

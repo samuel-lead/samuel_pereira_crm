@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
+import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda } from "@/components/icons";
 
 const ITENS = [
@@ -20,9 +21,13 @@ const ITENS = [
 export function Sidebar({
   isAdmin = true,
   paginasPermitidas = [],
+  nomeUsuario = "",
+  fotoUsuario = null,
 }: {
   isAdmin?: boolean;
   paginasPermitidas?: string[];
+  nomeUsuario?: string;
+  fotoUsuario?: string | null;
 }) {
   const pathname = usePathname();
   const [colapsado, setColapsado] = useState(false);
@@ -96,6 +101,20 @@ export function Sidebar({
       </nav>
 
       <div className="border-t border-neutral-200 p-3">
+        <Link
+          href="/perfil"
+          title={colapsado ? "Meu perfil" : undefined}
+          className={`mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-neutral-50 ${
+            colapsado ? "justify-center" : ""
+          } ${pathname === "/perfil" ? "bg-violet-50" : ""}`}
+        >
+          <AvatarUsuario nome={nomeUsuario} fotoUrl={fotoUsuario} tamanho="h-7 w-7 text-xs" />
+          {!colapsado && (
+            <span className="truncate text-sm font-medium text-neutral-700">
+              Meu perfil
+            </span>
+          )}
+        </Link>
         <LogoutButton compacto={colapsado} />
       </div>
     </aside>

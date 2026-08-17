@@ -3,6 +3,62 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
+export type EstadoFoto = { erro: string | null };
+
+const TAMANHO_MAXIMO_FOTO = 2 * 1024 * 1024;
+
+export async function atualizarFotoPerfil(
+  _estadoAnterior: EstadoFoto,
+  formData: FormData
+): Promise<EstadoFoto> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { erro: "Não autenticado" };
+  }
+
+  const arquivo = formData.get("foto");
+
+  if (!(arquivo instanceof File) || arquivo.size === 0) {
+    return { erro: "Escolha uma imagem" };
+  }
+
+  if (!arquivo.type.startsWith("image/")) {
+    return { erro: "O arquivo precisa ser uma imagem" };
+  }
+
+  if (arquivo.size > TAMANHO_MAXIMO_FOTO) {
+    return { erro: "Imagem muito grande (máximo 2MB)" };
+  }
+
+  const { error: erroUpload } = await supabase.storage
+    .from("avatars")
+    .upload(user.id, arquivo, { upsert: true, contentType: arquivo.type });
+
+  if (erroUpload) {
+    return { erro: erroUpload.message };
+  }
+
+  const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(user.id);
+  const fotoUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+
+  const { error: erroUpdate } = await supabase
+    .from("usuarios")
+    .update({ foto_url: fotoUrl })
+    .eq("id", user.id);
+
+  if (erroUpdate) {
+    return { erro: erroUpdate.message };
+  }
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/usuarios");
+  return { erro: null };
+}
+
 export async function atualizarOrg(formData: FormData) {
   const supabase = await createClient();
   const {
