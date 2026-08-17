@@ -33,17 +33,20 @@ export default async function BasePage() {
   ]);
 
   // Sem numeração aqui — "Nível X" só faz sentido dentro da sequência
-  // completa do funil, não num quadro de coluna única. E com destaque de
-  // cor sólida, igual a coluna "Leads" do funil, pra não ficar sem graça.
+  // completa do funil, não num quadro de coluna única. E usando a cor do
+  // ordem 0 (preto, mesma da coluna "Leads" do funil) — a paleta do nível 7
+  // é outra cor (stone), então o "ordem" aqui é só pra pegar a cor certa,
+  // não representa o nível de verdade do lead.
   const niveis = ((niveisData ?? []) as NivelResumo[]).map((nivel) => ({
     ...nivel,
+    ordem: 0,
     numerado: false,
     destacado: true,
   }));
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
 
-  const leadsPorNivel: Record<number, LeadResumo[]> = { 7: leads };
+  const leadsPorNivel: Record<number, LeadResumo[]> = { 0: leads };
 
   return (
     <>
