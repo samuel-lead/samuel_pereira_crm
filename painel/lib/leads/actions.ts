@@ -6,6 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 
 export type EstadoFormulario = { erro: string | null };
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+const NIVEL_REUNIAO_MARCADA = 4;
+const NIVEL_NO_SHOW = 5;
+const NIVEL_REUNIAO_FEITA = 6;
+
 async function contextoUsuario() {
   const supabase = await createClient();
   const {
@@ -34,6 +40,72 @@ function mensagemAmigavel(codigo: string | undefined, mensagemOriginal: string) 
     return "Já existe um lead com esse telefone.";
   }
   return mensagemOriginal;
+}
+
+// Mantém a tabela `reunioes` em sincronia com a mudança de nível.
+// Entrando em "Reunião marcada": cria a reunião (data de agendamento = agora,
+// data da reunião = o que a pessoa informou). Saindo de "Reunião marcada"
+// pra "No Show" ou "Reunião feita": atualiza o status da reunião mais recente.
+async function sincronizarReuniao(
+  supabase: SupabaseServerClient,
+  params: {
+    orgId: string;
+    usuarioId: string;
+    leadId: string;
+    deOrdem: number;
+    paraOrdem: number;
+    agendadaPara?: string | null;
+  }
+): Promise<string | null> {
+  const { orgId, usuarioId, leadId, deOrdem, paraOrdem, agendadaPara } = params;
+
+  if (paraOrdem === NIVEL_REUNIAO_MARCADA && deOrdem !== NIVEL_REUNIAO_MARCADA) {
+    if (!agendadaPara) {
+      return "Informe a data e hora da reunião.";
+    }
+
+    const data = new Date(agendadaPara);
+    if (Number.isNaN(data.getTime())) {
+      return "Data da reunião inválida.";
+    }
+
+    const { error } = await supabase.from("reunioes").insert({
+      org_id: orgId,
+      usuario_id: usuarioId,
+      lead_id: leadId,
+      agendada_para: data.toISOString(),
+      status: "marcada",
+    });
+
+    if (error) return error.message;
+    return null;
+  }
+
+  if (
+    deOrdem === NIVEL_REUNIAO_MARCADA &&
+    (paraOrdem === NIVEL_NO_SHOW || paraOrdem === NIVEL_REUNIAO_FEITA)
+  ) {
+    const { data: reuniao } = await supabase
+      .from("reunioes")
+      .select("id")
+      .eq("lead_id", leadId)
+      .eq("status", "marcada")
+      .order("marcada_em", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (reuniao) {
+      const novoStatus = paraOrdem === NIVEL_NO_SHOW ? "nao_compareceu" : "realizada";
+      const { error } = await supabase
+        .from("reunioes")
+        .update({ status: novoStatus })
+        .eq("id", reuniao.id);
+      if (error) return error.message;
+    }
+    return null;
+  }
+
+  return null;
 }
 
 export async function criarLead(
@@ -85,6 +157,7 @@ export async function atualizarLead(
     formData.get("criterio_capacidade") ?? "desconhecida"
   );
   const novoNivel = Number(formData.get("nivel_ordem"));
+  const reuniaoData = String(formData.get("reuniao_data") ?? "").trim() || null;
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
@@ -101,6 +174,20 @@ export async function atualizarLead(
   }
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
+
+  if (nivelMudou) {
+    const erroReuniao = await sincronizarReuniao(supabase, {
+      orgId: usuario.org_id,
+      usuarioId: usuario.id,
+      leadId,
+      deOrdem: leadAtual.nivel_ordem,
+      paraOrdem: novoNivel,
+      agendadaPara: reuniaoData,
+    });
+    if (erroReuniao) {
+      return { erro: erroReuniao };
+    }
+  }
 
   const { error } = await supabase
     .from("leads")
@@ -142,7 +229,11 @@ export async function atualizarLead(
   redirect("/leads");
 }
 
-export async function moverLeadNivel(leadId: string, novoNivel: number) {
+export async function moverLeadNivel(
+  leadId: string,
+  novoNivel: number,
+  agendadaPara?: string | null
+) {
   const { supabase, usuario } = await contextoUsuario();
 
   const { data: leadAtual, error: erroAtual } = await supabase
@@ -157,6 +248,18 @@ export async function moverLeadNivel(leadId: string, novoNivel: number) {
 
   if (leadAtual.nivel_ordem === novoNivel) {
     return;
+  }
+
+  const erroReuniao = await sincronizarReuniao(supabase, {
+    orgId: usuario.org_id,
+    usuarioId: usuario.id,
+    leadId,
+    deOrdem: leadAtual.nivel_ordem,
+    paraOrdem: novoNivel,
+    agendadaPara,
+  });
+  if (erroReuniao) {
+    throw new Error(erroReuniao);
   }
 
   const { error } = await supabase
@@ -187,6 +290,54 @@ export async function moverLeadNivel(leadId: string, novoNivel: number) {
   revalidatePath("/leads");
   revalidatePath("/leads/lista");
   revalidatePath(`/leads/${leadId}`);
+}
+
+export async function marcarVendido(
+  leadId: string,
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const { supabase } = await contextoUsuario();
+
+  const valorRaw = String(formData.get("valor_venda") ?? "").trim();
+  const valor = valorRaw ? Number(valorRaw) : null;
+
+  if (!valor || valor <= 0) {
+    return { erro: "Informe o valor da venda" };
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      status: "vendido",
+      valor_venda: valor,
+      vendido_em: new Date().toISOString(),
+    })
+    .eq("id", leadId);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  const { data: reuniao } = await supabase
+    .from("reunioes")
+    .select("id")
+    .eq("lead_id", leadId)
+    .order("marcada_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (reuniao) {
+    await supabase
+      .from("reunioes")
+      .update({ resultado: "vendeu", valor })
+      .eq("id", reuniao.id);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/leads/lista");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
 }
 
 export async function registrarNota(leadId: string, formData: FormData) {

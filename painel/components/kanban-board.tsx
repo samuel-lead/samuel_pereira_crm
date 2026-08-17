@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
+
+const NIVEL_REUNIAO_MARCADA = 4;
 
 type LeadResumo = {
   id: string;
@@ -28,6 +31,7 @@ export function KanbanBoard({
   leadsPorNivel: Record<number, LeadResumo[]>;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const numerosVisiveis = numerarNiveis(niveis);
   const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
   const [, iniciarTransicao] = useTransition();
@@ -57,6 +61,14 @@ export function KanbanBoard({
     const leadId = e.dataTransfer.getData("text/plain");
     setColunaAlvo(null);
     if (!leadId) return;
+
+    // "Reunião marcada" precisa da data da reunião — manda pra tela de
+    // editar em vez de mover na hora, pra usar o seletor de data de verdade.
+    if (ordem === NIVEL_REUNIAO_MARCADA) {
+      router.push(`/leads/${leadId}?marcarReuniao=1`);
+      return;
+    }
+
     iniciarTransicao(() => {
       moverLeadNivel(leadId, ordem).catch((erro: unknown) => {
         const mensagem = erro instanceof Error ? erro.message : "Não deu pra mover o lead";

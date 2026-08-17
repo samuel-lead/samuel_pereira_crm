@@ -106,3 +106,24 @@ Duas coisas nessa rodada:
 2. **Bug real encontrado pelo Samuel** ("texto livre deu erro"): ao investigar, não era bug do campo "Outro" — era a trava de telefone duplicado do banco (`unique (usuario_id, telefone_e164)`) sendo violada e o erro cru do Postgres (`duplicate key value violates unique constraint...`) subindo sem tratamento, quebrando a página com uma tela de erro feia do Next.js em vez de uma mensagem legível. Corrigido trocando `criarLead`/`atualizarLead` de "lança exceção" pra "retorna `{ erro }`", usando `useActionState` do React nos formulários (padrão igual ao da tela de login) — agora mostra "Já existe um lead com esse telefone." embaixo do formulário, sem crash, e sem perder o que a pessoa já tinha digitado. Isso exigiu separar o formulário de editar lead num componente cliente próprio (`components/editar-lead-form.tsx`), já que a página em si continua sendo um Server Component (busca dados no servidor).
 
 Testado no navegador: telefone duplicado mostra a mensagem certa e não deixa criar; telefone único cria e redireciona normal; editar sem mudar nada salva normal. Build de produção limpo.
+
+## 2026-08-17 — Reuniões de verdade, marcar venda, filtro no Kanban, dashboard de métricas
+
+O Samuel mandou uma planilha do Google (COMERCIAL) mostrando como ele controla hoje: aba por mês com "Data de Agendamento" e "Data da Reunião" separadas, e uma aba "ANO" com meta de receita/faturamento por mês. Pediu pra construir isso no sistema. Perguntei como ele queria separar "Base" e "Ganho" do funil principal (sugeri 2 boards, 3 boards, ou só um filtro) — ele escolheu **só um filtro no board atual**, sem criar tela nova pra isso.
+
+Quatro mudanças, nessa ordem:
+
+1. **Filtro no Kanban** (`/leads?todos=1`): por padrão o board só mostra leads sendo trabalhados (esconde nível 7 "Base" e leads com `status = 'vendido'`). Um link no topo alterna pra "Mostrar Base e Vendas".
+
+2. **Reunião de verdade com as 2 datas** — até agora, mudar o nível pra "Reunião marcada" só trocava `leads.nivel_ordem`, não criava nada na tabela `reunioes` (que existe desde a Fase 1 mas nunca tinha UI). Agora:
+   - Editando o lead e mudando o nível pra "Reunião marcada": aparece um campo obrigatório "Data e hora da reunião" (`reuniao_data`), que vira `reunioes.agendada_para`. A "data de agendamento" é `reunioes.marcada_em`, que o banco já preenche sozinho com `now()` — não precisa pedir pro usuário.
+   - Arrastando um lead pro "Reunião marcada" no Kanban: como arrastar não tem como abrir um seletor de data decente, manda pra tela de editar já com o nível pré-selecionado (`?marcarReuniao=1`), em vez de mover na hora.
+   - Saindo de "Reunião marcada" pra "No Show" ou "Reunião feita, sem fechar" (editando ou arrastando): atualiza sozinho o `status` da reunião mais recente pra `nao_compareceu` ou `realizada`. Isso é lógica nova, `sincronizarReuniao()` em `lib/leads/actions.ts`, chamada tanto por `atualizarLead` quanto por `moverLeadNivel`.
+
+3. **Marcar como vendido** — painel novo na página do lead (`components/marcar-vendido-form.tsx`) pra registrar o valor da venda. Grava `leads.status = 'vendido'`, `valor_venda`, `vendido_em = now()`, e atualiza a reunião mais recente com `resultado = 'vendeu'`. Depois disso o lead some do Kanban filtrado (item 1).
+
+4. **Dashboard de métricas** (`/dashboard`, novo item no menu) — leads trabalhados, reuniões marcadas, reuniões realizadas, no show, vendas e receita, mais as 3 taxas (agendamento/comparecimento/venda) comparadas com os mínimos do sistema (10%/80%/40%, lidos de `metas_config`, nunca hardcoded). Mostra "Esta semana" e "Este mês" lado a lado, com o piso (leads/dia × dias úteis já passados no período) como referência. Tudo calculado com `count`/`sum` direto no Postgres via Supabase — nenhuma conta feita "no olho". Se `leads_trabalhados < 20`, mostra aviso de amostra pequena, como o BUILD.md pede.
+
+Isso cobre boa parte da Fase 6 do BUILD.md (métricas em SQL, nunca estimadas) usando a estrutura que já existia desde a Fase 1 — só faltava a UI pra alimentar `reunioes` de verdade.
+
+Testado no navegador de ponta a ponta com o banco real: mudar nível pra reunião marcada pede a data e cria a reunião; mudar pra "reunião feita" marca a reunião como realizada sozinho; marcar como vendido grava tudo certo e some do funil filtrado; dashboard mostra os números batendo com o que foi criado. Desfiz as mudanças de teste no lead "teste" (que já existia, criado pelo próprio Samuel) pra não sujar as métricas reais dele. Build de produção limpo.

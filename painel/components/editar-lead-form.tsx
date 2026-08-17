@@ -1,9 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
+
+const NIVEL_REUNIAO_MARCADA = "4";
 
 type Lead = {
   id: string;
@@ -25,13 +27,20 @@ export function EditarLeadForm({
   lead,
   niveis,
   numerosVisiveis,
+  preSelecionarReuniao = false,
 }: {
   lead: Lead;
   niveis: NivelResumo[];
   numerosVisiveis: Record<number, number>;
+  preSelecionarReuniao?: boolean;
 }) {
   const acaoComId = atualizarLead.bind(null, lead.id);
   const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
+  const [nivelSelecionado, setNivelSelecionado] = useState(
+    preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
+  );
+  const vaiEntrarEmReuniaoMarcada =
+    nivelSelecionado === NIVEL_REUNIAO_MARCADA && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA;
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
@@ -73,7 +82,8 @@ export function EditarLeadForm({
           <select
             id="nivel_ordem"
             name="nivel_ordem"
-            defaultValue={lead.nivel_ordem}
+            value={nivelSelecionado}
+            onChange={(e) => setNivelSelecionado(e.target.value)}
             className={campoClasse}
           >
             {niveis.map((nivel) => (
@@ -82,6 +92,24 @@ export function EditarLeadForm({
               </option>
             ))}
           </select>
+
+          {vaiEntrarEmReuniaoMarcada && (
+            <div className="mt-2 space-y-1 rounded-md border border-emerald-200 bg-emerald-50 p-3">
+              <label className="text-sm font-medium text-emerald-800" htmlFor="reuniao_data">
+                Data e hora da reunião
+              </label>
+              <input
+                id="reuniao_data"
+                name="reuniao_data"
+                type="datetime-local"
+                required
+                className={`${campoClasse} bg-white`}
+              />
+              <p className="text-xs text-emerald-700">
+                A data de agendamento (hoje) é registrada automaticamente.
+              </p>
+            </div>
+          )}
         </div>
 
         <fieldset className="space-y-3 rounded-md border border-neutral-200 bg-neutral-50 p-3">

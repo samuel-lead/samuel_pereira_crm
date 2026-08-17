@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { registrarNota } from "@/lib/leads/actions";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
+import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
 type Lead = {
@@ -15,6 +16,9 @@ type Lead = {
   criterio_problema: string | null;
   criterio_urgencia: string;
   criterio_capacidade: string;
+  status: string;
+  valor_venda: number | null;
+  vendido_em: string | null;
 };
 
 type Interacao = {
@@ -47,10 +51,13 @@ function formatarData(iso: string) {
 
 export default async function EditarLeadPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ marcarReuniao?: string }>;
 }) {
   const { id } = await params;
+  const { marcarReuniao } = await searchParams;
   const supabase = await createClient();
 
   const [{ data: lead }, { data: niveisData }, { data: interacoesData }, { data: reunioesData }] =
@@ -58,7 +65,7 @@ export default async function EditarLeadPage({
       supabase
         .from("leads")
         .select(
-          "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade"
+          "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, vendido_em"
         )
         .eq("id", id)
         .single(),
@@ -105,9 +112,27 @@ export default async function EditarLeadPage({
           lead={leadTipado}
           niveis={niveis}
           numerosVisiveis={numerosVisiveis}
+          preSelecionarReuniao={marcarReuniao === "1"}
         />
 
         <div className="flex flex-col gap-4">
+          {leadTipado.status === "vendido" ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-emerald-800">
+                ✓ Vendido
+              </h2>
+              <p className="mt-1 text-sm text-emerald-700">
+                {leadTipado.valor_venda?.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+                {leadTipado.vendido_em && ` · ${formatarData(leadTipado.vendido_em)}`}
+              </p>
+            </div>
+          ) : (
+            <MarcarVendidoForm leadId={leadTipado.id} />
+          )}
+
           <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
             <h2 className="mb-3 text-sm font-semibold text-neutral-800">
               Registrar nota

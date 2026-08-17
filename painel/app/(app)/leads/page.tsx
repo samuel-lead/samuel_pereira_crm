@@ -11,22 +11,37 @@ type LeadResumo = {
   origem: string | null;
   nivel_ordem: number;
   declarado_em: string;
+  status: string;
 };
 
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ todos?: string }>;
+}) {
+  const { todos } = await searchParams;
+  const mostrarTodos = todos === "1";
   const supabase = await createClient();
 
   const [{ data: niveisData }, { data: leadsData }] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     supabase
       .from("leads")
-      .select("id, nome, telefone_e164, origem, nivel_ordem, declarado_em")
+      .select("id, nome, telefone_e164, origem, nivel_ordem, declarado_em, status")
       .is("arquivado_em", null)
       .order("declarado_em", { ascending: false }),
   ]);
 
   const niveis = (niveisData ?? []) as NivelResumo[];
-  const leads = (leadsData ?? []) as LeadResumo[];
+  const todosLeads = (leadsData ?? []) as LeadResumo[];
+
+  const leads = mostrarTodos
+    ? todosLeads
+    : todosLeads.filter((lead) => lead.status !== "vendido" && lead.nivel_ordem !== 7);
+
+  const niveisVisiveis = mostrarTodos
+    ? niveis
+    : niveis.filter((nivel) => nivel.ordem !== 7);
 
   const leadsPorNivel: Record<number, LeadResumo[]> = {};
   for (const lead of leads) {
@@ -52,17 +67,26 @@ export default async function LeadsPage() {
       <main className="px-6 py-6">
         <div className="mb-4 flex items-baseline justify-between">
           <p className="text-sm text-neutral-500">
-            {leads.length} lead{leads.length === 1 ? "" : "s"} no total
+            {leads.length} lead{leads.length === 1 ? "" : "s"}{" "}
+            {mostrarTodos ? "no total" : "sendo trabalhados"}
           </p>
-          <Link
-            href="/leads/lista"
-            className="text-sm font-medium text-violet-600 hover:text-violet-700"
-          >
-            Ver em lista →
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href={mostrarTodos ? "/leads" : "/leads?todos=1"}
+              className="text-sm font-medium text-violet-600 hover:text-violet-700"
+            >
+              {mostrarTodos ? "Só quem está sendo trabalhado" : "Mostrar Base e Vendas →"}
+            </Link>
+            <Link
+              href="/leads/lista"
+              className="text-sm font-medium text-violet-600 hover:text-violet-700"
+            >
+              Ver em lista →
+            </Link>
+          </div>
         </div>
 
-        <KanbanBoard niveis={niveis} leadsPorNivel={leadsPorNivel} />
+        <KanbanBoard niveis={niveisVisiveis} leadsPorNivel={leadsPorNivel} />
       </main>
     </>
   );

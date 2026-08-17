@@ -23,6 +23,14 @@ export function IconeAtividade(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconeMetricas(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path d="M4 20V10M12 20V4M20 20v-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function IconeConfig(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
