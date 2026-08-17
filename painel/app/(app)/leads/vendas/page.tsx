@@ -1,14 +1,23 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
-import { LeadCard } from "@/components/lead-card";
+import { KanbanBoard } from "@/components/kanban-board";
 
 type LeadVendido = {
   id: string;
   nome: string;
   telefone_e164: string | null;
-  origem: string | null;
   valor_venda: number | null;
   vendido_em: string | null;
+  responsavel_id: string | null;
+};
+
+type LeadResumo = {
+  id: string;
+  nome: string;
+  telefone_e164: string | null;
+  origem: string | null;
+  nivel_ordem: number;
+  responsavel_id: string | null;
 };
 
 function formatarData(iso: string) {
@@ -22,15 +31,42 @@ function formatarMoeda(valor: number) {
 export default async function VendasPage() {
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("leads")
-    .select("id, nome, telefone_e164, origem, valor_venda, vendido_em")
-    .eq("status", "vendido")
-    .is("arquivado_em", null)
-    .order("vendido_em", { ascending: false });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const leads = (data ?? []) as LeadVendido[];
+  const [{ data: leadsData }, { data: usuarioAtual }] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("id, nome, telefone_e164, valor_venda, vendido_em, responsavel_id")
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .order("vendido_em", { ascending: false }),
+    user
+      ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const leads = (leadsData ?? []) as LeadVendido[];
+  const souAdmin = usuarioAtual?.papel === "admin";
   const totalReceita = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+
+  // Reaproveita o card do Kanban do funil — o "origem" vira o valor da
+  // venda + data, pra mostrar isso de um jeito bonito (o mesmo selo que já
+  // existe pro card), em vez de um rodapé solto.
+  const leadsKanban: LeadResumo[] = leads.map((lead) => ({
+    id: lead.id,
+    nome: lead.nome,
+    telefone_e164: lead.telefone_e164,
+    origem:
+      lead.valor_venda != null
+        ? `${formatarMoeda(Number(lead.valor_venda))}${
+            lead.vendido_em ? ` · ${formatarData(lead.vendido_em)}` : ""
+          }`
+        : null,
+    nivel_ordem: 4,
+    responsavel_id: lead.responsavel_id,
+  }));
 
   return (
     <>
@@ -48,29 +84,12 @@ export default async function VendasPage() {
           </p>
         </div>
 
-        {leads.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-neutral-300 bg-white px-6 py-16 text-center">
-            <p className="text-sm text-neutral-400">Nenhuma venda ainda.</p>
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {leads.map((lead) => (
-              <LeadCard
-                key={lead.id}
-                id={lead.id}
-                nome={lead.nome}
-                telefoneE164={lead.telefone_e164}
-                badgeClasse="bg-emerald-200 text-emerald-700"
-                rodape={
-                  <p className="mt-1 text-xs font-medium text-emerald-700">
-                    {lead.valor_venda != null && formatarMoeda(Number(lead.valor_venda))}
-                    {lead.vendido_em ? ` · ${formatarData(lead.vendido_em)}` : ""}
-                  </p>
-                }
-              />
-            ))}
-          </div>
-        )}
+        <KanbanBoard
+          niveis={[{ ordem: 4, nome: "Clientes", numerado: false, destacado: true }]}
+          leadsPorNivel={{ 4: leadsKanban }}
+          souAdmin={souAdmin}
+          usuarioAtualId={user?.id ?? null}
+        />
       </main>
     </>
   );

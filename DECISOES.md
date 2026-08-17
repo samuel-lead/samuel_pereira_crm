@@ -300,3 +300,13 @@ O Samuel queria tirar os links "Base →", "Vendas →" e "Ver em lista →" do 
 - **Clientes** manteve a tela simples de lista (sem Kanban, como pedido) — só troquei o título de "Vendas" pra "Clientes". Por baixo continua a mesma lógica de "quem comprou" (`status = 'vendido'`), não mudei nenhum termo do negócio (venda, meta de venda, etc.) — só o nome dessa tela específica.
 
 Testado no navegador: menu lateral mostra os dois itens novos, Base de Leads renderiza o Kanban de coluna única sem numeração errada, Clientes mostra o título certo com a lista de quem comprou. Build de produção limpo, 15 rotas (mesmas de antes, só mudou o conteúdo).
+
+## 2026-08-17 — Base de Leads e Clientes: cor certa e valor da venda como selo
+
+Dois ajustes finos depois de ver as telas no ar:
+
+1. **Base de Leads**: o Samuel queria a cor exata da coluna "Leads" do funil (preto), não a cor genérica da paleta do nível 7 (stone). Como a cor no Kanban é decidida pelo `ordem` do nível, forcei `ordem: 0` só na hora de montar os dados pra essa tela (não mexe no banco, é local dessa página) — assim reaproveita a mesma cor preta de `CORES_NIVEL[0]` sem duplicar nada.
+
+2. **Clientes**: ele voltou atrás do "sem Kanban por enquanto" — viu a lista simples e achou o valor da venda "estranho" no rodapé do card. Troquei pelo mesmo Kanban do funil (coluna única verde-esmeralda, cor de sucesso). O valor da venda + data viram o selo que normalmente mostra a origem do lead (reaproveitando o mesmo espaço/estilo já pronto do card) — fica um selo arredondado, igual a "SS IG" aparece nos outros cards, só que com "R$ 2.500,00 · 17/08/2026". O card de receita total no topo continua do jeito que estava.
+
+Testado no navegador com dados de teste nas duas telas — cores batendo com o esperado, valor da venda aparecendo como selo limpo. Dados de teste removidos no final. Build de produção limpo.
