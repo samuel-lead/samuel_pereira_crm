@@ -21,7 +21,7 @@ type Lead = {
 };
 
 const campoClasse =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
+  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500";
 const labelClasse = "text-sm font-medium text-neutral-700";
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -30,12 +30,16 @@ export function EditarLeadForm({
   niveis,
   numerosVisiveis,
   usuarios,
+  souAdmin = true,
+  podeEditar = true,
   preSelecionarReuniao = false,
 }: {
   lead: Lead;
   niveis: NivelResumo[];
   numerosVisiveis: Record<number, number>;
   usuarios: { id: string; nome: string }[];
+  souAdmin?: boolean;
+  podeEditar?: boolean;
   preSelecionarReuniao?: boolean;
 }) {
   const acaoComId = atualizarLead.bind(null, lead.id);
@@ -45,10 +49,14 @@ export function EditarLeadForm({
   );
   const vaiEntrarEmReuniaoMarcada =
     nivelSelecionado === NIVEL_REUNIAO_MARCADA && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA;
+  const nomeResponsavelAtual = podeEditar
+    ? "Você"
+    : usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
       <form action={acaoFormulario} className="space-y-4">
+        <fieldset disabled={!podeEditar} className="space-y-4">
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="nome">
             Nome *
@@ -83,7 +91,16 @@ export function EditarLeadForm({
           <label className={labelClasse} htmlFor="responsavel_id">
             Responsável
           </label>
-          <ResponsavelSelect usuarios={usuarios} valorInicial={lead.responsavel_id} />
+          {souAdmin ? (
+            <ResponsavelSelect usuarios={usuarios} valorInicial={lead.responsavel_id} />
+          ) : (
+            <p className={`${campoClasse} bg-neutral-50 text-neutral-600`}>
+              {nomeResponsavelAtual}{" "}
+              <span className="text-xs text-neutral-400">
+                (só um admin pode reatribuir o lead)
+              </span>
+            </p>
+          )}
         </div>
 
         <div className="space-y-1">
@@ -175,6 +192,7 @@ export function EditarLeadForm({
             </select>
           </div>
         </fieldset>
+      </fieldset>
 
         {estado.erro && (
           <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
@@ -182,12 +200,14 @@ export function EditarLeadForm({
           </p>
         )}
 
-        <button
-          type="submit"
-          className="w-full rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
-        >
-          Salvar alterações
-        </button>
+        {podeEditar && (
+          <button
+            type="submit"
+            className="w-full rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+          >
+            Salvar alterações
+          </button>
+        )}
       </form>
     </div>
   );

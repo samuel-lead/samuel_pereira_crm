@@ -24,7 +24,7 @@ async function contextoUsuario() {
 
   const { data: usuario, error } = await supabase
     .from("usuarios")
-    .select("id, org_id")
+    .select("id, org_id, papel")
     .eq("id", user.id)
     .single();
 
@@ -33,6 +33,30 @@ async function contextoUsuario() {
   }
 
   return { supabase, usuario };
+}
+
+type UsuarioContexto = { id: string; org_id: string; papel: string };
+
+const ERRO_SEM_PERMISSAO = "Você só pode mexer em leads que são seus.";
+
+// Só admin ou o próprio responsável pelo lead podem alterar/arquivar/anotar.
+// Todo mundo com acesso ao Funil continua enxergando o lead (visão de equipe).
+async function garantirPodeEditar(
+  supabase: SupabaseServerClient,
+  usuario: UsuarioContexto,
+  leadId: string
+): Promise<string | null> {
+  if (usuario.papel === "admin") return null;
+
+  const { data: lead, error } = await supabase
+    .from("leads")
+    .select("responsavel_id")
+    .eq("id", leadId)
+    .single();
+
+  if (error || !lead) return "Lead não encontrado";
+  if (lead.responsavel_id !== usuario.id) return ERRO_SEM_PERMISSAO;
+  return null;
 }
 
 function mensagemAmigavel(codigo: string | undefined, mensagemOriginal: string) {
@@ -117,7 +141,10 @@ export async function criarLead(
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
-  const responsavelId = String(formData.get("responsavel_id") ?? "").trim() || null;
+  const responsavelId =
+    usuario.papel === "admin"
+      ? String(formData.get("responsavel_id") ?? "").trim() || null
+      : usuario.id;
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
@@ -160,7 +187,6 @@ export async function atualizarLead(
   );
   const novoNivel = Number(formData.get("nivel_ordem"));
   const reuniaoData = String(formData.get("reuniao_data") ?? "").trim() || null;
-  const responsavelId = String(formData.get("responsavel_id") ?? "").trim() || null;
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
@@ -168,13 +194,24 @@ export async function atualizarLead(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem")
+    .select("nivel_ordem, responsavel_id")
     .eq("id", leadId)
     .single();
 
   if (erroAtual || !leadAtual) {
     return { erro: "Lead não encontrado" };
   }
+
+  if (usuario.papel !== "admin" && leadAtual.responsavel_id !== usuario.id) {
+    return { erro: ERRO_SEM_PERMISSAO };
+  }
+
+  // Só admin pode trocar quem é o responsável; o "dono" do lead mantém o
+  // valor atual (o formulário nem mostra o campo editável pra ele).
+  const responsavelId =
+    usuario.papel === "admin"
+      ? String(formData.get("responsavel_id") ?? "").trim() || null
+      : leadAtual.responsavel_id;
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
 
@@ -242,12 +279,16 @@ export async function moverLeadNivel(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem")
+    .select("nivel_ordem, responsavel_id")
     .eq("id", leadId)
     .single();
 
   if (erroAtual || !leadAtual) {
     throw new Error("Lead não encontrado");
+  }
+
+  if (usuario.papel !== "admin" && leadAtual.responsavel_id !== usuario.id) {
+    throw new Error(ERRO_SEM_PERMISSAO);
   }
 
   if (leadAtual.nivel_ordem === novoNivel) {
@@ -301,7 +342,12 @@ export async function marcarVendido(
   _estadoAnterior: EstadoFormulario,
   formData: FormData
 ): Promise<EstadoFormulario> {
-  const { supabase } = await contextoUsuario();
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    return { erro: erroPermissao };
+  }
 
   const valorRaw = String(formData.get("valor_venda") ?? "").trim();
   const valor = valorRaw ? Number(valorRaw) : null;
@@ -347,6 +393,11 @@ export async function marcarVendido(
 export async function registrarNota(leadId: string, formData: FormData) {
   const { supabase, usuario } = await contextoUsuario();
 
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
+
   const conteudo = String(formData.get("conteudo") ?? "").trim();
 
   if (!conteudo) {
@@ -372,7 +423,12 @@ export async function registrarNota(leadId: string, formData: FormData) {
 }
 
 export async function arquivarLead(leadId: string) {
-  const { supabase } = await contextoUsuario();
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
 
   const { error } = await supabase
     .from("leads")

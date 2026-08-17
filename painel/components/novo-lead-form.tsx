@@ -10,8 +10,10 @@ const estadoInicial: EstadoFormulario = { erro: null };
 
 export function NovoLeadForm({
   usuarios,
+  souAdmin = true,
 }: {
   usuarios: { id: string; nome: string }[];
+  souAdmin?: boolean;
 }) {
   const [estado, acaoFormulario] = useActionState(criarLead, estadoInicial);
 
@@ -68,7 +70,13 @@ export function NovoLeadForm({
           <label className="text-sm font-medium text-neutral-700" htmlFor="responsavel_id">
             Responsável
           </label>
-          <ResponsavelSelect usuarios={usuarios} />
+          {souAdmin ? (
+            <ResponsavelSelect usuarios={usuarios} />
+          ) : (
+            <p className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+              Você
+            </p>
+          )}
         </div>
 
         <p className="rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-500">

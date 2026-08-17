@@ -14,6 +14,7 @@ type LeadResumo = {
   telefone_e164: string | null;
   origem: string | null;
   nivel_ordem: number;
+  responsavel_id: string | null;
 };
 
 function iniciais(nome: string) {
@@ -26,15 +27,23 @@ function iniciais(nome: string) {
 export function KanbanBoard({
   niveis,
   leadsPorNivel,
+  souAdmin = true,
+  usuarioAtualId = null,
 }: {
   niveis: NivelResumo[];
   leadsPorNivel: Record<number, LeadResumo[]>;
+  souAdmin?: boolean;
+  usuarioAtualId?: string | null;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const numerosVisiveis = numerarNiveis(niveis);
   const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
   const [, iniciarTransicao] = useTransition();
+
+  function podeArrastar(lead: LeadResumo) {
+    return souAdmin || lead.responsavel_id === usuarioAtualId;
+  }
 
   function rolar(direcao: "esquerda" | "direita") {
     const el = scrollRef.current;
@@ -165,13 +174,18 @@ export function KanbanBoard({
                       {recebendoArrasto ? "Solta aqui" : "Nenhum lead aqui"}
                     </p>
                   ) : (
-                    leadsDoNivel.map((lead) => (
+                    leadsDoNivel.map((lead) => {
+                      const arrastavel = podeArrastar(lead);
+                      return (
                       <Link
                         key={lead.id}
                         href={`/leads/${lead.id}`}
-                        draggable
-                        onDragStart={(e) => aoComecarArrastar(e, lead.id)}
-                        className="group cursor-grab rounded-md border border-neutral-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing"
+                        draggable={arrastavel}
+                        onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead.id)}
+                        title={arrastavel ? undefined : "Você só visualiza — não é seu lead"}
+                        className={`group rounded-md border border-neutral-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                          arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"
+                        }`}
                       >
                         <div className="flex items-start gap-2">
                           <span
@@ -196,7 +210,8 @@ export function KanbanBoard({
                           </div>
                         </div>
                       </Link>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </section>

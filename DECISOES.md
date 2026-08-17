@@ -203,3 +203,23 @@ Continuação direta do pedido anterior. Como não existia nenhuma forma de cria
 **Aplicando de verdade**: o menu lateral já esconde os itens que a pessoa não pode ver. E se ela tentar entrar direto numa URL fora da lista dela (digitando o endereço, por exemplo), o `proxy.ts` (middleware, roda em toda navegação) barra e manda ela pra primeira página que ela pode ver — ou pra uma tela de "sem acesso" se por algum motivo ela não tiver nenhuma.
 
 Testado com o banco real: cadastrei um "SDR Teste" como membro com só Funil e Lista de leads marcados, confirmei no banco que gravou certo, fiz login como ele no navegador e vi o menu mostrando só essas duas opções. Tentei entrar direto em `/dashboard` (Métricas, não liberado) e em `/usuarios` (admin-only) — as duas vezes fui redirecionado de volta pro Funil na hora. Testei também a troca de permissões e a trava de segurança (um membro tentando mudar permissão de outro usuário é bloqueado pela função no banco) simulando as sessões autenticadas direto no banco. Usuário de teste removido no final. Build de produção limpo, 15 rotas.
+
+## 2026-08-17 — Cada lead só pode ser mexido pelo responsável (ou admin)
+
+O Samuel perguntou como deveria funcionar o acesso: cada usuário só mexe no próprio lead, mas continua vendo o funil inteiro (visão de equipe) — ou cada um só vê os seus? Recomendei a primeira: ver tudo, editar só o seu, porque a segunda tem um buraco — como o responsável é opcional, um lead sem dono ficaria escondido de todo mundo. Ele topou.
+
+**Onde a regra vale de verdade é no banco (RLS)**, não só escondendo botão na tela — assim nem um usuário mexendo direto na API dá volta na regra:
+- Todo mundo da org continua **lendo** todos os leads (`leads_select_org`).
+- Só o **responsável do lead ou um admin** pode **alterar ou arquivar** (`leads_update_dono_ou_admin`, `leads_delete_dono_ou_admin`).
+- Registrar nota (tabela `interacoes`) segue a mesma regra: só o dono do lead (ou admin) anota.
+- Criei uma função `private.eh_admin()` que as políticas usam pra saber se quem tá logado é admin.
+
+**Na tela**, pra não depender só do banco rejeitar (o que daria um erro feio): as Server Actions checam a permissão antes de escrever e devolvem uma mensagem amigável ("Você só pode mexer em leads que são seus.") se não for o caso. O formulário de editar lead também:
+- Fica todo desabilitado (cinza, sem poder digitar) se o lead não é seu, com um aviso no topo dizendo quem é o responsável.
+- Esconde "Marcar como vendido", "Registrar nota" e "Excluir lead" quando o lead não é seu.
+- O campo "Responsável" só é um menu editável pra admin — pra quem não é admin, aparece só como texto (o admin que decide redistribuir leads entre a equipe).
+- Ao criar um lead novo, quem não é admin já entra automaticamente como responsável (sem escolher).
+
+No Kanban, o card de um lead que não é seu não pode mais ser arrastado (fica com a "mãozinha" trocada por seta comum e um pouco apagado), mas continua clicável pra abrir e ver os detalhes.
+
+Testado criando um usuário "membro" de teste direto no banco (pra simular um SDR de verdade, sem mexer na conta do Samuel): logado como ele, o lead que criei foi automaticamente atribuído a ele e deu pra editar e salvar normalmente; abrindo um lead de outra pessoa, o formulário veio todo travado com o aviso, sem os botões de ação, e o card dele no Kanban não pôde ser arrastado. Testei também tentando burlar direto no banco (sem passar pela tela) — um membro tentando editar lead alheio foi bloqueado (0 linhas alteradas), e um admin editando lead de outra pessoa funcionou normal. Usuário e lead de teste removidos no final. Build de produção limpo, 15 rotas.

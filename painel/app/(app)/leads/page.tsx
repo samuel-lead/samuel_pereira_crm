@@ -12,23 +12,32 @@ type LeadResumo = {
   nivel_ordem: number;
   declarado_em: string;
   status: string;
+  responsavel_id: string | null;
 };
 
 export default async function LeadsPage() {
   const supabase = await createClient();
 
-  const [{ data: niveisData }, { data: leadsData }] = await Promise.all([
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [{ data: niveisData }, { data: leadsData }, { data: usuarioAtual }] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     supabase
       .from("leads")
-      .select("id, nome, telefone_e164, origem, nivel_ordem, declarado_em, status")
+      .select("id, nome, telefone_e164, origem, nivel_ordem, declarado_em, status, responsavel_id")
       .is("arquivado_em", null)
       .neq("status", "vendido")
       .order("declarado_em", { ascending: false }),
+    user
+      ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
   ]);
 
   const niveis = ((niveisData ?? []) as NivelResumo[]).filter((nivel) => nivel.ordem !== 7);
   const leads = (leadsData ?? []) as LeadResumo[];
+  const souAdmin = usuarioAtual?.papel === "admin";
 
   const leadsPorNivel: Record<number, LeadResumo[]> = {};
   for (const lead of leads) {
@@ -78,7 +87,12 @@ export default async function LeadsPage() {
           </div>
         </div>
 
-        <KanbanBoard niveis={niveis} leadsPorNivel={leadsPorNivel} />
+        <KanbanBoard
+          niveis={niveis}
+          leadsPorNivel={leadsPorNivel}
+          souAdmin={souAdmin}
+          usuarioAtualId={user?.id ?? null}
+        />
       </main>
     </>
   );

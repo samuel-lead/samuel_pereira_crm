@@ -62,12 +62,17 @@ export default async function EditarLeadPage({
   const { marcarReuniao } = await searchParams;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const [
     { data: lead },
     { data: niveisData },
     { data: interacoesData },
     { data: reunioesData },
     { data: usuariosData },
+    { data: usuarioAtual },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -88,6 +93,9 @@ export default async function EditarLeadPage({
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
     supabase.from("usuarios").select("id, nome").order("nome"),
+    user
+      ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
   ]);
 
   if (!lead) {
@@ -99,6 +107,9 @@ export default async function EditarLeadPage({
   const interacoes = (interacoesData ?? []) as Interacao[];
   const reunioes = (reunioesData ?? []) as Reuniao[];
   const usuarios = usuariosData ?? [];
+  const souAdmin = usuarioAtual?.papel === "admin";
+  const podeEditar = souAdmin || leadTipado.responsavel_id === user?.id;
+  const nomeResponsavel = usuarios.find((u) => u.id === leadTipado.responsavel_id)?.nome;
   const registrarNotaComId = registrarNota.bind(null, leadTipado.id);
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
 
@@ -117,13 +128,25 @@ export default async function EditarLeadPage({
       />
 
       <main className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <EditarLeadForm
-          lead={leadTipado}
-          niveis={niveis}
-          numerosVisiveis={numerosVisiveis}
-          usuarios={usuarios}
-          preSelecionarReuniao={marcarReuniao === "1"}
-        />
+        <div className="flex flex-col gap-4">
+          {!podeEditar && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Você só pode visualizar este lead — o responsável é{" "}
+              <strong>{nomeResponsavel ?? "outra pessoa"}</strong>. Quem edita, move
+              ou anota é só ela (ou um admin).
+            </div>
+          )}
+
+          <EditarLeadForm
+            lead={leadTipado}
+            niveis={niveis}
+            numerosVisiveis={numerosVisiveis}
+            usuarios={usuarios}
+            souAdmin={souAdmin}
+            podeEditar={podeEditar}
+            preSelecionarReuniao={marcarReuniao === "1"}
+          />
+        </div>
 
         <div className="flex flex-col gap-4">
           {leadTipado.status === "vendido" ? (
@@ -140,29 +163,31 @@ export default async function EditarLeadPage({
               </p>
             </div>
           ) : (
-            <MarcarVendidoForm leadId={leadTipado.id} />
+            podeEditar && <MarcarVendidoForm leadId={leadTipado.id} />
           )}
 
-          <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold text-neutral-800">
-              Registrar nota
-            </h2>
-            <form action={registrarNotaComId} className="space-y-2">
-              <textarea
-                name="conteudo"
-                required
-                rows={3}
-                placeholder="Ex.: liguei, ficou de ver a agenda e responder amanhã..."
-                className={campoClasse}
-              />
-              <button
-                type="submit"
-                className="w-full rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100"
-              >
-                Adicionar à linha do tempo
-              </button>
-            </form>
-          </div>
+          {podeEditar && (
+            <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+              <h2 className="mb-3 text-sm font-semibold text-neutral-800">
+                Registrar nota
+              </h2>
+              <form action={registrarNotaComId} className="space-y-2">
+                <textarea
+                  name="conteudo"
+                  required
+                  rows={3}
+                  placeholder="Ex.: liguei, ficou de ver a agenda e responder amanhã..."
+                  className={campoClasse}
+                />
+                <button
+                  type="submit"
+                  className="w-full rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100"
+                >
+                  Adicionar à linha do tempo
+                </button>
+              </form>
+            </div>
+          )}
 
           <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
             <h2 className="mb-3 text-sm font-semibold text-neutral-800">
@@ -208,7 +233,9 @@ export default async function EditarLeadPage({
             )}
           </div>
 
-          <ExcluirLeadButton leadId={leadTipado.id} nome={leadTipado.nome} />
+          {podeEditar && (
+            <ExcluirLeadButton leadId={leadTipado.id} nome={leadTipado.nome} />
+          )}
         </div>
       </main>
     </>
