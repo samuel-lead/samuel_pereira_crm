@@ -48,11 +48,6 @@ export default async function BasePage() {
       <PageHeader titulo="Base de Leads" />
 
       <main className="px-6 py-6">
-        <p className="mb-4 text-sm text-neutral-500">
-          {leads.length} lead{leads.length === 1 ? "" : "s"} na base — passaram por
-          tudo e não viraram nada, ou estouraram os 5 dias sem engatar.
-        </p>
-
         <KanbanBoard
           niveis={niveis}
           leadsPorNivel={leadsPorNivel}
