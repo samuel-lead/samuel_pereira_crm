@@ -239,3 +239,9 @@ Testado no navegador logado (usuário de teste, sem mexer na conta do Samuel): o
 O Samuel não gostou do clique no WhatsApp abrir outra aba do navegador — queria uma janela pop-up, mais leve, sem sair de vista do CRM. Troquei `target="_blank"` (aba) por `window.open(url, "whatsapp", "width=420,height=680,noopener,noreferrer")` — passar tamanho fixo pro `window.open` é o que faz o navegador abrir como janela pop-up (sem barra de endereço, sem abas) em vez de uma aba normal.
 
 Testado: confirmei que o clique chama `window.open` com a URL certa (`https://wa.me/<telefone>`) e os parâmetros de tamanho, e que a tela do Funil continua no lugar (não navega pro lead nem sai da página). Build de produção limpo.
+
+## 2026-08-17 — WhatsApp: ir direto pra conversa, sem tela de propaganda
+
+O `wa.me` mostra uma tela de "baixe o WhatsApp" antes de abrir a conversa — o Samuel queria abrir já dentro da conversa, pronto pra mandar a mensagem. Troquei o link de `https://wa.me/<telefone>` pra `https://web.whatsapp.com/send?phone=<telefone>`, que vai direto pro WhatsApp Web: se a pessoa já tem sessão logada no navegador, abre a conversa na hora; sem tela de propaganda no meio.
+
+Testado: confirmei que o link gerado agora é `https://web.whatsapp.com/send?phone=556283223116`. Build de produção limpo.
