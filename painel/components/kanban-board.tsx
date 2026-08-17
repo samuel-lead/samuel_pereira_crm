@@ -67,12 +67,6 @@ export function KanbanBoard({
 
   return (
     <div className="relative">
-      <p className="mb-3 flex items-center gap-1 text-sm text-neutral-500">
-        Os {niveis.length} níveis do funil — arraste os cartões ou use as
-        setas para ver todos
-        <span aria-hidden>→</span>
-      </p>
-
       <div className="relative">
         <button
           type="button"
