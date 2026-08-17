@@ -155,3 +155,11 @@ Três pedidos:
 3. **Vendas e Base também ganharam um "hero" colorido** no topo (verde-esmeralda pra Vendas, ardósia escura pra Base), mostrando o número principal (receita total / quantidade na base) em destaque, no mesmo estilo do dashboard — resolve o "não gostei daquilo lá" do Samuel sobre a tela de Vendas.
 
 Testado com o banco real: criei um usuário de teste (via Admin API, fora do painel) e confirmei direto no banco, simulando a sessão autenticada do Samuel, que `excluir_usuario` apaga o usuário de teste (some de `usuarios` e de `auth.users`) e bloqueia a autoexclusão do próprio Samuel — a chamada pelo navegador em si não deu pra testar de ponta a ponta porque o `confirm()` do navegador é bloqueado pela automação headless, mas a lógica no banco (que é onde a segurança realmente mora) está provada. Dashboard e Vendas conferidos visualmente. Build de produção limpo, 13 rotas.
+
+## 2026-08-17 — Nome do nível quebrando em duas linhas no Kanban + renomeia nível 5
+
+O Samuel reclamou que o nome de nível comprido ("Topou reunião, mas ainda não definiu o horário") estava quebrando em duas linhas dentro da coluna do Kanban, bagunçando o design. Corrigido de forma genérica (vale pra qualquer nível, não só esse): o título da coluna agora trunca com reticências numa linha só (`truncate`), com o nome completo aparecendo ao passar o mouse (`title`). Mais simples e durável do que tentar caçar o texto perfeito que cabe exatamente na largura da coluna.
+
+Também renomeou o nível "Fez a reunião, mas ainda não comprou" (ordem 6, "Nível 5" na tela) pra **"Oportunidades para o fim do mês"** — mais curto e resolve a quebra de linha por si só nesse caso.
+
+Testado no navegador: nível 3 agora corta com "..." numa linha só; nível 5 mostra o nome novo inteiro, cabendo bem. Build de produção limpo.

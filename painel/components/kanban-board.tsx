@@ -142,10 +142,11 @@ export function KanbanBoard({
                     </span>
                   </div>
                   <h2
+                    title={nivel.nome}
                     className={
                       destacado
-                        ? "text-base font-bold text-white"
-                        : "text-sm font-semibold text-neutral-800"
+                        ? "truncate text-base font-bold text-white"
+                        : "truncate text-sm font-semibold text-neutral-800"
                     }
                   >
                     {nivel.nome}
