@@ -71,20 +71,24 @@ export function KanbanBoard({
             return (
               <section
                 key={nivel.ordem}
-                className="flex w-72 shrink-0 flex-col rounded-lg bg-neutral-100"
+                className={`flex w-72 shrink-0 flex-col rounded-lg border ${cor.borda} bg-neutral-50`}
               >
-                <div className="rounded-t-lg border-b border-neutral-200 bg-white px-3 py-3">
-                  <div className={`mb-2 h-1 w-8 rounded-full ${cor.faixa}`} />
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-neutral-800">
-                      {nivel.ordem}. {nivel.nome}
-                    </h2>
+                <div className={`rounded-t-lg border-b-2 ${cor.borda} ${cor.header} px-3 py-3`}>
+                  <div className="mb-2 flex items-center justify-between">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${cor.badge}`}
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${cor.pilula}`}
+                    >
+                      Nível {nivel.ordem}
+                    </span>
+                    <span
+                      className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ${cor.badge}`}
                     >
                       {leadsDoNivel.length}
                     </span>
                   </div>
+                  <h2 className="text-sm font-semibold text-neutral-800">
+                    {nivel.nome}
+                  </h2>
                 </div>
 
                 <div className="flex flex-1 flex-col gap-2 p-3">

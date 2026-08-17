@@ -33,7 +33,7 @@ export default function NovoLeadPage() {
                 id="nome"
                 name="nome"
                 required
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
             </div>
 
@@ -48,7 +48,7 @@ export default function NovoLeadPage() {
                 id="telefone"
                 name="telefone"
                 placeholder="+55 62 99999-9999"
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
             </div>
 
@@ -63,7 +63,7 @@ export default function NovoLeadPage() {
                 id="origem"
                 name="origem"
                 placeholder="Ex.: campanha Instagram, indicação..."
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
             </div>
 
@@ -74,7 +74,7 @@ export default function NovoLeadPage() {
 
             <button
               type="submit"
-              className="w-full rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800"
+              className="w-full rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
             >
               Salvar lead
             </button>
