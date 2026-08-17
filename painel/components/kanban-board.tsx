@@ -89,7 +89,13 @@ export function KanbanBoard({
                     : `border ${cor.borda}`
                 }`}
               >
-                <div className={`rounded-t-lg border-b-2 ${cor.borda} ${cor.header} px-3 py-3`}>
+                <div
+                  className={
+                    destacado
+                      ? "rounded-t-lg bg-gradient-to-br from-emerald-500 to-emerald-600 px-3 py-3"
+                      : `rounded-t-lg border-b-2 ${cor.borda} ${cor.header} px-3 py-3`
+                  }
+                >
                   <div className="mb-2 flex items-center justify-between">
                     {numeroVisivel ? (
                       <span
@@ -98,14 +104,14 @@ export function KanbanBoard({
                         Nível {numeroVisivel}
                       </span>
                     ) : (
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${cor.pilula}`}
-                      >
-                        ★ destaque
-                      </span>
+                      <span />
                     )}
                     <span
-                      className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ${cor.badge}`}
+                      className={
+                        destacado
+                          ? "flex h-5 min-w-5 items-center justify-center rounded-full bg-white/25 px-1.5 text-xs font-bold text-white"
+                          : `flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ${cor.badge}`
+                      }
                     >
                       {leadsDoNivel.length}
                     </span>
@@ -113,7 +119,7 @@ export function KanbanBoard({
                   <h2
                     className={
                       destacado
-                        ? "text-base font-bold text-emerald-800"
+                        ? "text-base font-bold text-white"
                         : "text-sm font-semibold text-neutral-800"
                     }
                   >
