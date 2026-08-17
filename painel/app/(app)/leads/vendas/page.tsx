@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { LeadCard } from "@/components/lead-card";
@@ -35,14 +34,7 @@ export default async function VendasPage() {
 
   return (
     <>
-      <PageHeader
-        titulo="Vendas"
-        acao={
-          <Link href="/leads" className="text-sm text-neutral-500 hover:text-neutral-700">
-            ← Voltar pro funil
-          </Link>
-        }
-      />
+      <PageHeader titulo="Clientes" />
 
       <main className="px-6 py-6">
         <div className="mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-sky-500 p-6 text-white shadow-md">

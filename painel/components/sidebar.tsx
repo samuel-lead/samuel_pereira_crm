@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig } from "@/components/icons";
+import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda } from "@/components/icons";
 
 const ITENS = [
   { href: "/leads", label: "Funil", Icone: IconeFunil, pagina: "funil" },
   { href: "/leads/lista", label: "Lista de leads", Icone: IconeLista, pagina: "lista" },
+  { href: "/leads/base", label: "Base de Leads", Icone: IconeAlvo, pagina: "funil" },
+  { href: "/leads/vendas", label: "Clientes", Icone: IconeMoeda, pagina: "funil" },
   { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
   { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
   { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios, pagina: "admin" },

@@ -289,3 +289,14 @@ O Samuel excluiu um lead e tentou cadastrar outro com o mesmo telefone — o sis
 Troquei a constraint por um índice único parcial — `unique (usuario_id, telefone_e164) where arquivado_em is null` — que só enxerga leads ativos. Lead excluído libera o telefone pra reuso; telefone já em uso por um lead ativo continua bloqueado normalmente (a mensagem amigável "Já existe um lead com esse telefone" não muda, só o comportamento por trás).
 
 Testado direto no banco: criei um lead, arquivei ele, recriei outro com o mesmo telefone — funcionou. Tentei um terceiro com o mesmo telefone enquanto o segundo tava ativo — bloqueou, como esperado. Dados de teste removidos no final.
+
+## 2026-08-17 — Base de Leads e Clientes viram itens do menu lateral
+
+O Samuel queria tirar os links "Base →", "Vendas →" e "Ver em lista →" do topo do Funil (poluição visual) e colocar essas duas telas como itens de verdade no menu lateral: **"Base de Leads"** e **"Clientes"**.
+
+- Menu lateral ganhou os dois itens novos (entre "Lista de leads" e "Atividades"), usando as mesmas permissões da página Funil (quem tem acesso ao Funil também acessa essas duas).
+- Topo do Funil ficou só com a contagem de leads e o filtro por usuário + "Novo lead" — sem os links redundantes.
+- **Base de Leads** virou um Kanban de verdade (reaproveitei o mesmo componente do Funil), mostrando os leads que estão na Base como cards — mesmo visual, WhatsApp, tudo. Como é só um nível (Base), a coluna não numera ("Nível X" só faz sentido dentro da sequência completa do funil).
+- **Clientes** manteve a tela simples de lista (sem Kanban, como pedido) — só troquei o título de "Vendas" pra "Clientes". Por baixo continua a mesma lógica de "quem comprou" (`status = 'vendido'`), não mudei nenhum termo do negócio (venda, meta de venda, etc.) — só o nome dessa tela específica.
+
+Testado no navegador: menu lateral mostra os dois itens novos, Base de Leads renderiza o Kanban de coluna única sem numeração errada, Clientes mostra o título certo com a lista de quem comprou. Build de produção limpo, 15 rotas (mesmas de antes, só mudou o conteúdo).

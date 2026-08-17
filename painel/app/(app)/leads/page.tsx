@@ -79,30 +79,10 @@ export default async function LeadsPage({
       />
 
       <main className="px-6 py-6">
-        <div className="mb-4 flex items-baseline justify-between">
+        <div className="mb-4">
           <p className="text-sm text-neutral-500">
             {leads.length} lead{leads.length === 1 ? "" : "s"} sendo trabalhados
           </p>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/leads/base"
-              className="text-sm font-medium text-stone-600 hover:text-stone-700"
-            >
-              Base →
-            </Link>
-            <Link
-              href="/leads/vendas"
-              className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
-            >
-              Vendas →
-            </Link>
-            <Link
-              href="/leads/lista"
-              className="text-sm font-medium text-violet-600 hover:text-violet-700"
-            >
-              Ver em lista →
-            </Link>
-          </div>
         </div>
 
         <KanbanBoard
