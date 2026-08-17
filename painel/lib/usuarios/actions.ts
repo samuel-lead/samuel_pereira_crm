@@ -4,21 +4,28 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export type EstadoExclusao = { erro: string | null };
+export type EstadoExclusao = { erro: string | null; precisaTransferir?: boolean };
 export type EstadoFormulario = { erro: string | null };
 
 export async function excluirUsuario(
   usuarioId: string,
-  _estadoAnterior: EstadoExclusao
+  _estadoAnterior: EstadoExclusao,
+  formData: FormData
 ): Promise<EstadoExclusao> {
   const supabase = await createClient();
 
+  const transferirPara = String(formData.get("transferir_para") ?? "").trim() || null;
+
   const { error } = await supabase.rpc("excluir_usuario", {
     usuario_id_alvo: usuarioId,
+    transferir_para: transferirPara,
   });
 
   if (error) {
-    return { erro: error.message };
+    return {
+      erro: error.message,
+      precisaTransferir: error.message.includes("vinculadas"),
+    };
   }
 
   revalidatePath("/usuarios");

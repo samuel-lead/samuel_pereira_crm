@@ -251,3 +251,25 @@ Testado: confirmei que o link gerado agora é `https://web.whatsapp.com/send?pho
 O Samuel testou e a conversa dava erro ao tentar mandar mensagem. Causa: o telefone salvo tava sem o "9" na frente (formato antigo, ex.: `6283223116`, 10 dígitos) — o WhatsApp não reconhece assim, precisa de 11 (DDD + 9 + 8 dígitos). `linkWhatsApp()` agora detecta esse caso e completa o "9" automaticamente antes de montar o link, além de lidar direito com número que já vier com o 55 na frente (não duplica nem falta dígito).
 
 Testado com vários formatos de entrada possíveis (com/sem 55, com/sem 9, com máscara `(62) 98432-5678`) — todos batem no formato final correto de 13 dígitos. Conferido também com um lead real no navegador. Build de produção limpo.
+
+## 2026-08-17 — Lead sem responsável pode ser "pego" por qualquer usuário
+
+Pensando na futura integração com campanha de tráfego (o lead vai chegar sem responsável definido), o Samuel confirmou o comportamento: todo mundo com acesso ao Funil já enxergava um lead sem dono, mas só admin conseguia definir quem era o responsável — não dava pra um usuário comum "pegar" o lead pra si.
+
+Ajustei a política de RLS de `leads` pra liberar update quando `responsavel_id is null` também (antes só liberava se `responsavel_id = auth.uid()` ou admin), mas o `with check` continua travando: quem não é admin só consegue deixar o lead com `responsavel_id` = o próprio `auth.uid()` — não dá pra "roubar" lead de outra pessoa nem deixar sem dono de novo.
+
+Na tela, quando o lead não tem responsável, em vez do aviso genérico de "só visualização" aparece um aviso diferente com um botão **"Pegar esse lead pra mim"** — um clique, sem precisar preencher o formulário inteiro. Depois de pegar, o lead vira dele normalmente (formulário libera, pode editar/mover/anotar/excluir).
+
+Importante: isso só vale pra lead **sem ninguém**. Se já tem responsável, continua só admin reatribuindo — não mudou.
+
+Testado: criei um lead sem responsável, logado como um usuário membro de teste, cliquei em "Pegar esse lead pra mim" e confirmei no banco que o `responsavel_id` virou o dele; recarreguei a página e o formulário já apareceu liberado, com todos os botões de ação. Usuários e lead de teste removidos no final. Build de produção limpo.
+
+## 2026-08-17 — Excluir usuário com leads exige escolher pra quem transferir
+
+O Samuel perguntou o que acontece se excluir um usuário que tem "um monte de lead no Funil" — testei e descobri que **dava erro** (violação de chave estrangeira), porque `leads.usuario_id`, `interacoes.usuario_id`, `reunioes.usuario_id` e `comandos.usuario_id` apontam pro usuário e o banco não deixa apagar quem ainda tem essas referências.
+
+Reescrevi `excluir_usuario()`: antes de excluir, checa se a pessoa tem leads (como criadora ou responsável), interações, reuniões ou comandos vinculados. Se tiver, **exige** um segundo parâmetro (`transferir_para`, outro usuário da mesma org) — aí transfere tudo isso pro novo dono antes de seguir com a exclusão. Metas (`metas_config`/`metas_mensais`) não são transferidas — são pessoais (piso de leads do dia, meta do mês), não fazem sentido pra outra pessoa, então somem junto com o usuário.
+
+Na tela, o botão "Excluir acesso" tenta direto; se vier o erro específico de "tem vínculo", em vez de mostrar só a mensagem, abre um seletinho "Transferir leads e atividades de [nome] pra:" com os outros usuários da org, e o botão vira "Transferir e excluir". Segunda tentativa já manda o destino junto.
+
+Testado: criei dois usuários de teste, um lead vinculado a um deles, tentei excluir — apareceu certinho o aviso pedindo pra escolher destino; escolhi o segundo usuário, cliquei em "Transferir e excluir" e confirmei no banco que o lead passou pro segundo (usuario_id e responsavel_id) e o primeiro usuário sumiu de `usuarios` e `auth.users`, sem erro de chave estrangeira. Dados de teste removidos no final. Build de produção limpo, 15 rotas.

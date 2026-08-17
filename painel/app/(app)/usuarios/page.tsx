@@ -97,7 +97,13 @@ export default async function UsuariosPage() {
                   >
                     Permissões
                   </Link>
-                  <ExcluirUsuarioButton usuarioId={usuario.id} nome={usuario.nome} />
+                  <ExcluirUsuarioButton
+                    usuarioId={usuario.id}
+                    nome={usuario.nome}
+                    outrosUsuarios={usuarios
+                      .filter((u) => u.id !== usuario.id)
+                      .map((u) => ({ id: u.id, nome: u.nome }))}
+                  />
                 </div>
               )}
             </div>
