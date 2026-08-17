@@ -5,6 +5,7 @@ import { registrarNota } from "@/lib/leads/actions";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
+import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
 type Lead = {
@@ -197,6 +198,8 @@ export default async function EditarLeadPage({
               </ul>
             )}
           </div>
+
+          <ExcluirLeadButton leadId={leadTipado.id} nome={leadTipado.nome} />
         </div>
       </main>
     </>

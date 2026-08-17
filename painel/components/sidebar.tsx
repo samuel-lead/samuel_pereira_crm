@@ -7,7 +7,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig } from "@/components/icons";
 
 const ITENS = [
-  { href: "/leads", label: "Funil (Kanban)", Icone: IconeFunil },
+  { href: "/leads", label: "Funil", Icone: IconeFunil },
   { href: "/leads/lista", label: "Lista de leads", Icone: IconeLista },
   { href: "/atividades", label: "Atividades", Icone: IconeAtividade },
   { href: "/dashboard", label: "Métricas", Icone: IconeMetricas },

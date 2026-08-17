@@ -366,3 +366,22 @@ export async function registrarNota(leadId: string, formData: FormData) {
 
   revalidatePath(`/leads/${leadId}`);
 }
+
+export async function arquivarLead(leadId: string) {
+  const { supabase } = await contextoUsuario();
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ arquivado_em: new Date().toISOString() })
+    .eq("id", leadId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/leads/lista");
+  revalidatePath("/leads/base");
+  revalidatePath("/leads/vendas");
+  redirect("/leads");
+}

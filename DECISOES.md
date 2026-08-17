@@ -169,3 +169,13 @@ Testado no navegador: nível 3 agora corta com "..." numa linha só; nível 5 mo
 O Samuel não gostou de ver "..." no nível 3 — queria a frase inteira legível dentro do quadrado, não cortada. Encurtei o texto mantendo o sentido e a gramática: "Topou reunião, mas ainda não definiu o horário" → **"Topou reunião, horário a definir"** (33 → 33 caracteres nominalmente parecido, mas sem a parte "mas ainda não" que empurrava a frase pra fora da largura da coluna). Cabe inteiro numa linha, sem reticências. O `truncate` genérico do commit anterior continua no lugar como rede de segurança pra nomes futuros mais compridos.
 
 Testado no navegador: "Topou reunião, horário a definir" aparece completo, sem cortar. Build de produção limpo.
+
+## 2026-08-17 — Tira "(Kanban)" do menu + botão de excluir lead
+
+Dois pedidos pequenos e rápidos:
+
+1. **Menu lateral**: o item dizia "Funil (Kanban)". O Samuel só queria "Funil". Trocado no array `ITENS` do `components/sidebar.tsx`.
+
+2. **Excluir lead**: não existia jeito nenhum de remover um lead pelo painel. Adicionei o botão "Excluir lead" no fim da página de detalhe do lead. Segue a regra do `CLAUDE.md` de "nada é apagado automaticamente, nunca — use soft delete": o botão não apaga a linha do banco, só marca `arquivado_em = agora` (a mesma coluna que todas as listas já ignoram desde a Fase 1). Antes de gravar, aparece o alerta nativo do navegador (`confirm()`) perguntando "Tem certeza que quer excluir o lead '<nome>'? Ele vai sumir de todas as telas." — só segue adiante se a pessoa confirmar.
+
+Testado no navegador de ponta a ponta (com o `confirm()` forçado a "sim" via script, já que a automação headless normalmente bloqueia esse alerta nativo): o lead "teste" sumiu do Funil depois do clique, a contagem de leads caiu de 3 pra 2, e o cancelamento (clicando em "Cancelar" no alerta) mantém o lead intacto. Build de produção limpo, 13 rotas.
