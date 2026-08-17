@@ -1,18 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { atualizarLead } from "@/lib/leads/actions";
-import { TopBar } from "@/components/top-bar";
-
-type NivelResumo = {
-  ordem: number;
-  nome: string;
-  numerado: boolean;
-};
-
-function rotuloNivel(nivel: NivelResumo, numeroVisivel: number | undefined) {
-  return numeroVisivel ? `Nível ${numeroVisivel}. ${nivel.nome}` : nivel.nome;
-}
+import { atualizarLead, registrarNota } from "@/lib/leads/actions";
+import { PageHeader } from "@/components/page-header";
+import { numerarNiveis, rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
 type Lead = {
   id: string;
@@ -25,9 +16,34 @@ type Lead = {
   criterio_capacidade: string;
 };
 
+type Interacao = {
+  id: string;
+  tipo: string | null;
+  canal: string | null;
+  conteudo: string | null;
+  ocorreu_em: string;
+};
+
+type Reuniao = {
+  id: string;
+  agendada_para: string;
+  status: string;
+  resultado: string | null;
+};
+
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
 const labelClasse = "text-sm font-medium text-neutral-700";
+
+function formatarData(iso: string) {
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default async function EditarLeadPage({
   params,
@@ -37,16 +53,27 @@ export default async function EditarLeadPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: lead }, { data: niveisData }] = await Promise.all([
-    supabase
-      .from("leads")
-      .select(
-        "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade"
-      )
-      .eq("id", id)
-      .single(),
-    supabase.from("niveis").select("ordem, nome, numerado").order("ordem"),
-  ]);
+  const [{ data: lead }, { data: niveisData }, { data: interacoesData }, { data: reunioesData }] =
+    await Promise.all([
+      supabase
+        .from("leads")
+        .select(
+          "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade"
+        )
+        .eq("id", id)
+        .single(),
+      supabase.from("niveis").select("ordem, nome, numerado").order("ordem"),
+      supabase
+        .from("interacoes")
+        .select("id, tipo, canal, conteudo, ocorreu_em")
+        .eq("lead_id", id)
+        .order("ocorreu_em", { ascending: false }),
+      supabase
+        .from("reunioes")
+        .select("id, agendada_para, status, resultado")
+        .eq("lead_id", id)
+        .order("agendada_para", { ascending: false }),
+    ]);
 
   if (!lead) {
     notFound();
@@ -54,35 +81,28 @@ export default async function EditarLeadPage({
 
   const leadTipado = lead as Lead;
   const niveis = (niveisData ?? []) as NivelResumo[];
+  const interacoes = (interacoesData ?? []) as Interacao[];
+  const reunioes = (reunioesData ?? []) as Reuniao[];
   const atualizarComId = atualizarLead.bind(null, leadTipado.id);
-
-  let contador = 0;
-  const numerosVisiveis = new Map<number, number>();
-  for (const nivel of niveis) {
-    if (nivel.numerado) {
-      contador += 1;
-      numerosVisiveis.set(nivel.ordem, contador);
-    }
-  }
+  const registrarNotaComId = registrarNota.bind(null, leadTipado.id);
+  const numerosVisiveis = numerarNiveis(niveis);
 
   return (
-    <div className="min-h-screen bg-[#f4f5f7]">
-      <TopBar />
+    <>
+      <PageHeader
+        titulo={leadTipado.nome}
+        acao={
+          <Link
+            href="/leads"
+            className="text-sm text-neutral-500 hover:text-neutral-700"
+          >
+            Voltar
+          </Link>
+        }
+      />
 
-      <main className="mx-auto max-w-lg px-6 py-10">
+      <main className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-lg font-semibold text-neutral-900">
-              Editar lead
-            </h1>
-            <Link
-              href="/leads"
-              className="text-sm text-neutral-500 hover:text-neutral-700"
-            >
-              Voltar
-            </Link>
-          </div>
-
           <form action={atualizarComId} className="space-y-4">
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="nome">
@@ -200,7 +220,74 @@ export default async function EditarLeadPage({
             </button>
           </form>
         </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+            <h2 className="mb-3 text-sm font-semibold text-neutral-800">
+              Registrar nota
+            </h2>
+            <form action={registrarNotaComId} className="space-y-2">
+              <textarea
+                name="conteudo"
+                required
+                rows={3}
+                placeholder="Ex.: liguei, ficou de ver a agenda e responder amanhã..."
+                className={campoClasse}
+              />
+              <button
+                type="submit"
+                className="w-full rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100"
+              >
+                Adicionar à linha do tempo
+              </button>
+            </form>
+          </div>
+
+          <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+            <h2 className="mb-3 text-sm font-semibold text-neutral-800">
+              Linha do tempo
+            </h2>
+
+            {interacoes.length === 0 && reunioes.length === 0 ? (
+              <p className="rounded-md border border-dashed border-neutral-300 px-3 py-6 text-center text-xs text-neutral-400">
+                Nada registrado ainda
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {reunioes.map((reuniao) => (
+                  <li key={`reuniao-${reuniao.id}`} className="border-l-2 border-amber-300 pl-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+                      Reunião · {reuniao.status}
+                    </p>
+                    <p className="text-sm text-neutral-700">
+                      Agendada para {formatarData(reuniao.agendada_para)}
+                    </p>
+                    {reuniao.resultado && (
+                      <p className="text-xs text-neutral-500">
+                        Resultado: {reuniao.resultado}
+                      </p>
+                    )}
+                  </li>
+                ))}
+                {interacoes.map((interacao) => (
+                  <li key={interacao.id} className="border-l-2 border-neutral-200 pl-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                      {interacao.tipo ?? "interação"}
+                      {interacao.canal ? ` · ${interacao.canal}` : ""}
+                    </p>
+                    <p className="text-sm text-neutral-700">
+                      {interacao.conteudo}
+                    </p>
+                    <p className="text-xs text-neutral-400">
+                      {formatarData(interacao.ocorreu_em)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </main>
-    </div>
+    </>
   );
 }

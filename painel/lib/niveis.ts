@@ -70,3 +70,29 @@ export const CORES_NIVEL: Record<
 export function corDoNivel(ordem: number) {
   return CORES_NIVEL[ordem] ?? CORES_NIVEL[1];
 }
+
+export type NivelResumo = {
+  ordem: number;
+  nome: string;
+  numerado: boolean;
+};
+
+export function numerarNiveis(niveis: NivelResumo[]) {
+  const numeros = new Map<number, number>();
+  let contador = 0;
+  for (const nivel of niveis) {
+    if (nivel.numerado) {
+      contador += 1;
+      numeros.set(nivel.ordem, contador);
+    }
+  }
+  return numeros;
+}
+
+export function rotuloNivel(nivel: NivelResumo, numeroVisivel: number | undefined) {
+  return numeroVisivel ? `Nível ${numeroVisivel}. ${nivel.nome}` : nivel.nome;
+}
+
+export function rotuloNivelCurto(nivel: NivelResumo, numeroVisivel: number | undefined) {
+  return numeroVisivel ? `Nível ${numeroVisivel}` : nivel.nome;
+}

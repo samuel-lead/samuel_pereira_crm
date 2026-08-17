@@ -125,3 +125,30 @@ export async function atualizarLead(leadId: string, formData: FormData) {
   revalidatePath(`/leads/${leadId}`);
   redirect("/leads");
 }
+
+export async function registrarNota(leadId: string, formData: FormData) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const conteudo = String(formData.get("conteudo") ?? "").trim();
+
+  if (!conteudo) {
+    throw new Error("Escreva algo pra registrar");
+  }
+
+  const { error } = await supabase.from("interacoes").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    tipo: "nota",
+    canal: "manual",
+    conteudo,
+    ocorreu_em: new Date().toISOString(),
+    origem: "declarado",
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/leads/${leadId}`);
+}

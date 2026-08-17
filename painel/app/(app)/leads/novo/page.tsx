@@ -1,18 +1,15 @@
 import Link from "next/link";
 import { criarLead } from "@/lib/leads/actions";
-import { TopBar } from "@/components/top-bar";
+import { PageHeader } from "@/components/page-header";
 
 export default function NovoLeadPage() {
   return (
-    <div className="min-h-screen bg-[#f4f5f7]">
-      <TopBar />
+    <>
+      <PageHeader titulo="Novo lead" />
 
       <main className="mx-auto max-w-lg px-6 py-10">
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-lg font-semibold text-neutral-900">
-              Novo lead
-            </h1>
+          <div className="mb-6 flex items-center justify-end">
             <Link
               href="/leads"
               className="text-sm text-neutral-500 hover:text-neutral-700"
@@ -81,6 +78,6 @@ export default function NovoLeadPage() {
           </form>
         </div>
       </main>
-    </div>
+    </>
   );
 }

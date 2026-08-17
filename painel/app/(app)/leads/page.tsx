@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { TopBar } from "@/components/top-bar";
+import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
-
-type NivelResumo = {
-  ordem: number;
-  nome: string;
-  numerado: boolean;
-};
+import type { NivelResumo } from "@/lib/niveis";
 
 type LeadResumo = {
   id: string;
@@ -41,9 +36,10 @@ export default async function LeadsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f5f7]">
-      <TopBar
-        acaoPrincipal={
+    <>
+      <PageHeader
+        titulo="Funil de leads"
+        acao={
           <Link
             href="/leads/novo"
             className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
@@ -53,18 +49,21 @@ export default async function LeadsPage() {
         }
       />
 
-      <main className="mx-auto max-w-7xl px-6 py-6">
+      <main className="px-6 py-6">
         <div className="mb-4 flex items-baseline justify-between">
-          <h1 className="text-lg font-semibold text-neutral-900">
-            Funil de leads
-          </h1>
-          <span className="text-sm text-neutral-500">
+          <p className="text-sm text-neutral-500">
             {leads.length} lead{leads.length === 1 ? "" : "s"} no total
-          </span>
+          </p>
+          <Link
+            href="/leads/lista"
+            className="text-sm font-medium text-violet-600 hover:text-violet-700"
+          >
+            Ver em lista →
+          </Link>
         </div>
 
         <KanbanBoard niveis={niveis} leadsPorNivel={leadsPorNivel} />
       </main>
-    </div>
+    </>
   );
 }

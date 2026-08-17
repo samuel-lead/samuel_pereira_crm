@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useRef } from "react";
-import { corDoNivel } from "@/lib/niveis";
-
-type NivelResumo = {
-  ordem: number;
-  nome: string;
-  numerado: boolean;
-};
+import { corDoNivel, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
 type LeadResumo = {
   id: string;
@@ -33,15 +27,7 @@ export function KanbanBoard({
   leadsPorNivel: Record<number, LeadResumo[]>;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  let contador = 0;
-  const numerosVisiveis = new Map<number, number>();
-  for (const nivel of niveis) {
-    if (nivel.numerado) {
-      contador += 1;
-      numerosVisiveis.set(nivel.ordem, contador);
-    }
-  }
+  const numerosVisiveis = numerarNiveis(niveis);
 
   function rolar(direcao: "esquerda" | "direita") {
     const el = scrollRef.current;

@@ -61,3 +61,17 @@ O Samuel pediu pra separar "reunião marcada" (agendada, ainda vai acontecer) de
 Pra isso, adicionei uma coluna `numerado boolean` na tabela `niveis` (default `true`, `false` só na linha "Reunião marcada"). O "número visível" que aparece na tela (as pílulas "Nível 1"..."Nível 6") é calculado no painel contando só as linhas com `numerado = true`, na ordem — não é o mesmo valor da coluna `ordem` interna do banco (que segue 1 a 7 sequencial, sem pular nada, porque isso é o que mantém a posição de cada coluna e as referências de `leads.nivel_ordem`).
 
 Atualizei `CLAUDE.md` e `docs/PRD-meu-vendedor.md` pra registrar os 7 níveis (a numeração ali é a numeração interna/de banco, 1 a 7, não a "numeração visível" da tela).
+
+## 2026-08-17 — Estrutura inspirada no Pipedrive (sem Kanban novo, sem separar Pessoa/Negócio)
+
+O Samuel pediu pra trazer a estrutura do Pipedrive pro painel, mantendo o Kanban que já tínhamos e sem separar "lead" em Pessoa/Organização/Negócio (continua um cadastro só, como já estava no PRD). Ele confirmou querer as três coisas juntas:
+
+1. **Menu lateral fixo** — substitui o cabeçalho horizontal (`TopBar`, removido) por uma barra lateral com Funil, Lista de leads, Atividades e Configurações, mais o botão Sair. Criei `components/sidebar.tsx` e um `components/page-header.tsx` mais simples (só título + ação) pra cada página usar.
+2. **Página do lead mais completa** — além do formulário de editar, agora tem uma linha do tempo (interações + reuniões) e um campo pra registrar nota rápida sem precisar editar o lead inteiro. Nova ação `registrarNota` em `lib/leads/actions.ts`, gravando na tabela `interacoes` que já existia desde a Fase 1 mas não tinha nenhuma tela usando ela ainda.
+3. **Lista em tabela** — `/leads/lista`, alternativa ao Kanban pra quando uma planilha for melhor que cartões. Filtro por nível e busca por nome via querystring (sem JavaScript extra, só GET de formulário).
+
+Também criei `/atividades` (feed de todas as interações e reuniões, de todos os leads, mais recentes primeiro) e `/configuracoes` (editar nome da org e o vocabulário/critérios de qualificação — os campos que já existiam em `orgs` desde a Fase 1 pra dar suporte à migração pro V2, mas não tinham UI nenhuma). As metas/taxas do sistema aparecem em Configurações só pra leitura, com o texto explicando por que não são editáveis por ali — não construí edição pra não abrir brecha de mexer no piso ou nas taxas por acidente.
+
+Reorganizei as páginas de leads pra dentro de um grupo de rotas `(app)` do Next.js (não muda nenhuma URL) só pra poder ter um layout compartilhado com o menu lateral sem repetir código em cada página.
+
+Testei cada tela nova no navegador com o banco real (login, ver a lista, filtrar por nível, registrar uma nota e ver ela aparecer tanto no lead quanto nas Atividades, editar as configurações da org). Rodei também um build de produção (`npm run build`) pra garantir que nada quebrou. Apaguei os dados de teste depois.
