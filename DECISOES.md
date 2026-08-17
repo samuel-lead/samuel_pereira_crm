@@ -223,3 +223,13 @@ O Samuel perguntou como deveria funcionar o acesso: cada usuário só mexe no pr
 No Kanban, o card de um lead que não é seu não pode mais ser arrastado (fica com a "mãozinha" trocada por seta comum e um pouco apagado), mas continua clicável pra abrir e ver os detalhes.
 
 Testado criando um usuário "membro" de teste direto no banco (pra simular um SDR de verdade, sem mexer na conta do Samuel): logado como ele, o lead que criei foi automaticamente atribuído a ele e deu pra editar e salvar normalmente; abrindo um lead de outra pessoa, o formulário veio todo travado com o aviso, sem os botões de ação, e o card dele no Kanban não pôde ser arrastado. Testei também tentando burlar direto no banco (sem passar pela tela) — um membro tentando editar lead alheio foi bloqueado (0 linhas alteradas), e um admin editando lead de outra pessoa funcionou normal. Usuário e lead de teste removidos no final. Build de produção limpo, 15 rotas.
+
+## 2026-08-17 — Botão de WhatsApp no card do lead + WhatsApp comercial do usuário
+
+O Samuel quer clicar direto no card do lead (sem abrir ele) e já chamar o lead no WhatsApp, sem sair do CRM. Adicionei um selo verde do WhatsApp ao lado da origem, em cada card do Kanban — clicando, abre `https://wa.me/<telefone>` numa aba nova (usa o WhatsApp Web/app que já está logado no navegador da pessoa, com a conversa já endereçada pro lead). Só aparece se o lead tiver telefone cadastrado.
+
+Detalhe técnico: pra caber um link clicável dentro do card sem quebrar o HTML (não dá pra colocar um link dentro de outro link), troquei o card inteiro de `<Link>` por uma `<div>` que navega por clique — e o botão do WhatsApp cancela essa propagação (`stopPropagation`), senão clicar nele também abriria o lead por baixo.
+
+Aproveitei e liguei o campo `wpp_comercial_e164` que já existia no banco desde o início do projeto (mas nunca tinha uma tela pra preencher): agora o formulário de "Novo usuário" pede também o WhatsApp comercial da pessoa — o número que ela usa pra atender os leads. Ainda não é usado por nada além de ficar registrado (é a base pra quando o WhatsApp automático entrar em cena, mais pra frente).
+
+Testado no navegador logado (usuário de teste, sem mexer na conta do Samuel): o selo do WhatsApp aparece no card, o link gerado bate certinho com o telefone do lead (`https://wa.me/556283223116`), clicar nele não abre o lead por baixo, e clicar no resto do card continua abrindo o lead normalmente. Cadastrei um usuário de teste com WhatsApp comercial preenchido e confirmei que salvou certo no banco. Usuários de teste removidos no final. Build de produção limpo, 15 rotas.

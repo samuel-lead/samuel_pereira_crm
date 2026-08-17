@@ -34,6 +34,7 @@ export async function criarUsuario(
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
+  const wppComercial = String(formData.get("wpp_comercial") ?? "").trim() || null;
   const papel = String(formData.get("papel") ?? "membro");
   const paginasPermitidas = formData.getAll("paginas_permitidas").map(String);
 
@@ -42,7 +43,14 @@ export async function criarUsuario(
   }
 
   const { error } = await supabase.functions.invoke("criar-usuario", {
-    body: { nome, email, senha, papel, paginas_permitidas: paginasPermitidas },
+    body: {
+      nome,
+      email,
+      senha,
+      papel,
+      paginas_permitidas: paginasPermitidas,
+      wpp_comercial_e164: wppComercial,
+    },
   });
 
   if (error) {

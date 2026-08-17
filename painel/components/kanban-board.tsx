@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
+import { linkWhatsApp } from "@/lib/whatsapp";
+import { IconeWhatsapp } from "@/components/icons";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 
@@ -177,9 +178,14 @@ export function KanbanBoard({
                     leadsDoNivel.map((lead) => {
                       const arrastavel = podeArrastar(lead);
                       return (
-                      <Link
+                      <div
                         key={lead.id}
-                        href={`/leads/${lead.id}`}
+                        role="link"
+                        tabIndex={0}
+                        onClick={() => router.push(`/leads/${lead.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") router.push(`/leads/${lead.id}`);
+                        }}
                         draggable={arrastavel}
                         onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead.id)}
                         title={arrastavel ? undefined : "Você só visualiza — não é seu lead"}
@@ -202,14 +208,28 @@ export function KanbanBoard({
                                 {lead.telefone_e164}
                               </p>
                             )}
-                            {lead.origem && (
-                              <span className="mt-1 inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600">
-                                {lead.origem}
-                              </span>
-                            )}
+                            <div className="mt-1 flex items-center gap-1.5">
+                              {lead.origem && (
+                                <span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600">
+                                  {lead.origem}
+                                </span>
+                              )}
+                              {lead.telefone_e164 && (
+                                <a
+                                  href={linkWhatsApp(lead.telefone_e164)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  title="Chamar no WhatsApp"
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white transition hover:bg-emerald-600"
+                                >
+                                  <IconeWhatsapp className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </Link>
+                      </div>
                       );
                     })
                   )}

@@ -58,6 +58,7 @@ Deno.serve(async (req: Request) => {
   const nome = String(body.nome ?? "").trim();
   const email = String(body.email ?? "").trim().toLowerCase();
   const senha = String(body.senha ?? "");
+  const wppComercial = String(body.wpp_comercial_e164 ?? "").trim() || null;
   const papel = body.papel === "admin" ? "admin" : "membro";
   const paginasEnviadas = Array.isArray(body.paginas_permitidas)
     ? (body.paginas_permitidas as unknown[]).filter(
@@ -88,6 +89,7 @@ Deno.serve(async (req: Request) => {
     nome,
     papel,
     paginas_permitidas: paginasPermitidas,
+    wpp_comercial_e164: wppComercial,
   });
 
   if (erroInsert) {
