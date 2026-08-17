@@ -322,3 +322,17 @@ O Samuel quer que cada usuário possa colocar uma foto real no lugar da bolinha 
 **Onde aparece**: criei um componente `AvatarUsuario` que mostra a foto se tiver, senão cai pra inicial (mesmo visual de sempre) — usado na tela de Usuários (lista da equipe) e no menu lateral ("Meu perfil"). `listar_usuarios_da_org()` também passou a devolver `foto_url`.
 
 Testado direto via API (a automação de navegador não consegue simular escolher um arquivo num `<input type="file">` — é bloqueado pelo próprio navegador por segurança): logei como usuário de teste via API do Supabase, subi uma imagem de verdade pro bucket, confirmei que funcionou; testei que outro usuário **não** consegue subir arquivo no lugar de alguém (bloqueado, RLS funcionando); confirmei leitura pública sem autenticação; depois simulei a gravação do `foto_url` e vi a foto aparecer certinho na tela de perfil, no menu lateral e na lista de Usuários, substituindo a inicial. Removi o arquivo e o usuário de teste no final. Build de produção limpo, 16 rotas.
+
+## 2026-08-17 — Métricas: ticket médio, canal que mais vendeu, performance por SDR
+
+O Samuel pediu pra analisar de novo a planilha do Google Sheets e trazer o que tava faltando no Dashboard. Abri a planilha (aba "MAI", a mais recente) e achei três blocos que a tela de Métricas não tinha:
+
+1. **Ticket médio** (receita ÷ vendas) — na planilha aparece junto do faturamento da semana. Adicionei no `Metricas` (`lib/metricas.ts`) e mostrei junto do card de Receita ("X vendas · ticket médio R$Y").
+
+2. **"Resultado por canal de agendamento"** — a planilha mostra, por canal/origem do lead, quantas vendas e quanto faturou no mês, com gráfico de pizza. Criei `calcularVendasPorCanal()` (agrupa `leads.origem` das vendas do mês, org inteira — não é métrica pessoal, é visão de time) e um componente novo `VendasPorCanal` com barrinha de proporção por canal.
+
+3. **"Resultado individual de cada SDR na semana"** — a planilha compara side-by-side o desempenho de cada vendedor. Criei `calcularMetricasPorUsuario()`, que roda o mesmo cálculo de métricas (já existia, por usuário) pra cada usuário da org e devolve tudo junto. Componente novo `PerformanceSdr` mostra numa tabela: leads, marcadas, realizadas, no show, vendas, taxa de venda e receita, um por linha.
+
+**Decisão de visibilidade**: os itens 2 e 3 (canal e comparação entre SDRs) só aparecem pra **admin** — são dados de time/comparação entre pessoas, diferente do resto do Dashboard que já era só a métrica pessoal de quem tá logado. Um membro continua vendo só a própria semana/mês, como sempre foi.
+
+Testado com um usuário de teste admin + um lead vendido de verdade no banco: o canal apareceu certinho ("SS IG · 1 venda · R$3.000,00"), e a tabela de SDRs mostrou o usuário de teste (zerado) ao lado do Samuel (com a venda) — confirmando que a visão por usuário separa direitinho quem fez o quê. Dados de teste removidos no final. Build de produção limpo, 16 rotas.

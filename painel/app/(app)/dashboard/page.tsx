@@ -1,7 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
-import { calcularMetricas, inicioDaSemana, inicioDoMes } from "@/lib/metricas";
+import { VendasPorCanal } from "@/components/vendas-por-canal";
+import { PerformanceSdr } from "@/components/performance-sdr";
+import {
+  calcularMetricas,
+  calcularVendasPorCanal,
+  calcularMetricasPorUsuario,
+  inicioDaSemana,
+  inicioDoMes,
+} from "@/lib/metricas";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -11,7 +19,7 @@ export default async function DashboardPage() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("id, org_id")
+    .select("id, org_id, papel")
     .eq("id", user!.id)
     .single();
 
@@ -29,10 +37,21 @@ export default async function DashboardPage() {
   amanha.setDate(amanha.getDate() + 1);
   amanha.setHours(0, 0, 0, 0);
 
-  const [metricasSemana, metricasMes] = await Promise.all([
-    calcularMetricas(supabase, usuario!.id, inicioDaSemana(agora), amanha),
-    calcularMetricas(supabase, usuario!.id, inicioDoMes(agora), amanha),
-  ]);
+  const souAdmin = usuario!.papel === "admin";
+  const inicioSemana = inicioDaSemana(agora);
+  const inicioMes = inicioDoMes(agora);
+
+  const [metricasSemana, metricasMes, vendasPorCanal, performanceSemanaSdr] =
+    await Promise.all([
+      calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
+      calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
+      souAdmin
+        ? calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha)
+        : Promise.resolve([]),
+      souAdmin
+        ? calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha)
+        : Promise.resolve([]),
+    ]);
 
   return (
     <>
@@ -41,6 +60,16 @@ export default async function DashboardPage() {
       <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
         <SecaoPeriodo titulo="Esta semana" metricas={metricasSemana} metas={metas} />
         <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} />
+
+        {souAdmin && (
+          <section>
+            <h2 className="mb-3 text-lg font-bold text-neutral-900">Visão da equipe</h2>
+            <div className="space-y-4">
+              <VendasPorCanal dados={vendasPorCanal} />
+              <PerformanceSdr dados={performanceSemanaSdr} />
+            </div>
+          </section>
+        )}
 
         <p className="text-xs text-neutral-400">
           Taxas e piso são constantes do sistema — nunca baixam por

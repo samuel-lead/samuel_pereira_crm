@@ -151,6 +151,8 @@ export function SecaoPeriodo({
         <p className="mt-1 text-sm text-violet-100">
           {metricas.vendas} venda{metricas.vendas === 1 ? "" : "s"} fechada
           {metricas.vendas === 1 ? "" : "s"}
+          {metricas.ticketMedio !== null &&
+            ` · ticket médio ${formatarMoeda(metricas.ticketMedio)}`}
         </p>
       </div>
 

@@ -9,6 +9,7 @@ export type Metricas = {
   noShow: number;
   vendas: number;
   receita: number;
+  ticketMedio: number | null;
   taxaAgendamento: number | null;
   taxaComparecimento: number | null;
   taxaVenda: number | null;
@@ -109,9 +110,70 @@ export async function calcularMetricas(
     noShow: noShow ?? 0,
     vendas,
     receita,
+    ticketMedio: vendas > 0 ? receita / vendas : null,
     taxaAgendamento: leads > 0 ? marcadas / leads : null,
     taxaComparecimento: marcadas > 0 ? realizadas / marcadas : null,
     taxaVenda: realizadas > 0 ? vendas / realizadas : null,
     diasUteis: diasUteisEntre(inicio, fim < new Date() ? fim : new Date()),
   };
+}
+
+export type VendaPorCanal = {
+  canal: string;
+  quantidade: number;
+  faturamento: number;
+};
+
+// Quais canais de origem do lead trouxeram mais vendas — soma tudo da org,
+// não só do usuário logado (é uma visão de time, não pessoal).
+export async function calcularVendasPorCanal(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<VendaPorCanal[]> {
+  const { data } = await supabase
+    .from("leads")
+    .select("origem, valor_venda")
+    .eq("org_id", orgId)
+    .eq("status", "vendido")
+    .gte("vendido_em", inicio.toISOString())
+    .lt("vendido_em", fim.toISOString());
+
+  const porCanal = new Map<string, VendaPorCanal>();
+  for (const lead of data ?? []) {
+    const canal = lead.origem?.trim() || "Sem origem";
+    const atual = porCanal.get(canal) ?? { canal, quantidade: 0, faturamento: 0 };
+    atual.quantidade += 1;
+    atual.faturamento += Number(lead.valor_venda ?? 0);
+    porCanal.set(canal, atual);
+  }
+
+  return Array.from(porCanal.values()).sort((a, b) => b.faturamento - a.faturamento);
+}
+
+export type MetricasUsuario = Metricas & { usuarioId: string; nome: string };
+
+// Performance individual de cada usuário da org no período — pra comparar
+// SDRs lado a lado (só admin vê essa visão).
+export async function calcularMetricasPorUsuario(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<MetricasUsuario[]> {
+  const { data: usuarios } = await supabase
+    .from("usuarios")
+    .select("id, nome")
+    .eq("org_id", orgId)
+    .order("nome");
+
+  const lista = usuarios ?? [];
+
+  return Promise.all(
+    lista.map(async (usuario) => {
+      const metricas = await calcularMetricas(supabase, usuario.id, inicio, fim);
+      return { ...metricas, usuarioId: usuario.id, nome: usuario.nome };
+    })
+  );
 }
