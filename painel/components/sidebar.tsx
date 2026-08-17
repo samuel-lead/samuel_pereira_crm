@@ -9,11 +9,11 @@ import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, I
 
 const ITENS = [
   { href: "/leads", label: "Funil", Icone: IconeFunil, pagina: "funil" },
+  { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
   { href: "/leads/lista", label: "Lista de leads", Icone: IconeLista, pagina: "lista" },
+  { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
   { href: "/leads/base", label: "Base de Leads", Icone: IconeAlvo, pagina: "funil" },
   { href: "/leads/vendas", label: "Clientes", Icone: IconeMoeda, pagina: "funil" },
-  { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
-  { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
   { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios, pagina: "admin" },
   { href: "/configuracoes", label: "Configurações", Icone: IconeConfig, pagina: "admin" },
 ];
