@@ -245,3 +245,9 @@ Testado: confirmei que o clique chama `window.open` com a URL certa (`https://wa
 O `wa.me` mostra uma tela de "baixe o WhatsApp" antes de abrir a conversa — o Samuel queria abrir já dentro da conversa, pronto pra mandar a mensagem. Troquei o link de `https://wa.me/<telefone>` pra `https://web.whatsapp.com/send?phone=<telefone>`, que vai direto pro WhatsApp Web: se a pessoa já tem sessão logada no navegador, abre a conversa na hora; sem tela de propaganda no meio.
 
 Testado: confirmei que o link gerado agora é `https://web.whatsapp.com/send?phone=556283223116`. Build de produção limpo.
+
+## 2026-08-17 — WhatsApp: corrige número sem o "9" do celular
+
+O Samuel testou e a conversa dava erro ao tentar mandar mensagem. Causa: o telefone salvo tava sem o "9" na frente (formato antigo, ex.: `6283223116`, 10 dígitos) — o WhatsApp não reconhece assim, precisa de 11 (DDD + 9 + 8 dígitos). `linkWhatsApp()` agora detecta esse caso e completa o "9" automaticamente antes de montar o link, além de lidar direito com número que já vier com o 55 na frente (não duplica nem falta dígito).
+
+Testado com vários formatos de entrada possíveis (com/sem 55, com/sem 9, com máscara `(62) 98432-5678`) — todos batem no formato final correto de 13 dígitos. Conferido também com um lead real no navegador. Build de produção limpo.
