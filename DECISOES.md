@@ -281,3 +281,11 @@ Pedido simples: um dropdown "Filtrar por usuário" do lado do botão "+ Novo lea
 Disponível pra todo mundo com acesso ao Funil (não só admin) — visualizar já era liberado geral, isso é só um jeito de focar a visão, não muda quem pode editar o quê.
 
 Testado: com dois leads (um de cada dono), filtrando por um usuário sobrou só o lead dele; voltando pro "sem filtro" os dois reapareceram. Dados de teste removidos no final. Build de produção limpo.
+
+## 2026-08-17 — Telefone de lead excluído ficava "preso" pra sempre
+
+O Samuel excluiu um lead e tentou cadastrar outro com o mesmo telefone — o sistema recusou dizendo que já existia, mesmo o antigo estando excluído. Causa: exclusão de lead é soft delete (`arquivado_em`, por regra do projeto — nada é apagado de verdade), mas a trava de "telefone duplicado" (`unique (usuario_id, telefone_e164)`) não sabia disso e continuava contando o lead arquivado como ocupando aquele número.
+
+Troquei a constraint por um índice único parcial — `unique (usuario_id, telefone_e164) where arquivado_em is null` — que só enxerga leads ativos. Lead excluído libera o telefone pra reuso; telefone já em uso por um lead ativo continua bloqueado normalmente (a mensagem amigável "Já existe um lead com esse telefone" não muda, só o comportamento por trás).
+
+Testado direto no banco: criei um lead, arquivei ele, recriei outro com o mesmo telefone — funcionou. Tentei um terceiro com o mesmo telefone enquanto o segundo tava ativo — bloqueou, como esperado. Dados de teste removidos no final.
