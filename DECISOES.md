@@ -187,3 +187,19 @@ O Samuel quer atribuir um responsável a cada lead (pensando em cadastrar SDRs).
 Descobri no caminho que **ainda não existe nenhuma forma de criar um novo usuário pelo painel** — hoje só dá pra listar e excluir em `/usuarios`. Conferi direto no banco e só existe o próprio Samuel em `usuarios` e `auth.users`; o SDR que ele mencionou ter cadastrado não chegou a ser criado em lugar nenhum. Isso vai precisar de uma tela própria — combinei com ele de tratar como próxima etapa, junto com o pedido de permissões por usuário.
 
 Testado: criei um lead de teste com "Samuel Pereira" como responsável, confirmei no banco que `responsavel_id` gravou certo, reabri a página de edição e o dropdown já veio com "Samuel Pereira" pré-selecionado. Lead de teste removido depois. Build de produção limpo, 13 rotas.
+
+## 2026-08-17 — Cadastro de usuário com permissões por página
+
+Continuação direta do pedido anterior. Como não existia nenhuma forma de criar um usuário pelo painel, construí isso do zero, junto com o sistema de permissões que o Samuel pediu ("só acesso ao Funil", por exemplo).
+
+**Modelo escolhido (o mais simples que atende o pedido):**
+- `usuarios.papel`: `'admin'` ou `'membro'`. Admin sempre vê tudo, sem exceção — inclusive Usuários e Configurações, que **não são configuráveis** (só admin mexe nisso, por design, pra não ter buraco de segurança tipo um membro se autopromovendo).
+- `usuarios.paginas_permitidas`: lista de páginas que um "membro" pode ver, entre as 4 operacionais: Funil, Lista de leads, Atividades, Métricas. Admin escolhe quais marcar na hora de cadastrar (ou depois, editando).
+
+**Cadastro (`/usuarios/novo`)**: pede nome, e-mail, senha temporária, tipo de acesso e (se "Membro") quais páginas. Como criar um login novo exige a chave `service_role` — proibida no painel pela Constituição do projeto — isso roda numa Edge Function nova (`criar-usuario`), que confere que quem está chamando é admin da mesma org antes de criar. O painel nunca vê a chave `service_role`, só chama a função autenticado.
+
+**Editar permissões (`/usuarios/[id]/permissoes`)**: qualquer usuário existente (menos você mesmo) pode ter o papel e as páginas trocados depois, via uma função SQL `atualizar_permissoes_usuario` que também confere que quem chama é admin.
+
+**Aplicando de verdade**: o menu lateral já esconde os itens que a pessoa não pode ver. E se ela tentar entrar direto numa URL fora da lista dela (digitando o endereço, por exemplo), o `proxy.ts` (middleware, roda em toda navegação) barra e manda ela pra primeira página que ela pode ver — ou pra uma tela de "sem acesso" se por algum motivo ela não tiver nenhuma.
+
+Testado com o banco real: cadastrei um "SDR Teste" como membro com só Funil e Lista de leads marcados, confirmei no banco que gravou certo, fiz login como ele no navegador e vi o menu mostrando só essas duas opções. Tentei entrar direto em `/dashboard` (Métricas, não liberado) e em `/usuarios` (admin-only) — as duas vezes fui redirecionado de volta pro Funil na hora. Testei também a troca de permissões e a trava de segurança (um membro tentando mudar permissão de outro usuário é bloqueado pela função no banco) simulando as sessões autenticadas direto no banco. Usuário de teste removido no final. Build de produção limpo, 15 rotas.

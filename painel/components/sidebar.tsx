@@ -7,17 +7,26 @@ import { LogoutButton } from "@/components/logout-button";
 import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig } from "@/components/icons";
 
 const ITENS = [
-  { href: "/leads", label: "Funil", Icone: IconeFunil },
-  { href: "/leads/lista", label: "Lista de leads", Icone: IconeLista },
-  { href: "/atividades", label: "Atividades", Icone: IconeAtividade },
-  { href: "/dashboard", label: "Métricas", Icone: IconeMetricas },
-  { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios },
-  { href: "/configuracoes", label: "Configurações", Icone: IconeConfig },
+  { href: "/leads", label: "Funil", Icone: IconeFunil, pagina: "funil" },
+  { href: "/leads/lista", label: "Lista de leads", Icone: IconeLista, pagina: "lista" },
+  { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
+  { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
+  { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios, pagina: "admin" },
+  { href: "/configuracoes", label: "Configurações", Icone: IconeConfig, pagina: "admin" },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  isAdmin = true,
+  paginasPermitidas = [],
+}: {
+  isAdmin?: boolean;
+  paginasPermitidas?: string[];
+}) {
   const pathname = usePathname();
   const [colapsado, setColapsado] = useState(false);
+  const itensVisiveis = ITENS.filter((item) =>
+    isAdmin ? true : item.pagina !== "admin" && paginasPermitidas.includes(item.pagina)
+  );
 
   return (
     <aside
@@ -62,7 +71,7 @@ export function Sidebar() {
       )}
 
       <nav className="flex-1 space-y-1 px-3">
-        {ITENS.map(({ href, label, Icone }) => {
+        {itensVisiveis.map(({ href, label, Icone }) => {
           const ativo = pathname === href;
           return (
             <Link
