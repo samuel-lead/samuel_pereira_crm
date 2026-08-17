@@ -50,3 +50,14 @@ Construí só o suficiente do painel pra você cadastrar e editar leads na mão:
 3. **Ainda não apliquei o gate de qualificação (Fase 5)** no painel — hoje dá pra mudar o lead pro nível 4 (Reunião marcada) mesmo sem os 3 critérios preenchidos. Isso é intencional por enquanto: o gate ainda não foi construído em lugar nenhum do sistema (nem no agente). Quando chegar na Fase 5, a trava entra pros dois caminhos (painel e WhatsApp) ao mesmo tempo, já que os dois escrevem no mesmo banco.
 
 Testei tudo de ponta a ponta no navegador com o banco real: login, criar lead, editar (mudar nível + critérios), e confirmei que o `nivel_historico` gravou certo. Depois apaguei o lead de teste.
+
+## 2026-08-17 — Novo nível "No Show" + "Reunião marcada" vira coluna sem número
+
+O Samuel pediu pra separar "reunião marcada" (agendada, ainda vai acontecer) de "no show" (agendada, o lead não apareceu) — antes isso tudo ficava misturado no nível 4. Depois de um vai-e-volta bom pra entender o pedido certo, ficou definido:
+
+- 6 colunas numeradas normalmente: Sem conversa iniciada (1), Em qualificação (2), Topou reunião sem horário (3), No Show (4), Reunião feita sem fechar (5), Base (6)
+- 1 coluna especial **sem número**, chamada "Reunião marcada", que aparece entre a 3 e a 4, com destaque visual (verde, borda reforçada) mas sem pílula "Nível X"
+
+Pra isso, adicionei uma coluna `numerado boolean` na tabela `niveis` (default `true`, `false` só na linha "Reunião marcada"). O "número visível" que aparece na tela (as pílulas "Nível 1"..."Nível 6") é calculado no painel contando só as linhas com `numerado = true`, na ordem — não é o mesmo valor da coluna `ordem` interna do banco (que segue 1 a 7 sequencial, sem pular nada, porque isso é o que mantém a posição de cada coluna e as referências de `leads.nivel_ordem`).
+
+Atualizei `CLAUDE.md` e `docs/PRD-meu-vendedor.md` pra registrar os 7 níveis (a numeração ali é a numeração interna/de banco, 1 a 7, não a "numeração visível" da tela).

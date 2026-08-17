@@ -48,18 +48,19 @@ Na prática: a tabela `orgs` guarda o vocabulário e os rótulos dos 3 critério
 
 ---
 
-## 4. Os 6 níveis — espinha dorsal
+## 4. Os 7 níveis — espinha dorsal
 
 Todo lead vive em exatamente um nível.
 
 | Nível | Nome | Definição | Prazo |
 |---|---|---|---|
-| **1** | Sem conversa iniciada | Mandei mensagem; o lead só visualizou, não respondeu, ou respondeu só "boa tarde" sem engatar | **5 dias** → vai pro 6 |
+| **1** | Sem conversa iniciada | Mandei mensagem; o lead só visualizou, não respondeu, ou respondeu só "boa tarde" sem engatar | **5 dias** → vai pro 7 |
 | **2** | Em qualificação | Conversa engatou, atendimento rolando, levantando os 3 critérios | — |
 | **3** | Topou reunião, sem horário | Qualificado e aceitou reunir, mas dia e hora não definidos | — |
 | **4** | Reunião marcada | Dia e hora definidos | — |
-| **5** | Reunião feita, sem fechar | Reuniu, proposta na mesa, não comprou ainda | — |
-| **6** | **Base** | Passou por todo o processo e não virou nada. Também recebe os do nível 1 que estouraram os 5 dias | Reaquecimento |
+| **5** | No Show | A reunião estava marcada e o lead não compareceu | — |
+| **6** | Reunião feita, sem fechar | Reuniu, proposta na mesa, não comprou ainda | — |
+| **7** | **Base** | Passou por todo o processo e não virou nada. Também recebe os do nível 1 que estouraram os 5 dias | Reaquecimento |
 
 ### Movimentação automática
 
@@ -70,9 +71,10 @@ O Samuel **declara** o lead. Depois disso ele não move nada na mão — o siste
 | 1 → 2 | Conversa engatou de verdade | Move e **avisa** |
 | 2 → 3 | Qualificado e topou reunir, sem horário | Move e **avisa** |
 | 3 → 4 | Dia e hora definidos | **Confirma antes** (consequência de agenda) |
-| 4 → 5 | A reunião aconteceu | **Confirma antes** (afeta taxa de comparecimento) |
-| 5 → venda / 6 | Fechou ou não fechou | **Confirma antes** (afeta receita) |
-| 1 → 6 | 5 dias sem engatar | Move e **avisa** |
+| 4 → 5 | A reunião aconteceu e o lead não apareceu | **Confirma antes** (afeta taxa de comparecimento) |
+| 4 → 6 | A reunião aconteceu | **Confirma antes** (afeta taxa de comparecimento) |
+| 6 → venda / 7 | Fechou ou não fechou | **Confirma antes** (afeta receita) |
+| 1 → 7 | 5 dias sem engatar | Move e **avisa** |
 
 Movimento automático **avisa**, não pede permissão — senão vira o trabalho manual que o produto existe pra eliminar. Tudo reversível por voz: *"volta o Marcos pro 2"*.
 

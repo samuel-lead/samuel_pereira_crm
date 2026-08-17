@@ -7,6 +7,7 @@ import { corDoNivel } from "@/lib/niveis";
 type NivelResumo = {
   ordem: number;
   nome: string;
+  numerado: boolean;
 };
 
 type LeadResumo = {
@@ -32,6 +33,15 @@ export function KanbanBoard({
   leadsPorNivel: Record<number, LeadResumo[]>;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  let contador = 0;
+  const numerosVisiveis = new Map<number, number>();
+  for (const nivel of niveis) {
+    if (nivel.numerado) {
+      contador += 1;
+      numerosVisiveis.set(nivel.ordem, contador);
+    }
+  }
 
   function rolar(direcao: "esquerda" | "direita") {
     const el = scrollRef.current;
@@ -67,26 +77,46 @@ export function KanbanBoard({
           {niveis.map((nivel) => {
             const leadsDoNivel = leadsPorNivel[nivel.ordem] ?? [];
             const cor = corDoNivel(nivel.ordem);
+            const numeroVisivel = numerosVisiveis.get(nivel.ordem);
+            const destacado = !nivel.numerado;
 
             return (
               <section
                 key={nivel.ordem}
-                className={`flex w-72 shrink-0 flex-col rounded-lg border ${cor.borda} bg-neutral-50`}
+                className={`flex w-72 shrink-0 flex-col rounded-lg border bg-neutral-50 ${
+                  destacado
+                    ? `border-2 ${cor.borda} shadow-md ring-1 ring-emerald-200`
+                    : `border ${cor.borda}`
+                }`}
               >
                 <div className={`rounded-t-lg border-b-2 ${cor.borda} ${cor.header} px-3 py-3`}>
                   <div className="mb-2 flex items-center justify-between">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${cor.pilula}`}
-                    >
-                      Nível {nivel.ordem}
-                    </span>
+                    {numeroVisivel ? (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${cor.pilula}`}
+                      >
+                        Nível {numeroVisivel}
+                      </span>
+                    ) : (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${cor.pilula}`}
+                      >
+                        ★ destaque
+                      </span>
+                    )}
                     <span
                       className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ${cor.badge}`}
                     >
                       {leadsDoNivel.length}
                     </span>
                   </div>
-                  <h2 className="text-sm font-semibold text-neutral-800">
+                  <h2
+                    className={
+                      destacado
+                        ? "text-base font-bold text-emerald-800"
+                        : "text-sm font-semibold text-neutral-800"
+                    }
+                  >
                     {nivel.nome}
                   </h2>
                 </div>

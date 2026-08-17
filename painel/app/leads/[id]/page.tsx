@@ -7,7 +7,12 @@ import { TopBar } from "@/components/top-bar";
 type NivelResumo = {
   ordem: number;
   nome: string;
+  numerado: boolean;
 };
+
+function rotuloNivel(nivel: NivelResumo, numeroVisivel: number | undefined) {
+  return numeroVisivel ? `Nível ${numeroVisivel}. ${nivel.nome}` : nivel.nome;
+}
 
 type Lead = {
   id: string;
@@ -40,7 +45,7 @@ export default async function EditarLeadPage({
       )
       .eq("id", id)
       .single(),
-    supabase.from("niveis").select("ordem, nome").order("ordem"),
+    supabase.from("niveis").select("ordem, nome, numerado").order("ordem"),
   ]);
 
   if (!lead) {
@@ -50,6 +55,15 @@ export default async function EditarLeadPage({
   const leadTipado = lead as Lead;
   const niveis = (niveisData ?? []) as NivelResumo[];
   const atualizarComId = atualizarLead.bind(null, leadTipado.id);
+
+  let contador = 0;
+  const numerosVisiveis = new Map<number, number>();
+  for (const nivel of niveis) {
+    if (nivel.numerado) {
+      contador += 1;
+      numerosVisiveis.set(nivel.ordem, contador);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#f4f5f7]">
@@ -119,7 +133,7 @@ export default async function EditarLeadPage({
               >
                 {niveis.map((nivel) => (
                   <option key={nivel.ordem} value={nivel.ordem}>
-                    {nivel.ordem}. {nivel.nome}
+                    {rotuloNivel(nivel, numerosVisiveis.get(nivel.ordem))}
                   </option>
                 ))}
               </select>

@@ -34,6 +34,22 @@ export const CORES_NIVEL: Record<
     pilula: "bg-violet-600 text-white",
   },
   4: {
+    faixa: "bg-emerald-500",
+    texto: "text-emerald-700",
+    badge: "bg-emerald-200 text-emerald-700",
+    header: "bg-emerald-50",
+    borda: "border-emerald-200",
+    pilula: "bg-emerald-600 text-white",
+  },
+  5: {
+    faixa: "bg-red-500",
+    texto: "text-red-700",
+    badge: "bg-red-200 text-red-700",
+    header: "bg-red-50",
+    borda: "border-red-200",
+    pilula: "bg-red-600 text-white",
+  },
+  6: {
     faixa: "bg-amber-500",
     texto: "text-amber-700",
     badge: "bg-amber-200 text-amber-700",
@@ -41,21 +57,13 @@ export const CORES_NIVEL: Record<
     borda: "border-amber-200",
     pilula: "bg-amber-600 text-white",
   },
-  5: {
-    faixa: "bg-orange-500",
-    texto: "text-orange-700",
-    badge: "bg-orange-200 text-orange-700",
-    header: "bg-orange-50",
-    borda: "border-orange-200",
-    pilula: "bg-orange-600 text-white",
-  },
-  6: {
-    faixa: "bg-rose-500",
-    texto: "text-rose-700",
-    badge: "bg-rose-200 text-rose-700",
-    header: "bg-rose-50",
-    borda: "border-rose-200",
-    pilula: "bg-rose-600 text-white",
+  7: {
+    faixa: "bg-stone-500",
+    texto: "text-stone-700",
+    badge: "bg-stone-200 text-stone-700",
+    header: "bg-stone-50",
+    borda: "border-stone-200",
+    pilula: "bg-stone-600 text-white",
   },
 };
 

@@ -6,6 +6,7 @@ import { KanbanBoard } from "@/components/kanban-board";
 type NivelResumo = {
   ordem: number;
   nome: string;
+  numerado: boolean;
 };
 
 type LeadResumo = {
@@ -21,7 +22,7 @@ export default async function LeadsPage() {
   const supabase = await createClient();
 
   const [{ data: niveisData }, { data: leadsData }] = await Promise.all([
-    supabase.from("niveis").select("ordem, nome").order("ordem"),
+    supabase.from("niveis").select("ordem, nome, numerado").order("ordem"),
     supabase
       .from("leads")
       .select("id, nome, telefone_e164, origem, nivel_ordem, declarado_em")

@@ -34,19 +34,20 @@ nenhum do código, banco, interface ou mensagem.**
 - **Vercel** — painel Next.js (App Router, TypeScript)
 - **GitHub** — já conectado
 
-## Os 6 níveis de lead — espinha dorsal
+## Os 7 níveis de lead — espinha dorsal
 
-1. **Sem conversa iniciada** — mandei mensagem, não engatou. Prazo 5 dias → nível 6
+1. **Sem conversa iniciada** — mandei mensagem, não engatou. Prazo 5 dias → nível 7
 2. **Em qualificação** — conversa engatou, levantando os 3 critérios
 3. **Topou reunião, sem horário** definido
 4. **Reunião marcada** — dia e hora definidos
-5. **Reunião feita, sem fechar** — proposta na mesa
-6. **Base** — passou por tudo e não virou nada
+5. **No Show** — a reunião estava marcada e o lead não compareceu
+6. **Reunião feita, sem fechar** — proposta na mesa
+7. **Base** — passou por tudo e não virou nada
 
 ### Movimentação automática (lendo o Canal B)
 
-- `1→2`, `2→3`, `1→6`: move e **avisa**. Não pede permissão
-- `3→4`, `4→5`, `5→venda/6`: **pergunta antes**
+- `1→2`, `2→3`, `1→7`: move e **avisa**. Não pede permissão
+- `3→4`, `4→5`, `4→6`, `6→venda/7`: **pergunta antes**
 - Toda movimentação é reversível por voz e grava histórico
 
 ## Os 3 critérios de qualificação
