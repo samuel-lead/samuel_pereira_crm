@@ -127,3 +127,15 @@ Quatro mudanças, nessa ordem:
 Isso cobre boa parte da Fase 6 do BUILD.md (métricas em SQL, nunca estimadas) usando a estrutura que já existia desde a Fase 1 — só faltava a UI pra alimentar `reunioes` de verdade.
 
 Testado no navegador de ponta a ponta com o banco real: mudar nível pra reunião marcada pede a data e cria a reunião; mudar pra "reunião feita" marca a reunião como realizada sozinho; marcar como vendido grava tudo certo e some do funil filtrado; dashboard mostra os números batendo com o que foi criado. Desfiz as mudanças de teste no lead "teste" (que já existia, criado pelo próprio Samuel) pra não sujar as métricas reais dele. Build de produção limpo.
+
+## 2026-08-17 — Base e Vendas viram telas próprias; gramática; filtro por data
+
+Depois de ver o filtro "Mostrar Base e Vendas" funcionando, o Samuel decidiu que não gostou do resultado visual e pediu pra trocar por telas separadas (voltando à ideia original que ele tinha descartado). Também pediu dois ajustes de gramática e um filtro que faltava:
+
+1. **`/leads/base` e `/leads/vendas`** — duas telas novas, cada uma com os cartões de lead (componente novo `components/lead-card.tsx`, reaproveitado dos dois lugares) mostrando só quem está na Base ou só quem foi vendido. O Kanban principal (`/leads`) voltou a ser sempre filtrado (sem nível 7, sem `status = 'vendido'`), sem alternância — os links "Base →" e "Vendas →" substituem o link único de antes.
+
+2. **Gramática dos níveis**: "Topou reunião, sem horário" → "Topou reunião, mas ainda não definiu o horário"; "Reunião feita, sem fechar" → "Fez a reunião, mas ainda não comprou".
+
+3. **Filtro por período na Lista de leads** (`/leads/lista?de=...&ate=...`): dois campos de data ("Entrou de" / "até"), filtrando por `declarado_em`, junto dos filtros que já existiam (nome e nível).
+
+Testado no navegador: as duas telas novas abrem com estado vazio correto; a gramática nova aparece em todo canto que usa `rotuloNivel` (dropdown de editar, badge da lista); o filtro de data com um período de 2020 zera a lista (prova que filtra de verdade). Build de produção limpo, 12 rotas.

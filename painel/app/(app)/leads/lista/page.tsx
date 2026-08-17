@@ -21,9 +21,9 @@ function formatarData(iso: string | null) {
 export default async function ListaLeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ nivel?: string; busca?: string }>;
+  searchParams: Promise<{ nivel?: string; busca?: string; de?: string; ate?: string }>;
 }) {
-  const { nivel, busca } = await searchParams;
+  const { nivel, busca, de, ate } = await searchParams;
   const supabase = await createClient();
 
   const { data: niveisData } = await supabase
@@ -47,9 +47,19 @@ export default async function ListaLeadsPage({
   if (busca) {
     consulta = consulta.ilike("nome", `%${busca}%`);
   }
+  if (de) {
+    consulta = consulta.gte("declarado_em", `${de}T00:00:00`);
+  }
+  if (ate) {
+    const fim = new Date(`${ate}T00:00:00`);
+    fim.setDate(fim.getDate() + 1);
+    consulta = consulta.lt("declarado_em", fim.toISOString());
+  }
 
   const { data: leadsData } = await consulta;
   const leads = (leadsData ?? []) as LeadLinha[];
+
+  const filtroAtivo = Boolean(nivel || busca || de || ate);
 
   return (
     <>
@@ -76,7 +86,7 @@ export default async function ListaLeadsPage({
               name="busca"
               defaultValue={busca ?? ""}
               placeholder="Ex.: Marcos"
-              className="w-56 rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              className="w-48 rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
             />
           </div>
 
@@ -99,6 +109,32 @@ export default async function ListaLeadsPage({
             </select>
           </div>
 
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-500" htmlFor="de">
+              Entrou de
+            </label>
+            <input
+              id="de"
+              name="de"
+              type="date"
+              defaultValue={de ?? ""}
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-500" htmlFor="ate">
+              até
+            </label>
+            <input
+              id="ate"
+              name="ate"
+              type="date"
+              defaultValue={ate ?? ""}
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            />
+          </div>
+
           <button
             type="submit"
             className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
@@ -106,7 +142,7 @@ export default async function ListaLeadsPage({
             Filtrar
           </button>
 
-          {(nivel || busca) && (
+          {filtroAtivo && (
             <Link
               href="/leads/lista"
               className="text-sm text-neutral-500 hover:text-neutral-700"
