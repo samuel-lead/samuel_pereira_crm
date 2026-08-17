@@ -76,9 +76,9 @@ export default async function ListaLeadsPage({
       />
 
       <main className="px-6 py-6">
-        <form className="mb-4 flex flex-wrap items-end gap-6">
+        <form className="mb-4 flex flex-wrap items-end gap-3">
           <div className="space-y-1">
-            <label className="text-xs font-medium text-neutral-500" htmlFor="busca">
+            <label className="block text-xs font-medium text-neutral-500" htmlFor="busca">
               Buscar por nome
             </label>
             <input
@@ -91,7 +91,7 @@ export default async function ListaLeadsPage({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-neutral-500" htmlFor="nivel">
+            <label className="block text-xs font-medium text-neutral-500" htmlFor="nivel">
               Nível
             </label>
             <select
@@ -110,7 +110,7 @@ export default async function ListaLeadsPage({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-neutral-500" htmlFor="de">
+            <label className="block text-xs font-medium text-neutral-500" htmlFor="de">
               Entrou de
             </label>
             <input
@@ -123,7 +123,7 @@ export default async function ListaLeadsPage({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-neutral-500" htmlFor="ate">
+            <label className="block text-xs font-medium text-neutral-500" htmlFor="ate">
               até
             </label>
             <input
