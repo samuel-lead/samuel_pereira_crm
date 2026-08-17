@@ -75,3 +75,15 @@ Também criei `/atividades` (feed de todas as interações e reuniões, de todos
 Reorganizei as páginas de leads pra dentro de um grupo de rotas `(app)` do Next.js (não muda nenhuma URL) só pra poder ter um layout compartilhado com o menu lateral sem repetir código em cada página.
 
 Testei cada tela nova no navegador com o banco real (login, ver a lista, filtrar por nível, registrar uma nota e ver ela aparecer tanto no lead quanto nas Atividades, editar as configurações da org). Rodei também um build de produção (`npm run build`) pra garantir que nada quebrou. Apaguei os dados de teste depois.
+
+## 2026-08-17 — Estágio "Leads" (ordem 0) + arrastar-e-soltar no Kanban
+
+Depois de ver a estrutura do Pipedrive, o Samuel pediu três ajustes:
+
+1. **Título da página**: "Funil de leads" → só "Leads".
+2. **Novo estágio "Leads" (ordem 0), sem número, antes do Nível 1** — diferente do Nível 1 ("mandei mensagem, não engatou"), esse é "cadastrado, ainda não abordado" (nenhuma mensagem mandada). Todo lead novo agora nasce aqui (mudei o `default` da coluna `leads.nivel_ordem` de 1 pra 0), não mais direto no Nível 1. Precisou abrir o `check` de `niveis.ordem` pra aceitar 0.
+3. **Arrastar os cartões entre colunas** — antes só dava pra mudar o nível editando o lead. Adicionei uma ação `moverLeadNivel` e transformei os cartões do Kanban em arrastáveis (`draggable`, API nativa do HTML5 — sem biblioteca externa). Registra `nivel_historico` igual as outras formas de mudar nível, com motivo "Arrastado no Kanban".
+
+Um efeito colateral do item 2: agora **duas** colunas ficam sem a pílula "Nível X" (Leads e Reunião marcada), mas só "Reunião marcada" deve ficar com o destaque visual verde. Separei os dois conceitos que antes eram a mesma coisa: `niveis.numerado` (mostra "Nível X" ou não) e `niveis.destacado` (ganha o estilo verde reforçado ou não) — colunas novas.
+
+Testado no navegador: coluna "Leads" aparece cinza, sem número, primeira da fila; "Reunião marcada" continua verde destacada; arrastar um lead de uma coluna pra outra funcionou e gravou o histórico. Build de produção limpo.

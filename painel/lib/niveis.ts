@@ -9,6 +9,14 @@ export const CORES_NIVEL: Record<
     pilula: string;
   }
 > = {
+  0: {
+    faixa: "bg-neutral-400",
+    texto: "text-neutral-600",
+    badge: "bg-neutral-200 text-neutral-600",
+    header: "bg-neutral-100",
+    borda: "border-neutral-300",
+    pilula: "bg-neutral-500 text-white",
+  },
   1: {
     faixa: "bg-slate-500",
     texto: "text-slate-700",
@@ -75,6 +83,7 @@ export type NivelResumo = {
   ordem: number;
   nome: string;
   numerado: boolean;
+  destacado: boolean;
 };
 
 export function numerarNiveis(niveis: NivelResumo[]) {

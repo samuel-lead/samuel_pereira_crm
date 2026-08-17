@@ -62,7 +62,7 @@ export default async function EditarLeadPage({
         )
         .eq("id", id)
         .single(),
-      supabase.from("niveis").select("ordem, nome, numerado").order("ordem"),
+      supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
       supabase
         .from("interacoes")
         .select("id, tipo, canal, conteudo, ocorreu_em")

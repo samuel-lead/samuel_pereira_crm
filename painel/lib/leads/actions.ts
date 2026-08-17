@@ -126,6 +126,53 @@ export async function atualizarLead(leadId: string, formData: FormData) {
   redirect("/leads");
 }
 
+export async function moverLeadNivel(leadId: string, novoNivel: number) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const { data: leadAtual, error: erroAtual } = await supabase
+    .from("leads")
+    .select("nivel_ordem")
+    .eq("id", leadId)
+    .single();
+
+  if (erroAtual || !leadAtual) {
+    throw new Error("Lead não encontrado");
+  }
+
+  if (leadAtual.nivel_ordem === novoNivel) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      nivel_ordem: novoNivel,
+      entrou_nivel_em: new Date().toISOString(),
+    })
+    .eq("id", leadId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const { error: erroHistorico } = await supabase.from("nivel_historico").insert({
+    org_id: usuario.org_id,
+    lead_id: leadId,
+    de_ordem: leadAtual.nivel_ordem,
+    para_ordem: novoNivel,
+    motivo: "Arrastado no Kanban",
+    automatico: false,
+  });
+
+  if (erroHistorico) {
+    throw new Error(erroHistorico.message);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/leads/lista");
+  revalidatePath(`/leads/${leadId}`);
+}
+
 export async function registrarNota(leadId: string, formData: FormData) {
   const { supabase, usuario } = await contextoUsuario();
 

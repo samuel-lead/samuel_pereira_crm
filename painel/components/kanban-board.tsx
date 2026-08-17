@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { moverLeadNivel } from "@/lib/leads/actions";
 
 type LeadResumo = {
   id: string;
@@ -28,6 +29,8 @@ export function KanbanBoard({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const numerosVisiveis = numerarNiveis(niveis);
+  const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
+  const [, iniciarTransicao] = useTransition();
 
   function rolar(direcao: "esquerda" | "direita") {
     const el = scrollRef.current;
@@ -38,11 +41,35 @@ export function KanbanBoard({
     });
   }
 
+  function aoComecarArrastar(e: React.DragEvent, leadId: string) {
+    e.dataTransfer.setData("text/plain", leadId);
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function aoPassarSobreColuna(e: React.DragEvent, ordem: number) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (colunaAlvo !== ordem) setColunaAlvo(ordem);
+  }
+
+  function aoSoltarNaColuna(e: React.DragEvent, ordem: number) {
+    e.preventDefault();
+    const leadId = e.dataTransfer.getData("text/plain");
+    setColunaAlvo(null);
+    if (!leadId) return;
+    iniciarTransicao(() => {
+      moverLeadNivel(leadId, ordem).catch((erro: unknown) => {
+        const mensagem = erro instanceof Error ? erro.message : "Não deu pra mover o lead";
+        alert(mensagem);
+      });
+    });
+  }
+
   return (
     <div className="relative">
       <p className="mb-3 flex items-center gap-1 text-sm text-neutral-500">
-        Os {niveis.length} níveis do funil — arraste ou use as setas para ver
-        todos
+        Os {niveis.length} níveis do funil — arraste os cartões ou use as
+        setas para ver todos
         <span aria-hidden>→</span>
       </p>
 
@@ -64,15 +91,21 @@ export function KanbanBoard({
             const leadsDoNivel = leadsPorNivel[nivel.ordem] ?? [];
             const cor = corDoNivel(nivel.ordem);
             const numeroVisivel = numerosVisiveis.get(nivel.ordem);
-            const destacado = !nivel.numerado;
+            const destacado = nivel.destacado;
+            const recebendoArrasto = colunaAlvo === nivel.ordem;
 
             return (
               <section
                 key={nivel.ordem}
-                className={`flex w-72 shrink-0 flex-col rounded-lg border bg-neutral-50 ${
-                  destacado
-                    ? `border-2 ${cor.borda} shadow-md ring-1 ring-emerald-200`
-                    : `border ${cor.borda}`
+                onDragOver={(e) => aoPassarSobreColuna(e, nivel.ordem)}
+                onDragLeave={() => setColunaAlvo((atual) => (atual === nivel.ordem ? null : atual))}
+                onDrop={(e) => aoSoltarNaColuna(e, nivel.ordem)}
+                className={`flex w-72 shrink-0 flex-col rounded-lg border bg-neutral-50 transition ${
+                  recebendoArrasto
+                    ? "border-2 border-violet-400 ring-2 ring-violet-200"
+                    : destacado
+                      ? `border-2 ${cor.borda} shadow-md ring-1 ring-emerald-200`
+                      : `border ${cor.borda}`
                 }`}
               >
                 <div
@@ -115,15 +148,23 @@ export function KanbanBoard({
 
                 <div className="flex flex-1 flex-col gap-2 p-3">
                   {leadsDoNivel.length === 0 ? (
-                    <p className="rounded-md border border-dashed border-neutral-300 bg-white/50 px-3 py-6 text-center text-xs text-neutral-400">
-                      Nenhum lead aqui
+                    <p
+                      className={`rounded-md border border-dashed px-3 py-6 text-center text-xs ${
+                        recebendoArrasto
+                          ? "border-violet-300 bg-violet-50 text-violet-500"
+                          : "border-neutral-300 bg-white/50 text-neutral-400"
+                      }`}
+                    >
+                      {recebendoArrasto ? "Solta aqui" : "Nenhum lead aqui"}
                     </p>
                   ) : (
                     leadsDoNivel.map((lead) => (
                       <Link
                         key={lead.id}
                         href={`/leads/${lead.id}`}
-                        className="group rounded-md border border-neutral-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                        draggable
+                        onDragStart={(e) => aoComecarArrastar(e, lead.id)}
+                        className="group cursor-grab rounded-md border border-neutral-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing"
                       >
                         <div className="flex items-start gap-2">
                           <span

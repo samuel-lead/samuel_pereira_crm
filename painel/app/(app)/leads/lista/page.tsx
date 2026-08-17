@@ -28,7 +28,7 @@ export default async function ListaLeadsPage({
 
   const { data: niveisData } = await supabase
     .from("niveis")
-    .select("ordem, nome, numerado")
+    .select("ordem, nome, numerado, destacado")
     .order("ordem");
   const niveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(niveis);

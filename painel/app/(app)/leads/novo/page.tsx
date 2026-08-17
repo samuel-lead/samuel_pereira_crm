@@ -65,8 +65,10 @@ export default function NovoLeadPage() {
             </div>
 
             <p className="rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
-              O lead entra no nível 1 (Sem conversa iniciada). Os 3 critérios
-              de qualificação você preenche depois, editando o lead.
+              O lead entra em &quot;Leads&quot; (ainda não abordado). Assim que
+              mandar a primeira mensagem, mova ele pro Nível 1. Os 3
+              critérios de qualificação você preenche depois, editando o
+              lead.
             </p>
 
             <button
