@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { criarLead } from "@/lib/leads/actions";
 import { PageHeader } from "@/components/page-header";
+import { OrigemSelect } from "@/components/origem-select";
 
 export default function NovoLeadPage() {
   return (
@@ -50,18 +51,10 @@ export default function NovoLeadPage() {
             </div>
 
             <div className="space-y-1">
-              <label
-                className="text-sm font-medium text-neutral-700"
-                htmlFor="origem"
-              >
+              <label className="text-sm font-medium text-neutral-700">
                 Origem
               </label>
-              <input
-                id="origem"
-                name="origem"
-                placeholder="Ex.: campanha Instagram, indicação..."
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-              />
+              <OrigemSelect />
             </div>
 
             <p className="rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-500">

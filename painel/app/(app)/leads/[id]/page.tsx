@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { atualizarLead, registrarNota } from "@/lib/leads/actions";
 import { PageHeader } from "@/components/page-header";
+import { OrigemSelect } from "@/components/origem-select";
 import { numerarNiveis, rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
 type Lead = {
@@ -130,15 +131,8 @@ export default async function EditarLeadPage({
             </div>
 
             <div className="space-y-1">
-              <label className={labelClasse} htmlFor="origem">
-                Origem
-              </label>
-              <input
-                id="origem"
-                name="origem"
-                defaultValue={leadTipado.origem ?? ""}
-                className={campoClasse}
-              />
+              <label className={labelClasse}>Origem</label>
+              <OrigemSelect valorInicial={leadTipado.origem ?? ""} />
             </div>
 
             <div className="space-y-1">
