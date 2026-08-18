@@ -3,6 +3,7 @@ import {
   IconeCalendario,
   IconeCheck,
   IconeAlerta,
+  IconeMoeda,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
 
@@ -143,12 +144,18 @@ export function SecaoPeriodo({
     <section>
       <h2 className="mb-3 text-lg font-bold text-neutral-900">{titulo}</h2>
 
-      <div className="mb-4 overflow-hidden rounded-xl bg-gradient-to-br from-violet-600 via-violet-600 to-sky-500 p-6 text-white shadow-md">
-        <p className="text-xs font-semibold uppercase tracking-wide text-violet-100">
+      <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950 via-emerald-700 to-teal-500 p-7 text-white shadow-2xl shadow-emerald-950/50 ring-1 ring-white/10">
+        <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
+
+        <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-emerald-200">
+          <IconeMoeda className="h-3.5 w-3.5" />
           Receita
         </p>
-        <p className="mt-1 text-4xl font-extrabold">{formatarMoeda(metricas.receita)}</p>
-        <p className="mt-1 text-sm text-violet-100">
+        <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
+          {formatarMoeda(metricas.receita)}
+        </p>
+        <p className="relative mt-2 text-sm font-medium text-emerald-100">
           {metricas.vendas} venda{metricas.vendas === 1 ? "" : "s"} fechada
           {metricas.vendas === 1 ? "" : "s"}
           {metricas.ticketMedio !== null &&

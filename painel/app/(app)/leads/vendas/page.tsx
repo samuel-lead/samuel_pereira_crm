@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
+import { IconeMoeda } from "@/components/icons";
 
 type LeadVendido = {
   id: string;
@@ -73,12 +74,18 @@ export default async function VendasPage() {
       <PageHeader titulo="Clientes" />
 
       <main className="px-6 py-6">
-        <div className="mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-sky-500 p-6 text-white shadow-md">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100">
+        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950 via-emerald-700 to-teal-500 p-7 text-white shadow-2xl shadow-emerald-950/50 ring-1 ring-white/10">
+          <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
+
+          <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-emerald-200">
+            <IconeMoeda className="h-3.5 w-3.5" />
             Receita total em vendas
           </p>
-          <p className="mt-1 text-4xl font-extrabold">{formatarMoeda(totalReceita)}</p>
-          <p className="mt-1 text-sm text-emerald-100">
+          <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
+            {formatarMoeda(totalReceita)}
+          </p>
+          <p className="relative mt-2 text-sm font-medium text-emerald-100">
             {leads.length} venda{leads.length === 1 ? "" : "s"} fechada
             {leads.length === 1 ? "" : "s"}
           </p>

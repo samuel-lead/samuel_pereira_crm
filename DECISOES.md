@@ -336,3 +336,11 @@ O Samuel pediu pra analisar de novo a planilha do Google Sheets e trazer o que t
 **Decisão de visibilidade**: os itens 2 e 3 (canal e comparação entre SDRs) só aparecem pra **admin** — são dados de time/comparação entre pessoas, diferente do resto do Dashboard que já era só a métrica pessoal de quem tá logado. Um membro continua vendo só a própria semana/mês, como sempre foi.
 
 Testado com um usuário de teste admin + um lead vendido de verdade no banco: o canal apareceu certinho ("SS IG · 1 venda · R$3.000,00"), e a tabela de SDRs mostrou o usuário de teste (zerado) ao lado do Samuel (com a venda) — confirmando que a visão por usuário separa direitinho quem fez o quê. Dados de teste removidos no final. Build de produção limpo, 16 rotas.
+
+## 2026-08-17 — Correção: aba certa da planilha + card de Receita "chique"
+
+Duas coisas nessa:
+
+1. **Eu tinha olhado a aba errada da planilha** (MAI) — a aba viva, que o Samuel realmente usa, é a do mês atual (AGO). Reabri e conferi lá: a estrutura é a mesma que já implementei (leads, calls, vendas, faturamento, receita, ticket médio, canal), então nada mudou na parte de métricas — só uma coisa nova que reparei: a planilha tem "Negociações" e "Valor das negociações" (leads que já ganharam proposta mas ainda não fecharam), que a gente ainda não tem. Dá pra contar quantos leads estão no nível "Oportunidades para o fim do mês" sem mexer em nada — mas o "valor" da negociação exigiria um campo novo no lead (hoje só existe valor depois que vira venda). Não criei isso ainda, fica pra próxima se o Samuel quiser.
+
+2. **Visual do card de Receita**: era roxo, o Samuel queria verde-esmeralda "de luxo" pra combinar com dinheiro. Refiz o card (no Dashboard e também no de "Clientes", pra ficar consistente): gradiente escuro esmeralda→verde-azulado, ícone de cifrão gigante e translúcido de marca d'água no canto, sombra grande colorida, número em fonte bem grossa com leve sombra no texto, brilho sutil no topo. Testado em tela de desktop de verdade (o painel de automação é estreito e cortava o texto, mas isso não acontece numa tela normal).
