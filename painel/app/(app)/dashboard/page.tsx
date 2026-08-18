@@ -2,12 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
+import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import {
   calcularMetricas,
   calcularVendasPorCanal,
+  calcularVendasPorProduto,
   calcularMetricasPorUsuario,
   calcularLeadsPorOrigem,
   calcularReceitaOrg,
@@ -57,6 +59,7 @@ export default async function DashboardPage() {
     metricasSemana,
     metricasMes,
     vendasPorCanal,
+    vendasPorProduto,
     performanceSemanaSdr,
     leadsPorOrigemSemana,
     leadsPorOrigemMes,
@@ -67,6 +70,9 @@ export default async function DashboardPage() {
     calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
     souAdmin
       ? calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha)
+      : Promise.resolve([]),
+    souAdmin
+      ? calcularVendasPorProduto(supabase, usuario!.org_id, inicioMes, amanha)
       : Promise.resolve([]),
     souAdmin
       ? calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha)
@@ -110,6 +116,7 @@ export default async function DashboardPage() {
               />
               <LeadsPorOrigem titulo="Origem dos leads — mês" dados={leadsPorOrigemMes} />
               <VendasPorCanal dados={vendasPorCanal} />
+              <VendasPorProduto dados={vendasPorProduto} />
               <PerformanceSdr
                 dados={performanceSemanaSdr}
                 periodo={`${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`}

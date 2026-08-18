@@ -178,6 +178,41 @@ export async function calcularVendasPorCanal(
   return Array.from(porCanal.values()).sort((a, b) => b.faturamento - a.faturamento);
 }
 
+export type VendaPorProduto = {
+  produto: string;
+  quantidade: number;
+  faturamento: number;
+};
+
+// Quais produtos mais venderam no período — soma tudo da org, não só do
+// usuário logado (é uma visão de time, não pessoal).
+export async function calcularVendasPorProduto(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<VendaPorProduto[]> {
+  const { data } = await supabase
+    .from("leads")
+    .select("produto, valor_venda")
+    .eq("org_id", orgId)
+    .eq("status", "vendido")
+    .is("arquivado_em", null)
+    .gte("vendido_em", inicio.toISOString())
+    .lt("vendido_em", fim.toISOString());
+
+  const porProduto = new Map<string, VendaPorProduto>();
+  for (const lead of data ?? []) {
+    const produto = lead.produto?.trim() || "Sem produto";
+    const atual = porProduto.get(produto) ?? { produto, quantidade: 0, faturamento: 0 };
+    atual.quantidade += 1;
+    atual.faturamento += Number(lead.valor_venda ?? 0);
+    porProduto.set(produto, atual);
+  }
+
+  return Array.from(porProduto.values()).sort((a, b) => b.faturamento - a.faturamento);
+}
+
 export type LeadPorOrigem = {
   origem: string;
   quantidade: number;

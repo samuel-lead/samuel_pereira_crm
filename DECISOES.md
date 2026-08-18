@@ -566,3 +566,13 @@ Causa: **"Marcadas" contava pela data em que a reunião foi agendada** (`marcada
 Apliquei o mesmo princípio: uma reunião conta como "marcada" no período se ela foi **marcada** dentro dele **ou** se a **call em si aconteceu** dentro dele — a mesma consulta que já usava esse "ou" pra "lead trabalhado" (reaproveitei, sem duplicar a busca no banco: uma query só serve pras duas contas agora). Isso garante que toda reunião que virou "realizada" ou "no show" no período sempre está contada também em "marcadas" daquele período — o funil nunca mais "estoura" de novo.
 
 Testado: reproduzi a conta em SQL (marcada dentro do mês OU call dentro do mês) — deu 6, batendo exatamente com 3 realizadas + 3 no show. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Métricas: "Produtos mais vendidos no mês"
+
+Pedido simples: uma categoria em Métricas mostrando quais produtos mais venderam. Segui exatamente o mesmo padrão de "Canais que venderam no mês" (mesma lógica, só trocando `origem` por `produto`):
+
+- `calcularVendasPorProduto()` em `lib/metricas.ts` — agrupa leads vendidos do mês por `produto`, soma faturamento e conta vendas. Lead vendido sem produto preenchido cai em "Sem produto" (mesmo padrão do "Sem origem" que já existia).
+- Componente novo `components/vendas-por-produto.tsx`, cópia do `VendasPorCanal` com barrinha azul-céu em vez de violeta (só pra diferenciar visualmente as duas seções).
+- Aparece em "Visão da equipe" (admin-only, visão de time), logo depois de "Canais que venderam".
+
+Testado: com uma conta de teste, conferi que a seção mostrou "Treinamento comercial · 1 venda · R$10.000,00" (Thiago Souza) e "Sem produto · 1 venda · R$5.000,00" (Claudilaine, que não tinha produto registrado na importação da planilha) — batendo com os dados reais. Conta de verificação removida no final. `tsc --noEmit` e `npm run build` limpos.
