@@ -827,3 +827,15 @@ Testado: com conta de teste, marquei o checkbox num lead que já estava em Oport
 ## 2026-08-18 — Menu volta a chamar "Pré-vendas" (título da página continua "Leads")
 
 Ajuste de nome, de novo: o Samuel definiu que o menu lateral mostra "Pré-vendas", mas o título dentro da própria tela continua "Leads" — é a mesma distinção que já existia desde antes de eu tocar nisso (o menu tinha um nome, o título de cima tinha outro). Mudei só o rótulo do menu lateral e do checkbox de permissões; o `<PageHeader titulo="Leads">` já estava certo, não precisou tocar.
+
+## 2026-08-18 — Nova página "Integrações" no menu lateral
+
+O Samuel pediu pra seguir o mesmo padrão do C2S (CRM imobiliário conhecido): um item "Integrações" no menu que abre uma tela com todas as integrações possíveis, cada uma com nome, descrição e status. Pesquisei a estrutura pública do C2S (não consegui abrir o site direto no navegador, mas achei o suficiente pela busca) — o padrão é comum: lista de cards, cada um mostrando o status da conexão.
+
+- **Tela nova** (`/integracoes`, admin-only, mesma régua de Usuários/Configurações): lista de cards com ícone colorido, nome, badge de status (Conectado/Não conectado/Em breve) e descrição curta.
+- Por enquanto é uma lista fixa no código (não tem tabela no banco ainda, não tem estado real de "conectar/desconectar") — só 2 itens: **WhatsApp (Z-API)**, já marcado como Conectado (é o canal que já existe), e **Facebook/Instagram Lead Ads**, marcado como Não conectado (é a integração que a gente já planejou, ainda não construída).
+- Ícone novo no menu (`IconeIntegracao`, um quadrado com "conectores" nas bordas, estilo tomada/plugue) — usei letras coloridas ("W", "F") em vez de logo de verdade das marcas, pra não usar marca registrada de terceiros sem necessidade.
+
+Quando a integração do Facebook for construída de verdade, esse card é o lugar natural pra virar interativo (botão de conectar, status dinâmico vindo do banco).
+
+Testado: com conta de teste admin, a tela mostrou os dois cards certos, com o WhatsApp em verde "Conectado" e o Facebook em cinza "Não conectado". Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 20 rotas.

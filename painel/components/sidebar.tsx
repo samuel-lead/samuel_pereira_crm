@@ -5,7 +5,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeCalendario } from "@/components/icons";
+import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeCalendario, IconeIntegracao } from "@/components/icons";
 
 const ITENS = [
   { href: "/leads", label: "Pré-vendas", Icone: IconeFunil, pagina: "funil" },
@@ -17,6 +17,7 @@ const ITENS = [
   { href: "/leads/base", label: "Base de Leads", Icone: IconeAlvo, pagina: "funil" },
   { href: "/leads/vendas", label: "Clientes", Icone: IconeMoeda, pagina: "funil" },
   { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios, pagina: "admin" },
+  { href: "/integracoes", label: "Integrações", Icone: IconeIntegracao, pagina: "admin" },
   { href: "/configuracoes", label: "Configurações", Icone: IconeConfig, pagina: "admin" },
 ];
 
