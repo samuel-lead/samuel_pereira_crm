@@ -689,3 +689,12 @@ A tela "Meu perfil" só tinha a foto — não dava nem pra conferir o próprio n
 Adicionei um card "Meus dados" no topo da tela, com nome e e-mail **só leitura** por enquanto — editar de verdade (principalmente o e-mail) exigiria um fluxo de confirmação que ainda não existe, fica pra outro passo se o Samuel quiser depois.
 
 Testado: com conta de teste, o card mostrou nome e e-mail certos, batendo com o que tava cadastrado. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 18 rotas.
+
+## 2026-08-18 — Critério 1 vira "perfil do lead" mais narrativo
+
+O Samuel queria testar juntar os 3 critérios de qualificação (problema, urgência, capacidade) num campo aberto só, pro SDR escrever livre em vez de preencher caixas separadas. Dei minha opinião antes de mexer (ele pediu sugestão, não implementação): concordo em deixar o campo do "problema" mais rico e narrativo, mas urgência e "consegue pagar" precisam continuar como campo fechado (seleção), porque o sistema depende de checar isso automaticamente no banco antes de deixar marcar reunião — com texto livre não dá pra saber com certeza se a urgência foi mencionada, e o projeto proíbe usar IA pra "adivinhar" isso (métrica sempre calculada direto no banco). Ele topou esse meio-termo.
+
+- **Campo "Qual é o problema dele"** virou **"Me conte sobre o lead — qual é o perfil dele?"**, com 4 linhas (era 2) e um placeholder de exemplo: "qual a situação dele hoje, o que já tentou fazer pra resolver, onde quer chegar...". Continua sendo o mesmo campo de texto livre de sempre — só o convite pra escrever ficou mais completo.
+- **Urgência e capacidade de pagar** continuam exatamente como estavam (seleção fechada) — não mudou nada estrutural aqui, e os 3 critérios do CLAUDE.md continuam os mesmos 3, só a forma de perguntar o primeiro ficou melhor.
+
+Testado: com conta de teste, abri um lead existente e conferi que o novo texto do campo aparece certo, e os dois seletores de urgência/capacidade continuam do jeito de sempre. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.

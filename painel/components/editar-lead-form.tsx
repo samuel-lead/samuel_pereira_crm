@@ -195,12 +195,13 @@ export function EditarLeadForm({
 
           <div className="space-y-1">
             <label className={labelClasse} htmlFor="criterio_problema">
-              Qual é o problema dele
+              Me conte sobre o lead — qual é o perfil dele?
             </label>
             <textarea
               id="criterio_problema"
               name="criterio_problema"
-              rows={2}
+              rows={4}
+              placeholder="Ex.: qual a situação dele hoje, o que já tentou fazer pra resolver, onde quer chegar..."
               defaultValue={lead.criterio_problema ?? ""}
               className={`${campoClasse} bg-white`}
             />
