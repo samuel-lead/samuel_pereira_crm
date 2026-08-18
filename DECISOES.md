@@ -681,3 +681,11 @@ Em Configurações, o card "Metas e taxas do sistema" (piso de leads/dia, piso d
 - **Formulário**: os 5 campos (antes só texto) viraram inputs numéricos editáveis; taxas mostradas/editadas em % (0-100) na tela, convertidas pra fração (0-1) na gravação. Validação no server action: piso > 0, taxas entre 1% e 100%, e um segundo cheque de papel (`papel !== "admin"` barra a escrita mesmo se alguém chamar a action direto).
 
 Testado: com conta de teste admin, mudei o piso de leads/dia de 30 pra 35 e conferi direto no banco que só esse campo mudou (os outros 4 ficaram intactos) — refeito com cuidado depois de notar, pelos logs do servidor, que o Samuel já tinha testado a mesma tela ao vivo no navegador dele antes de eu terminar de verificar, o que gerou algumas gravações extras (nada de errado, só concorrência de dois usuários mexendo ao mesmo tempo). Valores resetados pro padrão (30/3/10%/80%/40%) no final, conta de teste removida. `tsc --noEmit` e `npm run build` limpos, 18 rotas.
+
+## 2026-08-18 — Meu perfil: mostra nome e e-mail
+
+A tela "Meu perfil" só tinha a foto — não dava nem pra conferir o próprio nome ou e-mail cadastrado. Comparando com a documentação pública do HubSpot e do Pipedrive (só consulta, sem cadastrar nada), os dois mostram foto + nome + e-mail juntos numa área de "minha conta", com uma particularidade: e-mail de login em geral tem um cuidado a mais (muda numa tela separada ou com confirmação por trás), porque é ele que garante o acesso.
+
+Adicionei um card "Meus dados" no topo da tela, com nome e e-mail **só leitura** por enquanto — editar de verdade (principalmente o e-mail) exigiria um fluxo de confirmação que ainda não existe, fica pra outro passo se o Samuel quiser depois.
+
+Testado: com conta de teste, o card mostrou nome e e-mail certos, batendo com o que tava cadastrado. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 18 rotas.
