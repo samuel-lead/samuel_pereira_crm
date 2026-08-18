@@ -531,3 +531,16 @@ O Samuel pediu pra subir os leads da planilha (aba AGO) pro CRM, mantendo vendas
 **Também reparei:** já existia um lead de teste seu chamado "Samuel Pereira da Silva" com o mesmo telefone do Thiago Souza (11 99896-4964) — parece ter sido um teste seu enquanto mexia no sistema. Não toquei nele (pode ser coisa sua mesmo), só fica o aviso caso vire um lead duplicado — se for, é só excluir esse de teste.
 
 Testado: conferi cada um dos 11 leads na Lista de leads (nível batendo certinho com a planilha), a tela Clientes mostrando as 2 vendas com o total certo (R$5.000 de receita), e o Dashboard/Métricas com "Origem dos leads — mês: 10" (o Paulo Ribeiro fica de fora por ter entrado em julho, corretamente) e "Canais que venderam" mostrando Networking R$10.000 e SS IG R$5.000 — tudo batendo com os números que a própria planilha mostra. Conta de verificação removida no final (os 11 leads ficam, são dados reais).
+
+## 2026-08-18 — Bug: lead excluído continuava contando em "Leads trabalhados" e Reuniões
+
+O Samuel perguntou por que "Performance da semana" mostrava dado sendo que ele não tinha adicionado nada novo. Investigando, achei a causa: ele tinha criado alguns leads de teste essa semana (nomes "teste", "Samuel", "Samuel Pereira da Silva", enquanto testava as telas comigo) e já tinha excluído todos — mas "Leads trabalhados", "Reuniões marcadas", "Reuniões realizadas" e "No Show" continuavam contando eles mesmo assim.
+
+Essa é a mesma falha que corrigi ontem pra Receita/Canais/Meta (`calcularReceitaOrg`, `calcularVendasPorCanal`), só que eu tinha deixado essas quatro de fora de propósito, avisando que era decisão separada — hoje ficou claro que ele quer isso corrigido também, então apliquei o mesmo princípio.
+
+- `leadsTrabalhados`: adicionei `.is("arquivado_em", null)` direto (a consulta já é na tabela `leads`).
+- `reunioesMarcadas`, `reunioesRealizadas`, `noShow`: essas consultas são na tabela `reunioes`, que não tem coluna `arquivado_em` própria — tive que fazer um `join` com `leads` (`leads!inner(arquivado_em)`) e filtrar por `leads.arquivado_em is null`, já que o que importa é se o *lead* da reunião foi excluído, não a reunião em si.
+
+Agora excluir um lead tira ele de toda métrica, sem exceção — Receita, Canais, Meta, Leads trabalhados e Reuniões, todos.
+
+Testado: com uma conta de verificação, conferi que "Performance da semana por SDR" mostrava "Samuel Pereira: 7 leads, 2 calls marcadas, 0 realizadas, 1 no show" (sobra dos testes dele, todos já excluídos) antes da correção; depois de aplicar o filtro e reiniciar o servidor, os mesmos números foram todos pra 0 — batendo com o fato de ele não ter nenhum lead ativo (não-arquivado) nessa semana. `tsc --noEmit` e `npm run build` limpos.

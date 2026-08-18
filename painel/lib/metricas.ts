@@ -70,26 +70,30 @@ export async function calcularMetricas(
       .from("leads")
       .select("id", { count: "exact", head: true })
       .eq("usuario_id", usuarioId)
+      .is("arquivado_em", null)
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
     supabase
       .from("reunioes")
-      .select("id", { count: "exact", head: true })
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
       .eq("usuario_id", usuarioId)
+      .is("leads.arquivado_em", null)
       .gte("marcada_em", inicioISO)
       .lt("marcada_em", fimISO),
     supabase
       .from("reunioes")
-      .select("id", { count: "exact", head: true })
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
       .eq("usuario_id", usuarioId)
       .eq("status", "realizada")
+      .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
     supabase
       .from("reunioes")
-      .select("id", { count: "exact", head: true })
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
       .eq("usuario_id", usuarioId)
       .eq("status", "nao_compareceu")
+      .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
     supabase
