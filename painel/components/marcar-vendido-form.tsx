@@ -2,6 +2,7 @@
 
 import { useActionState, useState, type ChangeEvent } from "react";
 import { marcarVendido, type EstadoFormulario } from "@/lib/leads/actions";
+import { ProdutoSelect } from "@/components/produto-select";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -78,6 +79,13 @@ export function MarcarVendidoForm({ leadId }: { leadId: string }) {
         >
           Marcar como vendido
         </button>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-emerald-800">
+            Produto
+          </label>
+          <ProdutoSelect />
+        </div>
       </form>
     </div>
   );

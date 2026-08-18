@@ -153,7 +153,6 @@ export async function criarLead(
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
-  const produto = String(formData.get("produto") ?? "").trim() || null;
   const responsavelId =
     usuario.papel === "admin"
       ? String(formData.get("responsavel_id") ?? "").trim() || null
@@ -169,7 +168,6 @@ export async function criarLead(
     nome,
     telefone_e164: telefone,
     origem,
-    produto,
     responsavel_id: responsavelId,
   });
 
@@ -191,7 +189,6 @@ export async function atualizarLead(
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
-  const produto = String(formData.get("produto") ?? "").trim() || null;
   const criterioProblema =
     String(formData.get("criterio_problema") ?? "").trim() || null;
   const criterioUrgencia = String(
@@ -252,7 +249,6 @@ export async function atualizarLead(
       nome,
       telefone_e164: telefone,
       origem,
-      produto,
       criterio_problema: criterioProblema,
       criterio_urgencia: criterioUrgencia,
       criterio_capacidade: criterioCapacidade,
@@ -381,12 +377,15 @@ export async function marcarVendido(
     return { erro: "Informe a receita recebida" };
   }
 
+  const produto = String(formData.get("produto") ?? "").trim() || null;
+
   const { error } = await supabase
     .from("leads")
     .update({
       status: "vendido",
       valor_venda: valor,
       receita_venda: receita,
+      produto,
       vendido_em: new Date().toISOString(),
     })
     .eq("id", leadId);

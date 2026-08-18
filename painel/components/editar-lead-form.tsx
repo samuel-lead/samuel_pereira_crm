@@ -3,7 +3,6 @@
 import { useActionState, useState } from "react";
 import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
-import { ProdutoSelect } from "@/components/produto-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
@@ -20,7 +19,6 @@ type Lead = {
   nome: string;
   telefone_e164: string | null;
   origem: string | null;
-  produto: string | null;
   nivel_ordem: number;
   criterio_problema: string | null;
   criterio_urgencia: string;
@@ -93,11 +91,6 @@ export function EditarLeadForm({
         <div className="space-y-1">
           <label className={labelClasse}>Origem</label>
           <OrigemSelect valorInicial={lead.origem ?? ""} />
-        </div>
-
-        <div className="space-y-1">
-          <label className={labelClasse}>Produto</label>
-          <ProdutoSelect valorInicial={lead.produto ?? ""} />
         </div>
 
         <div className="space-y-1">
