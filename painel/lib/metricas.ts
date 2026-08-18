@@ -160,6 +160,38 @@ export async function calcularVendasPorCanal(
   return Array.from(porCanal.values()).sort((a, b) => b.faturamento - a.faturamento);
 }
 
+export type LeadPorOrigem = {
+  origem: string;
+  quantidade: number;
+};
+
+// De onde vieram os leads no período (todos, não só quem virou venda) —
+// soma tudo da org, é visão de time.
+export async function calcularLeadsPorOrigem(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<LeadPorOrigem[]> {
+  const { data } = await supabase
+    .from("leads")
+    .select("origem")
+    .eq("org_id", orgId)
+    .is("arquivado_em", null)
+    .gte("declarado_em", inicio.toISOString())
+    .lt("declarado_em", fim.toISOString());
+
+  const porOrigem = new Map<string, number>();
+  for (const lead of data ?? []) {
+    const origem = lead.origem?.trim() || "Sem origem";
+    porOrigem.set(origem, (porOrigem.get(origem) ?? 0) + 1);
+  }
+
+  return Array.from(porOrigem.entries())
+    .map(([origem, quantidade]) => ({ origem, quantidade }))
+    .sort((a, b) => b.quantidade - a.quantidade);
+}
+
 export type MetricasUsuario = Metricas & { usuarioId: string; nome: string };
 
 // Performance individual de cada usuário da org no período — pra comparar

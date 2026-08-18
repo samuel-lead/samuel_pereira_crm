@@ -3,10 +3,12 @@ import { PageHeader } from "@/components/page-header";
 import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { PerformanceSdr } from "@/components/performance-sdr";
+import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import {
   calcularMetricas,
   calcularVendasPorCanal,
   calcularMetricasPorUsuario,
+  calcularLeadsPorOrigem,
   inicioDaSemana,
   fimDaSemana,
   inicioDoMes,
@@ -48,17 +50,29 @@ export default async function DashboardPage() {
   const inicioMes = inicioDoMes(agora);
   const subtituloSemana = `domingo a sábado · ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`;
 
-  const [metricasSemana, metricasMes, vendasPorCanal, performanceSemanaSdr] =
-    await Promise.all([
-      calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
-      calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
-      souAdmin
-        ? calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha)
-        : Promise.resolve([]),
-      souAdmin
-        ? calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha)
-        : Promise.resolve([]),
-    ]);
+  const [
+    metricasSemana,
+    metricasMes,
+    vendasPorCanal,
+    performanceSemanaSdr,
+    leadsPorOrigemSemana,
+    leadsPorOrigemMes,
+  ] = await Promise.all([
+    calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
+    calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
+    souAdmin
+      ? calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha)
+      : Promise.resolve([]),
+    souAdmin
+      ? calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha)
+      : Promise.resolve([]),
+    souAdmin
+      ? calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioSemana, amanha)
+      : Promise.resolve([]),
+    souAdmin
+      ? calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioMes, amanha)
+      : Promise.resolve([]),
+  ]);
 
   return (
     <>
@@ -77,6 +91,11 @@ export default async function DashboardPage() {
           <section>
             <h2 className="mb-3 text-lg font-bold text-neutral-900">Visão da equipe</h2>
             <div className="space-y-4">
+              <LeadsPorOrigem
+                titulo={`Origem dos leads — semana (${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)})`}
+                dados={leadsPorOrigemSemana}
+              />
+              <LeadsPorOrigem titulo="Origem dos leads — mês" dados={leadsPorOrigemMes} />
               <VendasPorCanal dados={vendasPorCanal} />
               <PerformanceSdr
                 dados={performanceSemanaSdr}

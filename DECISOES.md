@@ -368,3 +368,11 @@ Testado com uma simulação isolada da função (segunda-feira 17/08 como "hoje"
 O Samuel reparou: a tela mostrava "1 lead sendo trabalhados" mas todas as colunas do Kanban apareciam vazias. Causa: a consulta que conta os leads não excluía quem tá no nível 7 (Base) — e a Base tem tela própria desde a mudança anterior, então não aparece em nenhuma coluna do Funil, mas ainda entrava na contagem. Adicionei `.neq("nivel_ordem", 7)` na consulta, pra contagem bater com o que realmente aparece nas colunas.
 
 Testado: confirmei no banco que o lead "teste" realmente estava no nível 7; depois de corrigir, a tela passou a mostrar "0 leads sendo trabalhados", batendo com as colunas vazias. Build de produção limpo.
+
+## 2026-08-17 — Origem dos leads (semana e mês) nas Métricas
+
+Pedido do Samuel, baseado na planilha: mostrar de onde vieram os leads (todos, não só quem virou venda) — separado por semana e por mês. Diferente do "Canais que venderam" (que já existia e só conta quem fechou), isso aqui conta **todo lead que entrou** no período, agrupado por origem.
+
+Criei `calcularLeadsPorOrigem()` (org inteira, visão de time — mesma lógica de admin-only das outras métricas de equipe) e um componente `LeadsPorOrigem` reaproveitado duas vezes: "Origem dos leads — semana" e "Origem dos leads — mês", cada um com o total geral em cima e a contagem por origem com barrinha de proporção.
+
+Testado com 3 leads de teste (2 de "SS IG", 1 de "Networking") — os dois blocos mostraram a contagem certinha (SS IG: 2, Networking: 1, total: 3 leads). Dados de teste removidos no final. Build de produção limpo.
