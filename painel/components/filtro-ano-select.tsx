@@ -12,7 +12,7 @@ export function FiltroAnoSelect({
   const router = useRouter();
 
   const anos: number[] = [];
-  for (let ano = anoAtual + 1; ano >= anoAtual - 3; ano--) {
+  for (let ano = anoAtual + 4; ano >= anoAtual; ano--) {
     anos.push(ano);
   }
 
