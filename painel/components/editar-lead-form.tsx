@@ -173,6 +173,17 @@ export function EditarLeadForm({
                   className={`${campoClasse} bg-white`}
                 />
               </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-emerald-800" htmlFor="closer_id">
+                  Closer (quem vai fazer a reunião)
+                </label>
+                <ResponsavelSelect
+                  usuarios={usuarios}
+                  name="closer_id"
+                  placeholder="Ainda não definido"
+                />
+              </div>
             </div>
           )}
         </div>

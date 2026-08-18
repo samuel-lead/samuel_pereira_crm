@@ -81,9 +81,10 @@ async function sincronizarReuniao(
     paraOrdem: number;
     agendadaPara?: string | null;
     marcadaEm?: string | null;
+    closerId?: string | null;
   }
 ): Promise<string | null> {
-  const { orgId, usuarioId, leadId, deOrdem, paraOrdem, agendadaPara, marcadaEm } = params;
+  const { orgId, usuarioId, leadId, deOrdem, paraOrdem, agendadaPara, marcadaEm, closerId } = params;
 
   if (paraOrdem === NIVEL_REUNIAO_MARCADA && deOrdem !== NIVEL_REUNIAO_MARCADA) {
     if (!agendadaPara) {
@@ -110,6 +111,7 @@ async function sincronizarReuniao(
       lead_id: leadId,
       agendada_para: data.toISOString(),
       marcada_em: dataMarcada.toISOString(),
+      closer_id: closerId || null,
       status: "marcada",
     });
 
@@ -201,6 +203,7 @@ export async function atualizarLead(
   const novoNivel = Number(formData.get("nivel_ordem"));
   const reuniaoData = String(formData.get("reuniao_data") ?? "").trim() || null;
   const reuniaoMarcadaEm = String(formData.get("marcada_em") ?? "").trim() || null;
+  const closerId = String(formData.get("closer_id") ?? "").trim() || null;
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
@@ -238,6 +241,7 @@ export async function atualizarLead(
       paraOrdem: novoNivel,
       agendadaPara: reuniaoData,
       marcadaEm: reuniaoMarcadaEm,
+      closerId,
     });
     if (erroReuniao) {
       return { erro: erroReuniao };

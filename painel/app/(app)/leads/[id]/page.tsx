@@ -42,6 +42,7 @@ type Reuniao = {
   marcada_em: string;
   status: string;
   resultado: string | null;
+  closer_id: string | null;
 };
 
 const campoClasse =
@@ -95,7 +96,7 @@ export default async function EditarLeadPage({
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("reunioes")
-      .select("id, agendada_para, marcada_em, status, resultado")
+      .select("id, agendada_para, marcada_em, status, resultado, closer_id")
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
     supabase.from("usuarios").select("id, nome").order("nome"),
@@ -246,6 +247,11 @@ export default async function EditarLeadPage({
                     <p className="text-xs text-neutral-400">
                       Marcada em {formatarData(reuniao.marcada_em)}
                     </p>
+                    {reuniao.closer_id && (
+                      <p className="text-xs text-neutral-500">
+                        Closer: {usuarios.find((u) => u.id === reuniao.closer_id)?.nome ?? "—"}
+                      </p>
+                    )}
                     {reuniao.resultado && (
                       <p className="text-xs text-neutral-500">
                         Resultado: {reuniao.resultado}

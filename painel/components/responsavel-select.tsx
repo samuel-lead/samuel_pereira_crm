@@ -4,18 +4,22 @@ const campoClasse =
 export function ResponsavelSelect({
   usuarios,
   valorInicial,
+  name = "responsavel_id",
+  placeholder = "Sem responsável definido",
 }: {
   usuarios: { id: string; nome: string }[];
   valorInicial?: string | null;
+  name?: string;
+  placeholder?: string;
 }) {
   return (
     <select
-      id="responsavel_id"
-      name="responsavel_id"
+      id={name}
+      name={name}
       defaultValue={valorInicial ?? ""}
       className={campoClasse}
     >
-      <option value="">Sem responsável definido</option>
+      <option value="">{placeholder}</option>
       {usuarios.map((usuario) => (
         <option key={usuario.id} value={usuario.id}>
           {usuario.nome}

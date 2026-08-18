@@ -662,3 +662,13 @@ O Samuel não gostou muito do visual da tela Ano ("acho que dá pra ser melhor")
 - **Redesenho da tela Ano**: troquei a tabela simples (linhas de texto) por um cartão por mês com **barra de progresso** comparando receita contra a meta — verde quando bateu, âmbar quando não. Cada cartão mostra o mês (com a etiqueta "agora" se for o mês corrente), a receita em destaque, a barra, e embaixo "Meta RX · Faturamento RY" de um lado e "Bateu a meta 🎉" ou "Falta RZ" do outro. Fica mais fácil de bater o olho e ver de cara quais meses foram bons sem precisar ler número por número.
 
 Testado: com conta de teste, a tela mostrou as barras de janeiro a abril em âmbar (nenhum mês bateu os R$30.000 de meta ainda), com a largura proporcional certa (ex.: janeiro em ~46%, batendo com R$13.710 de R$30.000); confirmei que "Ver o ano inteiro →" aparece depois de todo o conteúdo de Métricas, não mais no topo. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Campo Closer na reunião
+
+O Samuel pediu pra registrar quem vai fazer a reunião de venda (o Closer), separado de quem marcou a reunião (o SDR — já é o `usuario_id` da própria reunião). É a mesma distinção que a planilha dele já fazia.
+
+- **Banco**: nova coluna `closer_id` em `reunioes`, referenciando `usuarios(id)`, opcional (pode ficar sem definir).
+- **Formulário**: ao mover um lead pra "Reunião marcada", apareceu um terceiro campo (junto com "Data em que foi marcada" e "Data e hora da reunião") pra escolher o Closer, com "Ainda não definido" como opção padrão — reaproveitei o componente `ResponsavelSelect` que já existia pra Responsável.
+- **Linha do tempo do lead**: quando a reunião tem Closer definido, aparece "Closer: [nome]" logo abaixo de "Marcada em".
+
+Testado: com conta de teste, marquei uma reunião escolhendo "Samuel Pereira" como Closer — conferi direto no banco que a linha em `reunioes` gravou o `closer_id` certo, e na tela a Linha do tempo mostrou "Closer: Samuel Pereira" corretamente. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
