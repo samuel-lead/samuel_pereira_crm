@@ -620,3 +620,13 @@ Detalhe que vale registrar: o "Total de bônus" da planilha do Samuel está com 
 **Acesso**: só admin vê essa tela (é dado de compensação da equipe, não é algo que cada SDR deveria ver dos outros) — segue o mesmo padrão de Usuários/Configurações, protegido no `middleware.ts`.
 
 Testado: com uma conta de admin de teste, a tela mostrou "Samuel Pereira: 6 calls marcadas, 3 realizadas, 50% no-show, R$0 bônus calls (3 &lt; 60), R$0 bônus fim de semana, R$15.000 faturamento, R$0 bônus faturamento (15mil &lt; 50mil), R$0 total" — bati à mão os dias da semana das 3 reuniões realizadas (quarta, sexta, quinta — nenhuma cai em fim de semana), confirmando que o bônus de fim de semana zerado está certo, não é coincidência. Conferi também que "Bônus SDR" aparece na posição certa do menu (logo depois de "Atividades"). Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 17 rotas agora.
+
+## 2026-08-18 — Design do "Bônus SDR": mesma cara das Métricas
+
+O Samuel achou a tabela simples do Bônus SDR sem graça e pediu pra ficar bonita, igual as Métricas. Redesenhei usando a mesma linguagem visual do resto do painel:
+
+- **Card grande no topo** com gradiente (âmbar/laranja em vez do verde-esmeralda da Receita, pra diferenciar visualmente "bônus" de "receita") mostrando o total de bônus de toda a equipe somado, com marca d'água de estrela.
+- **Um card por SDR**, com o nome e o total de bônus dele em destaque no topo, depois uma grade de 4 mini-cards coloridos (mesmo estilo dos cards de "Leads trabalhados"/"Reuniões" das Métricas: ícone colorido, título pequeno, número grande) — Calls marcadas, Calls realizadas, No-show, Faturamento.
+- Embaixo de cada card, o detalhamento dos três blocos de bônus (por calls, por fim de semana, por faturamento) numa lista simples, pra deixar claro de onde veio cada parte do total.
+
+Testado: com conta de teste, o card do topo mostrou o gradiente âmbar com o total certo, e o card do Samuel Pereira mostrou os 4 mini-cards coloridos com os números batendo (6 marcadas, 3 realizadas, 50% no-show, R$15.000 faturamento) e o detalhamento dos três bônus embaixo. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
