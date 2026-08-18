@@ -766,3 +766,9 @@ O Samuel pediu um sinal visual no Funil pra avisar o SDR quando um lead fica par
 - Só vale pro Funil (`/leads`) — as telas de Base e Vendas reusam o mesmo componente de card mas não calculam isso (não faz sentido sinalizar atraso em lead que já saiu do funil ativo).
 
 Testado: peguei um lead real, forcei no banco a última atividade dele pra 3 dias atrás (nível e nota junto) — o card ficou vermelho com "3 dias sem atividade", os outros continuaram normais. Registrei uma nota nova nele e recarreguei — voltou ao normal, sem vermelho. Desfiz as datas forçadas e removi a conta de teste no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Nível 2 e 3 usam a mesma cor do Nível 1
+
+Ajuste visual simples no Funil: as colunas "Nível 2. Em qualificação" e "Nível 3. Topou reunião, horário a definir" usavam cores diferentes (azul e violeta) do "Nível 1" (cinza-azulado/slate). O Samuel pediu pra ficarem iguais ao Nível 1. Mudei só a função `corDoNivel()` em `lib/niveis.ts` pra devolver a cor do Nível 1 quando a coluna for 2 ou 3 — as outras colunas (Reunião marcada, No Show, etc.) não mudaram.
+
+Testado: com conta de teste, conferi visualmente que Nível 1, 2 e 3 agora têm a mesma cor cinza-azulada, e o resto do funil (Reunião marcada em verde, etc.) continua como estava. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.

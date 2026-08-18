@@ -85,6 +85,7 @@ export const CORES_NIVEL: Record<
 };
 
 export function corDoNivel(ordem: number) {
+  if (ordem === 2 || ordem === 3) return CORES_NIVEL[1];
   return CORES_NIVEL[ordem] ?? CORES_NIVEL[1];
 }
 
