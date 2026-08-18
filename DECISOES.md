@@ -576,3 +576,11 @@ Pedido simples: uma categoria em Métricas mostrando quais produtos mais vendera
 - Aparece em "Visão da equipe" (admin-only, visão de time), logo depois de "Canais que venderam".
 
 Testado: com uma conta de teste, conferi que a seção mostrou "Treinamento comercial · 1 venda · R$10.000,00" (Thiago Souza) e "Sem produto · 1 venda · R$5.000,00" (Claudilaine, que não tinha produto registrado na importação da planilha) — batendo com os dados reais. Conta de verificação removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Números da "Performance da semana por SDR" com peso visual desigual
+
+O Samuel reparou que os "0" da tabela "Performance da semana por SDR" pareciam ter tamanhos diferentes entre si. Conferi via inspeção direta (tamanho de fonte, altura da linha, altura da célula) e todas as células eram idênticas — não era um bug de tamanho de verdade. A causa mais provável é que números numa fonte proporcional (o padrão do navegador) podem ter peso visual/largura ligeiramente diferentes dependendo da vizinhança de caracteres, o que engana o olho numa tabela cheia de números lado a lado.
+
+Corrigido aplicando `tabular-nums` (dígitos de largura fixa, o jeito certo de mostrar números numa tabela) em todas as células numéricas da tabela — leads, calls marcadas/realizadas, no show, vendas, taxa de venda e receita.
+
+Testado: confirmei antes da mudança que fonte (14px), altura de linha (20px) e altura da célula (37px) já eram idênticas em todas as colunas — o ajuste é puramente de renderização dos dígitos, sem mudar nenhum dado. `tsc --noEmit` e `npm run build` limpos.

@@ -47,15 +47,15 @@ export function PerformanceSdr({
                 className="border-b border-neutral-100 last:border-0"
               >
                 <td className="px-3 py-2 text-left font-medium text-neutral-900">{linha.nome}</td>
-                <td className="px-3 py-2 text-center text-neutral-600">{linha.leadsTrabalhados}</td>
-                <td className="px-3 py-2 text-center text-neutral-600">{linha.reunioesMarcadas}</td>
-                <td className="px-3 py-2 text-center text-neutral-600">{linha.reunioesRealizadas}</td>
-                <td className="px-3 py-2 text-center text-neutral-600">{linha.noShow}</td>
-                <td className="px-3 py-2 text-center text-neutral-600">{linha.vendas}</td>
-                <td className="px-3 py-2 text-center text-neutral-600">
+                <td className="px-3 py-2 text-center tabular-nums text-neutral-600">{linha.leadsTrabalhados}</td>
+                <td className="px-3 py-2 text-center tabular-nums text-neutral-600">{linha.reunioesMarcadas}</td>
+                <td className="px-3 py-2 text-center tabular-nums text-neutral-600">{linha.reunioesRealizadas}</td>
+                <td className="px-3 py-2 text-center tabular-nums text-neutral-600">{linha.noShow}</td>
+                <td className="px-3 py-2 text-center tabular-nums text-neutral-600">{linha.vendas}</td>
+                <td className="px-3 py-2 text-center tabular-nums text-neutral-600">
                   {formatarPercentual(linha.taxaVenda)}
                 </td>
-                <td className="px-3 py-2 text-center font-medium text-emerald-700">
+                <td className="px-3 py-2 text-center tabular-nums font-medium text-emerald-700">
                   {formatarMoeda(linha.receita)}
                 </td>
               </tr>
