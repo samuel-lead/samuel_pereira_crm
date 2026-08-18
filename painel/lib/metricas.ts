@@ -9,6 +9,7 @@ export type Metricas = {
   noShow: number;
   vendas: number;
   receita: number;
+  faturamento: number;
   ticketMedio: number | null;
   taxaAgendamento: number | null;
   taxaComparecimento: number | null;
@@ -105,7 +106,7 @@ export async function calcularMetricas(
       .lt("agendada_para", fimISO),
     supabase
       .from("leads")
-      .select("receita_venda")
+      .select("receita_venda, valor_venda")
       .eq("usuario_id", usuarioId)
       .eq("status", "vendido")
       .is("arquivado_em", null)
@@ -116,6 +117,10 @@ export async function calcularMetricas(
   const vendas = vendasData?.length ?? 0;
   const receita = (vendasData ?? []).reduce(
     (soma, l) => soma + Number(l.receita_venda ?? 0),
+    0
+  );
+  const faturamento = (vendasData ?? []).reduce(
+    (soma, l) => soma + Number(l.valor_venda ?? 0),
     0
   );
 
@@ -135,6 +140,7 @@ export async function calcularMetricas(
     noShow: noShow ?? 0,
     vendas,
     receita,
+    faturamento,
     ticketMedio: vendas > 0 ? receita / vendas : null,
     taxaAgendamento: leads > 0 ? marcadas / leads : null,
     taxaComparecimento: marcadas > 0 ? realizadas / marcadas : null,

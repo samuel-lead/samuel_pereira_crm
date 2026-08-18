@@ -594,3 +594,11 @@ Dois pedidos numa tacada: mostrar a média de leads por dia ao lado do total (na
 **Média por dia**: `LeadsPorOrigem` ganhou uma prop `diasUteis` (reaproveita o mesmo `diasUteis` que `calcularMetricas()` já calculava pra "Esta semana"/"Este mês" — não criei conta nova). O cabeçalho virou "X leads/dia em média · Y leads no total", a média antes do total, na mesma linha, como pedido.
 
 Testado: com conta de teste, "Origem dos leads — mês" passou a mostrar "11 leads no total" (SS IG foi de 5 pra 6, entrando o Paulo Ribeiro) e "0,9 leads/dia em média" antes do total. Conta de verificação removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Faturamento também aparece nas Métricas
+
+O Samuel pediu pra ver o faturamento (não só a receita) nas Métricas. O sistema já guardava os dois valores por venda (`valor_venda` = faturamento, `receita_venda` = receita), mas só a receita aparecia no card grande de "Esta semana"/"Este mês" — faturamento não tinha lugar nenhum na tela.
+
+Adicionei `faturamento` no tipo `Metricas` e em `calcularMetricas()` (soma de `valor_venda` das vendas do período, do jeito igual já fazia com `receita_venda`). Na tela, mantive a **Receita como o número grande principal** (é a regra do `CLAUDE.md`: a meta e o destaque sempre são sobre receita, faturamento é secundário) e coloquei "Faturamento: RX" como uma linha pequena logo abaixo, dentro do mesmo card verde.
+
+Testado: com uma venda de teste (faturamento R$8.000, receita R$3.000 — valores propositalmente diferentes), o card mostrou "RECEITA R$3.000,00" grande e "Faturamento: R$8.000,00" pequeno embaixo, confirmando que os dois números continuam distintos e cada um aparece onde deve. Dados de teste removidos no final. `tsc --noEmit` e `npm run build` limpos.

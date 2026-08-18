@@ -166,6 +166,9 @@ export function SecaoPeriodo({
           {metricas.ticketMedio !== null &&
             ` · ticket médio ${formatarMoeda(metricas.ticketMedio)}`}
         </p>
+        <p className="relative mt-1 text-xs text-emerald-200/80">
+          Faturamento: {formatarMoeda(metricas.faturamento)}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
