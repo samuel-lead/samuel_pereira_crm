@@ -131,11 +131,6 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        <p className="text-xs text-neutral-400">
-          Taxas e piso são constantes do sistema — nunca baixam por
-          performance. Calculado direto no banco, sem estimativa.
-        </p>
-
         {souAdmin && (
           <div className="flex justify-center pt-2">
             <Link
