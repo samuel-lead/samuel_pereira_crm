@@ -183,11 +183,27 @@ export function MetaReceitaWidget({
           Meta <span className="font-bold text-neutral-900">{formatarMoeda(meta)}</span>
         </span>
       </div>
-      <div className="h-3 w-full overflow-hidden rounded-full bg-neutral-100">
-        <div
-          className={`h-full rounded-full transition-all ${bateu ? "bg-emerald-500" : "bg-violet-500"}`}
-          style={{ width: `${pct}%` }}
-        />
+      <div className="relative h-6 w-full">
+        <div className="h-full w-full overflow-hidden rounded-full bg-neutral-100">
+          <div
+            className={`flex h-full items-center justify-end rounded-full pr-2 transition-all ${
+              bateu ? "bg-emerald-500" : "bg-violet-500"
+            }`}
+            style={{ width: `${pct}%` }}
+          >
+            {pct >= 12 && (
+              <span className="text-[11px] font-bold text-white">{pct}%</span>
+            )}
+          </div>
+        </div>
+        {pct < 12 && (
+          <span
+            className="absolute top-1/2 -translate-y-1/2 text-[11px] font-bold text-neutral-500"
+            style={{ left: `calc(${pct}% + 6px)` }}
+          >
+            {pct}%
+          </span>
+        )}
       </div>
       <p className="mt-2 text-sm">
         {bateu ? (
