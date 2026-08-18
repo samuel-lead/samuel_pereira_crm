@@ -41,6 +41,16 @@ export function IconeUsuarios(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconeEmpresa(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <rect x="3.5" y="8" width="17" height="12" rx="1.5" />
+      <path d="M8.5 8V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5V8" />
+      <path d="M3.5 13h17" />
+    </svg>
+  );
+}
+
 export function IconeAlvo(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>

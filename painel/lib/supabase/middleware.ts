@@ -66,16 +66,44 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && !isLoginPage && pathname !== "/sem-acesso") {
+  if (
+    user &&
+    !isLoginPage &&
+    pathname !== "/sem-acesso" &&
+    pathname !== "/conta-suspensa"
+  ) {
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("papel, paginas_permitidas, super_admin, orgs(status)")
+      .eq("id", user.id)
+      .single();
+
+    const ehSuperAdmin = usuario?.super_admin === true;
+    const orgInfo = usuario?.orgs as { status?: string } | { status?: string }[] | null;
+    const statusOrg = Array.isArray(orgInfo) ? orgInfo[0]?.status : orgInfo?.status;
+
+    // Empresa suspensa não entra em nada — exceto o dono da plataforma,
+    // que nunca fica trancado pra fora por acidente.
+    if (!ehSuperAdmin && statusOrg === "suspenso") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/conta-suspensa";
+      return NextResponse.redirect(url);
+    }
+
+    // /empresas é onde o dono da plataforma cadastra/suspende clientes —
+    // não é uma página "admin" comum, é restrita a quem é super_admin.
+    // Manda pro próprio painel (não pra /sem-acesso — essa mensagem é pra
+    // quem não tem NENHUMA página liberada, o que não é o caso aqui).
+    const ehPaginaDaPlataforma = pathname === "/empresas" || pathname.startsWith("/empresas/");
+    if (ehPaginaDaPlataforma && !ehSuperAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/leads";
+      return NextResponse.redirect(url);
+    }
+
     const pagina = paginaDaRota(pathname);
 
     if (pagina) {
-      const { data: usuario } = await supabase
-        .from("usuarios")
-        .select("papel, paginas_permitidas")
-        .eq("id", user.id)
-        .single();
-
       const ehAdmin = usuario?.papel === "admin";
 
       if (!ehAdmin) {

@@ -11,11 +11,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let paginasPermitidas: string[] = [];
   let nomeUsuario = "";
   let fotoUsuario: string | null = null;
+  let souSuperAdmin = false;
 
   if (user) {
     const { data: usuario } = await supabase
       .from("usuarios")
-      .select("papel, paginas_permitidas, nome, foto_url")
+      .select("papel, paginas_permitidas, nome, foto_url, super_admin")
       .eq("id", user.id)
       .single();
 
@@ -23,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     paginasPermitidas = usuario?.paginas_permitidas ?? [];
     nomeUsuario = usuario?.nome ?? "";
     fotoUsuario = usuario?.foto_url ?? null;
+    souSuperAdmin = usuario?.super_admin === true;
   }
 
   return (
@@ -32,6 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         paginasPermitidas={paginasPermitidas}
         nomeUsuario={nomeUsuario}
         fotoUsuario={fotoUsuario}
+        souSuperAdmin={souSuperAdmin}
       />
       <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
     </div>

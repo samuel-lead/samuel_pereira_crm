@@ -862,3 +862,18 @@ Construí a "porta de entrada" que recebe os leads do formulário nativo do Face
 **Trade-off consciente**: o projeto tem a regra de "webhook responde 200 e processa depois" — aqui processei tudo na mesma chamada (busca na API do Facebook + grava no banco), porque pra esse volume (leads avulsos de campanha, não milhares por segundo) isso é rápido o suficiente e evita construir uma fila assíncrona sem necessidade real ainda. Se o volume crescer muito, dá pra revisitar.
 
 **Falta o lado do Samuel**: criar o App no Meta, gerar o token da página, e configurar o webhook lá com a URL `https://hgloheptxqdjpwzgquku.supabase.co/functions/v1/webhook-facebook-leads` — passo a passo combinado fora do código.
+
+## 2026-08-18 — Multi-cliente: cadastro manual de empresas + suspender acesso
+
+Depois de conversar sobre "duplicar" o CRM pra cada cliente do Samuel, ficou definido: não duplica nada — o banco já foi construído desde o primeiro dia com `org_id` em toda tabela e RLS isolando cada empresa, então o mesmo CRM já aguenta várias empresas ao mesmo tempo. Faltava só a tela de cadastrar cada uma. Ficou combinado: cadastro manual (só o Samuel cadastra, não é self-service ainda) e um jeito de suspender acesso se o cliente não pagar.
+
+**Conceito novo: "dono da plataforma" (super_admin)**
+- Coluna `usuarios.super_admin` (só o Samuel tem `true`) — diferente de `papel = admin`, que é só dentro da própria empresa. Um admin comum de uma empresa cliente não é super_admin e não vê nada disso.
+- Função `private.eh_super_admin()` no banco, usada nas políticas de segurança pra abrir uma exceção: o dono da plataforma pode ver/editar qualquer empresa, não só a própria.
+
+**Tela "Empresas"** (`/empresas`, só aparece no menu pro super_admin):
+- Lista todas as empresas clientes, com nome do admin, e-mail, status (Ativo/Suspenso) e botão de Suspender/Reativar.
+- "+ Nova empresa": formulário (nome da empresa + nome/e-mail/senha do primeiro admin dela) → chama a Edge Function `criar-cliente`, que cria a empresa, o funil padrão inteiro (os 8 níveis, copiados exatamente dos que o Samuel já usa) e as metas/taxas padrão — a empresa nova já nasce funcionando, sem precisar configurar nada na mão.
+- Suspender: muda `orgs.status` pra `suspenso`. A partir daí, ninguém dessa empresa consegue entrar — o sistema redireciona pra uma tela avisando ("O acesso da sua empresa está suspenso") em vez de deixar ver qualquer coisa. Reativar volta ao normal.
+
+Testado de ponta a ponta: criei uma empresa de teste ("Imobiliaria Teste Horizonte") pela tela, confirmei no banco que os 8 níveis e a meta padrão foram criados junto, logei como o admin dela e vi um funil vazio e isolado (nenhum lead do Samuel aparece). Suspendi essa empresa e confirmei que o login dela passa a cair na tela de bloqueio. Também confirmei que um admin comum (não super_admin) não vê "Empresas" no menu e, se tentar acessar a URL direto, é mandado de volta pro próprio painel dele (sem mensagem confusa). Tudo removido no final. `tsc --noEmit` e `npm run build` limpos, 23 rotas.

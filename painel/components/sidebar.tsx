@@ -5,9 +5,10 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeCalendario, IconeIntegracao } from "@/components/icons";
+import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeCalendario, IconeIntegracao, IconeEmpresa } from "@/components/icons";
 
 const ITENS = [
+  { href: "/empresas", label: "Empresas", Icone: IconeEmpresa, pagina: "plataforma" },
   { href: "/leads", label: "Pré-vendas", Icone: IconeFunil, pagina: "funil" },
   { href: "/reunioes", label: "Vendas", Icone: IconeCalendario, pagina: "reunioes" },
   { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
@@ -26,17 +27,20 @@ export function Sidebar({
   paginasPermitidas = [],
   nomeUsuario = "",
   fotoUsuario = null,
+  souSuperAdmin = false,
 }: {
   isAdmin?: boolean;
   paginasPermitidas?: string[];
   nomeUsuario?: string;
   fotoUsuario?: string | null;
+  souSuperAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const [colapsado, setColapsado] = useState(false);
-  const itensVisiveis = ITENS.filter((item) =>
-    isAdmin ? true : item.pagina !== "admin" && paginasPermitidas.includes(item.pagina)
-  );
+  const itensVisiveis = ITENS.filter((item) => {
+    if (item.pagina === "plataforma") return souSuperAdmin;
+    return isAdmin ? true : item.pagina !== "admin" && paginasPermitidas.includes(item.pagina);
+  });
 
   return (
     <aside
