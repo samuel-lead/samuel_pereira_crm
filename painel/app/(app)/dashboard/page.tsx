@@ -113,8 +113,13 @@ export default async function DashboardPage() {
               <LeadsPorOrigem
                 titulo={`Origem dos leads — semana (${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)})`}
                 dados={leadsPorOrigemSemana}
+                diasUteis={metricasSemana.diasUteis}
               />
-              <LeadsPorOrigem titulo="Origem dos leads — mês" dados={leadsPorOrigemMes} />
+              <LeadsPorOrigem
+                titulo="Origem dos leads — mês"
+                dados={leadsPorOrigemMes}
+                diasUteis={metricasMes.diasUteis}
+              />
               <VendasPorCanal dados={vendasPorCanal} />
               <VendasPorProduto dados={vendasPorProduto} />
               <PerformanceSdr

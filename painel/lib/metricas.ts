@@ -218,25 +218,51 @@ export type LeadPorOrigem = {
   quantidade: number;
 };
 
-// De onde vieram os leads no período (todos, não só quem virou venda) —
-// soma tudo da org, é visão de time.
+// De onde vieram os leads trabalhados no período (todos, não só quem virou
+// venda) — soma tudo da org, é visão de time. Usa a mesma regra de "lead
+// trabalhado" das outras métricas: declarado no período OU com reunião
+// (marcada ou realizada) dentro dele, mesmo que tenha entrado antes.
 export async function calcularLeadsPorOrigem(
   supabase: SupabaseServerClient,
   orgId: string,
   inicio: Date,
   fim: Date
 ): Promise<LeadPorOrigem[]> {
-  const { data } = await supabase
-    .from("leads")
-    .select("origem")
-    .eq("org_id", orgId)
-    .is("arquivado_em", null)
-    .gte("declarado_em", inicio.toISOString())
-    .lt("declarado_em", fim.toISOString());
+  const inicioISO = inicio.toISOString();
+  const fimISO = fim.toISOString();
+
+  const [{ data: declarados }, { data: viaReuniao }] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("id, origem")
+      .eq("org_id", orgId)
+      .is("arquivado_em", null)
+      .gte("declarado_em", inicioISO)
+      .lt("declarado_em", fimISO),
+    supabase
+      .from("reunioes")
+      .select("lead_id, leads!inner(origem, arquivado_em)")
+      .eq("org_id", orgId)
+      .is("leads.arquivado_em", null)
+      .or(
+        `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
+      ),
+  ]);
+
+  const origemPorLead = new Map<string, string | null>();
+  for (const lead of declarados ?? []) {
+    origemPorLead.set(lead.id, lead.origem);
+  }
+  for (const reuniao of viaReuniao ?? []) {
+    if (!origemPorLead.has(reuniao.lead_id)) {
+      const leadJunto = reuniao.leads as unknown as { origem: string | null };
+      origemPorLead.set(reuniao.lead_id, leadJunto?.origem ?? null);
+    }
+  }
 
   const porOrigem = new Map<string, number>();
-  for (const lead of data ?? []) {
-    const origem = lead.origem?.trim() || "Sem origem";
+  for (const origemLead of origemPorLead.values()) {
+    const origem = origemLead?.trim() || "Sem origem";
     porOrigem.set(origem, (porOrigem.get(origem) ?? 0) + 1);
   }
 

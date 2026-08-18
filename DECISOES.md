@@ -584,3 +584,13 @@ O Samuel reparou que os "0" da tabela "Performance da semana por SDR" pareciam t
 Corrigido aplicando `tabular-nums` (dígitos de largura fixa, o jeito certo de mostrar números numa tabela) em todas as células numéricas da tabela — leads, calls marcadas/realizadas, no show, vendas, taxa de venda e receita.
 
 Testado: confirmei antes da mudança que fonte (14px), altura de linha (20px) e altura da célula (37px) já eram idênticas em todas as colunas — o ajuste é puramente de renderização dos dígitos, sem mudar nenhum dado. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — "Origem dos leads" ganha média por dia + corrige total do mês desatualizado
+
+Dois pedidos numa tacada: mostrar a média de leads por dia ao lado do total (nas duas seções, semana e mês), e verificar se o total do mês (10) estava certo.
+
+**Não estava.** `calcularLeadsPorOrigem()` ainda contava só por `declarado_em` — não peguei essa função quando mudei a regra de "lead trabalhado" pra incluir reunião de período anterior (2026-08-18, entrada "'Lead trabalhado' passa a contar reunião de mês anterior também"), porque na hora achei que "de onde vieram os leads" era um conceito diferente de "trabalhado". Testando de verdade, ficou claro que não faz sentido ter dois números de "leads do mês" diferentes (11 em Leads trabalhados, 10 em Origem dos leads) — o Samuel espera que os dois batam. Apliquei a mesma regra aqui: um lead conta se foi declarado no período OU teve reunião (marcada ou realizada) dentro dele. Precisou juntar duas consultas (leads declarados + reuniões do período, com a origem vindo do lead pelo `join`) num mapa só, sem duplicar quem aparece nos dois grupos.
+
+**Média por dia**: `LeadsPorOrigem` ganhou uma prop `diasUteis` (reaproveita o mesmo `diasUteis` que `calcularMetricas()` já calculava pra "Esta semana"/"Este mês" — não criei conta nova). O cabeçalho virou "X leads/dia em média · Y leads no total", a média antes do total, na mesma linha, como pedido.
+
+Testado: com conta de teste, "Origem dos leads — mês" passou a mostrar "11 leads no total" (SS IG foi de 5 pra 6, entrando o Paulo Ribeiro) e "0,9 leads/dia em média" antes do total. Conta de verificação removida no final. `tsc --noEmit` e `npm run build` limpos.

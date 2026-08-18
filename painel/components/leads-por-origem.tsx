@@ -3,18 +3,22 @@ import type { LeadPorOrigem } from "@/lib/metricas";
 export function LeadsPorOrigem({
   titulo,
   dados,
+  diasUteis,
 }: {
   titulo: string;
   dados: LeadPorOrigem[];
+  diasUteis: number;
 }) {
   const total = dados.reduce((soma, d) => soma + d.quantidade, 0);
+  const mediaPorDia = diasUteis > 0 ? total / diasUteis : 0;
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="mb-1 flex items-baseline justify-between">
         <h2 className="text-sm font-semibold text-neutral-800">{titulo}</h2>
         <span className="text-xs font-medium text-neutral-500">
-          {total} lead{total === 1 ? "" : "s"} no total
+          {mediaPorDia.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} leads/dia
+          em média · {total} lead{total === 1 ? "" : "s"} no total
         </span>
       </div>
       <p className="mb-4 text-xs text-neutral-500">
