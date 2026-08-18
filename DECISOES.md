@@ -492,3 +492,15 @@ Continuação do que eu tinha sugerido (gap comparado com CRMs grandes e prepara
 Criei `leads.email` (coluna nova, texto, opcional) e o campo "E-mail" no `EditarLeadForm`, logo depois de Telefone. `criarLead()` não foi tocado (continua sem e-mail); `atualizarLead()` passou a gravar o campo.
 
 Testado: confirmei que `/leads/novo` continua sem nenhum campo de e-mail; abri um lead de teste, o campo "E-mail" apareceu vazio na edição, preenchi "lead.teste@example.com", salvei, e confirmei direto no banco que gravou certo. Dados de teste removidos no final. `tsc --noEmit` e `npm run build` limpos, mesmas 16 rotas.
+
+## 2026-08-18 — Design da tela "Novo lead"
+
+O Samuel achou a tela de cadastro de lead "sem vida" — era só um card branco simples. Redesenhei mantendo a mesma paleta que já uso no resto do painel (violeta/azul-céu, o gradiente do logo e do botão principal):
+
+- Card ganhou um cabeçalho colorido (gradiente violeta→azul-céu) com um ícone de "pessoa +" novo (`IconePessoaMais`, criado em `components/icons.tsx`), título "Novo lead" e uma frase curta de contexto — o link "Cancelar" mudou de lugar, pra dentro desse cabeçalho.
+- Card em si ganhou cantos mais arredondados e sombra mais forte (`shadow-md` em vez de `shadow-sm`), efeito de elevação mais "de produto" do que uma caixa solta.
+- Os campos de texto ganharam `placeholder` (antes só o de telefone tinha).
+- A caixa de aviso no fim ("O lead entra em Leads...") trocou o cinza neutro por um tom violeta claro com um emoji de lâmpada, pra combinar com o resto e não parecer um aviso de erro.
+- Botão "Salvar lead" ganhou o mesmo gradiente violeta→azul-céu do cabeçalho, com sombra que cresce ao passar o mouse.
+
+Testado no navegador (admin de teste): conferi que o cabeçalho e o "Cancelar" não se sobrepõem em tela de desktop (larguras conferidas via posição real dos elementos, não só visual), e cadastrei um lead de verdade pela tela nova — apareceu certinho na coluna "Leads" do Funil, confirmando que o formulário continua funcionando igual, só mudou a cara. Lead e conta de teste removidos no final. `tsc --noEmit` e `npm run build` limpos, mesmas 16 rotas.

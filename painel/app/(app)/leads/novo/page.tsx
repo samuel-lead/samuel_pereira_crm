@@ -23,7 +23,7 @@ export default async function NovoLeadPage() {
     <>
       <PageHeader titulo="Novo lead" />
 
-      <main className="mx-auto max-w-lg px-6 py-10">
+      <main className="mx-auto max-w-lg bg-[#f4f5f7] px-6 py-10">
         <NovoLeadForm usuarios={usuarios} souAdmin={souAdmin} />
       </main>
     </>

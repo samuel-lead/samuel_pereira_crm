@@ -96,6 +96,16 @@ export function IconeWhatsapp(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconePessoaMais(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <circle cx="10" cy="8" r="3.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3.5 20c.7-3.8 3.3-5.8 6.5-5.8s5.8 2 6.5 5.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18.5 8v5M16 10.5h5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function IconeConfig(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>

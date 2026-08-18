@@ -5,6 +5,7 @@ import Link from "next/link";
 import { criarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
+import { IconePessoaMais } from "@/components/icons";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -18,17 +19,31 @@ export function NovoLeadForm({
   const [estado, acaoFormulario] = useActionState(criarLead, estadoInicial);
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex items-center justify-end">
-        <Link
-          href="/leads"
-          className="text-sm text-neutral-500 hover:text-neutral-700"
-        >
-          Cancelar
-        </Link>
+    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
+      <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 to-sky-500 px-6 py-6 text-white">
+        <IconePessoaMais className="pointer-events-none absolute -right-4 -top-4 h-28 w-28 text-white/10" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/30">
+              <IconePessoaMais className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-base font-semibold">Novo lead</h2>
+              <p className="text-xs text-violet-100">
+                Cadastre um contato pra começar a trabalhar ele no funil.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/leads"
+            className="text-xs font-medium text-violet-100 transition hover:text-white"
+          >
+            Cancelar
+          </Link>
+        </div>
       </div>
 
-      <form action={acaoFormulario} className="space-y-4">
+      <form action={acaoFormulario} className="space-y-4 p-6">
         <div className="space-y-1">
           <label
             className="text-sm font-medium text-neutral-700"
@@ -40,7 +55,8 @@ export function NovoLeadForm({
             id="nome"
             name="nome"
             required
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            placeholder="Nome do lead"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
           />
         </div>
 
@@ -55,7 +71,7 @@ export function NovoLeadForm({
             id="telefone"
             name="telefone"
             placeholder="+55 62 99999-9999"
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
           />
         </div>
 
@@ -79,7 +95,8 @@ export function NovoLeadForm({
           )}
         </div>
 
-        <p className="rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
+        <p className="flex items-start gap-2 rounded-md border border-violet-100 bg-violet-50 px-3 py-2 text-xs text-violet-700">
+          <span aria-hidden className="mt-0.5">💡</span>
           O lead entra em &quot;Leads&quot; (ainda não abordado). Assim que
           mandar a primeira mensagem, mova ele pro Nível 1. Os 3
           critérios de qualificação você preenche depois, editando o
@@ -94,7 +111,7 @@ export function NovoLeadForm({
 
         <button
           type="submit"
-          className="w-full rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+          className="w-full rounded-md bg-gradient-to-r from-violet-600 to-sky-500 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md hover:brightness-105"
         >
           Salvar lead
         </button>
