@@ -446,3 +446,13 @@ Adicionei `.is("arquivado_em", null)` nas três consultas de venda/receita em `l
 **Não mexi** na contagem de "leads trabalhados" nem nas de reuniões (marcadas/realizadas/no show) — elas também não filtram `arquivado_em`, mas isso é uma decisão separada (o `CLAUDE.md` define "lead trabalhado" como "o que foi declarado", sem falar de exclusão) — fica pro Samuel dizer se quer isso também, é só avisar.
 
 Testado: criei um lead de teste já nascendo vendido (R$500), conferi que a Receita e a Meta mostravam R$500; excluí o lead pela tela normal (botão "Excluir lead", com o alerta de confirmação); recarreguei o Dashboard e a Receita, ticket médio, "Canais que venderam" e a Meta de receita foram todos pra R$0/vazio — só "Leads trabalhados" continuou contando 1 (esperado, não fazia parte do escopo). Dados de teste removidos no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Fechar venda: campo de dinheiro de verdade, sem setinha de número
+
+Três ajustes finos no card "Fechar venda", depois do Samuel ver a tela:
+
+1. **Texto corrigido de novo**: "sai do Funil e da Base" → só "sai do Funil e vai pra Clientes" — o "e da Base" não fazia sentido (o lead normalmente nem estava na Base quando é vendido; isso só foi um cenário de teste que criei propositalmente na entrada anterior pra provar o bug).
+2. **Texto do placeholder**: "Quanto já entrou no caixa" → "Quanto entrou no caixa".
+3. **Campo de dinheiro de verdade**: os dois campos eram `<input type="number">`, que no navegador mostra as setinhas pra incrementar/decrementar (o "dropbox" que o Samuel via) e não formata nada. Troquei por um campo de texto com máscara de moeda: assim que digita qualquer número, já aparece formatado "R$ 1.500,00" na hora — funciona tratando cada dígito digitado como centavo (a mesma lógica que apps de banco usam), sem setinha nenhuma. Por baixo dos panos, um campo escondido manda pro servidor o número puro (`1500.00`), então a Server Action que já existia não precisou mudar nada.
+
+Testado digitando "150000" no campo Valor da venda — virou "R$ 1.500,00" na hora, conferido tanto visualmente quanto no valor real do campo escondido (`1500.00`); preenchi Receita com "60000" → "R$ 600,00"; enviei o formulário de verdade e a página do lead mostrou "Venda: R$1.500,00" e "Receita: R$600,00", batendo exatamente com o que foi digitado. Lead e conta de teste removidos no final. `tsc --noEmit` e `npm run build` limpos.
