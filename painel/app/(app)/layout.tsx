@@ -26,14 +26,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f4f5f7]">
+    <div className="flex h-screen overflow-hidden bg-[#f4f5f7]">
       <Sidebar
         isAdmin={isAdmin}
         paginasPermitidas={paginasPermitidas}
         nomeUsuario={nomeUsuario}
         fotoUsuario={fotoUsuario}
       />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 }
