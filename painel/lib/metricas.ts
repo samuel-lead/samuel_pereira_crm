@@ -97,6 +97,7 @@ export async function calcularMetricas(
       .select("receita_venda")
       .eq("usuario_id", usuarioId)
       .eq("status", "vendido")
+      .is("arquivado_em", null)
       .gte("vendido_em", inicioISO)
       .lt("vendido_em", fimISO),
   ]);
@@ -145,6 +146,7 @@ export async function calcularVendasPorCanal(
     .select("origem, valor_venda")
     .eq("org_id", orgId)
     .eq("status", "vendido")
+    .is("arquivado_em", null)
     .gte("vendido_em", inicio.toISOString())
     .lt("vendido_em", fim.toISOString());
 
@@ -226,6 +228,7 @@ export async function calcularReceitaOrg(
     .select("receita_venda")
     .eq("org_id", orgId)
     .eq("status", "vendido")
+    .is("arquivado_em", null)
     .gte("vendido_em", inicio.toISOString())
     .lt("vendido_em", fim.toISOString());
 
