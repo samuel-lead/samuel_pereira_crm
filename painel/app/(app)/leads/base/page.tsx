@@ -25,6 +25,7 @@ export default async function BasePage() {
       .from("leads")
       .select("id, nome, telefone_e164, origem, nivel_ordem, responsavel_id")
       .eq("nivel_ordem", 7)
+      .neq("status", "vendido")
       .is("arquivado_em", null)
       .order("entrou_nivel_em", { ascending: false }),
     user

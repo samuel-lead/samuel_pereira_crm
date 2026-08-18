@@ -20,6 +20,7 @@ type Lead = {
   criterio_capacidade: string;
   status: string;
   valor_venda: number | null;
+  receita_venda: number | null;
   vendido_em: string | null;
   responsavel_id: string | null;
 };
@@ -78,7 +79,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, vendido_em, responsavel_id"
+        "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, responsavel_id"
       )
       .eq("id", id)
       .single(),
@@ -164,12 +165,24 @@ export default async function EditarLeadPage({
                 ✓ Vendido
               </h2>
               <p className="mt-1 text-sm text-emerald-700">
+                Venda:{" "}
                 {leadTipado.valor_venda?.toLocaleString("pt-BR", {
                   style: "currency",
                   currency: "BRL",
                 })}
-                {leadTipado.vendido_em && ` · ${formatarData(leadTipado.vendido_em)}`}
               </p>
+              <p className="text-sm text-emerald-700">
+                Receita:{" "}
+                {leadTipado.receita_venda?.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }) ?? "não informada"}
+              </p>
+              {leadTipado.vendido_em && (
+                <p className="mt-1 text-xs text-emerald-600">
+                  {formatarData(leadTipado.vendido_em)}
+                </p>
+              )}
             </div>
           ) : (
             podeEditar && <MarcarVendidoForm leadId={leadTipado.id} />

@@ -8,6 +8,7 @@ type LeadVendido = {
   nome: string;
   telefone_e164: string | null;
   valor_venda: number | null;
+  receita_venda: number | null;
   vendido_em: string | null;
   responsavel_id: string | null;
 };
@@ -39,7 +40,7 @@ export default async function VendasPage() {
   const [{ data: leadsData }, { data: usuarioAtual }] = await Promise.all([
     supabase
       .from("leads")
-      .select("id, nome, telefone_e164, valor_venda, vendido_em, responsavel_id")
+      .select("id, nome, telefone_e164, valor_venda, receita_venda, vendido_em, responsavel_id")
       .eq("status", "vendido")
       .is("arquivado_em", null)
       .order("vendido_em", { ascending: false }),
@@ -50,18 +51,18 @@ export default async function VendasPage() {
 
   const leads = (leadsData ?? []) as LeadVendido[];
   const souAdmin = usuarioAtual?.papel === "admin";
-  const totalReceita = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+  const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
 
-  // Reaproveita o card do Kanban do funil — o "origem" vira o valor da
-  // venda + data, pra mostrar isso de um jeito bonito (o mesmo selo que já
-  // existe pro card), em vez de um rodapé solto.
+  // Reaproveita o card do Kanban do funil — o "origem" vira a receita + data,
+  // pra mostrar isso de um jeito bonito (o mesmo selo que já existe pro
+  // card), em vez de um rodapé solto.
   const leadsKanban: LeadResumo[] = leads.map((lead) => ({
     id: lead.id,
     nome: lead.nome,
     telefone_e164: lead.telefone_e164,
     origem:
-      lead.valor_venda != null
-        ? `${formatarMoeda(Number(lead.valor_venda))}${
+      lead.receita_venda != null
+        ? `${formatarMoeda(Number(lead.receita_venda))}${
             lead.vendido_em ? ` · ${formatarData(lead.vendido_em)}` : ""
           }`
         : null,

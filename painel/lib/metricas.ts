@@ -94,7 +94,7 @@ export async function calcularMetricas(
       .lt("agendada_para", fimISO),
     supabase
       .from("leads")
-      .select("valor_venda")
+      .select("receita_venda")
       .eq("usuario_id", usuarioId)
       .eq("status", "vendido")
       .gte("vendido_em", inicioISO)
@@ -103,7 +103,7 @@ export async function calcularMetricas(
 
   const vendas = vendasData?.length ?? 0;
   const receita = (vendasData ?? []).reduce(
-    (soma, l) => soma + Number(l.valor_venda ?? 0),
+    (soma, l) => soma + Number(l.receita_venda ?? 0),
     0
   );
 
@@ -223,13 +223,13 @@ export async function calcularReceitaOrg(
 ): Promise<number> {
   const { data } = await supabase
     .from("leads")
-    .select("valor_venda")
+    .select("receita_venda")
     .eq("org_id", orgId)
     .eq("status", "vendido")
     .gte("vendido_em", inicio.toISOString())
     .lt("vendido_em", fim.toISOString());
 
-  return (data ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+  return (data ?? []).reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
 }
 
 export type MetricasUsuario = Metricas & { usuarioId: string; nome: string };

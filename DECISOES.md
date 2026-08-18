@@ -417,3 +417,22 @@ Troquei o estado "mês novo, meta ainda não definida" (só aparece pra admin, j
 Não precisou nenhuma tabela ou lógica nova: como `metas_mensais` já é uma linha por `(org_id, ano, mes)`, a virada do mês naturalmente já deixa essa linha inexistente até alguém cadastrar — o aviso só está reagindo a isso ficar `null`.
 
 Testado: criei um admin de teste, apaguei a meta de agosto pra simular o primeiro acesso do mês, logei e vi o aviso amarelo aparecer certinho no Funil e em Métricas; preenchi R$30.000 de novo, o aviso sumiu e voltou o card normal com "Falta R$30.000,00". Reassociei a linha da meta de volta pro usuário real (Samuel) e apaguei a conta de teste. `tsc --noEmit` e `npm run build` limpos, mesmas 16 rotas.
+
+## 2026-08-18 — Venda vendida ficando presa na Base + Receita separada de Valor da venda
+
+O Samuel viu o card "Fechar venda" e apontou dois problemas:
+
+1. **Bug real**: o texto dizia "fica só em 'Mostrar Base e Vendas'" — um recurso que já não existe (foi trocado por telas próprias há várias entradas atrás, ver "Base e Vendas viram telas próprias"). Investigando o código, achei um bug de verdade por trás do texto desatualizado: a tela `/leads/base` filtra só por `nivel_ordem = 7`, **sem excluir `status = 'vendido'`** — diferente do Funil (`/leads`), que já exclui vendidos. Ou seja, um lead que estava na Base e foi marcado como vendido continuava aparecendo lá, além de aparecer em Clientes — duplicado. Corrigido com `.neq("status", "vendido")` na query da Base, igual o Funil já fazia. Texto do card corrigido pra "sai do Funil e da Base e vai pra Clientes" — que agora é verdade.
+
+2. **Valor da venda ≠ Receita**: o Samuel apontou que precisa informar os dois separadamente ao fechar uma venda, pra métricas baterem certo — reforça a regra que já estava no `CLAUDE.md` desde o início ("faturamento é o preço da venda... a meta sempre é sobre receita: o quanto que entra no caixa"). Até agora só existia `valor_venda`, e esse mesmo número era usado como se fosse "receita" em toda métrica do painel — o que ia dar errado assim que uma venda fosse parcelada (o preço fechado é maior do que o que já entrou no caixa).
+
+   - **Migration** (`20260818020000_receita_separada_do_valor_da_venda.sql`): nova coluna `leads.receita_venda numeric`, nullable, ao lado de `valor_venda` (que continua existindo e significa faturamento/preço combinado).
+   - **`MarcarVendidoForm`**: dois campos agora, "Valor da venda (R$)" e "Receita recebida (R$)", os dois obrigatórios.
+   - **`marcarVendido()`** (`lib/leads/actions.ts`): grava os dois valores.
+   - **Página do lead**: card "✓ Vendido" mostra "Venda: RX" e "Receita: RY" em linhas separadas.
+   - **Clientes (`/leads/vendas`)**: o "Receita total em vendas" no topo e o selo em cada card agora somam/mostram `receita_venda`, não mais `valor_venda`.
+   - **`lib/metricas.ts`**: `calcularMetricas()` (usada em "Esta semana"/"Este mês", ticket médio, taxa de venda) e `calcularReceitaOrg()` (usada na Meta de receita) passaram a somar `receita_venda`. **Não mexi** em `calcularVendasPorCanal()` ("Canais que venderam") — o campo lá já se chama corretamente `faturamento` e usa `valor_venda`, que é o conceito certo pra aquela tela (quanto cada canal faturou, não quanto já recebeu).
+
+   Fica pro Samuel decidir mais pra frente (ele já sinalizou que tem mais ajustes de preenchimento de lead vindo a seguir): hoje os dois campos são obrigatórios sempre, mesmo quando o pagamento é à vista (aí ele digita o mesmo número duas vezes) — não criei nenhum atalho tipo "copiar valor da venda" porque não foi pedido, mas é simples de adicionar se ele quiser depois.
+
+Testado de ponta a ponta com um lead de teste que comecei propositalmente na Base: marquei como vendido com **valores diferentes** (Venda R$1.000, Receita R$400, pra garantir que não era coincidência) — confirmei que o lead sumiu da Base, apareceu em Clientes mostrando "Receita total em vendas: R$400,00" (não R$1.000), a página do lead mostrou "Venda: R$1.000,00" e "Receita: R$400,00" separados, o Dashboard mostrou "RECEITA R$400,00 · ticket médio R$400,00" e a Meta de receita mostrou "Recebido R$400,00" — enquanto "Canais que venderam" corretamente mostrou "R$1.000,00" (faturamento). Lead e conta de teste removidos no final. `tsc --noEmit` e `npm run build` limpos, mesmas 16 rotas.

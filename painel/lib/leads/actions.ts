@@ -356,11 +356,19 @@ export async function marcarVendido(
     return { erro: "Informe o valor da venda" };
   }
 
+  const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
+  const receita = receitaRaw ? Number(receitaRaw) : null;
+
+  if (!receita || receita <= 0) {
+    return { erro: "Informe a receita recebida" };
+  }
+
   const { error } = await supabase
     .from("leads")
     .update({
       status: "vendido",
       valor_venda: valor,
+      receita_venda: receita,
       vendido_em: new Date().toISOString(),
     })
     .eq("id", leadId);
