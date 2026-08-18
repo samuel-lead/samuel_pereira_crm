@@ -707,3 +707,15 @@ Dois ajustes finos no card de qualificação do lead, a pedido do Samuel:
 2. **Exemplo em chips**: o texto de exemplo que tava dentro do placeholder do campo virou 4 etiquetas visuais (chips) acima do campo de texto — Situação hoje, O que já tentou, Onde quer chegar, e uma nova, **Autonomia de decisão** (se o lead decide sozinho ou depende de outra pessoa pra fechar) — ideia dele, ajuda a entender se vai precisar de mais alguém na conversa antes de fechar. São só visuais (não clicáveis), o SDR ainda escreve tudo livre no campo de baixo.
 
 Testado: com conta de teste, abri um lead existente e conferi visualmente que o título e os 4 chips aparecem certos, campo continua editável normal. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Bloqueia marcar reunião sem os 3 critérios preenchidos
+
+Regra que já existia escrita no CLAUDE.md ("Nenhuma reunião pode ser marcada sem os três [critérios]") mas ainda não era checada em nenhum lugar do código — o Samuel pediu pra tornar obrigatório de verdade.
+
+Em `atualizarLead` (`lib/leads/actions.ts`), quando o lead está entrando agora em "Reunião marcada" (nível mudou e o novo nível é 4), o sistema checa: perfil do lead preenchido, urgência diferente de "ainda não sei", capacidade de pagar diferente de "ainda não sei". Se faltar algum, a gravação inteira é cancelada — nada é salvo, nenhuma reunião é criada — e aparece uma mensagem dizendo exatamente o que falta (ex.: "Antes de marcar a reunião, preencha: se tem urgência, se consegue pagar."). Só entra em vigor na hora que o lead troca pra esse nível — quem já tava em "Reunião marcada" antes não é barrado por edições comuns.
+
+Não implementei o "forçar com justificativa" que o CLAUDE.md também menciona (marcar mesmo sem qualificação, mas sinalizado como "não-qualificada" nos relatórios) — o Samuel só pediu o bloqueio simples por enquanto; fica pra depois se ele quiser essa válvula de escape.
+
+O único lugar do painel que realmente cria uma reunião é esse formulário de editar lead — arrastar o card no Kanban pra "Reunião marcada" já redireciona pra essa mesma tela em vez de marcar direto, então não precisou mexer no drag-and-drop.
+
+Testado: com conta e lead de teste, tentei marcar reunião sem preencher os 3 critérios — bloqueou, mensagem certa apareceu, nível continuou 2 e nenhuma reunião foi criada no banco. Preenchendo os 3 e submetendo de novo, salvou normal (nível virou 4, reunião criada). Tudo removido no final. `tsc --noEmit` e `npm run build` limpos.

@@ -232,6 +232,22 @@ export async function atualizarLead(
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
 
+  // Nenhuma reunião pode ser marcada sem os 3 critérios de qualificação
+  // preenchidos (regra do CLAUDE.md) — checa só quando o lead está
+  // entrando em "Reunião marcada" agora, não em quem já estava lá.
+  if (nivelMudou && novoNivel === NIVEL_REUNIAO_MARCADA) {
+    const faltando: string[] = [];
+    if (!criterioProblema) faltando.push("o perfil do lead");
+    if (criterioUrgencia === "desconhecida") faltando.push("se tem urgência");
+    if (criterioCapacidade === "desconhecida") faltando.push("se consegue pagar");
+
+    if (faltando.length > 0) {
+      return {
+        erro: `Antes de marcar a reunião, preencha: ${faltando.join(", ")}.`,
+      };
+    }
+  }
+
   if (nivelMudou) {
     const erroReuniao = await sincronizarReuniao(supabase, {
       orgId: usuario.org_id,
