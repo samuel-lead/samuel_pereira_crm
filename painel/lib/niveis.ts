@@ -89,6 +89,15 @@ export function corDoNivel(ordem: number) {
   return CORES_NIVEL[ordem] ?? CORES_NIVEL[1];
 }
 
+// O funil virou dois quadros. "Reunião marcada" aparece nos dois — o SDR
+// continua vendo o compromisso que marcou, e o Closer já vê na fila dele.
+// Pré-vendas: antes da reunião, + Reunião marcada, + quem levou No Show
+// (volta pra ser remarcado). Vendas: Reunião marcada em diante — depois
+// que a call acontece, o lead sai do Pré-vendas (o responsável virou o
+// Closer) e só fica em Vendas.
+export const NIVEIS_PRE_VENDAS = [0, 1, 2, 3, 4, 5];
+export const NIVEIS_VENDAS = [4, 6];
+
 export type NivelResumo = {
   ordem: number;
   nome: string;

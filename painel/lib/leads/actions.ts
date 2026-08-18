@@ -147,7 +147,7 @@ async function sincronizarReuniao(
   ) {
     const { data: reuniao } = await supabase
       .from("reunioes")
-      .select("id")
+      .select("id, closer_id")
       .eq("lead_id", leadId)
       .eq("status", "marcada")
       .order("marcada_em", { ascending: false })
@@ -161,6 +161,15 @@ async function sincronizarReuniao(
         .update({ status: novoStatus })
         .eq("id", reuniao.id);
       if (error) return error.message;
+
+      // Reunião realizada: o lead passa a ser 100% do Closer que fez a call.
+      if (paraOrdem === NIVEL_REUNIAO_FEITA && reuniao.closer_id) {
+        const { error: erroTransferencia } = await supabase.rpc(
+          "transferir_lead_para_closer",
+          { p_lead_id: leadId, p_closer_id: reuniao.closer_id }
+        );
+        if (erroTransferencia) return erroTransferencia.message;
+      }
     }
     return null;
   }
@@ -258,6 +267,14 @@ export async function atualizarLead(
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
 
+  // Reunião marcada → Oportunidades: o responsável pode ter sido trocado
+  // pro Closer automaticamente (ver sincronizarReuniao). Não sobrescreve
+  // com o valor antigo do formulário nesse caso específico.
+  const transferenciaParaCloser =
+    nivelMudou &&
+    leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA &&
+    novoNivel === NIVEL_REUNIAO_FEITA;
+
   // Nenhuma reunião pode ser marcada sem os 3 critérios de qualificação
   // preenchidos (regra do CLAUDE.md) — checa só quando o lead está
   // entrando em "Reunião marcada" agora, não em quem já estava lá.
@@ -301,7 +318,7 @@ export async function atualizarLead(
       criterio_urgencia: criterioUrgencia,
       criterio_capacidade: criterioCapacidade,
       nivel_ordem: novoNivel,
-      responsavel_id: responsavelId,
+      ...(transferenciaParaCloser ? {} : { responsavel_id: responsavelId }),
       ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString() } : {}),
     })
     .eq("id", leadId);

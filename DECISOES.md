@@ -783,3 +783,24 @@ Depois de conversar sobre como CRMs como Close e Pipedrive têm uma visão dedic
 - **Menu lateral**: novo item "Reuniões" com ícone de calendário, entre Atividades e Bônus SDR.
 
 Testado: com conta de teste admin, a tela mostrou as 6 reuniões existentes com SDR/Closer/Status corretos; marquei uma reunião com um closer de teste e o filtro por closer mostrou só ela (1 reunião). Encontrei e corrigi um bug de português no contador ("6 reuniãoões" em vez de "6 reuniões") antes de fechar. Tudo removido no final. `tsc --noEmit` e `npm run build` limpos, 19 rotas.
+
+## 2026-08-18 — Funil vira dois quadros: Pré-vendas e Vendas
+
+Mudança grande, pedida em várias mensagens seguidas pelo Samuel: a tela "Reuniões" (que eu tinha acabado de criar como tabela) virou um quadro Kanban igual o Funil, e o Funil foi dividido em dois:
+
+- **Pré-vendas** (era "Funil", continua em `/leads`): Leads, Sem conversa iniciada, Em qualificação, Topou reunião sem horário, **e No Show** — quando o lead não comparece, ele volta pra cá, pro SDR tentar remarcar. Território do SDR.
+- **Vendas** (era "Reuniões", em `/reunioes`, agora logo abaixo de Pré-vendas no menu): Reunião marcada e Oportunidades para o fim do mês. Território do Closer.
+
+**A regra mais importante**: quando o lead sai de "Reunião marcada" e entra em "Oportunidades" (ou seja, a reunião foi realizada), o **responsável pelo lead muda automaticamente pro Closer** que fez a call — antes disso o lead continua do SDR (inclusive se levar No Show, continua do SDR). Isso bateu num problema técnico: a política de segurança do banco (RLS) não deixa ninguém, fora admin, transferir um lead pra OUTRA pessoa — então criei uma função no banco (`transferir_lead_para_closer`, com suas próprias checagens de permissão por dentro) que faz essa troca específica com privilégio elevado, chamada automaticamente pelo código sempre que essa transição acontece. Também corrigi um bug que eu mesmo ia introduzir: o formulário de editar lead, se eu não tomasse cuidado, sobrescreveria essa troca automática com o valor antigo do campo "Responsável" no mesmo salvamento — agora ele pula esse campo especificamente nessa transição.
+
+**Técnico**: os dois quadros reusam o mesmo componente `KanbanBoard` de sempre (só filtram quais níveis aparecem em cada um — `NIVEIS_PRE_VENDAS = [0,1,2,3,5]` e `NIVEIS_VENDAS = [4,6]`, em `lib/niveis.ts`), então arrastar card, cores, aviso de "sem atividade" etc. funcionam igual nos dois. A tabela de reuniões que eu tinha acabado de fazer (com filtro por closer) foi substituída por esse Kanban — não ficou nas duas formas.
+
+Testado: com contas e leads de teste, confirmei que Pré-vendas só mostra os níveis antes da reunião + No Show, e Vendas só mostra Reunião marcada + Oportunidades. Movi um lead de "Reunião marcada" pra "Oportunidades" pelo formulário — o responsável trocou automaticamente pro Closer certo, e a reunião ficou "realizada". Movi outro lead pra "No Show" — o responsável continuou com o SDR, sem trocar. Tudo removido no final. `tsc --noEmit` e `npm run build` limpos, 19 rotas.
+
+## 2026-08-18 — Correção: "Reunião marcada" aparece nos dois quadros
+
+Ajuste rápido depois de eu ter dividido o funil: o Samuel esclareceu que "Reunião marcada" não devia sair do Pré-vendas — ela continua lá (o SDR quer ver o compromisso que marcou), logo antes do No Show, **e também** aparece no Vendas (fila do Closer). Só um lead que já teve a reunião realizada (entrou em Oportunidades, e o responsável já virou o Closer) sai de vez do Pré-vendas.
+
+Mudei só `NIVEIS_PRE_VENDAS` em `lib/niveis.ts` de `[0,1,2,3,5]` pra `[0,1,2,3,4,5]` — Vendas (`[4,6]`) não mudou. Como os dois quadros usam a mesma consulta ordenada por `ordem`, "Reunião marcada" já cai automaticamente entre "Topou reunião" e "No Show", sem precisar reordenar nada.
+
+Testado: com conta de teste, o Pré-vendas mostrou a coluna "Reunião marcada" na posição certa (vazia, nenhum lead lá no momento), e o Vendas continuou mostrando "Reunião marcada" + "Oportunidades" normalmente. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.

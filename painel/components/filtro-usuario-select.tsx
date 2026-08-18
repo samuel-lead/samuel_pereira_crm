@@ -5,15 +5,17 @@ import { useRouter } from "next/navigation";
 export function FiltroUsuarioSelect({
   usuarios,
   valorInicial,
+  baseHref = "/leads",
 }: {
   usuarios: { id: string; nome: string }[];
   valorInicial?: string;
+  baseHref?: string;
 }) {
   const router = useRouter();
 
   function aoMudar(e: React.ChangeEvent<HTMLSelectElement>) {
     const valor = e.target.value;
-    router.push(valor ? `/leads?usuario=${valor}` : "/leads");
+    router.push(valor ? `${baseHref}?usuario=${valor}` : baseHref);
   }
 
   return (
