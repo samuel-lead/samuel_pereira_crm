@@ -8,6 +8,7 @@ type UsuarioLinha = {
   id: string;
   nome: string;
   papel: string;
+  funcao: string | null;
   paginas_permitidas: string[];
 };
 
@@ -46,6 +47,7 @@ export default async function PermissoesUsuarioPage({
           <EditarPermissoesForm
             usuarioId={usuario.id}
             papelAtual={usuario.papel}
+            funcaoAtual={usuario.funcao}
             paginasAtuais={usuario.paginas_permitidas ?? []}
           />
         </div>

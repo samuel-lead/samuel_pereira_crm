@@ -729,3 +729,16 @@ O Samuel confirmou que faz sentido o Closer (quando é uma pessoa diferente do S
 - **Bug evitado no caminho**: o texto "Responsável: Você" (que aparecia pra quem não é admin) assumia que só o próprio dono podia estar editando — com o Closer entrando nessa exceção, isso ia mostrar "Você" errado pro Closer. Corrigido pra sempre mostrar o nome de verdade do responsável.
 
 Testado: criei um SDR e um Closer de teste (ambos não-admin, pessoas diferentes), um lead do SDR com reunião marcada pro Closer. Logado como Closer: o formulário apareceu editável (sem o aviso de "só visualização"), "Responsável" mostrou o nome certo do SDR (não "Você"), e o botão "Fechar venda" funcionou — venda registrada com sucesso e o `responsavel_id` do lead continuou sendo o SDR, sem mudar. Tudo removido no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Função do usuário (SDR / Closer)
+
+O Samuel pediu pra poder marcar a função de cada usuário — SDR ou Closer — na tela de Usuários. É diferente do "papel" que já existia (admin/membro, que é nível de acesso ao sistema) — função é o papel da pessoa no processo comercial.
+
+- **Banco**: nova coluna `funcao` em `usuarios` (texto, só aceita 'sdr', 'closer' ou vazio). `listar_usuarios_da_org()` e `atualizar_permissoes_usuario(...)` atualizados pra ler/gravar essa coluna.
+- **Criar usuário**: novo campo "Função" (SDR / Closer / Não definida) no formulário de cadastro — vai junto pra Edge Function `criar-usuario`, que também foi atualizada e reimplantada.
+- **Editar permissões**: a mesma tela onde já se troca admin/membro e páginas permitidas ganhou o seletor de função.
+- **Lista de usuários**: quando a função está definida, aparece um badge verde ("SDR" ou "Closer") ao lado do badge de Administrador/Membro.
+
+Por enquanto essa função é só um rótulo — não filtra os seletores de "Responsável" nem de "Closer" na tela do lead (ainda mostram todo mundo da org). Se o Samuel quiser, um próximo passo natural é usar essa função pra filtrar esses seletores.
+
+Testado: com conta de teste, cadastrei um usuário novo com função SDR (gravou certo no banco e apareceu o badge na lista), depois editei as permissões dele e troquei pra Closer (o seletor já veio pré-selecionado com o valor salvo, e a troca gravou certo). Tudo removido no final. `tsc --noEmit` e `npm run build` limpos, Edge Function `criar-usuario` reimplantada.

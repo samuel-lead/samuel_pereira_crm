@@ -43,6 +43,7 @@ export async function criarUsuario(
   const senha = String(formData.get("senha") ?? "");
   const wppComercial = String(formData.get("wpp_comercial") ?? "").trim() || null;
   const papel = String(formData.get("papel") ?? "membro");
+  const funcao = String(formData.get("funcao") ?? "").trim() || null;
   const paginasPermitidas = formData.getAll("paginas_permitidas").map(String);
 
   if (!nome || !email || senha.length < 6) {
@@ -55,6 +56,7 @@ export async function criarUsuario(
       email,
       senha,
       papel,
+      funcao,
       paginas_permitidas: paginasPermitidas,
       wpp_comercial_e164: wppComercial,
     },
@@ -86,12 +88,14 @@ export async function atualizarPermissoes(
   const supabase = await createClient();
 
   const papel = String(formData.get("papel") ?? "membro");
+  const funcao = String(formData.get("funcao") ?? "").trim() || null;
   const paginasPermitidas = formData.getAll("paginas_permitidas").map(String);
 
   const { error } = await supabase.rpc("atualizar_permissoes_usuario", {
     usuario_id_alvo: usuarioId,
     novo_papel: papel,
     novas_paginas: paginasPermitidas,
+    nova_funcao: funcao,
   });
 
   if (error) {

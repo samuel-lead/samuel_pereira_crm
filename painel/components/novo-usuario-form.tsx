@@ -51,6 +51,17 @@ export function NovoUsuarioForm() {
       </div>
 
       <div className="space-y-1">
+        <label className={labelClasse} htmlFor="funcao">
+          Função
+        </label>
+        <select id="funcao" name="funcao" defaultValue="" className={campoClasse}>
+          <option value="">— Não definida —</option>
+          <option value="sdr">SDR</option>
+          <option value="closer">Closer</option>
+        </select>
+      </div>
+
+      <div className="space-y-1">
         <label className={labelClasse} htmlFor="senha">
           Senha temporária *
         </label>

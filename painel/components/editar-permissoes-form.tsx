@@ -9,10 +9,12 @@ const estadoInicial: EstadoFormulario = { erro: null };
 export function EditarPermissoesForm({
   usuarioId,
   papelAtual,
+  funcaoAtual,
   paginasAtuais,
 }: {
   usuarioId: string;
   papelAtual: string;
+  funcaoAtual: string | null;
   paginasAtuais: string[];
 }) {
   const acaoComId = atualizarPermissoes.bind(null, usuarioId);
@@ -23,6 +25,22 @@ export function EditarPermissoesForm({
 
   return (
     <form action={acaoFormulario} className="space-y-4">
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-neutral-700" htmlFor="funcao">
+          Função
+        </label>
+        <select
+          id="funcao"
+          name="funcao"
+          defaultValue={funcaoAtual ?? ""}
+          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+        >
+          <option value="">— Não definida —</option>
+          <option value="sdr">SDR</option>
+          <option value="closer">Closer</option>
+        </select>
+      </div>
+
       <fieldset className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
           Tipo de acesso

@@ -12,6 +12,7 @@ function json(status: number, body: unknown) {
 }
 
 const PAGINAS_VALIDAS = ["funil", "lista", "atividades", "metricas"];
+const FUNCOES_VALIDAS = ["sdr", "closer"];
 
 Deno.serve(async (req: Request) => {
   const authHeader = req.headers.get("Authorization");
@@ -66,6 +67,8 @@ Deno.serve(async (req: Request) => {
       )
     : [];
   const paginasPermitidas = papel === "admin" ? PAGINAS_VALIDAS : paginasEnviadas;
+  const funcaoRaw = String(body.funcao ?? "").trim();
+  const funcao = FUNCOES_VALIDAS.includes(funcaoRaw) ? funcaoRaw : null;
 
   if (!nome || !email || senha.length < 6) {
     return json(400, {
@@ -88,6 +91,7 @@ Deno.serve(async (req: Request) => {
     org_id: chamador.org_id,
     nome,
     papel,
+    funcao,
     paginas_permitidas: paginasPermitidas,
     wpp_comercial_e164: wppComercial,
   });

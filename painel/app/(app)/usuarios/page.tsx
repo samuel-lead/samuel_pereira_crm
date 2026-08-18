@@ -10,8 +10,14 @@ type UsuarioLinha = {
   email: string;
   criado_em: string;
   papel: string;
+  funcao: string | null;
   paginas_permitidas: string[];
   foto_url: string | null;
+};
+
+const FUNCAO_LABEL: Record<string, string> = {
+  sdr: "SDR",
+  closer: "Closer",
 };
 
 function formatarData(iso: string) {
@@ -74,6 +80,11 @@ export default async function UsuariosPage() {
                     >
                       {usuario.papel === "admin" ? "Administrador" : "Membro"}
                     </span>
+                    {usuario.funcao && (
+                      <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                        {FUNCAO_LABEL[usuario.funcao] ?? usuario.funcao}
+                      </span>
+                    )}
                   </div>
                   <p className="truncate text-sm text-neutral-500">{usuario.email}</p>
                   <p className="text-xs text-neutral-400">
