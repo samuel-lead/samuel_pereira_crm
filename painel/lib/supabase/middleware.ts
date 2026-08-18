@@ -16,6 +16,7 @@ function paginaDaRota(pathname: string): string | null {
   if (pathname === "/usuarios" || pathname.startsWith("/usuarios/")) return "admin";
   if (pathname === "/configuracoes" || pathname.startsWith("/configuracoes/")) return "admin";
   if (pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/")) return "admin";
+  if (pathname === "/ano" || pathname.startsWith("/ano/")) return "admin";
   return null;
 }
 

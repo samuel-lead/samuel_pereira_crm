@@ -630,3 +630,17 @@ O Samuel achou a tabela simples do Bônus SDR sem graça e pediu pra ficar bonit
 - Embaixo de cada card, o detalhamento dos três blocos de bônus (por calls, por fim de semana, por faturamento) numa lista simples, pra deixar claro de onde veio cada parte do total.
 
 Testado: com conta de teste, o card do topo mostrou o gradiente âmbar com o total certo, e o card do Samuel Pereira mostrou os 4 mini-cards coloridos com os números batendo (6 marcadas, 3 realizadas, 50% no-show, R$15.000 faturamento) e o detalhamento dos três bônus embaixo. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Nova página "Ano" + carga histórica de janeiro a julho
+
+O Samuel perguntou como ia controlar leads e métricas do ano inteiro e dos meses — hoje o CRM só mostra "esta semana"/"este mês", nada de ano nem meses passados. Perguntei se ele queria só os números agregados por mês ou também importar lead por lead de janeiro a julho (igual fiz com agosto) — ele escolheu só os números, mais rápido e sem risco de errar detalhe de 7 meses de planilha.
+
+**De onde vieram os números**: baixei a aba "ANO" da planilha como CSV (mesmo truque do `gid` + `export?format=csv` que uso desde a importação de agosto) — ela já tem meta, faturamento e receita por mês, prontos, sem precisar somar nada na mão.
+
+**Onde ficaram guardados**: criei duas colunas novas em `metas_mensais` — `faturamento_real` e `receita_real` — só preenchidas pra janeiro a julho de 2026 (os meses de antes do CRM existir, sem lead nenhum registrado). Cada mês desses ganhou uma linha com a meta (R$30.000, igual todo mês) e esses dois valores reais tirados direto da planilha.
+
+**Como a tela decide o que mostrar**: `calcularResumoAno()` (nova, em `lib/metricas.ts`) passa pelos 12 meses do ano — se o mês tem `faturamento_real`/`receita_real` preenchido, usa esse valor fixo; senão, calcula ao vivo somando os leads vendidos daquele mês (do jeito que já faz em `calcularReceitaOrg`). Isso quer dizer que agosto em diante segue vivo, crescendo junto com o CRM sendo usado de verdade — só o passado é fixo.
+
+**Tela nova** (`/ano`, item "Ano" no menu, logo depois de Métricas, só admin — mesma régua de "dado financeiro de time" do Bônus SDR): card grande verde-esmeralda com a receita acumulada do ano, e uma tabela mês a mês (Meta, Faturamento, Receita, Falta pra meta) com o mês atual destacado com uma etiqueta "agora".
+
+Testado: com conta de teste, os totais acumulados batidos à mão (Receita R$66.560,00, Meta R$240.000,00, Faturamento R$178.700,00) confirmaram que a soma dos 12 meses está certa; cada linha de "Falta pra meta" bateu exatamente com a linha "Falta para a meta" da própria planilha (ex.: Janeiro R$16.290,00); Agosto apareceu com a etiqueta "agora" e os valores calculados ao vivo (R$15.000 faturamento, R$5.000 receita), batendo com o que já estava correto no resto do painel. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 18 rotas.

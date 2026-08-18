@@ -411,3 +411,70 @@ export async function calcularBonusPorSdr(
     })
   );
 }
+
+export type ResumoMes = {
+  mes: number;
+  metaReceita: number | null;
+  faturamento: number;
+  receita: number;
+};
+
+// Visão do ano inteiro, mês a mês — meta, faturamento e receita. Meses que
+// já têm lead de verdade no CRM (a partir de quando começou a ser usado)
+// são calculados ao vivo, somando os leads vendidos daquele mês. Meses de
+// antes disso (só existiam na planilha) usam o resultado real que foi
+// registrado à mão em `metas_mensais.faturamento_real`/`receita_real`.
+export async function calcularResumoAno(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  ano: number
+): Promise<ResumoMes[]> {
+  const { data: metas } = await supabase
+    .from("metas_mensais")
+    .select("mes, meta_receita, faturamento_real, receita_real")
+    .eq("org_id", orgId)
+    .eq("ano", ano);
+
+  const metaPorMes = new Map<
+    number,
+    { meta_receita: number | null; faturamento_real: number | null; receita_real: number | null }
+  >();
+  for (const linha of metas ?? []) {
+    metaPorMes.set(linha.mes, linha);
+  }
+
+  const resultado: ResumoMes[] = [];
+
+  for (let mes = 1; mes <= 12; mes++) {
+    const registro = metaPorMes.get(mes);
+    const metaReceita = registro?.meta_receita != null ? Number(registro.meta_receita) : null;
+
+    if (registro && (registro.faturamento_real !== null || registro.receita_real !== null)) {
+      resultado.push({
+        mes,
+        metaReceita,
+        faturamento: Number(registro.faturamento_real ?? 0),
+        receita: Number(registro.receita_real ?? 0),
+      });
+      continue;
+    }
+
+    const inicio = new Date(ano, mes - 1, 1);
+    const fim = new Date(ano, mes, 1);
+    const { data: vendas } = await supabase
+      .from("leads")
+      .select("valor_venda, receita_venda")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicio.toISOString())
+      .lt("vendido_em", fim.toISOString());
+
+    const faturamento = (vendas ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+    const receita = (vendas ?? []).reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+
+    resultado.push({ mes, metaReceita, faturamento, receita });
+  }
+
+  return resultado;
+}
