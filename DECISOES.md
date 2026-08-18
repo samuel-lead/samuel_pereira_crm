@@ -504,3 +504,30 @@ O Samuel achou a tela de cadastro de lead "sem vida" — era só um card branco 
 - Botão "Salvar lead" ganhou o mesmo gradiente violeta→azul-céu do cabeçalho, com sombra que cresce ao passar o mouse.
 
 Testado no navegador (admin de teste): conferi que o cabeçalho e o "Cancelar" não se sobrepõem em tela de desktop (larguras conferidas via posição real dos elementos, não só visual), e cadastrei um lead de verdade pela tela nova — apareceu certinho na coluna "Leads" do Funil, confirmando que o formulário continua funcionando igual, só mudou a cara. Lead e conta de teste removidos no final. `tsc --noEmit` e `npm run build` limpos, mesmas 16 rotas.
+
+## 2026-08-18 — Importação dos 11 leads reais da planilha (aba AGO)
+
+O Samuel pediu pra subir os leads da planilha (aba AGO) pro CRM, mantendo vendas, follow-ups etc. **Isso não foi mudança de código** — foi uma inserção direta de dados reais no banco, via SQL, sem passar pelas telas do painel (11 leads de uma vez pela interface seria lento e sem necessidade).
+
+**Como li a planilha certo:** clicar célula por célula (como fiz nas vezes anteriores) é lento e arriscado pra 11 linhas com várias colunas. Descobri o `gid` da aba AGO pela URL e baixei ela como CSV (`.../export?format=csv&gid=876711910`) via `curl` — isso trouxe todas as linhas e colunas de uma vez, sem erro de leitura.
+
+**Mapeamento planilha → banco** (uma linha por lead, sempre com `usuario_id`/`responsavel_id` = Samuel, já que SDR e CLOSER eram sempre ele em todas as linhas):
+- `DATA DE ENTRADA` → `declarado_em` (hora fixada em meio-dia, horário de Brasília — a planilha só tinha data, sem hora)
+- `WHATSAPP` → `telefone_e164` (só limpei o número e adicionei o 55 na frente; não mexi no "9" que falta em alguns — o `linkWhatsApp()` já conserta isso na hora de abrir a conversa)
+- `ORIGEM DO LEAD` → `origem` (todas bateram com a lista já cadastrada, nenhuma caiu em "Outro")
+- `PRODUTO` → `produto` (só Paulo Ribeiro e Thiago Souza tinham; os outros ficaram vazio)
+- `Data de Agendamento` + `Data da Call` → uma linha nova em `reunioes` (`marcada_em` e `agendada_para`)
+- `CALL Realizada (S/N)` + `Status da CALL` → decidiu o nível do lead e o status da reunião:
+  - Sem nenhuma call marcada (5 leads: Ted, Caio Lacerda, Ivo Santos, Amanda Ambrósio, Monique Pimentel) → nível "Leads" (0), sem reunião
+  - Call marcada mas não realizada (Túlio Queiroz, Nice Soares, Beatriz Aranha) → nível "No Show" (5), reunião com `status = 'nao_compareceu'`
+  - Call realizada, "Status da CALL: Follow-up" (Paulo Ribeiro) → nível "Oportunidades para o fim do mês" (6), reunião `realizada`, sem resultado fechado
+  - Call realizada, "Status da CALL: Venda" (Claudilaine, Thiago Souza) → `status = 'vendido'`, reunião `realizada` com `resultado = 'vendeu'`
+- `VALOR DA VENDA` → `valor_venda`; `VALOR PAGO NO MÊS` → `receita_venda` — aqui achei uma diferença real: a Claudilaine tinha os dois preenchidos (R$5.000 os dois), mas o **Thiago Souza vendeu R$10.000 e o "valor pago no mês" estava em branco na planilha**. Segui a planilha à risca: gravei `receita_venda = null` pra ele, em vez de chutar um valor. Isso bateu exatamente com o card "Receita" da própria planilha (R$5.000, só a Claudilaine) — confirma que não foi erro meu, é assim que está registrado lá.
+- `NEGOCIAÇÃO EM ABERTO` e "closer pegou indicação" (colunas que o CRM ainda não tem campo próprio) → viraram uma nota na Linha do tempo de cada lead, pra não perder a informação.
+- Todo lead importado ganhou uma nota "Importado da planilha COMERCIAL (aba AGO)." na Linha do tempo, pra ficar rastreável.
+
+**Coisa que ficou pra você resolver:** o Thiago Souza está com receita "não informada" (R$10.000 vendidos, mas não sei quanto já caiu no caixa) — é só abrir o lead dele e conferir/corrigir se quiser que aquele valor conte na Meta de receita.
+
+**Também reparei:** já existia um lead de teste seu chamado "Samuel Pereira da Silva" com o mesmo telefone do Thiago Souza (11 99896-4964) — parece ter sido um teste seu enquanto mexia no sistema. Não toquei nele (pode ser coisa sua mesmo), só fica o aviso caso vire um lead duplicado — se for, é só excluir esse de teste.
+
+Testado: conferi cada um dos 11 leads na Lista de leads (nível batendo certinho com a planilha), a tela Clientes mostrando as 2 vendas com o total certo (R$5.000 de receita), e o Dashboard/Métricas com "Origem dos leads — mês: 10" (o Paulo Ribeiro fica de fora por ter entrado em julho, corretamente) e "Canais que venderam" mostrando Networking R$10.000 e SS IG R$5.000 — tudo batendo com os números que a própria planilha mostra. Conta de verificação removida no final (os 11 leads ficam, são dados reais).
