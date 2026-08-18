@@ -544,3 +544,15 @@ Essa é a mesma falha que corrigi ontem pra Receita/Canais/Meta (`calcularReceit
 Agora excluir um lead tira ele de toda métrica, sem exceção — Receita, Canais, Meta, Leads trabalhados e Reuniões, todos.
 
 Testado: com uma conta de verificação, conferi que "Performance da semana por SDR" mostrava "Samuel Pereira: 7 leads, 2 calls marcadas, 0 realizadas, 1 no show" (sobra dos testes dele, todos já excluídos) antes da correção; depois de aplicar o filtro e reiniciar o servidor, os mesmos números foram todos pra 0 — batendo com o fato de ele não ter nenhum lead ativo (não-arquivado) nessa semana. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — "Lead trabalhado" passa a contar reunião de mês anterior também
+
+Ligado à entrada anterior sobre a importação: o Samuel reparou que "Este mês" mostrava 10 leads trabalhados, mas ele "trabalhou com 11" em agosto. Investigando, achei o motivo: o Paulo Ribeiro entrou no sistema em 29/07 (segundo a própria planilha), mas a call dele foi em 05/08 — ou seja, ele continuou sendo trabalhado em agosto mesmo tendo entrado em julho. Perguntei ao Samuel se a data da planilha estava errada ou se era assim mesmo (trabalhou o lead em agosto, mesmo tendo entrado antes) — ele confirmou: quer contar **todo lead que ele trabalhou no mês**, não só quem entrou nele.
+
+Isso muda a definição de "lead trabalhado" que estava até no `CLAUDE.md` — atualizei o arquivo também, já que o Samuel mudou a regra explicitamente (a própria constituição do projeto permite isso: "a menos que o Samuel diga explicitamente que está mudando uma regra daqui").
+
+**Nova regra**: um lead conta como trabalhado num período se ele foi **declarado** (entrou) nesse período **ou** teve alguma **reunião** (marcada ou realizada) dentro dele — mesmo que tenha entrado num período anterior. Implementei em `calcularMetricas()` (`lib/metricas.ts`): além da consulta de leads declarados no período, adicionei uma segunda consulta buscando reuniões do usuário com `marcada_em` ou `agendada_para` dentro do período (excluindo lead arquivado, igual as outras). Os dois grupos de IDs de lead se juntam num `Set` (sem duplicar quem aparece nos dois) e o tamanho desse conjunto é o total de "leads trabalhados".
+
+Não mexi em `calcularLeadsPorOrigem()` ("Origem dos leads — semana/mês") — esse é sobre de onde os leads vieram, não sobre trabalho contínuo, então continua olhando só a data de entrada.
+
+Testado: reproduzi a mesma lógica direto em SQL (união de "declarados no período" com "teve reunião no período") pro Samuel em agosto — o resultado bateu 11 leads, incluindo o Paulo Ribeiro dessa vez. Conta de verificação removida no final. `tsc --noEmit` e `npm run build` limpos.

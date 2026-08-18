@@ -70,8 +70,11 @@ explícita e a reunião fica marcada como não-qualificada, separada em todo rel
 - **30 leads trabalhados por dia útil** (150/semana)
 - **3 reuniões marcadas por dia** (15/semana)
 
-"Lead trabalhado" = o lead que o Samuel **declara** pelo WhatsApp. Não é
-contato tentado nem respondido. A declaração é o que conta.
+"Lead trabalhado" num período = o lead **declarado** naquele período **ou**
+um lead de período anterior que teve reunião marcada ou realizada dentro
+dele. Não conta contato tentado nem respondido, só declaração ou reunião —
+um lead que entrou em julho mas teve a call em agosto conta como
+trabalhado em agosto também.
 
 ### Meta mensal de receita
 Na virada do mês o sistema **pergunta** a meta. Volta pela cadeia de taxas

@@ -60,7 +60,8 @@ export async function calcularMetricas(
   const fimISO = fim.toISOString();
 
   const [
-    { count: leadsTrabalhados },
+    { data: leadsDeclarados },
+    { data: reunioesDoPeriodo },
     { count: reunioesMarcadas },
     { count: reunioesRealizadas },
     { count: noShow },
@@ -68,11 +69,23 @@ export async function calcularMetricas(
   ] = await Promise.all([
     supabase
       .from("leads")
-      .select("id", { count: "exact", head: true })
+      .select("id")
       .eq("usuario_id", usuarioId)
       .is("arquivado_em", null)
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
+    // "Lead trabalhado" não é só quem entrou no período — é também quem já
+    // estava na base e teve reunião marcada ou realizada dentro dele (ex.:
+    // lead entrou em julho, teve a call em agosto, conta como trabalhado
+    // em agosto também).
+    supabase
+      .from("reunioes")
+      .select("lead_id, leads!inner(arquivado_em)")
+      .eq("usuario_id", usuarioId)
+      .is("leads.arquivado_em", null)
+      .or(
+        `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
+      ),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -112,7 +125,12 @@ export async function calcularMetricas(
     0
   );
 
-  const leads = leadsTrabalhados ?? 0;
+  const idsTrabalhados = new Set<string>([
+    ...(leadsDeclarados ?? []).map((l) => l.id),
+    ...(reunioesDoPeriodo ?? []).map((r) => r.lead_id),
+  ]);
+
+  const leads = idsTrabalhados.size;
   const marcadas = reunioesMarcadas ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
 
