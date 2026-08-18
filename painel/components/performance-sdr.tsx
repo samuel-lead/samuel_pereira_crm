@@ -27,17 +27,17 @@ export function PerformanceSdr({
       </p>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[640px] table-fixed text-left text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
               <th className="px-3 py-2 text-left font-medium">SDR</th>
-              <th className="px-3 py-2 text-center font-medium">Leads</th>
-              <th className="px-3 py-2 text-center font-medium">Calls marcadas</th>
-              <th className="px-3 py-2 text-center font-medium">Calls realizadas</th>
-              <th className="px-3 py-2 text-center font-medium">No Show</th>
-              <th className="px-3 py-2 text-center font-medium">Vendas</th>
-              <th className="px-3 py-2 text-center font-medium">Taxa de venda</th>
-              <th className="px-3 py-2 text-center font-medium">Receita</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">Leads</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">Calls marcadas</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">Calls realizadas</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">No Show</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">Vendas</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">Taxa de venda</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">Receita</th>
             </tr>
           </thead>
           <tbody>
