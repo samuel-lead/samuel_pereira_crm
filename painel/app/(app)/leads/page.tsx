@@ -18,9 +18,12 @@ type LeadResumo = {
   origem: string | null;
   nivel_ordem: number;
   declarado_em: string;
+  entrou_nivel_em: string;
   status: string;
   responsavel_id: string | null;
 };
+
+type LeadComAtividade = LeadResumo & { ultima_atividade_em: string };
 
 export default async function LeadsPage({
   searchParams,
@@ -36,7 +39,9 @@ export default async function LeadsPage({
 
   let consulta = supabase
     .from("leads")
-    .select("id, nome, telefone_e164, origem, nivel_ordem, declarado_em, status, responsavel_id")
+    .select(
+      "id, nome, telefone_e164, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id"
+    )
     .is("arquivado_em", null)
     .neq("status", "vendido")
     .neq("nivel_ordem", 7) // Base tem tela própria, não conta nem aparece aqui
@@ -75,8 +80,37 @@ export default async function LeadsPage({
       ])
     : [null, null];
 
-  const leadsPorNivel: Record<number, LeadResumo[]> = {};
-  for (const lead of leads) {
+  // "Atividade" de um lead = ou ele mudou de nível, ou alguém registrou uma
+  // nota nele — o que tiver acontecido mais recente. Usado pra sinalizar no
+  // card quando o lead fica parado sem ninguém mexer.
+  const leadIds = leads.map((lead) => lead.id);
+  const { data: interacoesData } = leadIds.length
+    ? await supabase
+        .from("interacoes")
+        .select("lead_id, ocorreu_em")
+        .in("lead_id", leadIds)
+        .order("ocorreu_em", { ascending: false })
+    : { data: [] as { lead_id: string; ocorreu_em: string }[] };
+
+  const ultimaInteracaoPorLead = new Map<string, string>();
+  for (const interacao of interacoesData ?? []) {
+    if (!ultimaInteracaoPorLead.has(interacao.lead_id)) {
+      ultimaInteracaoPorLead.set(interacao.lead_id, interacao.ocorreu_em);
+    }
+  }
+
+  const leadsComAtividade: LeadComAtividade[] = leads.map((lead) => {
+    const ultimaInteracao = ultimaInteracaoPorLead.get(lead.id);
+    const ultimaAtividadeEm =
+      ultimaInteracao &&
+      new Date(ultimaInteracao).getTime() > new Date(lead.entrou_nivel_em).getTime()
+        ? ultimaInteracao
+        : lead.entrou_nivel_em;
+    return { ...lead, ultima_atividade_em: ultimaAtividadeEm };
+  });
+
+  const leadsPorNivel: Record<number, LeadComAtividade[]> = {};
+  for (const lead of leadsComAtividade) {
     const lista = leadsPorNivel[lead.nivel_ordem] ?? [];
     lista.push(lead);
     leadsPorNivel[lead.nivel_ordem] = lista;

@@ -754,3 +754,15 @@ Passo seguinte da função SDR/Closer (feature anterior): os seletores de "Respo
 Como quase ninguém na equipe do Samuel tem função definida ainda (é feature nova), esses seletores vão continuar curtos até ele preencher a função de cada pessoa em Usuários → Permissões.
 
 Testado: com usuários de teste (um SDR, um Closer, um sem função nenhuma), confirmei que "Responsável" mostrou só o SDR, "Closer" mostrou só o Closer, e um lead com responsável pré-existente sem função continuou mostrando esse responsável certo (não sumiu nem quebrou). Tudo removido no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Card do lead fica vermelho sem atividade há mais de 1 dia
+
+O Samuel pediu um sinal visual no Funil pra avisar o SDR quando um lead fica parado — sem ser movido de nível nem receber nenhuma nota.
+
+**O que conta como "atividade"**: o mais recente entre (a) a última vez que o lead mudou de nível (`entrou_nivel_em`, já existia e já era atualizado a cada movimentação) e (b) a nota mais recente registrada nele (`interacoes.ocorreu_em`). Não precisei criar coluna nova — só juntei os dois dados que já existiam.
+
+- Em `app/(app)/leads/page.tsx`, depois de buscar os leads do Funil, busco a interação mais recente de cada um (uma query só, agrupada em memória) e calculo `ultima_atividade_em` = a mais recente entre as duas fontes.
+- Em `components/kanban-board.tsx`, cada card calcula quantos dias se passaram desde essa data. Com 1 dia ou mais, o card fica com fundo e borda vermelho-claro e mostra "X dia(s) sem atividade" embaixo do nome — assim que o lead recebe uma nota nova ou é movido de coluna, some sozinho na próxima vez que a tela carregar.
+- Só vale pro Funil (`/leads`) — as telas de Base e Vendas reusam o mesmo componente de card mas não calculam isso (não faz sentido sinalizar atraso em lead que já saiu do funil ativo).
+
+Testado: peguei um lead real, forcei no banco a última atividade dele pra 3 dias atrás (nível e nota junto) — o card ficou vermelho com "3 dias sem atividade", os outros continuaram normais. Registrei uma nota nova nele e recarreguei — voltou ao normal, sem vermelho. Desfiz as datas forçadas e removi a conta de teste no final. `tsc --noEmit` e `npm run build` limpos.

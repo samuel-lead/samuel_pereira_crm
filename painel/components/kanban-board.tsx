@@ -8,6 +8,7 @@ import { linkWhatsApp } from "@/lib/whatsapp";
 import { IconeWhatsapp } from "@/components/icons";
 
 const NIVEL_REUNIAO_MARCADA = 4;
+const UM_DIA_MS = 24 * 60 * 60 * 1000;
 
 type LeadResumo = {
   id: string;
@@ -16,7 +17,14 @@ type LeadResumo = {
   origem: string | null;
   nivel_ordem: number;
   responsavel_id: string | null;
+  ultima_atividade_em?: string;
 };
+
+function diasSemAtividade(ultimaAtividadeEm?: string) {
+  if (!ultimaAtividadeEm) return 0;
+  const passou = Date.now() - new Date(ultimaAtividadeEm).getTime();
+  return Math.floor(passou / UM_DIA_MS);
+}
 
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
@@ -187,6 +195,8 @@ export function KanbanBoard({
                   ) : (
                     leadsDoNivel.map((lead) => {
                       const arrastavel = podeArrastar(lead);
+                      const diasParado = diasSemAtividade(lead.ultima_atividade_em);
+                      const atrasado = diasParado >= 1;
                       return (
                       <div
                         key={lead.id}
@@ -198,10 +208,18 @@ export function KanbanBoard({
                         }}
                         draggable={arrastavel}
                         onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead.id)}
-                        title={arrastavel ? undefined : "Você só visualiza — não é seu lead"}
-                        className={`group rounded-md border border-neutral-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
-                          arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"
-                        }`}
+                        title={
+                          arrastavel
+                            ? atrasado
+                              ? `${diasParado} dia${diasParado === 1 ? "" : "s"} sem atividade`
+                              : undefined
+                            : "Você só visualiza — não é seu lead"
+                        }
+                        className={`group rounded-md border p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                          atrasado
+                            ? "border-red-300 bg-red-50"
+                            : "border-neutral-200 bg-white"
+                        } ${arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"}`}
                       >
                         <div className="flex items-start gap-2">
                           <span
@@ -216,6 +234,11 @@ export function KanbanBoard({
                             {lead.telefone_e164 && (
                               <p className="truncate text-xs text-neutral-500">
                                 {lead.telefone_e164}
+                              </p>
+                            )}
+                            {atrasado && (
+                              <p className="mt-0.5 text-[11px] font-medium text-red-600">
+                                {diasParado} dia{diasParado === 1 ? "" : "s"} sem atividade
                               </p>
                             )}
                             <div className="mt-1 flex items-center gap-1.5">
