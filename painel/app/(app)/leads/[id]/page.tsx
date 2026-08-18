@@ -13,6 +13,7 @@ type Lead = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  email: string | null;
   origem: string | null;
   produto: string | null;
   nivel_ordem: number;
@@ -82,7 +83,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id"
+        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id"
       )
       .eq("id", id)
       .single(),

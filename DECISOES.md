@@ -484,3 +484,11 @@ Testado com um lead de teste: escolhi "Agenda Previsível" no Produto, movi o le
 O Samuel viu o campo "Produto" no meio do formulário de editar lead (entre Origem e Responsável) e achou melhor mudar: só faz sentido perguntar o produto na hora de fechar a venda, não antes. Movido o `ProdutoSelect` pra dentro do card "Fechar venda" (`MarcarVendidoForm`), logo abaixo do botão "Marcar como vendido" — e removido do cadastro de lead novo e da edição geral. `marcarVendido()` agora grava `produto` junto com `valor_venda`/`receita_venda`; `criarLead()` e `atualizarLead()` não mexem mais nesse campo.
 
 Testado: abri um lead sem produto, conferi que "Produto" sumiu do formulário de edição (só ficou Nome, Telefone, Origem, Responsável, Nível) e apareceu certinho abaixo do botão verde, dentro do card "Fechar venda". Preenchi valor, receita e escolhi "Treinamento comercial", marquei como vendido, e o card "✓ Vendido" mostrou "Produto: Treinamento comercial" — confirmando que salvou pelo lugar novo. Dados de teste removidos no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Campo de e-mail do lead (só na edição, não no cadastro rápido)
+
+Continuação do que eu tinha sugerido (gap comparado com CRMs grandes e preparação pra integração com anúncio): o Samuel topou adicionar e-mail, mas só na tela de editar o lead — não quer que peça e-mail no cadastro rápido (`/leads/novo`), que continua só nome, telefone, origem e responsável.
+
+Criei `leads.email` (coluna nova, texto, opcional) e o campo "E-mail" no `EditarLeadForm`, logo depois de Telefone. `criarLead()` não foi tocado (continua sem e-mail); `atualizarLead()` passou a gravar o campo.
+
+Testado: confirmei que `/leads/novo` continua sem nenhum campo de e-mail; abri um lead de teste, o campo "E-mail" apareceu vazio na edição, preenchi "lead.teste@example.com", salvei, e confirmei direto no banco que gravou certo. Dados de teste removidos no final. `tsc --noEmit` e `npm run build` limpos, mesmas 16 rotas.

@@ -18,6 +18,7 @@ type Lead = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  email: string | null;
   origem: string | null;
   nivel_ordem: number;
   criterio_problema: string | null;
@@ -84,6 +85,19 @@ export function EditarLeadForm({
             id="telefone"
             name="telefone"
             defaultValue={lead.telefone_e164 ?? ""}
+            className={campoClasse}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className={labelClasse} htmlFor="email">
+            E-mail
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            defaultValue={lead.email ?? ""}
             className={campoClasse}
           />
         </div>

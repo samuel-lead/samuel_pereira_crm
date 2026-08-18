@@ -188,6 +188,7 @@ export async function atualizarLead(
 
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
+  const email = String(formData.get("email") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
   const criterioProblema =
     String(formData.get("criterio_problema") ?? "").trim() || null;
@@ -248,6 +249,7 @@ export async function atualizarLead(
     .update({
       nome,
       telefone_e164: telefone,
+      email,
       origem,
       criterio_problema: criterioProblema,
       criterio_urgencia: criterioUrgencia,
