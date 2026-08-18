@@ -376,3 +376,7 @@ Pedido do Samuel, baseado na planilha: mostrar de onde vieram os leads (todos, n
 Criei `calcularLeadsPorOrigem()` (org inteira, visão de time — mesma lógica de admin-only das outras métricas de equipe) e um componente `LeadsPorOrigem` reaproveitado duas vezes: "Origem dos leads — semana" e "Origem dos leads — mês", cada um com o total geral em cima e a contagem por origem com barrinha de proporção.
 
 Testado com 3 leads de teste (2 de "SS IG", 1 de "Networking") — os dois blocos mostraram a contagem certinha (SS IG: 2, Networking: 1, total: 3 leads). Dados de teste removidos no final. Build de produção limpo.
+
+## 2026-08-17 — Tabela de performance por SDR: números centralizados
+
+Ajuste visual simples: na tabela "Performance da semana por SDR", os números (Leads, Calls marcadas/realizadas, No Show, Vendas, Taxa de venda, Receita) ficaram centralizados; só o nome do SDR continua alinhado à esquerda. Testado direto no DOM (className de cada célula) pra confirmar o alinhamento certo em cada coluna.
