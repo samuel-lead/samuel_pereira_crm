@@ -9,7 +9,13 @@ function formatarPercentual(valor: number | null) {
   return `${Math.round(valor * 100)}%`;
 }
 
-export function PerformanceSdr({ dados }: { dados: MetricasUsuario[] }) {
+export function PerformanceSdr({
+  dados,
+  periodo,
+}: {
+  dados: MetricasUsuario[];
+  periodo?: string;
+}) {
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <h2 className="mb-1 text-sm font-semibold text-neutral-800">
@@ -17,6 +23,7 @@ export function PerformanceSdr({ dados }: { dados: MetricasUsuario[] }) {
       </h2>
       <p className="mb-4 text-xs text-neutral-500">
         Só admin vê essa comparação entre a equipe.
+        {periodo && <> Semana de {periodo} (domingo a sábado).</>}
       </p>
 
       <div className="overflow-x-auto">

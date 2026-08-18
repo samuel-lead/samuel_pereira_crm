@@ -16,12 +16,20 @@ export type Metricas = {
   diasUteis: number;
 };
 
+// Semana sempre domingo a sábado (não segunda a domingo) — combinado com
+// o Samuel, senão as contas de "esta semana" batem errado.
 export function inicioDaSemana(data: Date) {
   const d = new Date(data);
-  const dia = d.getDay();
-  const diff = dia === 0 ? -6 : 1 - dia;
-  d.setDate(d.getDate() + diff);
+  const dia = d.getDay(); // 0 = domingo
+  d.setDate(d.getDate() - dia);
   d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+export function fimDaSemana(inicioSemana: Date) {
+  const d = new Date(inicioSemana);
+  d.setDate(d.getDate() + 6);
+  d.setHours(23, 59, 59, 999);
   return d;
 }
 

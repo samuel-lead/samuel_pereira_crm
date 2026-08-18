@@ -354,3 +354,11 @@ Dois retoques depois de ver a tela:
 2. **Tabela de performance por SDR**: as colunas "Marcadas" e "Realizadas" viraram "Calls marcadas" e "Calls realizadas", pra bater com o nome usado na planilha de referência.
 
 Testado com 3 vendas de canais diferentes (Networking, SS IG, Indicação base) — as três apareceram na lista, cada uma com sua quantidade e faturamento; e a tabela de SDR já mostra os nomes completos das colunas. Dados de teste removidos no final. Build de produção limpo.
+
+## 2026-08-17 — Bug: semana calculava segunda a domingo, tinha que ser domingo a sábado
+
+O Samuel percebeu que a "semana" das métricas não tava no padrão certo. Conferi o código: `inicioDaSemana()` calculava a partir de **segunda-feira** (padrão ISO), mas o combinado sempre foi domingo a sábado. Corrigi a função pra sempre voltar até o domingo mais recente, e criei `fimDaSemana()` (domingo + 6 dias = sábado).
+
+Pra isso nunca mais dar dúvida, também **mostrei o intervalo de datas na tela** — tanto no card "Esta semana" quanto na tabela "Performance da semana por SDR" agora aparece "domingo a sábado · 16/08 a 22/08" (ou a semana correspondente), calculado ao vivo, não fixo.
+
+Testado com uma simulação isolada da função (segunda-feira 17/08 como "hoje") — confirmou que a semana calculada vai de domingo 16/08 a sábado 22/08. Testado também na tela, logado com usuário de teste: os dois textos de período aparecem certinhos. Usuário de teste removido no final. Build de produção limpo.

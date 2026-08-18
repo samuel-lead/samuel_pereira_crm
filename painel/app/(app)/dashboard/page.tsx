@@ -8,8 +8,13 @@ import {
   calcularVendasPorCanal,
   calcularMetricasPorUsuario,
   inicioDaSemana,
+  fimDaSemana,
   inicioDoMes,
 } from "@/lib/metricas";
+
+function formatarDataCurta(d: Date) {
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -39,7 +44,9 @@ export default async function DashboardPage() {
 
   const souAdmin = usuario!.papel === "admin";
   const inicioSemana = inicioDaSemana(agora);
+  const fimSemana = fimDaSemana(inicioSemana);
   const inicioMes = inicioDoMes(agora);
+  const subtituloSemana = `domingo a sábado · ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`;
 
   const [metricasSemana, metricasMes, vendasPorCanal, performanceSemanaSdr] =
     await Promise.all([
@@ -58,7 +65,12 @@ export default async function DashboardPage() {
       <PageHeader titulo="Métricas" />
 
       <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
-        <SecaoPeriodo titulo="Esta semana" metricas={metricasSemana} metas={metas} />
+        <SecaoPeriodo
+          titulo="Esta semana"
+          subtitulo={subtituloSemana}
+          metricas={metricasSemana}
+          metas={metas}
+        />
         <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} />
 
         {souAdmin && (
@@ -66,7 +78,10 @@ export default async function DashboardPage() {
             <h2 className="mb-3 text-lg font-bold text-neutral-900">Visão da equipe</h2>
             <div className="space-y-4">
               <VendasPorCanal dados={vendasPorCanal} />
-              <PerformanceSdr dados={performanceSemanaSdr} />
+              <PerformanceSdr
+                dados={performanceSemanaSdr}
+                periodo={`${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`}
+              />
             </div>
           </section>
         )}

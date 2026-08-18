@@ -130,10 +130,12 @@ function BarraTaxa({
 
 export function SecaoPeriodo({
   titulo,
+  subtitulo,
   metricas,
   metas,
 }: {
   titulo: string;
+  subtitulo?: string;
   metricas: Metricas;
   metas: MetasConfig;
 }) {
@@ -142,7 +144,10 @@ export function SecaoPeriodo({
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-bold text-neutral-900">{titulo}</h2>
+      <div className="mb-3 flex items-baseline gap-2">
+        <h2 className="text-lg font-bold text-neutral-900">{titulo}</h2>
+        {subtitulo && <span className="text-xs text-neutral-400">{subtitulo}</span>}
+      </div>
 
       <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950 via-emerald-700 to-teal-500 p-7 text-white shadow-2xl shadow-emerald-950/50 ring-1 ring-white/10">
         <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
