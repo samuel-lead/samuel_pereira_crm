@@ -38,15 +38,20 @@ export function KanbanBoard({
   leadsPorNivel,
   souAdmin = true,
   usuarioAtualId = null,
+  numerosVisiveis: numerosVisiveisExternos,
 }: {
   niveis: NivelResumo[];
   leadsPorNivel: Record<number, LeadResumo[]>;
   souAdmin?: boolean;
   usuarioAtualId?: string | null;
+  // Quando o quadro mostra só um pedaço dos níveis (ex.: Vendas, que é a
+  // continuação do Pré-vendas), a numeração "Nível X" precisa vir calculada
+  // com base em TODOS os níveis, senão recomeça do 1 dentro do recorte.
+  numerosVisiveis?: Map<number, number>;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const numerosVisiveis = numerarNiveis(niveis);
+  const numerosVisiveis = numerosVisiveisExternos ?? numerarNiveis(niveis);
   const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
   const [, iniciarTransicao] = useTransition();
 

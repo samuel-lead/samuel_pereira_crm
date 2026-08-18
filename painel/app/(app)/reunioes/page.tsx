@@ -9,7 +9,7 @@ import {
   calcularReceitaOrg,
   inicioDoMes,
 } from "@/lib/metricas";
-import { NIVEIS_VENDAS, type NivelResumo } from "@/lib/niveis";
+import { NIVEIS_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
 type LeadResumo = {
   id: string;
@@ -59,9 +59,9 @@ export default async function VendasPage({
       supabase.from("usuarios").select("id, nome").order("nome"),
     ]);
 
-  const niveis = ((niveisData ?? []) as NivelResumo[]).filter((nivel) =>
-    NIVEIS_VENDAS.includes(nivel.ordem)
-  );
+  const todosNiveis = (niveisData ?? []) as NivelResumo[];
+  const numerosVisiveis = numerarNiveis(todosNiveis);
+  const niveis = todosNiveis.filter((nivel) => NIVEIS_VENDAS.includes(nivel.ordem));
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
@@ -116,6 +116,7 @@ export default async function VendasPage({
           leadsPorNivel={leadsPorNivel}
           souAdmin={souAdmin}
           usuarioAtualId={user?.id ?? null}
+          numerosVisiveis={numerosVisiveis}
         />
       </main>
     </>

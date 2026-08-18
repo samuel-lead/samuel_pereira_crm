@@ -804,3 +804,12 @@ Ajuste rápido depois de eu ter dividido o funil: o Samuel esclareceu que "Reuni
 Mudei só `NIVEIS_PRE_VENDAS` em `lib/niveis.ts` de `[0,1,2,3,5]` pra `[0,1,2,3,4,5]` — Vendas (`[4,6]`) não mudou. Como os dois quadros usam a mesma consulta ordenada por `ordem`, "Reunião marcada" já cai automaticamente entre "Topou reunião" e "No Show", sem precisar reordenar nada.
 
 Testado: com conta de teste, o Pré-vendas mostrou a coluna "Reunião marcada" na posição certa (vazia, nenhum lead lá no momento), e o Vendas continuou mostrando "Reunião marcada" + "Oportunidades" normalmente. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Menu volta a chamar "Leads" + numeração corrigida no Vendas
+
+Dois ajustes rápidos depois da divisão em Pré-vendas/Vendas:
+
+1. **Nome no menu**: o Samuel pediu pra voltar a chamar de "Leads" (em vez de "Pré-vendas") no menu lateral, no título da página e no checkbox de permissões — "Vendas" continua com esse nome.
+2. **Numeração errada no quadro Vendas**: a coluna "Oportunidades para o fim do mês" estava aparecendo como "NÍVEL 1" no quadro Vendas, porque a numeração era calculada só com os níveis daquele quadro (que ali é só o segundo nível da lista). Corrigido pra calcular a numeração usando TODOS os níveis (a lista completa, sem filtrar), e só depois decidir quais colunas aparecem em cada quadro — agora mostra "NÍVEL 5", que é o número certo, contínuo com o Leads/Pré-vendas.
+
+Testado: com conta de teste, confirmei que o menu mostra "Leads" e que o quadro Vendas mostra "NÍVEL 5. Oportunidades para o fim do mês" corretamente. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
