@@ -8,7 +8,7 @@ import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeCalendario } from "@/components/icons";
 
 const ITENS = [
-  { href: "/leads", label: "Leads", Icone: IconeFunil, pagina: "funil" },
+  { href: "/leads", label: "Pré-vendas", Icone: IconeFunil, pagina: "funil" },
   { href: "/reunioes", label: "Vendas", Icone: IconeCalendario, pagina: "reunioes" },
   { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
   { href: "/leads/lista", label: "Lista de leads", Icone: IconeLista, pagina: "lista" },

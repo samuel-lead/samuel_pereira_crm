@@ -823,3 +823,7 @@ Terceira peça da divisão do funil: dentro de "Oportunidades para o fim do mês
 - **Duas formas de marcar**, como o Samuel pediu: **arrastar o card** pra essa coluna no Kanban (o `moverLeadNivel` reconhece esse ordem especial e só liga a marcação, sem tocar no nível de verdade), ou **abrir o lead e marcar um checkbox** que só aparece quando o nível selecionado é "Oportunidades" — ambos os caminhos levam ao mesmo lugar.
 
 Testado: com conta de teste, marquei o checkbox num lead que já estava em Oportunidades — o nível continuou 6, a marcação virou `true`, e o card foi pra coluna verde nova no quadro Vendas. Desmarquei de novo — voltou pra coluna normal. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Menu volta a chamar "Pré-vendas" (título da página continua "Leads")
+
+Ajuste de nome, de novo: o Samuel definiu que o menu lateral mostra "Pré-vendas", mas o título dentro da própria tela continua "Leads" — é a mesma distinção que já existia desde antes de eu tocar nisso (o menu tinha um nome, o título de cima tinha outro). Mudei só o rótulo do menu lateral e do checkbox de permissões; o `<PageHeader titulo="Leads">` já estava certo, não precisou tocar.

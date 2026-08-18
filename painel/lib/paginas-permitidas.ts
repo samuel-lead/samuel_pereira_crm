@@ -1,5 +1,5 @@
 export const PAGINAS_CONFIGURAVEIS = [
-  { chave: "funil", label: "Leads" },
+  { chave: "funil", label: "Pré-vendas" },
   { chave: "reunioes", label: "Vendas" },
   { chave: "lista", label: "Lista de leads" },
   { chave: "atividades", label: "Atividades" },
