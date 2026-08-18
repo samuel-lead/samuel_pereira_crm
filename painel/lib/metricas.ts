@@ -343,3 +343,71 @@ export async function calcularMetricasPorUsuario(
     })
   );
 }
+
+export type BonusSdr = MetricasUsuario & {
+  noShowPercentual: number | null;
+  bonusPorCallRealizada: number;
+  bonusFimDeSemana: number;
+  bonusPorFaturamento: number;
+  totalBonus: number;
+};
+
+// Bônus da equipe de pré-vendas — mesma régua da aba "BÔNUS SDRs" da
+// planilha do Samuel, três blocos que se somam:
+// 1. Volume de calls realizadas no mês: ≥60 → R$300, ≥80 → R$500, ≥100 → R$1.000
+// 2. R$20 por call realizada que tinha sido MARCADA num fim de semana
+//    (sábado ou domingo — olha a data do agendamento, não da call em si)
+// 3. Faturamento das vendas fechadas no mês: ≥R$50mil → R$1.000,
+//    ≥R$80mil → R$2.000, ≥R$100mil → R$3.000
+export async function calcularBonusPorSdr(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<BonusSdr[]> {
+  const metricasPorUsuario = await calcularMetricasPorUsuario(supabase, orgId, inicio, fim);
+  const inicioISO = inicio.toISOString();
+  const fimISO = fim.toISOString();
+
+  return Promise.all(
+    metricasPorUsuario.map(async (m) => {
+      const { data: realizadasNoPeriodo } = await supabase
+        .from("reunioes")
+        .select("marcada_em, leads!inner(arquivado_em)")
+        .eq("usuario_id", m.usuarioId)
+        .eq("status", "realizada")
+        .is("leads.arquivado_em", null)
+        .gte("agendada_para", inicioISO)
+        .lt("agendada_para", fimISO);
+
+      const callsMarcadasNoFimDeSemana = (realizadasNoPeriodo ?? []).filter((r) => {
+        const diaDaSemana = new Date(r.marcada_em).getDay();
+        return diaDaSemana === 0 || diaDaSemana === 6;
+      }).length;
+
+      const bonusPorCallRealizada =
+        m.reunioesRealizadas >= 100
+          ? 1000
+          : m.reunioesRealizadas >= 80
+            ? 500
+            : m.reunioesRealizadas >= 60
+              ? 300
+              : 0;
+
+      const bonusFimDeSemana = callsMarcadasNoFimDeSemana * 20;
+
+      const bonusPorFaturamento =
+        m.faturamento >= 100000 ? 3000 : m.faturamento >= 80000 ? 2000 : m.faturamento >= 50000 ? 1000 : 0;
+
+      return {
+        ...m,
+        noShowPercentual:
+          m.reunioesMarcadas > 0 ? 1 - m.reunioesRealizadas / m.reunioesMarcadas : null,
+        bonusPorCallRealizada,
+        bonusFimDeSemana,
+        bonusPorFaturamento,
+        totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorFaturamento,
+      };
+    })
+  );
+}

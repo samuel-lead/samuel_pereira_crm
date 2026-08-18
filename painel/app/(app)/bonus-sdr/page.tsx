@@ -1,0 +1,51 @@
+import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
+import { BonusSdrTabela } from "@/components/bonus-sdr";
+import { calcularBonusPorSdr, inicioDoMes } from "@/lib/metricas";
+
+const MESES = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+
+export default async function BonusSdrPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: usuario } = await supabase
+    .from("usuarios")
+    .select("org_id")
+    .eq("id", user!.id)
+    .single();
+
+  const agora = new Date();
+  const amanha = new Date(agora);
+  amanha.setDate(amanha.getDate() + 1);
+  amanha.setHours(0, 0, 0, 0);
+  const inicioMes = inicioDoMes(agora);
+
+  const bonus = await calcularBonusPorSdr(supabase, usuario!.org_id, inicioMes, amanha);
+
+  return (
+    <>
+      <PageHeader titulo="Bônus SDR" />
+
+      <main className="space-y-4 bg-[#f4f5f7] px-6 py-6">
+        <BonusSdrTabela dados={bonus} periodo={MESES[agora.getMonth()]} />
+      </main>
+    </>
+  );
+}

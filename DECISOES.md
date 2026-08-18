@@ -602,3 +602,21 @@ O Samuel pediu pra ver o faturamento (não só a receita) nas Métricas. O siste
 Adicionei `faturamento` no tipo `Metricas` e em `calcularMetricas()` (soma de `valor_venda` das vendas do período, do jeito igual já fazia com `receita_venda`). Na tela, mantive a **Receita como o número grande principal** (é a regra do `CLAUDE.md`: a meta e o destaque sempre são sobre receita, faturamento é secundário) e coloquei "Faturamento: RX" como uma linha pequena logo abaixo, dentro do mesmo card verde.
 
 Testado: com uma venda de teste (faturamento R$8.000, receita R$3.000 — valores propositalmente diferentes), o card mostrou "RECEITA R$3.000,00" grande e "Faturamento: R$8.000,00" pequeno embaixo, confirmando que os dois números continuam distintos e cada um aparece onde deve. Dados de teste removidos no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Nova página "Bônus SDR"
+
+O Samuel pediu pra trazer a aba "BÔNUS SDRs" da planilha pro CRM, como item novo no menu, logo depois de "Atividades".
+
+Abri a aba na planilha e, em vez de adivinhar a régua do bônus, cliquei em cada célula de fórmula pra ler a conta exata que o Google Sheets usa (a maioria das planilhas dele usa fórmula de verdade, não número digitado à mão). A régua real, com três blocos que se somam:
+
+1. **Bônus por volume de calls realizadas no mês**: ≥60 calls → R$300, ≥80 → R$500, ≥100 → R$1.000 (senão R$0).
+2. **R$20 por call que foi marcada num fim de semana E realizada** — o "fim de semana" aqui é o dia da **marcação** (quando o SDR agendou), não o dia da call em si. Achei essa fórmula (`DIA.DA.SEMANA` sobre a "Data de Agendamento") e seguidamente confirmei que bate com o campo `marcada_em` que já existe no nosso banco.
+3. **Bônus por faturamento das vendas fechadas no mês**: ≥R$50mil → R$1.000, ≥R$80mil → R$2.000, ≥R$100mil → R$3.000 (senão R$0) — usa faturamento (`valor_venda`), não receita, exatamente como a planilha.
+
+Detalhe que vale registrar: o "Total de bônus" da planilha do Samuel está com um erro `#REF!` agora mesmo (uma referência quebrada, provavelmente uma coluna que foi apagada e a fórmula não atualizou) — no CRM implementei o total como a soma dos três blocos (`bônus calls + bônus fim de semana + bônus faturamento`), que é claramente a intenção da fórmula original, sem herdar o bug da planilha.
+
+**Onde os números vêm**: reaproveitei `calcularMetricasPorUsuario()` (que já calcula calls marcadas/realizadas e faturamento por SDR, já corrigido pra excluir lead arquivado e contar reunião de mês anterior) — só adicionei uma consulta nova pra contar quantas calls realizadas foram marcadas num fim de semana. Nova função `calcularBonusPorSdr()` em `lib/metricas.ts`.
+
+**Acesso**: só admin vê essa tela (é dado de compensação da equipe, não é algo que cada SDR deveria ver dos outros) — segue o mesmo padrão de Usuários/Configurações, protegido no `middleware.ts`.
+
+Testado: com uma conta de admin de teste, a tela mostrou "Samuel Pereira: 6 calls marcadas, 3 realizadas, 50% no-show, R$0 bônus calls (3 &lt; 60), R$0 bônus fim de semana, R$15.000 faturamento, R$0 bônus faturamento (15mil &lt; 50mil), R$0 total" — bati à mão os dias da semana das 3 reuniões realizadas (quarta, sexta, quinta — nenhuma cai em fim de semana), confirmando que o bônus de fim de semana zerado está certo, não é coincidência. Conferi também que "Bônus SDR" aparece na posição certa do menu (logo depois de "Atividades"). Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 17 rotas agora.
