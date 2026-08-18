@@ -57,7 +57,7 @@ export function MarcarVendidoForm({ leadId }: { leadId: string }) {
         Fechar venda
       </h2>
       <p className="mb-3 text-xs text-emerald-700">
-        Ao marcar como vendido, o lead sai do Funil e vai pra Clientes.
+        Ao marcar como vendido, o lead sai do Funil e vai para Clientes.
       </p>
       <form action={acaoFormulario} className="space-y-2">
         <CampoMoeda
