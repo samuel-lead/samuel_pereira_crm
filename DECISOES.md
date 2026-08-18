@@ -719,3 +719,13 @@ Não implementei o "forçar com justificativa" que o CLAUDE.md também menciona 
 O único lugar do painel que realmente cria uma reunião é esse formulário de editar lead — arrastar o card no Kanban pra "Reunião marcada" já redireciona pra essa mesma tela em vez de marcar direto, então não precisou mexer no drag-and-drop.
 
 Testado: com conta e lead de teste, tentei marcar reunião sem preencher os 3 critérios — bloqueou, mensagem certa apareceu, nível continuou 2 e nenhuma reunião foi criada no banco. Preenchendo os 3 e submetendo de novo, salvou normal (nível virou 4, reunião criada). Tudo removido no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Closer da reunião marcada também pode editar o lead
+
+O Samuel confirmou que faz sentido o Closer (quando é uma pessoa diferente do SDR responsável) conseguir editar o lead — principalmente fechar a venda — sem precisar ser admin. O lead **não muda de dono**: o SDR continua sendo o responsável (e continua contando pra métrica dele), só abre uma exceção de permissão de edição pro Closer da reunião marcada (ativa) daquele lead.
+
+- **Banco (RLS)**: nova função `private.eh_closer_da_reuniao_ativa(lead_id)` — verifica se o usuário logado é `closer_id` de uma reunião com `status = 'marcada'` daquele lead. As políticas de UPDATE em `leads` e INSERT em `interacoes` (notas) passaram a aceitar também essa condição, além de admin/responsável.
+- **Código**: `garantirPodeEditar`, `atualizarLead` e `moverLeadNivel` (em `lib/leads/actions.ts`) ganharam a mesma checagem. Na tela do lead, `podeEditar` agora também é `true` quando existe uma reunião marcada com esse usuário como `closer_id` (usa os dados que a página já buscava, sem consulta extra).
+- **Bug evitado no caminho**: o texto "Responsável: Você" (que aparecia pra quem não é admin) assumia que só o próprio dono podia estar editando — com o Closer entrando nessa exceção, isso ia mostrar "Você" errado pro Closer. Corrigido pra sempre mostrar o nome de verdade do responsável.
+
+Testado: criei um SDR e um Closer de teste (ambos não-admin, pessoas diferentes), um lead do SDR com reunião marcada pro Closer. Logado como Closer: o formulário apareceu editável (sem o aviso de "só visualização"), "Responsável" mostrou o nome certo do SDR (não "Você"), e o botão "Fechar venda" funcionou — venda registrada com sucesso e o `responsavel_id` do lead continuou sendo o SDR, sem mudar. Tudo removido no final. `tsc --noEmit` e `npm run build` limpos.

@@ -115,7 +115,11 @@ export default async function EditarLeadPage({
   const reunioes = (reunioesData ?? []) as Reuniao[];
   const usuarios = usuariosData ?? [];
   const souAdmin = usuarioAtual?.papel === "admin";
-  const podeEditar = souAdmin || leadTipado.responsavel_id === user?.id;
+  const souCloserAtivo = reunioes.some(
+    (r) => r.status === "marcada" && r.closer_id === user?.id
+  );
+  const podeEditar =
+    souAdmin || leadTipado.responsavel_id === user?.id || souCloserAtivo;
   const podeReivindicar = !souAdmin && leadTipado.responsavel_id === null;
   const nomeResponsavel = usuarios.find((u) => u.id === leadTipado.responsavel_id)?.nome;
   const registrarNotaComId = registrarNota.bind(null, leadTipado.id);

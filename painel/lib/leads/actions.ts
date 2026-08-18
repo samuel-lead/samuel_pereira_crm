@@ -39,8 +39,29 @@ type UsuarioContexto = { id: string; org_id: string; papel: string };
 
 const ERRO_SEM_PERMISSAO = "Você só pode mexer em leads que são seus.";
 
-// Só admin ou o próprio responsável pelo lead podem alterar/arquivar/anotar.
-// Todo mundo com acesso ao Funil continua enxergando o lead (visão de equipe).
+// O Closer de uma reunião marcada pode ser outra pessoa, diferente do SDR
+// responsável pelo lead — ele também pode editar esse lead (ex.: fechar a
+// venda), sem virar o dono. Lead continua sendo do SDR.
+async function souCloserAtivo(
+  supabase: SupabaseServerClient,
+  leadId: string,
+  usuarioId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("reunioes")
+    .select("id")
+    .eq("lead_id", leadId)
+    .eq("closer_id", usuarioId)
+    .eq("status", "marcada")
+    .limit(1)
+    .maybeSingle();
+
+  return !!data;
+}
+
+// Admin, o responsável pelo lead, ou o Closer da reunião marcada dele
+// podem alterar/arquivar/anotar. Todo mundo com acesso ao Funil continua
+// enxergando o lead (visão de equipe).
 async function garantirPodeEditar(
   supabase: SupabaseServerClient,
   usuario: UsuarioContexto,
@@ -55,8 +76,9 @@ async function garantirPodeEditar(
     .single();
 
   if (error || !lead) return "Lead não encontrado";
-  if (lead.responsavel_id !== usuario.id) return ERRO_SEM_PERMISSAO;
-  return null;
+  if (lead.responsavel_id === usuario.id) return null;
+  if (await souCloserAtivo(supabase, leadId, usuario.id)) return null;
+  return ERRO_SEM_PERMISSAO;
 }
 
 function mensagemAmigavel(codigo: string | undefined, mensagemOriginal: string) {
@@ -219,7 +241,11 @@ export async function atualizarLead(
     return { erro: "Lead não encontrado" };
   }
 
-  if (usuario.papel !== "admin" && leadAtual.responsavel_id !== usuario.id) {
+  if (
+    usuario.papel !== "admin" &&
+    leadAtual.responsavel_id !== usuario.id &&
+    !(await souCloserAtivo(supabase, leadId, usuario.id))
+  ) {
     return { erro: ERRO_SEM_PERMISSAO };
   }
 
@@ -323,7 +349,11 @@ export async function moverLeadNivel(
     throw new Error("Lead não encontrado");
   }
 
-  if (usuario.papel !== "admin" && leadAtual.responsavel_id !== usuario.id) {
+  if (
+    usuario.papel !== "admin" &&
+    leadAtual.responsavel_id !== usuario.id &&
+    !(await souCloserAtivo(supabase, leadId, usuario.id))
+  ) {
     throw new Error(ERRO_SEM_PERMISSAO);
   }
 

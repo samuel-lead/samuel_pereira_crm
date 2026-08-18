@@ -56,9 +56,8 @@ export function EditarLeadForm({
   );
   const vaiEntrarEmReuniaoMarcada =
     nivelSelecionado === NIVEL_REUNIAO_MARCADA && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA;
-  const nomeResponsavelAtual = podeEditar
-    ? "Você"
-    : usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
+  const nomeResponsavelAtual =
+    usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
