@@ -35,8 +35,8 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
           {formatarMoeda(totalReceita)}
         </p>
         <p className="relative mt-2 text-sm font-medium text-emerald-100">
-          Meta acumulada {formatarMoeda(totalMeta)} · Faturamento acumulado{" "}
-          {formatarMoeda(totalFaturamento)}
+          Meta de receita acumulada {formatarMoeda(totalMeta)} · Faturamento
+          acumulado {formatarMoeda(totalFaturamento)}
         </p>
       </div>
 
@@ -89,7 +89,7 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
 
                 <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs">
                   <span className="text-neutral-500">
-                    Meta {meta !== null ? formatarMoeda(meta) : "—"} · Faturamento{" "}
+                    Meta de receita {meta !== null ? formatarMoeda(meta) : "—"} · Faturamento{" "}
                     {formatarMoeda(linha.faturamento)}
                   </span>
                   <span
@@ -105,7 +105,7 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
                       ? "—"
                       : bateu
                         ? "Bateu a meta 🎉"
-                        : `Falta ${formatarMoeda(meta! - linha.receita)}`}
+                        : `Faltou ${formatarMoeda(meta! - linha.receita)} pra bater a meta`}
                   </span>
                 </div>
               </div>
