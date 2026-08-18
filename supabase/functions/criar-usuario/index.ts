@@ -11,7 +11,7 @@ function json(status: number, body: unknown) {
   });
 }
 
-const PAGINAS_VALIDAS = ["funil", "lista", "atividades", "metricas"];
+const PAGINAS_VALIDAS = ["funil", "lista", "atividades", "reunioes", "metricas"];
 const FUNCOES_VALIDAS = ["sdr", "closer"];
 
 Deno.serve(async (req: Request) => {

@@ -772,3 +772,14 @@ Testado: peguei um lead real, forcei no banco a última atividade dele pra 3 dia
 Ajuste visual simples no Funil: as colunas "Nível 2. Em qualificação" e "Nível 3. Topou reunião, horário a definir" usavam cores diferentes (azul e violeta) do "Nível 1" (cinza-azulado/slate). O Samuel pediu pra ficarem iguais ao Nível 1. Mudei só a função `corDoNivel()` em `lib/niveis.ts` pra devolver a cor do Nível 1 quando a coluna for 2 ou 3 — as outras colunas (Reunião marcada, No Show, etc.) não mudaram.
 
 Testado: com conta de teste, conferi visualmente que Nível 1, 2 e 3 agora têm a mesma cor cinza-azulada, e o resto do funil (Reunião marcada em verde, etc.) continua como estava. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Nova página "Reuniões" no menu lateral
+
+Depois de conversar sobre como CRMs como Close e Pipedrive têm uma visão dedicada só de reuniões/calls, o Samuel pediu pra construir a mesma coisa aqui. Antes, a única forma de ver uma reunião era abrindo o lead individualmente ou olhando a coluna "Reunião marcada" no Funil — não dava pra ver todas de uma vez, nem filtrar por closer.
+
+- **Tela nova** (`/reunioes`): tabela simples com Data e hora, Lead, SDR (quem marcou a reunião), Closer (quem vai fazer a call) e Status (Marcada/Realizada/Não compareceu). Ordenada da mais recente pra mais antiga.
+- **Filtro por closer**: um seletor no topo (`FiltroCloserSelect`, mesmo padrão do filtro por usuário que já existia no Funil) — só lista quem tem função Closer.
+- **Página configurável**: "Reuniões" entrou na mesma lista de páginas que um admin pode liberar por usuário (`funil`, `lista`, `atividades`, `reunioes`, `métricas`) — admin vê sempre, membro só se for liberado em Usuários → Permissões. Tive que atualizar a Edge Function `criar-usuario` (lista de páginas válidas) e a função `atualizar_permissoes_usuario` no banco, além do valor padrão da coluna `paginas_permitidas`, e reimplantar a Edge Function.
+- **Menu lateral**: novo item "Reuniões" com ícone de calendário, entre Atividades e Bônus SDR.
+
+Testado: com conta de teste admin, a tela mostrou as 6 reuniões existentes com SDR/Closer/Status corretos; marquei uma reunião com um closer de teste e o filtro por closer mostrou só ela (1 reunião). Encontrei e corrigi um bug de português no contador ("6 reuniãoões" em vez de "6 reuniões") antes de fechar. Tudo removido no final. `tsc --noEmit` e `npm run build` limpos, 19 rotas.
