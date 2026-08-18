@@ -672,3 +672,12 @@ O Samuel pediu pra registrar quem vai fazer a reunião de venda (o Closer), sepa
 - **Linha do tempo do lead**: quando a reunião tem Closer definido, aparece "Closer: [nome]" logo abaixo de "Marcada em".
 
 Testado: com conta de teste, marquei uma reunião escolhendo "Samuel Pereira" como Closer — conferi direto no banco que a linha em `reunioes` gravou o `closer_id` certo, e na tela a Linha do tempo mostrou "Closer: Samuel Pereira" corretamente. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Metas e taxas do sistema viram editáveis pelo admin
+
+Em Configurações, o card "Metas e taxas do sistema" (piso de leads/dia, piso de reuniões/dia, taxas mínimas de agendamento/comparecimento/venda) era só leitura de propósito — refletindo a regra do CLAUDE.md de que essas taxas nunca são recalculadas automaticamente por performance. O Samuel pediu pra deixar editável pelo admin, e isso não conflita com aquela regra: o sistema continua nunca ajustando os números sozinho (ex.: baixar a meta porque o mês foi bom) — só um humano, admin, decide mudar a régua manualmente, mesma lógica que a Meta de Receita mensal já tinha.
+
+- **Banco**: a política de RLS `metas_config_por_org` (que já deixava qualquer usuário da org editar, mesmo sem UI pra isso) virou duas: `metas_config_select_org` (todo mundo vê) e `metas_config_update_admin` (só admin grava) — mesmo padrão usado em `metas_mensais` pra Meta de Receita.
+- **Formulário**: os 5 campos (antes só texto) viraram inputs numéricos editáveis; taxas mostradas/editadas em % (0-100) na tela, convertidas pra fração (0-1) na gravação. Validação no server action: piso > 0, taxas entre 1% e 100%, e um segundo cheque de papel (`papel !== "admin"` barra a escrita mesmo se alguém chamar a action direto).
+
+Testado: com conta de teste admin, mudei o piso de leads/dia de 30 pra 35 e conferi direto no banco que só esse campo mudou (os outros 4 ficaram intactos) — refeito com cuidado depois de notar, pelos logs do servidor, que o Samuel já tinha testado a mesma tela ao vivo no navegador dele antes de eu terminar de verificar, o que gerou algumas gravações extras (nada de errado, só concorrência de dois usuários mexendo ao mesmo tempo). Valores resetados pro padrão (30/3/10%/80%/40%) no final, conta de teste removida. `tsc --noEmit` e `npm run build` limpos, 18 rotas.

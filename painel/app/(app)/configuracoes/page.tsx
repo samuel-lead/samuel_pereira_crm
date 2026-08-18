@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
-import { atualizarOrg } from "@/lib/configuracoes/actions";
+import { atualizarOrg, atualizarMetasConfig } from "@/lib/configuracoes/actions";
 
 type Org = {
   nome: string;
@@ -175,38 +175,97 @@ export default async function ConfiguracoesPage() {
               Metas e taxas do sistema
             </h2>
             <p className="mb-4 text-xs text-neutral-500">
-              Essas são constantes do sistema — o piso é chão, nunca teto, e
-              as taxas nunca são recalculadas por performance. Não dá pra
-              editar por aqui de propósito.
+              O piso é chão, nunca teto — bater ele não é motivo pra reduzir.
+              As taxas não mudam sozinhas por performance, só se você trocar
+              aqui.
             </p>
-            <dl className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <dt className="text-xs text-neutral-500">Piso de leads/dia</dt>
-                <dd className="font-medium text-neutral-900">{metas.piso_leads_dia}</dd>
+            <form action={atualizarMetasConfig} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className={labelClasse} htmlFor="piso_leads_dia">
+                    Piso de leads/dia
+                  </label>
+                  <input
+                    id="piso_leads_dia"
+                    name="piso_leads_dia"
+                    type="number"
+                    min={1}
+                    required
+                    defaultValue={metas.piso_leads_dia}
+                    className={campoClasse}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className={labelClasse} htmlFor="piso_reunioes_dia">
+                    Piso de reuniões/dia
+                  </label>
+                  <input
+                    id="piso_reunioes_dia"
+                    name="piso_reunioes_dia"
+                    type="number"
+                    min={1}
+                    required
+                    defaultValue={metas.piso_reunioes_dia}
+                    className={campoClasse}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className={labelClasse} htmlFor="taxa_agendamento_min">
+                    Taxa de agendamento mín. (%)
+                  </label>
+                  <input
+                    id="taxa_agendamento_min"
+                    name="taxa_agendamento_min"
+                    type="number"
+                    min={1}
+                    max={100}
+                    step="0.1"
+                    required
+                    defaultValue={Math.round(Number(metas.taxa_agendamento_min) * 1000) / 10}
+                    className={campoClasse}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className={labelClasse} htmlFor="taxa_comparecimento_min">
+                    Taxa de comparecimento mín. (%)
+                  </label>
+                  <input
+                    id="taxa_comparecimento_min"
+                    name="taxa_comparecimento_min"
+                    type="number"
+                    min={1}
+                    max={100}
+                    step="0.1"
+                    required
+                    defaultValue={Math.round(Number(metas.taxa_comparecimento_min) * 1000) / 10}
+                    className={campoClasse}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className={labelClasse} htmlFor="taxa_venda_min">
+                    Taxa de venda mín. (%)
+                  </label>
+                  <input
+                    id="taxa_venda_min"
+                    name="taxa_venda_min"
+                    type="number"
+                    min={1}
+                    max={100}
+                    step="0.1"
+                    required
+                    defaultValue={Math.round(Number(metas.taxa_venda_min) * 1000) / 10}
+                    className={campoClasse}
+                  />
+                </div>
               </div>
-              <div>
-                <dt className="text-xs text-neutral-500">Piso de reuniões/dia</dt>
-                <dd className="font-medium text-neutral-900">{metas.piso_reunioes_dia}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-neutral-500">Taxa de agendamento mín.</dt>
-                <dd className="font-medium text-neutral-900">
-                  {Math.round(Number(metas.taxa_agendamento_min) * 100)}%
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-neutral-500">Taxa de comparecimento mín.</dt>
-                <dd className="font-medium text-neutral-900">
-                  {Math.round(Number(metas.taxa_comparecimento_min) * 100)}%
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-neutral-500">Taxa de venda mín.</dt>
-                <dd className="font-medium text-neutral-900">
-                  {Math.round(Number(metas.taxa_venda_min) * 100)}%
-                </dd>
-              </div>
-            </dl>
+
+              <button
+                type="submit"
+                className="w-full rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+              >
+                Salvar
+              </button>
+            </form>
           </div>
         )}
       </main>

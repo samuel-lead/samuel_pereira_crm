@@ -109,3 +109,63 @@ export async function atualizarOrg(formData: FormData) {
 
   revalidatePath("/configuracoes");
 }
+
+export async function atualizarMetasConfig(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Não autenticado");
+  }
+
+  const { data: usuario, error: erroUsuario } = await supabase
+    .from("usuarios")
+    .select("org_id, papel")
+    .eq("id", user.id)
+    .single();
+
+  if (erroUsuario || !usuario) {
+    throw new Error("Usuário não encontrado");
+  }
+
+  if (usuario.papel !== "admin") {
+    throw new Error("Só admin pode editar metas e taxas do sistema");
+  }
+
+  const pisoLeadsDia = Number(formData.get("piso_leads_dia"));
+  const pisoReunioesDia = Number(formData.get("piso_reunioes_dia"));
+  const taxaAgendamentoMin = Number(formData.get("taxa_agendamento_min")) / 100;
+  const taxaComparecimentoMin = Number(formData.get("taxa_comparecimento_min")) / 100;
+  const taxaVendaMin = Number(formData.get("taxa_venda_min")) / 100;
+
+  if (
+    !Number.isFinite(pisoLeadsDia) || pisoLeadsDia <= 0 ||
+    !Number.isFinite(pisoReunioesDia) || pisoReunioesDia <= 0 ||
+    !Number.isFinite(taxaAgendamentoMin) || taxaAgendamentoMin <= 0 || taxaAgendamentoMin > 1 ||
+    !Number.isFinite(taxaComparecimentoMin) || taxaComparecimentoMin <= 0 || taxaComparecimentoMin > 1 ||
+    !Number.isFinite(taxaVendaMin) || taxaVendaMin <= 0 || taxaVendaMin > 1
+  ) {
+    throw new Error("Valores inválidos — piso maior que zero, taxas entre 1% e 100%");
+  }
+
+  const { error } = await supabase
+    .from("metas_config")
+    .update({
+      piso_leads_dia: pisoLeadsDia,
+      piso_reunioes_dia: pisoReunioesDia,
+      taxa_agendamento_min: taxaAgendamentoMin,
+      taxa_comparecimento_min: taxaComparecimentoMin,
+      taxa_venda_min: taxaVendaMin,
+    })
+    .eq("org_id", usuario.org_id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/dashboard");
+  revalidatePath("/metricas");
+}
