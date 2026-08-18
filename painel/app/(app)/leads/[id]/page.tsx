@@ -99,7 +99,7 @@ export default async function EditarLeadPage({
       .select("id, agendada_para, marcada_em, status, resultado, closer_id")
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
-    supabase.from("usuarios").select("id, nome").order("nome"),
+    supabase.from("usuarios").select("id, nome, funcao").order("nome"),
     user
       ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
       : Promise.resolve({ data: null }),

@@ -13,7 +13,7 @@ export function NovoLeadForm({
   usuarios,
   souAdmin = true,
 }: {
-  usuarios: { id: string; nome: string }[];
+  usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin?: boolean;
 }) {
   const [estado, acaoFormulario] = useActionState(criarLead, estadoInicial);
@@ -87,7 +87,7 @@ export function NovoLeadForm({
             Responsável
           </label>
           {souAdmin ? (
-            <ResponsavelSelect usuarios={usuarios} />
+            <ResponsavelSelect usuarios={usuarios} funcaoFiltro="sdr" />
           ) : (
             <p className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
               Você

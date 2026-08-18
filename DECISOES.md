@@ -742,3 +742,15 @@ O Samuel pediu pra poder marcar a função de cada usuário — SDR ou Closer �
 Por enquanto essa função é só um rótulo — não filtra os seletores de "Responsável" nem de "Closer" na tela do lead (ainda mostram todo mundo da org). Se o Samuel quiser, um próximo passo natural é usar essa função pra filtrar esses seletores.
 
 Testado: com conta de teste, cadastrei um usuário novo com função SDR (gravou certo no banco e apareceu o badge na lista), depois editei as permissões dele e troquei pra Closer (o seletor já veio pré-selecionado com o valor salvo, e a troca gravou certo). Tudo removido no final. `tsc --noEmit` e `npm run build` limpos, Edge Function `criar-usuario` reimplantada.
+
+## 2026-08-18 — Filtra Responsável/Closer pela função do usuário
+
+Passo seguinte da função SDR/Closer (feature anterior): os seletores de "Responsável" e "Closer" no lead agora usam essa função pra filtrar quem aparece — Responsável só mostra quem tem função SDR, Closer só mostra quem tem função Closer. Antes mostravam todo mundo da equipe, misturado.
+
+- **`ResponsavelSelect`** ganhou um prop `funcaoFiltro` ("sdr" ou "closer"). Quando usado, filtra a lista de usuários — mas **sempre mantém quem já tava selecionado**, mesmo que a função dele não bata (ou nem tenha função definida ainda). Isso evita que um lead antigo, com responsável sem função marcada, apareça com o campo vazio ou quebrado.
+- Aplicado nos dois lugares: "Responsável" (em Novo lead e Editar lead) com `funcaoFiltro="sdr"`, e "Closer" (em Editar lead, ao marcar reunião) com `funcaoFiltro="closer"`.
+- As páginas que alimentam esses formulários (`leads/novo`, `leads/[id]`) passaram a buscar a coluna `funcao` junto com `id, nome`.
+
+Como quase ninguém na equipe do Samuel tem função definida ainda (é feature nova), esses seletores vão continuar curtos até ele preencher a função de cada pessoa em Usuários → Permissões.
+
+Testado: com usuários de teste (um SDR, um Closer, um sem função nenhuma), confirmei que "Responsável" mostrou só o SDR, "Closer" mostrou só o Closer, e um lead com responsável pré-existente sem função continuou mostrando esse responsável certo (não sumiu nem quebrou). Tudo removido no final. `tsc --noEmit` e `npm run build` limpos.

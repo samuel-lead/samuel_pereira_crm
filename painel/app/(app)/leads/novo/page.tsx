@@ -10,7 +10,7 @@ export default async function NovoLeadPage() {
   } = await supabase.auth.getUser();
 
   const [{ data: usuariosData }, { data: usuarioAtual }] = await Promise.all([
-    supabase.from("usuarios").select("id, nome").order("nome"),
+    supabase.from("usuarios").select("id, nome, funcao").order("nome"),
     user
       ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
       : Promise.resolve({ data: null }),

@@ -44,7 +44,7 @@ export function EditarLeadForm({
   lead: Lead;
   niveis: NivelResumo[];
   numerosVisiveis: Record<number, number>;
-  usuarios: { id: string; nome: string }[];
+  usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin?: boolean;
   podeEditar?: boolean;
   preSelecionarReuniao?: boolean;
@@ -111,7 +111,11 @@ export function EditarLeadForm({
             Responsável
           </label>
           {souAdmin ? (
-            <ResponsavelSelect usuarios={usuarios} valorInicial={lead.responsavel_id} />
+            <ResponsavelSelect
+              usuarios={usuarios}
+              valorInicial={lead.responsavel_id}
+              funcaoFiltro="sdr"
+            />
           ) : (
             <p className={`${campoClasse} bg-neutral-50 text-neutral-600`}>
               {nomeResponsavelAtual}{" "}
@@ -181,6 +185,7 @@ export function EditarLeadForm({
                   usuarios={usuarios}
                   name="closer_id"
                   placeholder="Ainda não definido"
+                  funcaoFiltro="closer"
                 />
               </div>
             </div>
