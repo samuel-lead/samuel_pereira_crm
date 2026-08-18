@@ -362,3 +362,9 @@ O Samuel percebeu que a "semana" das métricas não tava no padrão certo. Confe
 Pra isso nunca mais dar dúvida, também **mostrei o intervalo de datas na tela** — tanto no card "Esta semana" quanto na tabela "Performance da semana por SDR" agora aparece "domingo a sábado · 16/08 a 22/08" (ou a semana correspondente), calculado ao vivo, não fixo.
 
 Testado com uma simulação isolada da função (segunda-feira 17/08 como "hoje") — confirmou que a semana calculada vai de domingo 16/08 a sábado 22/08. Testado também na tela, logado com usuário de teste: os dois textos de período aparecem certinhos. Usuário de teste removido no final. Build de produção limpo.
+
+## 2026-08-17 — Bug: contador do Funil incluía lead da Base
+
+O Samuel reparou: a tela mostrava "1 lead sendo trabalhados" mas todas as colunas do Kanban apareciam vazias. Causa: a consulta que conta os leads não excluía quem tá no nível 7 (Base) — e a Base tem tela própria desde a mudança anterior, então não aparece em nenhuma coluna do Funil, mas ainda entrava na contagem. Adicionei `.neq("nivel_ordem", 7)` na consulta, pra contagem bater com o que realmente aparece nas colunas.
+
+Testado: confirmei no banco que o lead "teste" realmente estava no nível 7; depois de corrigir, a tela passou a mostrar "0 leads sendo trabalhados", batendo com as colunas vazias. Build de produção limpo.

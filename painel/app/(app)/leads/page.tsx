@@ -33,6 +33,7 @@ export default async function LeadsPage({
     .select("id, nome, telefone_e164, origem, nivel_ordem, declarado_em, status, responsavel_id")
     .is("arquivado_em", null)
     .neq("status", "vendido")
+    .neq("nivel_ordem", 7) // Base tem tela própria, não conta nem aparece aqui
     .order("declarado_em", { ascending: false });
 
   if (usuarioFiltro) {
