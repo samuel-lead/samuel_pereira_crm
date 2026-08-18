@@ -839,3 +839,13 @@ O Samuel pediu pra seguir o mesmo padrão do C2S (CRM imobiliário conhecido): u
 Quando a integração do Facebook for construída de verdade, esse card é o lugar natural pra virar interativo (botão de conectar, status dinâmico vindo do banco).
 
 Testado: com conta de teste admin, a tela mostrou os dois cards certos, com o WhatsApp em verde "Conectado" e o Facebook em cinza "Não conectado". Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 20 rotas.
+
+## 2026-08-18 — Integrações vira clicável, com mais opções
+
+O Samuel reclamou que a tela nova de Integrações era só visual, não dava pra clicar em nada, e pediu mais opções básicas, organizadas de forma profissional.
+
+- **Cards viram links**: cada card em `/integracoes` agora leva pra `/integracoes/[id]`, uma tela de detalhe com "O que faz" e, quando não tá conectada, "Como conectar" (dividido em "Você" — o que só ele consegue fazer, tipo criar app/token — e "Eu" — o que eu construo). Pra quem já tá conectado (WhatsApp), mostra uma explicação em vez do checklist.
+- **Mais 3 integrações** além de WhatsApp e Facebook, todas "Não conectado" (nenhuma é fake funcionando, só documentada pra quando ele quiser seguir): **Google Ads (Lead Form)** (mesma ideia do Facebook, formulário nativo do Google), **Google Calendar** (sincroniza reunião marcada com agenda de verdade do Closer), **Google Sheets** (importar leads de planilha sem precisar mandar pra mim toda vez).
+- Dados centralizados em `lib/integracoes.ts` (lista fixa no código, sem tabela no banco ainda) — tanto a tela de lista quanto a de detalhe leem dali, então adicionar uma integração nova no futuro é só adicionar um item nesse arquivo.
+
+Testado: com conta de teste admin, a lista mostrou as 5 integrações com a setinha de "clicável", e abrir o Facebook mostrou a tela de detalhe certa (O que faz + Como conectar, dividido Você/Eu). Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 21 rotas.
