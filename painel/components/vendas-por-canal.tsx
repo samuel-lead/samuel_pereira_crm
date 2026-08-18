@@ -10,10 +10,11 @@ export function VendasPorCanal({ dados }: { dados: VendaPorCanal[] }) {
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <h2 className="mb-1 text-sm font-semibold text-neutral-800">
-        Canal que mais vendeu no mês
+        Canais que venderam no mês
       </h2>
       <p className="mb-4 text-xs text-neutral-500">
-        Origem do lead × quantas vendas e quanto faturou.
+        Todo canal (origem do lead) que teve venda, com quantas vezes
+        aconteceu e quanto faturou.
       </p>
 
       {dados.length === 0 ? (

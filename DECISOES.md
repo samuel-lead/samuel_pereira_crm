@@ -344,3 +344,13 @@ Duas coisas nessa:
 1. **Eu tinha olhado a aba errada da planilha** (MAI) — a aba viva, que o Samuel realmente usa, é a do mês atual (AGO). Reabri e conferi lá: a estrutura é a mesma que já implementei (leads, calls, vendas, faturamento, receita, ticket médio, canal), então nada mudou na parte de métricas — só uma coisa nova que reparei: a planilha tem "Negociações" e "Valor das negociações" (leads que já ganharam proposta mas ainda não fecharam), que a gente ainda não tem. Dá pra contar quantos leads estão no nível "Oportunidades para o fim do mês" sem mexer em nada — mas o "valor" da negociação exigiria um campo novo no lead (hoje só existe valor depois que vira venda). Não criei isso ainda, fica pra próxima se o Samuel quiser.
 
 2. **Visual do card de Receita**: era roxo, o Samuel queria verde-esmeralda "de luxo" pra combinar com dinheiro. Refiz o card (no Dashboard e também no de "Clientes", pra ficar consistente): gradiente escuro esmeralda→verde-azulado, ícone de cifrão gigante e translúcido de marca d'água no canto, sombra grande colorida, número em fonte bem grossa com leve sombra no texto, brilho sutil no topo. Testado em tela de desktop de verdade (o painel de automação é estreito e cortava o texto, mas isso não acontece numa tela normal).
+
+## 2026-08-17 — Ajustes finos: canais no plural + nome das colunas
+
+Dois retoques depois de ver a tela:
+
+1. **"Canal que mais vendeu"**: o componente já listava todos os canais com venda (nunca foi só um) — o problema era só o título no singular, que dava a entender que era só o campeão. Renomeei pra "Canais que venderam no mês" e deixei a descrição mais clara ("todo canal que teve venda, com quantas vezes aconteceu").
+
+2. **Tabela de performance por SDR**: as colunas "Marcadas" e "Realizadas" viraram "Calls marcadas" e "Calls realizadas", pra bater com o nome usado na planilha de referência.
+
+Testado com 3 vendas de canais diferentes (Networking, SS IG, Indicação base) — as três apareceram na lista, cada uma com sua quantidade e faturamento; e a tabela de SDR já mostra os nomes completos das colunas. Dados de teste removidos no final. Build de produção limpo.

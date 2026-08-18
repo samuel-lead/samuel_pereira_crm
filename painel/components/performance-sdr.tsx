@@ -25,8 +25,8 @@ export function PerformanceSdr({ dados }: { dados: MetricasUsuario[] }) {
             <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
               <th className="px-3 py-2 font-medium">SDR</th>
               <th className="px-3 py-2 font-medium">Leads</th>
-              <th className="px-3 py-2 font-medium">Marcadas</th>
-              <th className="px-3 py-2 font-medium">Realizadas</th>
+              <th className="px-3 py-2 font-medium">Calls marcadas</th>
+              <th className="px-3 py-2 font-medium">Calls realizadas</th>
               <th className="px-3 py-2 font-medium">No Show</th>
               <th className="px-3 py-2 font-medium">Vendas</th>
               <th className="px-3 py-2 font-medium">Taxa de venda</th>
