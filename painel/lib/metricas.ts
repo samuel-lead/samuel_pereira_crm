@@ -192,6 +192,26 @@ export async function calcularLeadsPorOrigem(
     .sort((a, b) => b.quantidade - a.quantidade);
 }
 
+// Meta de receita do mês (o que entra no caixa, não o valor da venda em
+// si) — cada usuário tem a própria, guardada em metas_mensais.
+export async function buscarMetaReceitaMes(
+  supabase: SupabaseServerClient,
+  usuarioId: string,
+  ano: number,
+  mes: number
+): Promise<number | null> {
+  const { data } = await supabase
+    .from("metas_mensais")
+    .select("meta_receita")
+    .eq("usuario_id", usuarioId)
+    .eq("ano", ano)
+    .eq("mes", mes)
+    .maybeSingle();
+
+  if (!data || data.meta_receita === null) return null;
+  return Number(data.meta_receita);
+}
+
 export type MetricasUsuario = Metricas & { usuarioId: string; nome: string };
 
 // Performance individual de cada usuário da org no período — pra comparar

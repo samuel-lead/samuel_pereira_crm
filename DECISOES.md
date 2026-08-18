@@ -380,3 +380,16 @@ Testado com 3 leads de teste (2 de "SS IG", 1 de "Networking") — os dois bloco
 ## 2026-08-17 — Tabela de performance por SDR: números centralizados
 
 Ajuste visual simples: na tabela "Performance da semana por SDR", os números (Leads, Calls marcadas/realizadas, No Show, Vendas, Taxa de venda, Receita) ficaram centralizados; só o nome do SDR continua alinhado à esquerda. Testado direto no DOM (className de cada célula) pra confirmar o alinhamento certo em cada coluna.
+
+## 2026-08-18 — Meta de receita do mês (não confundir com faturamento)
+
+O Samuel deixou bem claro: **a meta é sempre sobre receita** (o dinheiro que realmente entra no caixa), nunca sobre faturamento (o valor bruto da venda — se vendeu R$10 mil mas só recebeu R$5 mil até agora, a meta olha os R$5 mil). O sistema já tinha essa distinção (`leads.valor_venda` soma como "receita" em todo o resto do painel), então não precisei mudar nada de conceito — só faltava um jeito de **definir a meta e ver o progresso**.
+
+A tabela `metas_mensais` já existia desde a Fase 1 do projeto (schema original) mas nunca tinha tela nenhuma — criei:
+
+- `definirMetaReceita()`: cada usuário define a própria meta do mês atual (upsert em `metas_mensais`, chave é usuário+ano+mês). Preenche `ticket_medio` e `dias_uteis` (colunas obrigatórias na tabela) com o ticket médio padrão da org e os dias úteis do mês, mas **não calculei ainda** a cadeia inteira de "quantos leads/reuniões preciso pra bater a meta" que tá descrita na Constituição (`CLAUDE.md`) — isso é maior, fica pra outra tarefa se o Samuel quiser.
+- `MetaReceitaWidget`: componente com duas versões — **compacta** (uma linha: "Meta do mês: R$X · Falta R$Y", clicável pra editar) e **completa** (card com barra de progresso, "Recebido" vs "Meta", editável).
+
+**Onde aparece**: compacta no topo do Funil, do lado direito da contagem de leads (mesma linha, ao lado do filtro por usuário); completa no topo da tela de Métricas, antes de "Esta semana". Se ainda não tiver meta definida, os dois lugares mostram o campo pra preencher na hora.
+
+Testado com usuário de teste: defini uma meta de R$30.000, salvou, e os dois lugares mostraram "Falta R$30.000,00 pra bater a meta" (recebido R$0 ainda) — sem precisar recarregar a página, o formulário já vira resumo sozinho depois de salvar. Dados de teste removidos no final. Build de produção limpo, mesmas 16 rotas.

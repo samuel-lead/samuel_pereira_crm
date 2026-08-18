@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FiltroUsuarioSelect } from "@/components/filtro-usuario-select";
+import { MetaReceitaWidget } from "@/components/meta-receita-widget";
+import { calcularMetricas, buscarMetaReceitaMes, inicioDoMes } from "@/lib/metricas";
 import type { NivelResumo } from "@/lib/niveis";
 
 type LeadResumo = {
@@ -55,6 +57,18 @@ export default async function LeadsPage({
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
 
+  const agora = new Date();
+  const amanha = new Date(agora);
+  amanha.setDate(amanha.getDate() + 1);
+  amanha.setHours(0, 0, 0, 0);
+
+  const [metricasMes, metaReceita] = user
+    ? await Promise.all([
+        calcularMetricas(supabase, user.id, inicioDoMes(agora), amanha),
+        buscarMetaReceitaMes(supabase, user.id, agora.getFullYear(), agora.getMonth() + 1),
+      ])
+    : [null, null];
+
   const leadsPorNivel: Record<number, LeadResumo[]> = {};
   for (const lead of leads) {
     const lista = leadsPorNivel[lead.nivel_ordem] ?? [];
@@ -80,10 +94,17 @@ export default async function LeadsPage({
       />
 
       <main className="px-6 py-6">
-        <div className="mb-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-neutral-500">
             {leads.length} lead{leads.length === 1 ? "" : "s"} sendo trabalhados
           </p>
+          {metricasMes && (
+            <MetaReceitaWidget
+              compacta
+              metaReceita={metaReceita}
+              receitaAtual={metricasMes.receita}
+            />
+          )}
         </div>
 
         <KanbanBoard

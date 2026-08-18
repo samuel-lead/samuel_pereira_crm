@@ -4,11 +4,13 @@ import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { PerformanceSdr } from "@/components/performance-sdr";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
+import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import {
   calcularMetricas,
   calcularVendasPorCanal,
   calcularMetricasPorUsuario,
   calcularLeadsPorOrigem,
+  buscarMetaReceitaMes,
   inicioDaSemana,
   fimDaSemana,
   inicioDoMes,
@@ -57,6 +59,7 @@ export default async function DashboardPage() {
     performanceSemanaSdr,
     leadsPorOrigemSemana,
     leadsPorOrigemMes,
+    metaReceita,
   ] = await Promise.all([
     calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
     calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
@@ -72,6 +75,7 @@ export default async function DashboardPage() {
     souAdmin
       ? calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioMes, amanha)
       : Promise.resolve([]),
+    buscarMetaReceitaMes(supabase, usuario!.id, agora.getFullYear(), agora.getMonth() + 1),
   ]);
 
   return (
@@ -79,6 +83,8 @@ export default async function DashboardPage() {
       <PageHeader titulo="Métricas" />
 
       <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
+        <MetaReceitaWidget metaReceita={metaReceita} receitaAtual={metricasMes.receita} />
+
         <SecaoPeriodo
           titulo="Esta semana"
           subtitulo={subtituloSemana}
