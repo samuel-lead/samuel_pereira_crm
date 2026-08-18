@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ORDEM_OPORTUNIDADE_FUTURA } from "@/lib/niveis";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -235,6 +236,9 @@ export async function atualizarLead(
   const reuniaoData = String(formData.get("reuniao_data") ?? "").trim() || null;
   const reuniaoMarcadaEm = String(formData.get("marcada_em") ?? "").trim() || null;
   const closerId = String(formData.get("closer_id") ?? "").trim() || null;
+  // Só faz sentido em Oportunidades (nível 6) — fora dele, fica sempre false.
+  const oportunidadeFutura =
+    novoNivel === NIVEL_REUNIAO_FEITA && formData.get("oportunidade_futura") === "on";
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
@@ -318,6 +322,7 @@ export async function atualizarLead(
       criterio_urgencia: criterioUrgencia,
       criterio_capacidade: criterioCapacidade,
       nivel_ordem: novoNivel,
+      oportunidade_futura: oportunidadeFutura,
       ...(transferenciaParaCloser ? {} : { responsavel_id: responsavelId }),
       ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString() } : {}),
     })
@@ -358,7 +363,7 @@ export async function moverLeadNivel(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id")
+    .select("nivel_ordem, responsavel_id, oportunidade_futura")
     .eq("id", leadId)
     .single();
 
@@ -374,7 +379,13 @@ export async function moverLeadNivel(
     throw new Error(ERRO_SEM_PERMISSAO);
   }
 
-  if (leadAtual.nivel_ordem === novoNivel) {
+  // "Oportunidades futuras" é uma coluna sintética (divisão visual dentro
+  // do nível 6, não um nível de verdade) — arrastar pra ela só liga a
+  // marcação `oportunidade_futura`, o nivel_ordem continua 6.
+  const querFutura = novoNivel === ORDEM_OPORTUNIDADE_FUTURA;
+  const nivelReal = querFutura ? NIVEL_REUNIAO_FEITA : novoNivel;
+
+  if (leadAtual.nivel_ordem === nivelReal && leadAtual.oportunidade_futura === querFutura) {
     return;
   }
 
@@ -383,7 +394,7 @@ export async function moverLeadNivel(
     usuarioId: usuario.id,
     leadId,
     deOrdem: leadAtual.nivel_ordem,
-    paraOrdem: novoNivel,
+    paraOrdem: nivelReal,
     agendadaPara,
   });
   if (erroReuniao) {
@@ -393,7 +404,8 @@ export async function moverLeadNivel(
   const { error } = await supabase
     .from("leads")
     .update({
-      nivel_ordem: novoNivel,
+      nivel_ordem: nivelReal,
+      oportunidade_futura: querFutura,
       entrou_nivel_em: new Date().toISOString(),
     })
     .eq("id", leadId);
@@ -406,7 +418,7 @@ export async function moverLeadNivel(
     org_id: usuario.org_id,
     lead_id: leadId,
     de_ordem: leadAtual.nivel_ordem,
-    para_ordem: novoNivel,
+    para_ordem: nivelReal,
     motivo: "Arrastado no Kanban",
     automatico: false,
   });

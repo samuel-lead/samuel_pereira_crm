@@ -7,6 +7,7 @@ import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
 const NIVEL_REUNIAO_MARCADA = "4";
+const NIVEL_OPORTUNIDADES = "6";
 
 function agoraParaInputLocal() {
   const agora = new Date();
@@ -25,6 +26,7 @@ type Lead = {
   criterio_urgencia: string;
   criterio_capacidade: string;
   responsavel_id: string | null;
+  oportunidade_futura: boolean;
 };
 
 const campoClasse =
@@ -188,6 +190,23 @@ export function EditarLeadForm({
                   funcaoFiltro="closer"
                 />
               </div>
+            </div>
+          )}
+
+          {nivelSelecionado === NIVEL_OPORTUNIDADES && (
+            <div className="mt-2 rounded-md border border-green-200 bg-green-50 p-3">
+              <label className="flex items-start gap-2 text-sm text-green-800">
+                <input
+                  type="checkbox"
+                  name="oportunidade_futura"
+                  defaultChecked={lead.oportunidade_futura}
+                  className="mt-0.5"
+                />
+                <span>
+                  Oportunidade futura — fez a reunião, é ICP qualificado, mas
+                  avisou que só fecha depois (não é pra fechar esse mês).
+                </span>
+              </label>
             </div>
           )}
         </div>

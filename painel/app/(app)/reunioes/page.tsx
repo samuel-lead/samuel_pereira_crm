@@ -9,7 +9,15 @@ import {
   calcularReceitaOrg,
   inicioDoMes,
 } from "@/lib/metricas";
-import { NIVEIS_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import {
+  NIVEIS_VENDAS,
+  NIVEL_OPORTUNIDADE_FUTURA,
+  ORDEM_OPORTUNIDADE_FUTURA,
+  numerarNiveis,
+  type NivelResumo,
+} from "@/lib/niveis";
+
+const NIVEL_OPORTUNIDADES = 6;
 
 type LeadResumo = {
   id: string;
@@ -21,6 +29,7 @@ type LeadResumo = {
   entrou_nivel_em: string;
   status: string;
   responsavel_id: string | null;
+  oportunidade_futura: boolean;
 };
 
 export default async function VendasPage({
@@ -38,7 +47,7 @@ export default async function VendasPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id"
+      "id, nome, telefone_e164, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
@@ -61,7 +70,10 @@ export default async function VendasPage({
 
   const todosNiveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(todosNiveis);
-  const niveis = todosNiveis.filter((nivel) => NIVEIS_VENDAS.includes(nivel.ordem));
+  const niveis = [
+    ...todosNiveis.filter((nivel) => NIVEIS_VENDAS.includes(nivel.ordem)),
+    NIVEL_OPORTUNIDADE_FUTURA,
+  ];
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
@@ -84,9 +96,15 @@ export default async function VendasPage({
 
   const leadsPorNivel: Record<number, typeof leadsComAtividade> = {};
   for (const lead of leadsComAtividade) {
-    const lista = leadsPorNivel[lead.nivel_ordem] ?? [];
+    // "Oportunidades futuras" é uma divisão visual dentro do nível 6, não
+    // um nível separado — separa aqui na hora de montar as colunas.
+    const chave =
+      lead.nivel_ordem === NIVEL_OPORTUNIDADES && lead.oportunidade_futura
+        ? ORDEM_OPORTUNIDADE_FUTURA
+        : lead.nivel_ordem;
+    const lista = leadsPorNivel[chave] ?? [];
     lista.push(lead);
-    leadsPorNivel[lead.nivel_ordem] = lista;
+    leadsPorNivel[chave] = lista;
   }
 
   return (

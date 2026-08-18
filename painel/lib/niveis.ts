@@ -82,6 +82,18 @@ export const CORES_NIVEL: Record<
     pilula: "bg-stone-600 text-white",
     solido: "bg-gradient-to-br from-stone-500 to-stone-600",
   },
+  // Coluna sintética "Oportunidades futuras" (ver ORDEM_OPORTUNIDADE_FUTURA
+  // mais abaixo) — não é um nível de verdade, por isso a chave não segue
+  // a sequência normal de ordem.
+  1006: {
+    faixa: "bg-green-600",
+    texto: "text-green-700",
+    badge: "bg-green-200 text-green-700",
+    header: "bg-green-50",
+    borda: "border-green-300",
+    pilula: "bg-green-700 text-white",
+    solido: "bg-gradient-to-br from-green-600 to-green-700",
+  },
 };
 
 export function corDoNivel(ordem: number) {
@@ -98,11 +110,25 @@ export function corDoNivel(ordem: number) {
 export const NIVEIS_PRE_VENDAS = [0, 1, 2, 3, 4, 5];
 export const NIVEIS_VENDAS = [4, 6];
 
+// Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
+// do nível 6, pro lead que já fez a reunião (ICP qualificado) mas avisou
+// que só fecha depois. Usada só no quadro Vendas — nunca é gravada como
+// nivel_ordem no banco, só serve pra identificar a coluna no Kanban e no
+// drag-and-drop.
+export const ORDEM_OPORTUNIDADE_FUTURA = 1006;
+
 export type NivelResumo = {
   ordem: number;
   nome: string;
   numerado: boolean;
   destacado: boolean;
+};
+
+export const NIVEL_OPORTUNIDADE_FUTURA: NivelResumo = {
+  ordem: ORDEM_OPORTUNIDADE_FUTURA,
+  nome: "Oportunidades futuras",
+  numerado: false,
+  destacado: true,
 };
 
 export function numerarNiveis(niveis: NivelResumo[]) {

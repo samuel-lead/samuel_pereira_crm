@@ -813,3 +813,13 @@ Dois ajustes rápidos depois da divisão em Pré-vendas/Vendas:
 2. **Numeração errada no quadro Vendas**: a coluna "Oportunidades para o fim do mês" estava aparecendo como "NÍVEL 1" no quadro Vendas, porque a numeração era calculada só com os níveis daquele quadro (que ali é só o segundo nível da lista). Corrigido pra calcular a numeração usando TODOS os níveis (a lista completa, sem filtrar), e só depois decidir quais colunas aparecem em cada quadro — agora mostra "NÍVEL 5", que é o número certo, contínuo com o Leads/Pré-vendas.
 
 Testado: com conta de teste, confirmei que o menu mostra "Leads" e que o quadro Vendas mostra "NÍVEL 5. Oportunidades para o fim do mês" corretamente. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Coluna "Oportunidades futuras" (verde) dentro de Vendas
+
+Terceira peça da divisão do funil: dentro de "Oportunidades para o fim do mês" (nível 6), o Samuel queria separar visualmente quem já fez a reunião, é ICP qualificado, mas avisou que só fecha depois (não é pra fechar esse mês) — ele confirmou que não é um nível novo de verdade, é só uma divisão visual dentro do mesmo nível.
+
+- **Banco**: nova coluna `leads.oportunidade_futura` (boolean, default false). `nivel_ordem` continua 6 pros dois casos — não mexe em relatório nem em nenhuma métrica existente.
+- **Quadro Vendas**: a coluna "Oportunidades" virou duas na tela — "Oportunidades para o fim do mês" (de sempre) e uma nova "Oportunidades futuras", em verde, só quando `oportunidade_futura = true`. Essa segunda coluna é sintética (não existe na tabela `niveis` do banco) — só serve pra desenhar o Kanban, criada em `lib/niveis.ts` como `NIVEL_OPORTUNIDADE_FUTURA`/`ORDEM_OPORTUNIDADE_FUTURA` (usei o número 1006, bem fora da faixa real, só pra não colidir com nenhum nível de verdade).
+- **Duas formas de marcar**, como o Samuel pediu: **arrastar o card** pra essa coluna no Kanban (o `moverLeadNivel` reconhece esse ordem especial e só liga a marcação, sem tocar no nível de verdade), ou **abrir o lead e marcar um checkbox** que só aparece quando o nível selecionado é "Oportunidades" — ambos os caminhos levam ao mesmo lugar.
+
+Testado: com conta de teste, marquei o checkbox num lead que já estava em Oportunidades — o nível continuou 6, a marcação virou `true`, e o card foi pra coluna verde nova no quadro Vendas. Desmarquei de novo — voltou pra coluna normal. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
