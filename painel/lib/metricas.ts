@@ -62,7 +62,6 @@ export async function calcularMetricas(
   const [
     { data: leadsDeclarados },
     { data: reunioesDoPeriodo },
-    { count: reunioesMarcadas },
     { count: reunioesRealizadas },
     { count: noShow },
     { data: vendasData },
@@ -74,25 +73,20 @@ export async function calcularMetricas(
       .is("arquivado_em", null)
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
-    // "Lead trabalhado" não é só quem entrou no período — é também quem já
-    // estava na base e teve reunião marcada ou realizada dentro dele (ex.:
-    // lead entrou em julho, teve a call em agosto, conta como trabalhado
-    // em agosto também).
+    // Toda reunião "ativa" no período — marcada dentro dele OU com a call
+    // dentro dele (mesmo que tenha sido marcada num período anterior, ex.:
+    // marcada em julho, call em agosto). Serve pra duas contas: "reuniões
+    // marcadas" do período e "lead trabalhado" do período (mais embaixo) —
+    // sem isso, "realizadas + no show" podia passar de "marcadas", porque
+    // elas usavam datas diferentes (marcada_em vs agendada_para).
     supabase
       .from("reunioes")
-      .select("lead_id, leads!inner(arquivado_em)")
+      .select("id, lead_id, leads!inner(arquivado_em)")
       .eq("usuario_id", usuarioId)
       .is("leads.arquivado_em", null)
       .or(
         `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
       ),
-    supabase
-      .from("reunioes")
-      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
-      .eq("usuario_id", usuarioId)
-      .is("leads.arquivado_em", null)
-      .gte("marcada_em", inicioISO)
-      .lt("marcada_em", fimISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -131,7 +125,7 @@ export async function calcularMetricas(
   ]);
 
   const leads = idsTrabalhados.size;
-  const marcadas = reunioesMarcadas ?? 0;
+  const marcadas = reunioesDoPeriodo?.length ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
 
   return {

@@ -556,3 +556,13 @@ Isso muda a definição de "lead trabalhado" que estava até no `CLAUDE.md` — 
 Não mexi em `calcularLeadsPorOrigem()` ("Origem dos leads — semana/mês") — esse é sobre de onde os leads vieram, não sobre trabalho contínuo, então continua olhando só a data de entrada.
 
 Testado: reproduzi a mesma lógica direto em SQL (união de "declarados no período" com "teve reunião no período") pro Samuel em agosto — o resultado bateu 11 leads, incluindo o Paulo Ribeiro dessa vez. Conta de verificação removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Bug: "Reuniões realizadas + No Show" passava de "Reuniões marcadas"
+
+O Samuel reparou algo que não fazia sentido: Métricas mostrava 5 reuniões marcadas, mas 3 realizadas + 3 no show = 6 — mais do que o total de marcadas, matematicamente impossível se "realizada"/"no show" são sempre um subconjunto de "marcada".
+
+Causa: **"Marcadas" contava pela data em que a reunião foi agendada** (`marcada_em`), **mas "Realizadas" e "No Show" contavam pela data em que a reunião de fato aconteceu** (`agendada_para`) — duas datas diferentes. O caso que estourou isso: o Paulo Ribeiro (da importação da planilha) foi marcado em 29/07 mas a call dele foi em 05/08 — contava como "realizada em agosto" mas não como "marcada em agosto", porque a marcação em si foi em julho. É exatamente a mesma raiz do bug de "lead trabalhado" (2 entradas acima), só que nas reuniões em vez dos leads.
+
+Apliquei o mesmo princípio: uma reunião conta como "marcada" no período se ela foi **marcada** dentro dele **ou** se a **call em si aconteceu** dentro dele — a mesma consulta que já usava esse "ou" pra "lead trabalhado" (reaproveitei, sem duplicar a busca no banco: uma query só serve pras duas contas agora). Isso garante que toda reunião que virou "realizada" ou "no show" no período sempre está contada também em "marcadas" daquele período — o funil nunca mais "estoura" de novo.
+
+Testado: reproduzi a conta em SQL (marcada dentro do mês OU call dentro do mês) — deu 6, batendo exatamente com 3 realizadas + 3 no show. `tsc --noEmit` e `npm run build` limpos.
