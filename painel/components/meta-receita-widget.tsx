@@ -13,13 +13,15 @@ export function MetaReceitaWidget({
   metaReceita,
   receitaAtual,
   compacta = false,
+  podeEditar = false,
 }: {
   metaReceita: number | null;
   receitaAtual: number;
   compacta?: boolean;
+  podeEditar?: boolean;
 }) {
   const [estado, acaoFormulario] = useActionState(definirMetaReceita, estadoInicial);
-  const [editando, setEditando] = useState(metaReceita === null);
+  const [editando, setEditando] = useState(podeEditar && metaReceita === null);
 
   useEffect(() => {
     if (estado !== estadoInicial && !estado.erro) {
@@ -27,7 +29,23 @@ export function MetaReceitaWidget({
     }
   }, [estado]);
 
-  if (editando) {
+  if (metaReceita === null && !podeEditar) {
+    if (compacta) {
+      return (
+        <span className="flex shrink-0 items-center rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-500 shadow-sm">
+          Meta do mês ainda não definida pelo admin
+        </span>
+      );
+    }
+    return (
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-1 text-sm font-semibold text-neutral-800">Meta de receita do mês</h2>
+        <p className="text-sm text-neutral-500">Ainda não foi definida pelo administrador.</p>
+      </div>
+    );
+  }
+
+  if (editando && podeEditar) {
     return (
       <form
         action={acaoFormulario}
@@ -71,13 +89,8 @@ export function MetaReceitaWidget({
   const pct = meta > 0 ? Math.min(100, Math.round((receitaAtual / meta) * 100)) : 0;
 
   if (compacta) {
-    return (
-      <button
-        type="button"
-        onClick={() => setEditando(true)}
-        title="Clique pra editar a meta do mês"
-        className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs shadow-sm transition hover:bg-neutral-50"
-      >
+    const conteudo = (
+      <>
         <span className="font-medium text-neutral-700">
           Meta do mês: {formatarMoeda(meta)}
         </span>
@@ -85,6 +98,25 @@ export function MetaReceitaWidget({
         <span className={`font-semibold ${bateu ? "text-emerald-600" : "text-amber-600"}`}>
           {bateu ? "Meta batida! 🎉" : `Falta ${formatarMoeda(falta)}`}
         </span>
+      </>
+    );
+
+    if (!podeEditar) {
+      return (
+        <span className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs shadow-sm">
+          {conteudo}
+        </span>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => setEditando(true)}
+        title="Clique pra editar a meta do mês"
+        className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs shadow-sm transition hover:bg-neutral-50"
+      >
+        {conteudo}
       </button>
     );
   }
@@ -93,13 +125,15 @@ export function MetaReceitaWidget({
     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-neutral-800">Meta de receita do mês</h2>
-        <button
-          type="button"
-          onClick={() => setEditando(true)}
-          className="text-xs font-medium text-violet-600 hover:text-violet-700"
-        >
-          Editar
-        </button>
+        {podeEditar && (
+          <button
+            type="button"
+            onClick={() => setEditando(true)}
+            className="text-xs font-medium text-violet-600 hover:text-violet-700"
+          >
+            Editar
+          </button>
+        )}
       </div>
       <div className="mb-1 flex items-baseline justify-between text-sm">
         <span className="text-neutral-600">

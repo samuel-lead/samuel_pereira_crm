@@ -7,7 +7,8 @@ import { diasUteisEntre, inicioDoMes } from "@/lib/metricas";
 export type EstadoMeta = { erro: string | null };
 
 // Meta é sempre sobre receita — o dinheiro que entra no caixa, não o valor
-// bruto da venda (faturamento). Um usuário só define a própria meta.
+// bruto da venda (faturamento). É uma meta só, da empresa toda — não por
+// usuário. Só admin pode definir/editar (todo mundo só visualiza).
 export async function definirMetaReceita(
   _estadoAnterior: EstadoMeta,
   formData: FormData
@@ -24,12 +25,16 @@ export async function definirMetaReceita(
 
   const { data: usuario, error: erroUsuario } = await supabase
     .from("usuarios")
-    .select("id, org_id")
+    .select("id, org_id, papel")
     .eq("id", user.id)
     .single();
 
   if (erroUsuario || !usuario) {
     return { erro: "Usuário não encontrado" };
+  }
+
+  if (usuario.papel !== "admin") {
+    return { erro: "Só administradores podem definir a meta." };
   }
 
   const valorRaw = String(formData.get("meta_receita") ?? "").trim();
@@ -64,7 +69,7 @@ export async function definirMetaReceita(
       ticket_medio: ticketMedio,
       dias_uteis: diasUteis,
     },
-    { onConflict: "usuario_id,ano,mes" }
+    { onConflict: "org_id,ano,mes" }
   );
 
   if (error) {

@@ -393,3 +393,17 @@ A tabela `metas_mensais` já existia desde a Fase 1 do projeto (schema original)
 **Onde aparece**: compacta no topo do Funil, do lado direito da contagem de leads (mesma linha, ao lado do filtro por usuário); completa no topo da tela de Métricas, antes de "Esta semana". Se ainda não tiver meta definida, os dois lugares mostram o campo pra preencher na hora.
 
 Testado com usuário de teste: defini uma meta de R$30.000, salvou, e os dois lugares mostraram "Falta R$30.000,00 pra bater a meta" (recebido R$0 ainda) — sem precisar recarregar a página, o formulário já vira resumo sozinho depois de salvar. Dados de teste removidos no final. Build de produção limpo, mesmas 16 rotas.
+
+## 2026-08-18 — Meta de receita vira única (não por usuário) — só admin edita
+
+O Samuel corrigiu o modelo do dia anterior: não existe "meta de cada um da equipe" — é **uma meta só, da empresa toda**. Todo mundo vê; só o administrador escolhe/edita o valor.
+
+Mudanças:
+
+- **Migration** (`20260818010000_meta_receita_por_org_admin_edita.sql`): a chave única de `metas_mensais` passou de `(usuario_id, ano, mes)` pra `(org_id, ano, mes)` — uma linha por mês pra organização inteira, não mais uma por pessoa. RLS trocada: leitura liberada pra todo mundo da org (`metas_mensais_select_org`), escrita (inserir/editar) só pra admin (`metas_mensais_insert_admin`/`metas_mensais_update_admin`, usando a função `private.eh_admin()` que já existia).
+- **`lib/metas/actions.ts`**: `definirMetaReceita()` agora barra na entrada quem não é admin (`"Só administradores podem definir a meta."`) — mesma regra que a RLS já garante no banco, só que com mensagem amigável em vez de erro cru.
+- **`lib/metricas.ts`**: `buscarMetaReceitaMes()` passou a receber `orgId` em vez de `usuarioId`. Criei `calcularReceitaOrg()` — soma a receita da organização inteira no período, porque o "progresso" da meta agora também é de time, não mais só do usuário logado.
+- **`MetaReceitaWidget`**: ganhou a prop `podeEditar`. Quem não é admin nunca vê o botão "Editar" nem o formulário — só o valor e a barra de progresso, somem também o clique na versão compacta. Se a meta ainda não foi definida e a pessoa não é admin, mostra um aviso neutro ("Ainda não foi definida pelo administrador") em vez de abrir um formulário vazio.
+- **Funil e Métricas**: as duas páginas passaram a buscar a meta e a receita por `org_id` (não mais `usuario_id`), e passam `podeEditar={souAdmin}` pro widget.
+
+Testado com duas contas: logado como membro de teste, a tela mostrou a meta certa (R$30.000, já cadastrada antes pelo Samuel) mas **sem nenhum botão de editar** em nenhuma das duas telas — conferido também direto no DOM, sem nenhum "Editar" na lista de botões. Pra provar que a trava é de verdade (não só escondida na tela), tentei um `PATCH` direto na API do Supabase autenticado como esse membro, tentando mudar a meta pra R$999.999 — a RLS bloqueou (0 linhas afetadas) e o valor no banco continuou R$30.000. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.

@@ -193,23 +193,43 @@ export async function calcularLeadsPorOrigem(
 }
 
 // Meta de receita do mês (o que entra no caixa, não o valor da venda em
-// si) — cada usuário tem a própria, guardada em metas_mensais.
+// si) — é uma só, da empresa toda (não por usuário). Todo mundo vê, só
+// admin define (garantido pela RLS também, não só aqui).
 export async function buscarMetaReceitaMes(
   supabase: SupabaseServerClient,
-  usuarioId: string,
+  orgId: string,
   ano: number,
   mes: number
 ): Promise<number | null> {
   const { data } = await supabase
     .from("metas_mensais")
     .select("meta_receita")
-    .eq("usuario_id", usuarioId)
+    .eq("org_id", orgId)
     .eq("ano", ano)
     .eq("mes", mes)
     .maybeSingle();
 
   if (!data || data.meta_receita === null) return null;
   return Number(data.meta_receita);
+}
+
+// Receita da empresa toda no período (soma de todo mundo, não só quem tá
+// logado) — usada como progresso da meta, que também é da empresa toda.
+export async function calcularReceitaOrg(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<number> {
+  const { data } = await supabase
+    .from("leads")
+    .select("valor_venda")
+    .eq("org_id", orgId)
+    .eq("status", "vendido")
+    .gte("vendido_em", inicio.toISOString())
+    .lt("vendido_em", fim.toISOString());
+
+  return (data ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
 }
 
 export type MetricasUsuario = Metricas & { usuarioId: string; nome: string };

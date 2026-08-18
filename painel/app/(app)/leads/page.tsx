@@ -4,7 +4,11 @@ import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FiltroUsuarioSelect } from "@/components/filtro-usuario-select";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
-import { calcularMetricas, buscarMetaReceitaMes, inicioDoMes } from "@/lib/metricas";
+import {
+  buscarMetaReceitaMes,
+  calcularReceitaOrg,
+  inicioDoMes,
+} from "@/lib/metricas";
 import type { NivelResumo } from "@/lib/niveis";
 
 type LeadResumo = {
@@ -47,7 +51,7 @@ export default async function LeadsPage({
       supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
       consulta,
       user
-        ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
+        ? supabase.from("usuarios").select("org_id, papel").eq("id", user.id).single()
         : Promise.resolve({ data: null }),
       supabase.from("usuarios").select("id, nome").order("nome"),
     ]);
@@ -62,10 +66,12 @@ export default async function LeadsPage({
   amanha.setDate(amanha.getDate() + 1);
   amanha.setHours(0, 0, 0, 0);
 
-  const [metricasMes, metaReceita] = user
+  const orgId = usuarioAtual?.org_id ?? null;
+
+  const [receitaOrgMes, metaReceita] = orgId
     ? await Promise.all([
-        calcularMetricas(supabase, user.id, inicioDoMes(agora), amanha),
-        buscarMetaReceitaMes(supabase, user.id, agora.getFullYear(), agora.getMonth() + 1),
+        calcularReceitaOrg(supabase, orgId, inicioDoMes(agora), amanha),
+        buscarMetaReceitaMes(supabase, orgId, agora.getFullYear(), agora.getMonth() + 1),
       ])
     : [null, null];
 
@@ -98,11 +104,12 @@ export default async function LeadsPage({
           <p className="text-sm text-neutral-500">
             {leads.length} lead{leads.length === 1 ? "" : "s"} sendo trabalhados
           </p>
-          {metricasMes && (
+          {receitaOrgMes !== null && (
             <MetaReceitaWidget
               compacta
               metaReceita={metaReceita}
-              receitaAtual={metricasMes.receita}
+              receitaAtual={receitaOrgMes}
+              podeEditar={souAdmin}
             />
           )}
         </div>

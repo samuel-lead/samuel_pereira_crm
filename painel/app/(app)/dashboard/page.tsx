@@ -10,6 +10,7 @@ import {
   calcularVendasPorCanal,
   calcularMetricasPorUsuario,
   calcularLeadsPorOrigem,
+  calcularReceitaOrg,
   buscarMetaReceitaMes,
   inicioDaSemana,
   fimDaSemana,
@@ -59,6 +60,7 @@ export default async function DashboardPage() {
     performanceSemanaSdr,
     leadsPorOrigemSemana,
     leadsPorOrigemMes,
+    receitaOrgMes,
     metaReceita,
   ] = await Promise.all([
     calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
@@ -75,7 +77,8 @@ export default async function DashboardPage() {
     souAdmin
       ? calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioMes, amanha)
       : Promise.resolve([]),
-    buscarMetaReceitaMes(supabase, usuario!.id, agora.getFullYear(), agora.getMonth() + 1),
+    calcularReceitaOrg(supabase, usuario!.org_id, inicioMes, amanha),
+    buscarMetaReceitaMes(supabase, usuario!.org_id, agora.getFullYear(), agora.getMonth() + 1),
   ]);
 
   return (
@@ -83,7 +86,11 @@ export default async function DashboardPage() {
       <PageHeader titulo="Métricas" />
 
       <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
-        <MetaReceitaWidget metaReceita={metaReceita} receitaAtual={metricasMes.receita} />
+        <MetaReceitaWidget
+          metaReceita={metaReceita}
+          receitaAtual={receitaOrgMes}
+          podeEditar={souAdmin}
+        />
 
         <SecaoPeriodo
           titulo="Esta semana"
