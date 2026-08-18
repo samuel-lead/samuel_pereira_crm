@@ -698,3 +698,12 @@ O Samuel queria testar juntar os 3 critérios de qualificação (problema, urgê
 - **Urgência e capacidade de pagar** continuam exatamente como estavam (seleção fechada) — não mudou nada estrutural aqui, e os 3 critérios do CLAUDE.md continuam os mesmos 3, só a forma de perguntar o primeiro ficou melhor.
 
 Testado: com conta de teste, abri um lead existente e conferi que o novo texto do campo aparece certo, e os dois seletores de urgência/capacidade continuam do jeito de sempre. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — "Sobre o lead" com chips de exemplo e autonomia de decisão
+
+Dois ajustes finos no card de qualificação do lead, a pedido do Samuel:
+
+1. **Título do quadro**: "OS 3 CRITÉRIOS DE QUALIFICAÇÃO" virou **"SOBRE O LEAD"** — mais simples e conecta direto com o campo logo abaixo ("Me conte sobre o lead").
+2. **Exemplo em chips**: o texto de exemplo que tava dentro do placeholder do campo virou 4 etiquetas visuais (chips) acima do campo de texto — Situação hoje, O que já tentou, Onde quer chegar, e uma nova, **Autonomia de decisão** (se o lead decide sozinho ou depende de outra pessoa pra fechar) — ideia dele, ajuda a entender se vai precisar de mais alguém na conversa antes de fechar. São só visuais (não clicáveis), o SDR ainda escreve tudo livre no campo de baixo.
+
+Testado: com conta de teste, abri um lead existente e conferi visualmente que o título e os 4 chips aparecem certos, campo continua editável normal. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.

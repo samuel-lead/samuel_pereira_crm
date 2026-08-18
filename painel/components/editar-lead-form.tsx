@@ -190,18 +190,32 @@ export function EditarLeadForm({
 
         <fieldset className="space-y-3 rounded-md border border-neutral-200 bg-neutral-50 p-3">
           <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-            Os 3 critérios de qualificação
+            Sobre o lead
           </legend>
 
           <div className="space-y-1">
             <label className={labelClasse} htmlFor="criterio_problema">
               Me conte sobre o lead — qual é o perfil dele?
             </label>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                "Situação hoje",
+                "O que já tentou",
+                "Onde quer chegar",
+                "Autonomia de decisão",
+              ].map((dica) => (
+                <span
+                  key={dica}
+                  className="rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs text-neutral-600"
+                >
+                  {dica}
+                </span>
+              ))}
+            </div>
             <textarea
               id="criterio_problema"
               name="criterio_problema"
               rows={4}
-              placeholder="Ex.: qual a situação dele hoje, o que já tentou fazer pra resolver, onde quer chegar..."
               defaultValue={lead.criterio_problema ?? ""}
               className={`${campoClasse} bg-white`}
             />
