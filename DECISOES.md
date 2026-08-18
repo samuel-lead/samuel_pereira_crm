@@ -849,3 +849,16 @@ O Samuel reclamou que a tela nova de Integrações era só visual, não dava pra
 - Dados centralizados em `lib/integracoes.ts` (lista fixa no código, sem tabela no banco ainda) — tanto a tela de lista quanto a de detalhe leem dali, então adicionar uma integração nova no futuro é só adicionar um item nesse arquivo.
 
 Testado: com conta de teste admin, a lista mostrou as 5 integrações com a setinha de "clicável", e abrir o Facebook mostrou a tela de detalhe certa (O que faz + Como conectar, dividido Você/Eu). Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 21 rotas.
+
+## 2026-08-18 — Edge Function do Facebook Lead Ads no ar
+
+Construí a "porta de entrada" que recebe os leads do formulário nativo do Facebook/Instagram — a parte que combinei ser "minha" no plano da integração.
+
+- **Nova Edge Function `webhook-facebook-leads`**, pública (sem exigir login do Supabase, porque quem chama é o Facebook) — a segurança vem de duas checagens: no GET de configuração, confere um "verify token" que o Samuel escolhe; em todo POST de verdade, confere a assinatura HMAC que o Facebook manda (`X-Hub-Signature-256`), usando o App Secret — sem isso, a requisição é recusada (testei sem credencial certa e ela bloqueou: 403 no GET, 401 no POST).
+- **O que ela faz**: recebe o aviso ("mudou o campo leadgen"), busca os dados completos do lead na API do Facebook (nome, telefone, e-mail), normaliza o telefone, e grava um lead novo — Pré-vendas → Leads (nível 0), sem responsável, origem "Tráfego pago" (reaproveitei a categoria que já existe, em vez de criar uma nova só pra Facebook).
+- **Idempotência**: nova coluna `leads.id_externo` (com índice único) guarda o `leadgen_id` do Facebook — se ele reenviar o mesmo aviso (acontece por natureza do protocolo), o segundo insert é recusado pelo banco e o código trata como "ok, já processei", sem duplicar o lead nem quebrar o webhook.
+- Segredos (App Secret, token de acesso da página, verify token) ficam só nas variáveis de ambiente da Edge Function no Supabase — nunca em código, nunca no chat.
+
+**Trade-off consciente**: o projeto tem a regra de "webhook responde 200 e processa depois" — aqui processei tudo na mesma chamada (busca na API do Facebook + grava no banco), porque pra esse volume (leads avulsos de campanha, não milhares por segundo) isso é rápido o suficiente e evita construir uma fila assíncrona sem necessidade real ainda. Se o volume crescer muito, dá pra revisitar.
+
+**Falta o lado do Samuel**: criar o App no Meta, gerar o token da página, e configurar o webhook lá com a URL `https://hgloheptxqdjpwzgquku.supabase.co/functions/v1/webhook-facebook-leads` — passo a passo combinado fora do código.
