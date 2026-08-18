@@ -48,61 +48,69 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
           leads do CRM.
         </p>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
-                <th className="px-3 py-2 text-left font-medium">Mês</th>
-                <th className="px-3 py-2 text-center font-medium">Meta</th>
-                <th className="px-3 py-2 text-center font-medium">Faturamento</th>
-                <th className="px-3 py-2 text-center font-medium">Receita</th>
-                <th className="px-3 py-2 text-center font-medium">Falta pra meta</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dados.map((linha) => {
-                const falta =
-                  linha.metaReceita !== null ? linha.metaReceita - linha.receita : null;
-                const bateu = falta !== null ? falta <= 0 : null;
-                const ehMesAtual = linha.mes === mesAtual;
-                return (
-                  <tr
-                    key={linha.mes}
-                    className={`border-b border-neutral-100 last:border-0 ${
-                      ehMesAtual ? "bg-emerald-50/50" : ""
+        <div className="space-y-3">
+          {dados.map((linha) => {
+            const meta = linha.metaReceita;
+            const pct = meta && meta > 0 ? Math.min(100, Math.round((linha.receita / meta) * 100)) : 0;
+            const bateu = meta !== null ? linha.receita >= meta : null;
+            const ehMesAtual = linha.mes === mesAtual;
+            const corBarra =
+              bateu === null ? "bg-neutral-300" : bateu ? "bg-emerald-500" : "bg-amber-500";
+
+            return (
+              <div
+                key={linha.mes}
+                className={`rounded-lg border p-3 transition ${
+                  ehMesAtual
+                    ? "border-emerald-300 bg-emerald-50/50"
+                    : "border-neutral-100 bg-neutral-50/40"
+                }`}
+              >
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
+                    {NOMES_MESES[linha.mes - 1]}
+                    {ehMesAtual && (
+                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                        agora
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-sm font-bold tabular-nums text-neutral-900">
+                    {formatarMoeda(linha.receita)}
+                  </span>
+                </div>
+
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-neutral-200/70">
+                  <div
+                    className={`h-full rounded-full ${corBarra} transition-all`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+
+                <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs">
+                  <span className="text-neutral-500">
+                    Meta {meta !== null ? formatarMoeda(meta) : "—"} · Faturamento{" "}
+                    {formatarMoeda(linha.faturamento)}
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      bateu === null
+                        ? "text-neutral-400"
+                        : bateu
+                          ? "text-emerald-600"
+                          : "text-amber-600"
                     }`}
                   >
-                    <td className="px-3 py-2 text-left font-medium text-neutral-900">
-                      {NOMES_MESES[linha.mes - 1]}
-                      {ehMesAtual && (
-                        <span className="ml-2 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                          agora
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 text-center tabular-nums text-neutral-600">
-                      {linha.metaReceita !== null ? formatarMoeda(linha.metaReceita) : "—"}
-                    </td>
-                    <td className="px-3 py-2 text-center tabular-nums text-neutral-600">
-                      {formatarMoeda(linha.faturamento)}
-                    </td>
-                    <td className="px-3 py-2 text-center tabular-nums font-semibold text-neutral-900">
-                      {formatarMoeda(linha.receita)}
-                    </td>
-                    <td className="px-3 py-2 text-center tabular-nums font-bold">
-                      {bateu === null ? (
-                        <span className="text-neutral-400">—</span>
-                      ) : bateu ? (
-                        <span className="text-emerald-600">Bateu a meta 🎉</span>
-                      ) : (
-                        <span className="text-amber-600">{formatarMoeda(falta!)}</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    {bateu === null
+                      ? "—"
+                      : bateu
+                        ? "Bateu a meta 🎉"
+                        : `Falta ${formatarMoeda(meta! - linha.receita)}`}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
     </div>

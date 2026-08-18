@@ -653,3 +653,12 @@ Dois ajustes rápidos na tela "Ano" logo depois de criada:
 2. **Seletor de ano** — a tela só mostrava o ano atual (2026), sem jeito de ver anos anteriores ou futuros. Adicionei `FiltroAnoSelect` (mesmo padrão do `FiltroUsuarioSelect` que já existia pro Funil), um `<select>` que navega pra `/ano?ano=X`. A tela agora lê o ano pela URL, com o ano atual como padrão quando não vem nada. O texto "até agora" no card verde e a etiqueta "agora" na linha do mês só aparecem quando o ano escolhido é o ano corrente — pra anos passados/futuros isso não faz sentido, então some sozinho.
 
 Testado: conferi que "Ano" sumiu do menu lateral e o link novo em Métricas aponta pra `/ano`; troquei o seletor pra 2025 e a tela mudou pra "Ano 2025", tudo zerado (sem dado nesse ano, esperado) e sem a etiqueta "agora" em nenhum mês — confirmando que a lógica de "só mostra 'agora' no ano corrente" funciona. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Ano: barras de progresso em vez de tabela + link vai pro final de Métricas
+
+O Samuel não gostou muito do visual da tela Ano ("acho que dá pra ser melhor") e pediu pra mover o link "Ver o ano inteiro" do topo de Métricas pro final da página.
+
+- **Link movido**: saiu do `PageHeader` (topo) e foi pro fim do `<main>`, depois de todo o conteúdo de Métricas (Taxas, Visão da equipe, etc.), centralizado — mesmo texto "Ver o ano inteiro →", só mudou de lugar.
+- **Redesenho da tela Ano**: troquei a tabela simples (linhas de texto) por um cartão por mês com **barra de progresso** comparando receita contra a meta — verde quando bateu, âmbar quando não. Cada cartão mostra o mês (com a etiqueta "agora" se for o mês corrente), a receita em destaque, a barra, e embaixo "Meta RX · Faturamento RY" de um lado e "Bateu a meta 🎉" ou "Falta RZ" do outro. Fica mais fácil de bater o olho e ver de cara quais meses foram bons sem precisar ler número por número.
+
+Testado: com conta de teste, a tela mostrou as barras de janeiro a abril em âmbar (nenhum mês bateu os R$30.000 de meta ainda), com a largura proporcional certa (ex.: janeiro em ~46%, batendo com R$13.710 de R$30.000); confirmei que "Ver o ano inteiro →" aparece depois de todo o conteúdo de Métricas, não mais no topo. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.

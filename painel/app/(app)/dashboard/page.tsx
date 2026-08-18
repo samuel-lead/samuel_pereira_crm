@@ -90,19 +90,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader
-        titulo="Métricas"
-        acao={
-          souAdmin && (
-            <Link
-              href="/ano"
-              className="text-sm font-medium text-violet-600 hover:text-violet-700"
-            >
-              Ver o ano inteiro →
-            </Link>
-          )
-        }
-      />
+      <PageHeader titulo="Métricas" />
 
       <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
         <MetaReceitaWidget
@@ -147,6 +135,17 @@ export default async function DashboardPage() {
           Taxas e piso são constantes do sistema — nunca baixam por
           performance. Calculado direto no banco, sem estimativa.
         </p>
+
+        {souAdmin && (
+          <div className="flex justify-center pt-2">
+            <Link
+              href="/ano"
+              className="text-sm font-medium text-violet-600 hover:text-violet-700"
+            >
+              Ver o ano inteiro →
+            </Link>
+          </div>
+        )}
       </main>
     </>
   );
