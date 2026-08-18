@@ -407,3 +407,13 @@ Mudanças:
 - **Funil e Métricas**: as duas páginas passaram a buscar a meta e a receita por `org_id` (não mais `usuario_id`), e passam `podeEditar={souAdmin}` pro widget.
 
 Testado com duas contas: logado como membro de teste, a tela mostrou a meta certa (R$30.000, já cadastrada antes pelo Samuel) mas **sem nenhum botão de editar** em nenhuma das duas telas — conferido também direto no DOM, sem nenhum "Editar" na lista de botões. Pra provar que a trava é de verdade (não só escondida na tela), tentei um `PATCH` direto na API do Supabase autenticado como esse membro, tentando mudar a meta pra R$999.999 — a RLS bloqueou (0 linhas afetadas) e o valor no banco continuou R$30.000. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.
+
+## 2026-08-18 — Aviso chamativo quando vira o mês e a meta não foi definida
+
+O Samuel pediu um "sinal" mais claro: toda vez que virar o mês, precisa aparecer alguma coisa avisando que a meta de receita precisa ser trocada. Isso já acontecia de forma silenciosa (o formulário abria sozinho pro admin quando não havia meta pro mês atual), mas ficava discreto demais, meio camuflado no fundo branco da tela.
+
+Troquei o estado "mês novo, meta ainda não definida" (só aparece pra admin, já que só ele pode agir) por um aviso amarelo com sino (🔔), tanto na versão compacta (Funil) quanto na completa (Métricas): "🔔 [Mês] começou — defina a meta". Continua sendo o mesmo formulário de sempre por baixo — só a moldura chamou mais atenção. Assim que salva, o aviso some sozinho e volta o card normal com a barra de progresso.
+
+Não precisou nenhuma tabela ou lógica nova: como `metas_mensais` já é uma linha por `(org_id, ano, mes)`, a virada do mês naturalmente já deixa essa linha inexistente até alguém cadastrar — o aviso só está reagindo a isso ficar `null`.
+
+Testado: criei um admin de teste, apaguei a meta de agosto pra simular o primeiro acesso do mês, logei e vi o aviso amarelo aparecer certinho no Funil e em Métricas; preenchi R$30.000 de novo, o aviso sumiu e voltou o card normal com "Falta R$30.000,00". Reassociei a linha da meta de volta pro usuário real (Samuel) e apaguei a conta de teste. `tsc --noEmit` e `npm run build` limpos, mesmas 16 rotas.
