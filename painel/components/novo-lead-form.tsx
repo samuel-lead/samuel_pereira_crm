@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { criarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
+import { ProdutoSelect } from "@/components/produto-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 
 const estadoInicial: EstadoFormulario = { erro: null };
@@ -64,6 +65,13 @@ export function NovoLeadForm({
             Origem
           </label>
           <OrigemSelect />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-neutral-700">
+            Produto
+          </label>
+          <ProdutoSelect />
         </div>
 
         <div className="space-y-1">

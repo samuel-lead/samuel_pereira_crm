@@ -67,9 +67,10 @@ function mensagemAmigavel(codigo: string | undefined, mensagemOriginal: string) 
 }
 
 // Mantém a tabela `reunioes` em sincronia com a mudança de nível.
-// Entrando em "Reunião marcada": cria a reunião (data de agendamento = agora,
-// data da reunião = o que a pessoa informou). Saindo de "Reunião marcada"
-// pra "No Show" ou "Reunião feita": atualiza o status da reunião mais recente.
+// Entrando em "Reunião marcada": cria a reunião (data de agendamento = o
+// que a pessoa informou, default agora — data da reunião = o que a pessoa
+// informou). Saindo de "Reunião marcada" pra "No Show" ou "Reunião feita":
+// atualiza o status da reunião mais recente.
 async function sincronizarReuniao(
   supabase: SupabaseServerClient,
   params: {
@@ -79,9 +80,10 @@ async function sincronizarReuniao(
     deOrdem: number;
     paraOrdem: number;
     agendadaPara?: string | null;
+    marcadaEm?: string | null;
   }
 ): Promise<string | null> {
-  const { orgId, usuarioId, leadId, deOrdem, paraOrdem, agendadaPara } = params;
+  const { orgId, usuarioId, leadId, deOrdem, paraOrdem, agendadaPara, marcadaEm } = params;
 
   if (paraOrdem === NIVEL_REUNIAO_MARCADA && deOrdem !== NIVEL_REUNIAO_MARCADA) {
     if (!agendadaPara) {
@@ -93,11 +95,21 @@ async function sincronizarReuniao(
       return "Data da reunião inválida.";
     }
 
+    let dataMarcada = new Date();
+    if (marcadaEm) {
+      const parsed = new Date(marcadaEm);
+      if (Number.isNaN(parsed.getTime())) {
+        return "Data de agendamento inválida.";
+      }
+      dataMarcada = parsed;
+    }
+
     const { error } = await supabase.from("reunioes").insert({
       org_id: orgId,
       usuario_id: usuarioId,
       lead_id: leadId,
       agendada_para: data.toISOString(),
+      marcada_em: dataMarcada.toISOString(),
       status: "marcada",
     });
 
@@ -141,6 +153,7 @@ export async function criarLead(
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
+  const produto = String(formData.get("produto") ?? "").trim() || null;
   const responsavelId =
     usuario.papel === "admin"
       ? String(formData.get("responsavel_id") ?? "").trim() || null
@@ -156,6 +169,7 @@ export async function criarLead(
     nome,
     telefone_e164: telefone,
     origem,
+    produto,
     responsavel_id: responsavelId,
   });
 
@@ -177,6 +191,7 @@ export async function atualizarLead(
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
+  const produto = String(formData.get("produto") ?? "").trim() || null;
   const criterioProblema =
     String(formData.get("criterio_problema") ?? "").trim() || null;
   const criterioUrgencia = String(
@@ -187,6 +202,7 @@ export async function atualizarLead(
   );
   const novoNivel = Number(formData.get("nivel_ordem"));
   const reuniaoData = String(formData.get("reuniao_data") ?? "").trim() || null;
+  const reuniaoMarcadaEm = String(formData.get("marcada_em") ?? "").trim() || null;
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
@@ -223,6 +239,7 @@ export async function atualizarLead(
       deOrdem: leadAtual.nivel_ordem,
       paraOrdem: novoNivel,
       agendadaPara: reuniaoData,
+      marcadaEm: reuniaoMarcadaEm,
     });
     if (erroReuniao) {
       return { erro: erroReuniao };
@@ -235,6 +252,7 @@ export async function atualizarLead(
       nome,
       telefone_e164: telefone,
       origem,
+      produto,
       criterio_problema: criterioProblema,
       criterio_urgencia: criterioUrgencia,
       criterio_capacidade: criterioCapacidade,

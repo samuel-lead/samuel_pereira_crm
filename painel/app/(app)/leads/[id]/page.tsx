@@ -14,6 +14,7 @@ type Lead = {
   nome: string;
   telefone_e164: string | null;
   origem: string | null;
+  produto: string | null;
   nivel_ordem: number;
   criterio_problema: string | null;
   criterio_urgencia: string;
@@ -22,6 +23,7 @@ type Lead = {
   valor_venda: number | null;
   receita_venda: number | null;
   vendido_em: string | null;
+  declarado_em: string;
   responsavel_id: string | null;
 };
 
@@ -36,6 +38,7 @@ type Interacao = {
 type Reuniao = {
   id: string;
   agendada_para: string;
+  marcada_em: string;
   status: string;
   resultado: string | null;
 };
@@ -79,7 +82,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, origem, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, responsavel_id"
+        "id, nome, telefone_e164, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id"
       )
       .eq("id", id)
       .single(),
@@ -91,7 +94,7 @@ export default async function EditarLeadPage({
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("reunioes")
-      .select("id, agendada_para, status, resultado")
+      .select("id, agendada_para, marcada_em, status, resultado")
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
     supabase.from("usuarios").select("id, nome").order("nome"),
@@ -132,6 +135,10 @@ export default async function EditarLeadPage({
 
       <main className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex flex-col gap-4">
+          <p className="text-xs text-neutral-400">
+            Lead adicionado em {formatarData(leadTipado.declarado_em)}
+          </p>
+
           {podeReivindicar && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               <span>Esse lead ainda não tem responsável.</span>
@@ -164,6 +171,11 @@ export default async function EditarLeadPage({
               <h2 className="text-sm font-semibold text-emerald-800">
                 ✓ Vendido
               </h2>
+              {leadTipado.produto && (
+                <p className="mt-1 text-sm text-emerald-700">
+                  Produto: {leadTipado.produto}
+                </p>
+              )}
               <p className="mt-1 text-sm text-emerald-700">
                 Venda:{" "}
                 {leadTipado.valor_venda?.toLocaleString("pt-BR", {
@@ -229,6 +241,9 @@ export default async function EditarLeadPage({
                     </p>
                     <p className="text-sm text-neutral-700">
                       Agendada para {formatarData(reuniao.agendada_para)}
+                    </p>
+                    <p className="text-xs text-neutral-400">
+                      Marcada em {formatarData(reuniao.marcada_em)}
                     </p>
                     {reuniao.resultado && (
                       <p className="text-xs text-neutral-500">

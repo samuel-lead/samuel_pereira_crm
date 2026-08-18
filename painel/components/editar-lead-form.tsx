@@ -3,16 +3,24 @@
 import { useActionState, useState } from "react";
 import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
+import { ProdutoSelect } from "@/components/produto-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
 const NIVEL_REUNIAO_MARCADA = "4";
+
+function agoraParaInputLocal() {
+  const agora = new Date();
+  const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
 
 type Lead = {
   id: string;
   nome: string;
   telefone_e164: string | null;
   origem: string | null;
+  produto: string | null;
   nivel_ordem: number;
   criterio_problema: string | null;
   criterio_urgencia: string;
@@ -88,6 +96,11 @@ export function EditarLeadForm({
         </div>
 
         <div className="space-y-1">
+          <label className={labelClasse}>Produto</label>
+          <ProdutoSelect valorInicial={lead.produto ?? ""} />
+        </div>
+
+        <div className="space-y-1">
           <label className={labelClasse} htmlFor="responsavel_id">
             Responsável
           </label>
@@ -122,20 +135,37 @@ export function EditarLeadForm({
           </select>
 
           {vaiEntrarEmReuniaoMarcada && (
-            <div className="mt-2 space-y-1 rounded-md border border-emerald-200 bg-emerald-50 p-3">
-              <label className="text-sm font-medium text-emerald-800" htmlFor="reuniao_data">
-                Data e hora da reunião
-              </label>
-              <input
-                id="reuniao_data"
-                name="reuniao_data"
-                type="datetime-local"
-                required
-                className={`${campoClasse} bg-white`}
-              />
-              <p className="text-xs text-emerald-700">
-                A data de agendamento (hoje) é registrada automaticamente.
-              </p>
+            <div className="mt-2 space-y-3 rounded-md border border-emerald-200 bg-emerald-50 p-3">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-emerald-800" htmlFor="marcada_em">
+                  Data em que foi marcada
+                </label>
+                <input
+                  id="marcada_em"
+                  name="marcada_em"
+                  type="datetime-local"
+                  required
+                  defaultValue={agoraParaInputLocal()}
+                  className={`${campoClasse} bg-white`}
+                />
+                <p className="text-xs text-emerald-700">
+                  Já vem preenchido com agora — troque se estiver registrando
+                  uma reunião que foi marcada em outro dia.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-emerald-800" htmlFor="reuniao_data">
+                  Data e hora da reunião
+                </label>
+                <input
+                  id="reuniao_data"
+                  name="reuniao_data"
+                  type="datetime-local"
+                  required
+                  className={`${campoClasse} bg-white`}
+                />
+              </div>
             </div>
           )}
         </div>
