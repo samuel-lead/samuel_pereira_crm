@@ -29,7 +29,7 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950 via-emerald-700 to-teal-500 p-7 text-white shadow-2xl shadow-emerald-950/50 ring-1 ring-white/10">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
         <p className="relative text-xs font-bold uppercase tracking-widest text-emerald-200">
-          Receita do ano até agora
+          Receita do ano{mesAtual > 0 ? " até agora" : ""}
         </p>
         <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
           {formatarMoeda(totalReceita)}

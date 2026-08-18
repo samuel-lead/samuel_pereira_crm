@@ -641,6 +641,15 @@ O Samuel perguntou como ia controlar leads e métricas do ano inteiro e dos mese
 
 **Como a tela decide o que mostrar**: `calcularResumoAno()` (nova, em `lib/metricas.ts`) passa pelos 12 meses do ano — se o mês tem `faturamento_real`/`receita_real` preenchido, usa esse valor fixo; senão, calcula ao vivo somando os leads vendidos daquele mês (do jeito que já faz em `calcularReceitaOrg`). Isso quer dizer que agosto em diante segue vivo, crescendo junto com o CRM sendo usado de verdade — só o passado é fixo.
 
-**Tela nova** (`/ano`, item "Ano" no menu, logo depois de Métricas, só admin — mesma régua de "dado financeiro de time" do Bônus SDR): card grande verde-esmeralda com a receita acumulada do ano, e uma tabela mês a mês (Meta, Faturamento, Receita, Falta pra meta) com o mês atual destacado com uma etiqueta "agora".
+**Tela nova** (`/ano`, só admin — mesma régua de "dado financeiro de time" do Bônus SDR): card grande verde-esmeralda com a receita acumulada do ano, e uma tabela mês a mês (Meta, Faturamento, Receita, Falta pra meta) com o mês atual destacado com uma etiqueta "agora".
 
 Testado: com conta de teste, os totais acumulados batidos à mão (Receita R$66.560,00, Meta R$240.000,00, Faturamento R$178.700,00) confirmaram que a soma dos 12 meses está certa; cada linha de "Falta pra meta" bateu exatamente com a linha "Falta para a meta" da própria planilha (ex.: Janeiro R$16.290,00); Agosto apareceu com a etiqueta "agora" e os valores calculados ao vivo (R$15.000 faturamento, R$5.000 receita), batendo com o que já estava correto no resto do painel. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos, 18 rotas.
+
+## 2026-08-18 — Ano: tira do menu lateral, vira link em Métricas + seletor de ano
+
+Dois ajustes rápidos na tela "Ano" logo depois de criada:
+
+1. **O Samuel achou estranho ter "Ano" fixo no menu lateral** ("parece que eu estou enchendo linguiça") — é uma tela que abre de vez em quando, não toda hora, diferente de Funil/Métricas que são usadas todo dia. Tirei do menu (`components/sidebar.tsx`) e coloquei um link "Ver o ano inteiro →" no canto de cima da tela de Métricas (só pra admin, já que `/ano` continua sendo admin-only) — mais fácil de achar quando precisa, sem ocupar espaço fixo o tempo todo.
+2. **Seletor de ano** — a tela só mostrava o ano atual (2026), sem jeito de ver anos anteriores ou futuros. Adicionei `FiltroAnoSelect` (mesmo padrão do `FiltroUsuarioSelect` que já existia pro Funil), um `<select>` que navega pra `/ano?ano=X`. A tela agora lê o ano pela URL, com o ano atual como padrão quando não vem nada. O texto "até agora" no card verde e a etiqueta "agora" na linha do mês só aparecem quando o ano escolhido é o ano corrente — pra anos passados/futuros isso não faz sentido, então some sozinho.
+
+Testado: conferi que "Ano" sumiu do menu lateral e o link novo em Métricas aponta pra `/ano`; troquei o seletor pra 2025 e a tela mudou pra "Ano 2025", tudo zerado (sem dado nesse ano, esperado) e sem a etiqueta "agora" em nenhum mês — confirmando que a lógica de "só mostra 'agora' no ano corrente" funciona. Conta de teste removida no final. `tsc --noEmit` e `npm run build` limpos.

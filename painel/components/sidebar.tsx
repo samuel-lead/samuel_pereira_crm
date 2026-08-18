@@ -5,12 +5,11 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeCalendario } from "@/components/icons";
+import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela } from "@/components/icons";
 
 const ITENS = [
   { href: "/leads", label: "Funil", Icone: IconeFunil, pagina: "funil" },
   { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
-  { href: "/ano", label: "Ano", Icone: IconeCalendario, pagina: "admin" },
   { href: "/leads/lista", label: "Lista de leads", Icone: IconeLista, pagina: "lista" },
   { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
   { href: "/bonus-sdr", label: "Bônus SDR", Icone: IconeEstrela, pagina: "admin" },

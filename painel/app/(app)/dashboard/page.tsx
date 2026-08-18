@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
@@ -89,7 +90,19 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader titulo="Métricas" />
+      <PageHeader
+        titulo="Métricas"
+        acao={
+          souAdmin && (
+            <Link
+              href="/ano"
+              className="text-sm font-medium text-violet-600 hover:text-violet-700"
+            >
+              Ver o ano inteiro →
+            </Link>
+          )
+        }
+      />
 
       <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
         <MetaReceitaWidget
