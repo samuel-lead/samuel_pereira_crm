@@ -26,13 +26,6 @@ export default async function ListaLeadsPage({
   const { nivel, busca, de, ate } = await searchParams;
   const supabase = await createClient();
 
-  const { data: niveisData } = await supabase
-    .from("niveis")
-    .select("ordem, nome, numerado, destacado")
-    .order("ordem");
-  const niveis = (niveisData ?? []) as NivelResumo[];
-  const numerosVisiveis = numerarNiveis(niveis);
-
   let consulta = supabase
     .from("leads")
     .select(
@@ -57,7 +50,12 @@ export default async function ListaLeadsPage({
     consulta = consulta.lt("declarado_em", fim.toISOString());
   }
 
-  const { data: leadsData } = await consulta;
+  const [{ data: niveisData }, { data: leadsData }] = await Promise.all([
+    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
+    consulta,
+  ]);
+  const niveis = (niveisData ?? []) as NivelResumo[];
+  const numerosVisiveis = numerarNiveis(niveis);
   const leads = (leadsData ?? []) as LeadLinha[];
 
   const filtroAtivo = Boolean(nivel || busca || de || ate);

@@ -26,11 +26,15 @@ function formatarData(iso: string) {
 
 export default async function UsuariosPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data } = await supabase.rpc("listar_usuarios_da_org");
+  const [
+    {
+      data: { user },
+    },
+    { data },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.rpc("listar_usuarios_da_org"),
+  ]);
   const usuarios = (data ?? []) as UsuarioLinha[];
 
   return (

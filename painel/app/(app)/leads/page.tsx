@@ -97,13 +97,6 @@ export default async function LeadsPage({
 
   const orgId = usuarioAtual?.org_id ?? null;
 
-  const [receitaOrgMes, metaReceita] = orgId
-    ? await Promise.all([
-        calcularReceitaOrg(supabase, orgId, inicioDoMes(agora), amanha),
-        buscarMetaReceitaMes(supabase, orgId, agora.getFullYear(), agora.getMonth() + 1),
-      ])
-    : [null, null];
-
   const inicioHoje = new Date(agora);
   inicioHoje.setHours(0, 0, 0, 0);
 
@@ -148,13 +141,20 @@ export default async function LeadsPage({
     { count: ligacoesHoje },
     { count: callsMarcadasHoje },
     { count: callsRealizadasHoje },
+    [receitaOrgMes, metaReceita],
+    leadsComAtividade,
   ] = await Promise.all([
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
     consultaCallsMarcadasHoje ? filtrarPorEscopo(consultaCallsMarcadasHoje) : { count: null },
     consultaCallsRealizadasHoje ? filtrarPorEscopo(consultaCallsRealizadasHoje) : { count: null },
+    orgId
+      ? Promise.all([
+          calcularReceitaOrg(supabase, orgId, inicioDoMes(agora), amanha),
+          buscarMetaReceitaMes(supabase, orgId, agora.getFullYear(), agora.getMonth() + 1),
+        ])
+      : Promise.resolve([null, null] as const),
+    anexarUltimaAtividade(supabase, leads),
   ]);
-
-  const leadsComAtividade = await anexarUltimaAtividade(supabase, leads);
 
   const leadsPorNivel: Record<number, typeof leadsComAtividade> = {};
   for (const lead of leadsComAtividade) {

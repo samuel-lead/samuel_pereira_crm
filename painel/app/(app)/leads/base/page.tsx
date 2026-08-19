@@ -32,29 +32,29 @@ function calcularMotivo(
 export default async function BasePage() {
   const supabase = await createClient();
 
-  const { data: leadsData } = await supabase
-    .from("leads")
-    .select(
-      "id, nome, telefone_e164, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor"
-    )
-    .eq("nivel_ordem", 8)
-    .neq("status", "vendido")
-    .is("arquivado_em", null)
-    .order("entrou_nivel_em", { ascending: false });
+  const [{ data: leadsData }, { data: usuariosData }] = await Promise.all([
+    supabase
+      .from("leads")
+      .select(
+        "id, nome, telefone_e164, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor"
+      )
+      .eq("nivel_ordem", 8)
+      .neq("status", "vendido")
+      .is("arquivado_em", null)
+      .order("entrou_nivel_em", { ascending: false }),
+    supabase.from("usuarios").select("id, nome"),
+  ]);
 
   const leads = (leadsData ?? []) as LeadComHistorico[];
   const leadIds = leads.map((l) => l.id);
 
-  const [{ data: reunioesData }, { data: usuariosData }] = await Promise.all([
-    leadIds.length
-      ? supabase
-          .from("reunioes")
-          .select("lead_id, status, agendada_para")
-          .in("lead_id", leadIds)
-          .order("agendada_para", { ascending: false })
-      : Promise.resolve({ data: [] as { lead_id: string; status: string; agendada_para: string }[] }),
-    supabase.from("usuarios").select("id, nome"),
-  ]);
+  const { data: reunioesData } = leadIds.length
+    ? await supabase
+        .from("reunioes")
+        .select("lead_id, status, agendada_para")
+        .in("lead_id", leadIds)
+        .order("agendada_para", { ascending: false })
+    : { data: [] as { lead_id: string; status: string; agendada_para: string }[] };
 
   // A mais recente por lead — reunioesData já vem ordenado por data desc.
   const ultimaReuniaoPorLead = new Map<string, string>();

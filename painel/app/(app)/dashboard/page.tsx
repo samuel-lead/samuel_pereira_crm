@@ -36,15 +36,6 @@ export default async function DashboardPage() {
     .eq("id", user!.id)
     .single();
 
-  const { data: metasData } = await supabase
-    .from("metas_config")
-    .select(
-      "piso_leads_dia, piso_reunioes_dia, taxa_agendamento_min, taxa_comparecimento_min, taxa_venda_min"
-    )
-    .eq("org_id", usuario!.org_id)
-    .single();
-
-  const metas = metasData as MetasConfig | null;
   const agora = new Date();
   const amanha = new Date(agora);
   amanha.setDate(amanha.getDate() + 1);
@@ -66,6 +57,7 @@ export default async function DashboardPage() {
     leadsPorOrigemMes,
     receitaOrgMes,
     metaReceita,
+    { data: metasData },
   ] = await Promise.all([
     calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
     calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
@@ -86,7 +78,16 @@ export default async function DashboardPage() {
       : Promise.resolve([]),
     calcularReceitaOrg(supabase, usuario!.org_id, inicioMes, amanha),
     buscarMetaReceitaMes(supabase, usuario!.org_id, agora.getFullYear(), agora.getMonth() + 1),
+    supabase
+      .from("metas_config")
+      .select(
+        "piso_leads_dia, piso_reunioes_dia, taxa_agendamento_min, taxa_comparecimento_min, taxa_venda_min"
+      )
+      .eq("org_id", usuario!.org_id)
+      .single(),
   ]);
+
+  const metas = metasData as MetasConfig | null;
 
   return (
     <>

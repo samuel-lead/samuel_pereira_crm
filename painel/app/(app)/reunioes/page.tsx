@@ -134,16 +134,18 @@ export default async function VendasPage({
   const inicioHoje = new Date(agora);
   inicioHoje.setHours(0, 0, 0, 0);
 
-  const [receitaOrgMes, metaReceita, vendasHoje, ultimaVenda] = orgId
-    ? await Promise.all([
-        calcularReceitaOrg(supabase, orgId, inicioDoMes(agora), amanha),
-        buscarMetaReceitaMes(supabase, orgId, agora.getFullYear(), agora.getMonth() + 1),
-        calcularVendasHoje(supabase, orgId, inicioHoje, amanha),
-        buscarUltimaVenda(supabase, orgId),
-      ])
-    : [null, null, null, null];
-
-  const leadsComAtividade = await anexarUltimaAtividade(supabase, leads);
+  const [[receitaOrgMes, metaReceita, vendasHoje, ultimaVenda], leadsComAtividade] =
+    await Promise.all([
+      orgId
+        ? Promise.all([
+            calcularReceitaOrg(supabase, orgId, inicioDoMes(agora), amanha),
+            buscarMetaReceitaMes(supabase, orgId, agora.getFullYear(), agora.getMonth() + 1),
+            calcularVendasHoje(supabase, orgId, inicioHoje, amanha),
+            buscarUltimaVenda(supabase, orgId),
+          ])
+        : Promise.resolve([null, null, null, null] as const),
+      anexarUltimaAtividade(supabase, leads),
+    ]);
 
   const leadsPorNivel: Record<number, typeof leadsComAtividade> = {};
   for (const lead of leadsComAtividade) {
