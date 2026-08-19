@@ -20,13 +20,38 @@ export function SinoNotificacoes() {
   const [aberto, setAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const jaNotificadasRef = useRef<Set<string> | null>(null);
+
+  useEffect(() => {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
   useEffect(() => {
     const supabase = createClient();
     let ativo = true;
 
     async function carregar() {
       const { data } = await supabase.rpc("listar_notificacoes");
-      if (ativo) setNotificacoes((data as Notificacao[]) ?? []);
+      const lista = (data as Notificacao[]) ?? [];
+      if (!ativo) return;
+
+      const chaves = new Set(lista.map((n) => `${n.tipo}-${n.lead_id}`));
+
+      if (jaNotificadasRef.current) {
+        const novas = lista.filter(
+          (n) => !jaNotificadasRef.current!.has(`${n.tipo}-${n.lead_id}`)
+        );
+        if (novas.length > 0 && typeof Notification !== "undefined" && Notification.permission === "granted") {
+          for (const n of novas) {
+            new Notification("Meu Vendedor", { body: n.mensagem });
+          }
+        }
+      }
+      jaNotificadasRef.current = chaves;
+
+      setNotificacoes(lista);
     }
 
     carregar();

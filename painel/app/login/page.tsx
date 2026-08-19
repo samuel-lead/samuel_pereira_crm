@@ -34,22 +34,24 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-[#f4f5f7] p-6">
-      <div className="mb-6 flex items-center gap-2">
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-900 p-6">
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-600/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 right-1/4 h-80 w-80 rounded-full bg-sky-500/20 blur-3xl" />
+
+      <div className="relative z-10 mb-8 flex flex-col items-center gap-3">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-sky-500 text-lg font-bold text-white shadow-lg shadow-blue-900/40">
           MV
         </span>
-        <span className="text-lg font-semibold text-neutral-900">
-          Meu Vendedor
-        </span>
+        <span className="text-2xl font-bold text-white">Meu Vendedor</span>
+        <span className="text-sm text-slate-400">Entre para gerenciar seus leads</span>
       </div>
 
       <form
         onSubmit={entrar}
-        className="w-full max-w-sm space-y-4 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm"
+        className="relative z-10 w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-[#ffffff] p-8 shadow-2xl"
       >
         <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700" htmlFor="email">
+          <label className="text-sm font-medium text-[#404040]" htmlFor="email">
             E-mail
           </label>
           <input
@@ -58,12 +60,12 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-[#d4d4d4] bg-[#ffffff] px-3 py-2.5 text-sm text-[#171717] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700" htmlFor="senha">
+          <label className="text-sm font-medium text-[#404040]" htmlFor="senha">
             Senha
           </label>
           <input
@@ -72,7 +74,7 @@ export default function LoginPage() {
             required
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-[#d4d4d4] bg-[#ffffff] px-3 py-2.5 text-sm text-[#171717] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
           />
         </div>
 
@@ -81,7 +83,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={carregando}
-          className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-900/30 transition hover:brightness-110 disabled:opacity-50"
         >
           {carregando ? "Entrando..." : "Entrar"}
         </button>

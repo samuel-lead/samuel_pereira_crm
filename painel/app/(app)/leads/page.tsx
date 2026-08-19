@@ -104,6 +104,25 @@ export default async function LeadsPage({
       ])
     : [null, null];
 
+  const inicioHoje = new Date(agora);
+  inicioHoje.setHours(0, 0, 0, 0);
+
+  const consultaLigacoesHoje = user
+    ? supabase
+        .from("interacoes")
+        .select("id", { count: "exact", head: true })
+        .eq("tipo", "ligacao")
+        .is("excluido_em", null)
+        .gte("ocorreu_em", inicioHoje.toISOString())
+        .lt("ocorreu_em", amanha.toISOString())
+    : null;
+
+  const { count: ligacoesHoje } = consultaLigacoesHoje
+    ? await (souAdmin && orgId
+        ? consultaLigacoesHoje.eq("org_id", orgId)
+        : consultaLigacoesHoje.eq("usuario_id", user!.id))
+    : { count: null };
+
   const leadsComAtividade = await anexarUltimaAtividade(supabase, leads);
 
   const leadsPorNivel: Record<number, typeof leadsComAtividade> = {};
@@ -137,9 +156,17 @@ export default async function LeadsPage({
 
       <main className="px-6 py-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-neutral-500">
-            {leads.length} lead{leads.length === 1 ? "" : "s"} sendo trabalhados
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm text-neutral-500">
+              {leads.length} lead{leads.length === 1 ? "" : "s"} sendo trabalhados
+            </p>
+            {ligacoesHoje !== null && (
+              <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                {ligacoesHoje} ligaç{ligacoesHoje === 1 ? "ão" : "ões"} hoje
+                {souAdmin ? " (equipe)" : ""}
+              </span>
+            )}
+          </div>
           {receitaOrgMes !== null && (
             <MetaReceitaWidget
               compacta

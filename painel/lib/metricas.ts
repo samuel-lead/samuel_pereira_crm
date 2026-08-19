@@ -4,6 +4,7 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 export type Metricas = {
   leadsTrabalhados: number;
+  ligacoes: number;
   reunioesMarcadas: number;
   reunioesRealizadas: number;
   noShow: number;
@@ -62,6 +63,7 @@ export async function calcularMetricas(
 
   const [
     { data: leadsDeclarados },
+    { count: ligacoes },
     { data: reunioesDoPeriodo },
     { count: reunioesRealizadas },
     { count: noShow },
@@ -74,6 +76,14 @@ export async function calcularMetricas(
       .is("arquivado_em", null)
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
+    supabase
+      .from("interacoes")
+      .select("id", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
+      .eq("tipo", "ligacao")
+      .is("excluido_em", null)
+      .gte("ocorreu_em", inicioISO)
+      .lt("ocorreu_em", fimISO),
     // Toda reunião "ativa" no período — marcada dentro dele OU com a call
     // dentro dele (mesmo que tenha sido marcada num período anterior, ex.:
     // marcada em julho, call em agosto). Serve pra duas contas: "reuniões
@@ -135,6 +145,7 @@ export async function calcularMetricas(
 
   return {
     leadsTrabalhados: leads,
+    ligacoes: ligacoes ?? 0,
     reunioesMarcadas: marcadas,
     reunioesRealizadas: realizadas,
     noShow: noShow ?? 0,

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { registrarNota } from "@/lib/leads/actions";
+import { registrarNota, registrarLigacao, excluirInteracao } from "@/lib/leads/actions";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
@@ -101,6 +101,7 @@ export default async function EditarLeadPage({
       .from("interacoes")
       .select("id, tipo, canal, conteudo, ocorreu_em")
       .eq("lead_id", id)
+      .is("excluido_em", null)
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("reunioes")
@@ -140,6 +141,7 @@ export default async function EditarLeadPage({
     : null;
   const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
   const registrarNotaComId = registrarNota.bind(null, leadTipado.id);
+  const registrarLigacaoComId = registrarLigacao.bind(null, leadTipado.id);
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
 
   return (
@@ -260,6 +262,17 @@ export default async function EditarLeadPage({
           )}
 
           {podeEditar && (
+            <form action={registrarLigacaoComId}>
+              <button
+                type="submit"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+              >
+                Registrar ligação
+              </button>
+            </form>
+          )}
+
+          {podeEditar && (
             <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
               <h2 className="mb-3 text-sm font-semibold text-neutral-800">
                 Registrar nota
@@ -317,17 +330,33 @@ export default async function EditarLeadPage({
                   </li>
                 ))}
                 {interacoes.map((interacao) => (
-                  <li key={interacao.id} className="border-l-2 border-neutral-200 pl-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                      {interacao.tipo ?? "interação"}
-                      {interacao.canal ? ` · ${interacao.canal}` : ""}
-                    </p>
-                    <p className="text-sm text-neutral-700">
-                      {interacao.conteudo}
-                    </p>
-                    <p className="text-xs text-neutral-400">
-                      {formatarData(interacao.ocorreu_em)}
-                    </p>
+                  <li
+                    key={interacao.id}
+                    className="group flex items-start justify-between gap-2 border-l-2 border-neutral-200 pl-3"
+                  >
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                        {interacao.tipo ?? "interação"}
+                        {interacao.canal ? ` · ${interacao.canal}` : ""}
+                      </p>
+                      <p className="text-sm text-neutral-700">
+                        {interacao.conteudo}
+                      </p>
+                      <p className="text-xs text-neutral-400">
+                        {formatarData(interacao.ocorreu_em)}
+                      </p>
+                    </div>
+                    {podeEditar && (
+                      <form action={excluirInteracao.bind(null, leadTipado.id, interacao.id)}>
+                        <button
+                          type="submit"
+                          title="Excluir esse registro"
+                          className="rounded-md px-2 py-1 text-xs text-neutral-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                        >
+                          Excluir
+                        </button>
+                      </form>
+                    )}
                   </li>
                 ))}
               </ul>

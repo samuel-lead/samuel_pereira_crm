@@ -47,6 +47,7 @@ export default async function AtividadesPage() {
     supabase
       .from("interacoes")
       .select("id, tipo, canal, conteudo, ocorreu_em, lead_id, leads(nome)")
+      .is("excluido_em", null)
       .order("ocorreu_em", { ascending: false })
       .limit(50),
     supabase

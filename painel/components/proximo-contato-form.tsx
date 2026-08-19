@@ -73,8 +73,8 @@ export function ProximoContatoForm({
         </div>
       ) : (
         <p className="mb-3 text-xs text-blue-700">
-          Marque quando o lead pediu pra você entrar em contato de novo — avisa no sino
-          na hora certa.
+          Marque quando um lead pediu para entrar em contato ou quando será a sua
+          próxima atividade com ele.
         </p>
       )}
 

@@ -12,6 +12,7 @@ export async function anexarUltimaAtividade<
         .from("interacoes")
         .select("lead_id, ocorreu_em")
         .in("lead_id", leadIds)
+        .is("excluido_em", null)
         .order("ocorreu_em", { ascending: false })
     : { data: [] as { lead_id: string; ocorreu_em: string }[] };
 

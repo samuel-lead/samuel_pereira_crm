@@ -642,6 +642,53 @@ export async function registrarNota(leadId: string, formData: FormData) {
   revalidatePath(`/leads/${leadId}`);
 }
 
+export async function registrarLigacao(leadId: string) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
+
+  const { error } = await supabase.from("interacoes").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    tipo: "ligacao",
+    canal: "manual",
+    conteudo: "Ligação registrada",
+    ocorreu_em: new Date().toISOString(),
+    origem: "declarado",
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/leads/${leadId}`);
+}
+
+export async function excluirInteracao(leadId: string, interacaoId: string) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
+
+  const { error } = await supabase
+    .from("interacoes")
+    .update({ excluido_em: new Date().toISOString() })
+    .eq("id", interacaoId)
+    .eq("lead_id", leadId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/leads/${leadId}`);
+}
+
 export async function arquivarLead(leadId: string) {
   const { supabase, usuario } = await contextoUsuario();
 
