@@ -27,7 +27,7 @@ export function AvatarUsuario({
 
   return (
     <span
-      className={`flex ${tamanho} shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-sky-500 font-bold text-white`}
+      className={`flex ${tamanho} shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-sky-500 font-bold text-white`}
     >
       {iniciais(nome)}
     </span>

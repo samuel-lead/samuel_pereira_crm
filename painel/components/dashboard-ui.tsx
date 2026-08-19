@@ -26,10 +26,10 @@ function formatarPercentual(valor: number | null) {
 
 const ESQUEMAS = {
   violeta: {
-    fundo: "bg-violet-50",
-    borda: "border-violet-200",
-    icone: "bg-violet-600 text-white",
-    texto: "text-violet-700",
+    fundo: "bg-blue-50",
+    borda: "border-blue-200",
+    icone: "bg-blue-600 text-white",
+    texto: "text-blue-700",
   },
   ceu: {
     fundo: "bg-sky-50",
@@ -38,10 +38,10 @@ const ESQUEMAS = {
     texto: "text-sky-700",
   },
   esmeralda: {
-    fundo: "bg-emerald-50",
-    borda: "border-emerald-200",
-    icone: "bg-emerald-600 text-white",
-    texto: "text-emerald-700",
+    fundo: "bg-green-50",
+    borda: "border-green-200",
+    icone: "bg-green-600 text-white",
+    texto: "text-green-700",
   },
   rosa: {
     fundo: "bg-rose-50",
@@ -77,7 +77,7 @@ function CardNumero({
         {meta !== undefined && (
           <span
             className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-              bateuMeta ? "bg-emerald-600 text-white" : "bg-amber-500 text-white"
+              bateuMeta ? "bg-green-600 text-white" : "bg-amber-500 text-white"
             }`}
           >
             {bateuMeta ? "✓ piso" : `piso ${meta}`}
@@ -107,13 +107,13 @@ function BarraTaxa({
   const bateu = valor !== null ? valor >= minimo : null;
   const larguraPct = valor !== null ? Math.min(100, Math.round(valor * 100)) : 0;
   const corBarra =
-    bateu === null ? "bg-neutral-300" : bateu ? "bg-emerald-500" : "bg-red-500";
+    bateu === null ? "bg-neutral-300" : bateu ? "bg-green-500" : "bg-red-500";
 
   return (
     <div className="py-2">
       <div className="mb-1 flex items-center justify-between text-sm">
         <span className="font-medium text-neutral-700">{nome}</span>
-        <span className={`font-bold ${bateu ? "text-emerald-600" : bateu === false ? "text-red-600" : "text-neutral-400"}`}>
+        <span className={`font-bold ${bateu ? "text-green-600" : bateu === false ? "text-red-600" : "text-neutral-400"}`}>
           {formatarPercentual(valor)}{" "}
           <span className="font-normal text-neutral-400">/ mín. {Math.round(minimo * 100)}%</span>
         </span>
@@ -149,24 +149,24 @@ export function SecaoPeriodo({
         {subtitulo && <span className="text-xs text-neutral-400">{subtitulo}</span>}
       </div>
 
-      <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950 via-emerald-700 to-teal-500 p-7 text-white shadow-2xl shadow-emerald-950/50 ring-1 ring-white/10">
+      <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
         <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
 
-        <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-emerald-200">
+        <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
           <IconeMoeda className="h-3.5 w-3.5" />
           Receita
         </p>
         <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
           {formatarMoeda(metricas.receita)}
         </p>
-        <p className="relative mt-2 text-sm font-medium text-emerald-100">
+        <p className="relative mt-2 text-sm font-medium text-green-100">
           {metricas.vendas} venda{metricas.vendas === 1 ? "" : "s"} fechada
           {metricas.vendas === 1 ? "" : "s"}
           {metricas.ticketMedio !== null &&
             ` · ticket médio ${formatarMoeda(metricas.ticketMedio)}`}
         </p>
-        <p className="relative mt-1 text-xs text-emerald-200/80">
+        <p className="relative mt-1 text-xs text-green-200/80">
           Faturamento: {formatarMoeda(metricas.faturamento)}
         </p>
       </div>
@@ -194,7 +194,7 @@ export function SecaoPeriodo({
           Icone={IconeCheck}
         />
         <CardNumero
-          titulo="No Show"
+          titulo="No-show"
           valor={metricas.noShow}
           esquema="rosa"
           Icone={IconeAlerta}

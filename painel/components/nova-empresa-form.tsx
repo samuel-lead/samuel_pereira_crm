@@ -5,7 +5,7 @@ import { criarCliente, type EstadoFormulario } from "@/lib/plataforma/actions";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 const campoClasse =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
+  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 const labelClasse = "text-sm font-medium text-neutral-700";
 
 export function NovaEmpresaForm() {
@@ -89,7 +89,7 @@ export function NovaEmpresaForm() {
 
       <button
         type="submit"
-        className="w-full rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+        className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
       >
         Cadastrar empresa
       </button>

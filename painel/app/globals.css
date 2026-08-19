@@ -10,3 +10,471 @@ body {
   background-color: #f4f5f7;
   color: #111827;
 }
+
+/* Branco menos "agressivo" — os cards, a barra lateral e os inputs usavam
+   #ffffff puro, que destoa forte do fundo cinza-claro (#f4f5f7) da página.
+   Troca pra um branco levemente neutro, mais parecido com o fundo. Não
+   afeta o modo escuro: a regra ".dark .bg-white" abaixo é mais específica
+   e sempre ganha quando a página está escura. */
+.bg-white {
+  background-color: #f8f8f6;
+}
+
+/* Modo escuro — sobrescreve as classes do Tailwind já usadas no app quando
+   o <html> tem a classe "dark". O sistema inteiro usa um conjunto pequeno
+   e consistente de cores (branco, cinza-neutro, e "chips" claros de cor),
+   então sobrescrever essas classes aqui escurece todas as telas de uma vez,
+   sem precisar mexer em cada componente. */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #0a0a0a;
+  color: #e5e5e5;
+}
+
+.dark .bg-white {
+  background-color: #171717;
+}
+
+.dark .bg-white\/90 {
+  background-color: rgb(23 23 23 / 0.9);
+}
+
+.dark .bg-\[\#f4f5f7\] {
+  background-color: #0a0a0a;
+}
+
+.dark .from-\[\#f4f5f7\] {
+  --tw-gradient-from: #0a0a0a var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(10 10 10 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+/* Coluna "Leads" (nível 0) é destacada com preto sólido de propósito —
+   ótimo contraste no claro, mas preto sobre o fundo já escuro some por
+   completo. Clareia bastante essa dupla (pedido do Samuel: bem mais
+   destacada, quase branca) pra ela continuar chamando atenção. */
+.dark .from-neutral-800 {
+  --tw-gradient-from: #a1a1aa var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(161 161 170 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark .to-black {
+  --tw-gradient-to: #27272a var(--tw-gradient-to-position);
+}
+
+.dark .bg-white\/50 {
+  background-color: rgb(23 23 23 / 0.5);
+}
+
+/* Cartões com fundo semi-transparente (ex.: cada mês na tela "Ano", os
+   itens do Bônus SDR) — sem isso ficam cinza lavado, difícil de ler. */
+.dark .bg-neutral-50\/40 {
+  background-color: rgb(38 38 38 / 0.6);
+}
+
+.dark .bg-neutral-50\/60 {
+  background-color: rgb(38 38 38 / 0.7);
+}
+
+.dark .bg-neutral-200\/70 {
+  background-color: rgb(64 64 64 / 0.7);
+}
+
+.dark .bg-green-50\/50 {
+  background-color: rgb(22 163 74 / 0.18);
+}
+
+.dark .bg-neutral-50 {
+  background-color: #1f1f1f;
+}
+
+.dark .bg-neutral-100 {
+  background-color: #262626;
+}
+
+.dark .bg-neutral-200 {
+  background-color: #2e2e2e;
+}
+
+.dark .bg-neutral-300 {
+  background-color: #404040;
+}
+
+.dark .bg-neutral-800 {
+  background-color: #e5e5e5;
+}
+
+.dark .hover\:bg-neutral-50:hover {
+  background-color: #262626;
+}
+
+.dark .hover\:bg-neutral-100:hover {
+  background-color: #2e2e2e;
+}
+
+.dark .border-neutral-100 {
+  border-color: #262626;
+}
+
+.dark .border-neutral-200 {
+  border-color: #2e2e2e;
+}
+
+.dark .border-neutral-300 {
+  border-color: #404040;
+}
+
+.dark .border-neutral-400 {
+  border-color: #525252;
+}
+
+.dark .divide-neutral-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #262626;
+}
+
+.dark .text-neutral-900 {
+  color: #f5f5f5;
+}
+
+.dark .text-neutral-800 {
+  color: #e5e5e5;
+}
+
+.dark .text-neutral-700 {
+  color: #d4d4d4;
+}
+
+.dark .text-neutral-600 {
+  color: #a3a3a3;
+}
+
+.dark .text-neutral-500 {
+  color: #8a8a8a;
+}
+
+.dark .text-neutral-400 {
+  color: #6b6b6b;
+}
+
+.dark .text-neutral-300 {
+  color: #525252;
+}
+
+.dark .hover\:text-neutral-600:hover {
+  color: #d4d4d4;
+}
+
+.dark .hover\:text-neutral-700:hover {
+  color: #e5e5e5;
+}
+
+.dark .hover\:text-neutral-900:hover {
+  color: #f5f5f5;
+}
+
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+}
+
+/* chips, alertas e as colunas coloridas do Kanban (cada nível do funil tem
+   uma cor) — em fundo escuro ficam tingidas, não branco-ofuscante */
+.dark .bg-blue-50 {
+  background-color: rgba(37, 99, 235, 0.15);
+}
+
+.dark .bg-amber-50 {
+  background-color: rgba(217, 119, 6, 0.15);
+}
+
+.dark .bg-red-50 {
+  background-color: rgba(220, 38, 38, 0.15);
+}
+
+.dark .bg-sky-50 {
+  background-color: rgba(2, 132, 199, 0.15);
+}
+
+.dark .bg-rose-50 {
+  background-color: rgba(225, 29, 72, 0.15);
+}
+
+.dark .border-rose-200 {
+  border-color: rgba(225, 29, 72, 0.4);
+}
+
+.dark .text-rose-700 {
+  color: #fda4af;
+}
+
+.dark .bg-slate-50 {
+  background-color: rgba(71, 85, 105, 0.2);
+}
+
+.dark .bg-stone-50 {
+  background-color: rgba(87, 83, 78, 0.2);
+}
+
+.dark .bg-green-50 {
+  background-color: rgba(22, 163, 74, 0.15);
+}
+
+/* Selos/etiquetas coloridos (ícone de integração, cargo do usuário, chip
+   "Proposta: R$X" etc.) usam fundo -100 + texto -700. O texto -700 já vira
+   claro no modo escuro (regras abaixo), mas sem isso o fundo -100
+   continuava sólido e claro do Tailwind puro — texto claro em cima de
+   fundo claro, ilegível. Mesmo tratamento (fundo tingido translúcido) que
+   as classes -50/-200 já recebem acima/abaixo. */
+.dark .bg-green-100 {
+  background-color: rgba(22, 163, 74, 0.22);
+}
+
+.dark .bg-sky-100 {
+  background-color: rgba(2, 132, 199, 0.22);
+}
+
+.dark .bg-amber-100 {
+  background-color: rgba(217, 119, 6, 0.22);
+}
+
+.dark .bg-blue-100 {
+  background-color: rgba(37, 99, 235, 0.22);
+}
+
+.dark .bg-lime-100 {
+  background-color: rgba(101, 163, 13, 0.22);
+}
+
+.dark .text-lime-700 {
+  color: #bef264;
+}
+
+.dark .border-amber-300 {
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.dark .text-amber-600 {
+  color: #fbbf24;
+}
+
+.dark .text-amber-700 {
+  color: #fcd34d;
+}
+
+.dark .text-amber-800 {
+  color: #fde68a;
+}
+
+.dark .bg-white\/60 {
+  background-color: rgb(23 23 23 / 0.6);
+}
+
+.dark .hover\:bg-amber-100:hover {
+  background-color: rgba(217, 119, 6, 0.25);
+}
+
+.dark .hover\:text-amber-700:hover {
+  color: #fcd34d;
+}
+
+/* pílulas de contagem em cada coluna do Kanban (ex.: badge: "bg-sky-200
+   text-sky-700") — fundo tingido + texto claro pra continuar legível */
+.dark .bg-slate-200 {
+  background-color: rgba(71, 85, 105, 0.35);
+}
+
+.dark .bg-sky-200 {
+  background-color: rgba(2, 132, 199, 0.3);
+}
+
+.dark .bg-blue-200 {
+  background-color: rgba(37, 99, 235, 0.3);
+}
+
+.dark .bg-red-200 {
+  background-color: rgba(220, 38, 38, 0.3);
+}
+
+.dark .bg-amber-200 {
+  background-color: rgba(217, 119, 6, 0.3);
+}
+
+.dark .bg-stone-200 {
+  background-color: rgba(87, 83, 78, 0.3);
+}
+
+.dark .bg-green-200 {
+  background-color: rgba(22, 163, 74, 0.3);
+}
+
+.dark .text-slate-700 {
+  color: #cbd5e1;
+}
+
+.dark .text-sky-700 {
+  color: #7dd3fc;
+}
+
+.dark .text-blue-700 {
+  color: #93c5fd;
+}
+
+.dark .text-red-700 {
+  color: #fca5a5;
+}
+
+.dark .text-stone-700 {
+  color: #d6d3d1;
+}
+
+.dark .text-green-700 {
+  color: #86efac;
+}
+
+/* bordas das colunas e do card de lead atrasado */
+.dark .border-slate-200 {
+  border-color: rgba(71, 85, 105, 0.4);
+}
+
+.dark .border-sky-200 {
+  border-color: rgba(2, 132, 199, 0.4);
+}
+
+.dark .border-blue-200 {
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+.dark .border-blue-400 {
+  border-color: rgba(37, 99, 235, 0.6);
+}
+
+.dark .border-red-200 {
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.dark .border-red-300 {
+  border-color: rgba(220, 38, 38, 0.5);
+}
+
+.dark .border-amber-200 {
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.dark .border-stone-200 {
+  border-color: rgba(87, 83, 78, 0.4);
+}
+
+.dark .border-green-300 {
+  border-color: rgba(22, 163, 74, 0.5);
+}
+
+/* Pedido do Samuel: os cards de lead no Kanban continuam brancos mesmo no
+   modo escuro — "flutuam" no fundo escuro em vez de escurecer junto. Como
+   as regras acima escurecem essas mesmas classes em qualquer lugar, aqui
+   a gente devolve a cor clara original só para o que está dentro de um
+   ".kanban-card" (mais específico, então ganha da regra genérica). */
+.dark .kanban-card {
+  background-color: #f8f8f6;
+  border-color: #e5e5e5;
+}
+
+.dark .kanban-card.border-red-300 {
+  background-color: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.dark .kanban-card .text-neutral-900 {
+  color: #171717;
+}
+
+.dark .kanban-card .text-neutral-500 {
+  color: #737373;
+}
+
+.dark .kanban-card .text-neutral-600 {
+  color: #525252;
+}
+
+.dark .kanban-card .text-neutral-800 {
+  color: #262626;
+}
+
+.dark .kanban-card .text-red-600 {
+  color: #dc2626;
+}
+
+.dark .kanban-card .bg-neutral-100 {
+  background-color: #f5f5f5;
+}
+
+.dark .kanban-card .bg-neutral-300 {
+  background-color: #d4d4d4;
+}
+
+.dark .kanban-card .bg-slate-200 {
+  background-color: #e2e8f0;
+}
+.dark .kanban-card .text-slate-700 {
+  color: #334155;
+}
+
+.dark .kanban-card .bg-sky-200 {
+  background-color: #bae6fd;
+}
+.dark .kanban-card .text-sky-700 {
+  color: #0369a1;
+}
+
+.dark .kanban-card .bg-blue-200 {
+  background-color: #bfdbfe;
+}
+.dark .kanban-card .text-blue-700 {
+  color: #1d4ed8;
+}
+
+/* Mesmos selos, mas na tonalidade -100 (ex.: chip "Proposta: R$X", valor
+   da venda) — reaproveita o texto -700 já restaurado acima. */
+.dark .kanban-card .bg-green-100 {
+  background-color: #dcfce7;
+}
+.dark .kanban-card .bg-amber-100 {
+  background-color: #fef3c7;
+}
+.dark .kanban-card .bg-sky-100 {
+  background-color: #e0f2fe;
+}
+.dark .kanban-card .bg-blue-100 {
+  background-color: #dbeafe;
+}
+
+
+.dark .kanban-card .bg-red-200 {
+  background-color: #fecaca;
+}
+.dark .kanban-card .text-red-700 {
+  color: #b91c1c;
+}
+
+.dark .kanban-card .bg-amber-200 {
+  background-color: #fde68a;
+}
+.dark .kanban-card .text-amber-700 {
+  color: #b45309;
+}
+
+.dark .kanban-card .bg-stone-200 {
+  background-color: #e7e5e4;
+}
+.dark .kanban-card .text-stone-700 {
+  color: #44403c;
+}
+
+.dark .kanban-card .bg-green-200 {
+  background-color: #bbf7d0;
+}
+.dark .kanban-card .text-green-700 {
+  color: #15803d;
+}

@@ -44,7 +44,7 @@ export default async function DashboardPage() {
     .eq("org_id", usuario!.org_id)
     .single();
 
-  const metas = metasData as MetasConfig;
+  const metas = metasData as MetasConfig | null;
   const agora = new Date();
   const amanha = new Date(agora);
   amanha.setDate(amanha.getDate() + 1);
@@ -99,13 +99,31 @@ export default async function DashboardPage() {
           podeEditar={souAdmin}
         />
 
-        <SecaoPeriodo
-          titulo="Esta semana"
-          subtitulo={subtituloSemana}
-          metricas={metricasSemana}
-          metas={metas}
-        />
-        <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} />
+        {metas ? (
+          <>
+            <SecaoPeriodo
+              titulo="Esta semana"
+              subtitulo={subtituloSemana}
+              metricas={metricasSemana}
+              metas={metas}
+            />
+            <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} />
+          </>
+        ) : (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {souAdmin ? (
+              <>
+                Ainda não tem metas configuradas pra essa organização.{" "}
+                <Link href="/configuracoes" className="font-medium underline">
+                  Defina o piso de leads/reuniões e as taxas em Configurações
+                </Link>{" "}
+                pra ver o progresso aqui.
+              </>
+            ) : (
+              "Ainda não tem metas configuradas pra essa organização. Peça pra um admin configurar em Configurações."
+            )}
+          </div>
+        )}
 
         {souAdmin && (
           <section>
@@ -135,7 +153,7 @@ export default async function DashboardPage() {
           <div className="flex justify-center pt-2">
             <Link
               href="/ano"
-              className="text-sm font-medium text-violet-600 hover:text-violet-700"
+              className="text-sm font-medium text-blue-600 hover:text-blue-700"
             >
               Ver o ano inteiro →
             </Link>

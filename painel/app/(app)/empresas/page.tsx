@@ -28,7 +28,7 @@ export default async function EmpresasPage() {
         acao={
           <Link
             href="/empresas/nova"
-            className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
           >
             + Nova empresa
           </Link>
@@ -58,7 +58,7 @@ export default async function EmpresasPage() {
                     <span
                       className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                         empresa.status === "ativo"
-                          ? "bg-emerald-100 text-emerald-700"
+                          ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >

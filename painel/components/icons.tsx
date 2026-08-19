@@ -128,6 +128,21 @@ export function IconePessoaMais(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconeClientePagante(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <circle cx="9.5" cy="7.5" r="3.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3.3 19.5c.7-3.6 3.1-5.5 6.2-5.5.7 0 1.4.1 2 .3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="17.5" cy="16.5" r="4.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M17.5 14.2v4.6M16.2 17.7c.2.5.7.8 1.3.8.8 0 1.4-.4 1.4-1s-.6-.9-1.4-1.1c-.8-.2-1.4-.4-1.4-1s.6-1 1.4-1c.5 0 1 .2 1.2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconeIntegracao(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
@@ -136,6 +151,39 @@ export function IconeIntegracao(props: React.SVGProps<SVGSVGElement>) {
         strokeLinecap="round"
       />
       <rect x="6" y="6" width="12" height="12" rx="2.5" />
+    </svg>
+  );
+}
+
+export function IconeSino(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path d="M6 9a6 6 0 1 1 12 0c0 3.5 1.2 5 2 6H4c.8-1 2-2.5 2-6Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 19a2 2 0 0 0 4 0" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconeLua(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconeSol(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <circle cx="12" cy="12" r="4.5" />
+      <path
+        d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

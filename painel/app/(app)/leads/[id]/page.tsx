@@ -5,6 +5,8 @@ import { registrarNota } from "@/lib/leads/actions";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
+import { RegistrarPropostaForm } from "@/components/registrar-proposta-form";
+import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
@@ -27,6 +29,10 @@ type Lead = {
   declarado_em: string;
   responsavel_id: string | null;
   oportunidade_futura: boolean;
+  proposta_valor: number | null;
+  proposta_enviada_em: string | null;
+  proposta_observacao: string | null;
+  proximo_follow_em: string | null;
 };
 
 type Interacao = {
@@ -44,10 +50,11 @@ type Reuniao = {
   status: string;
   resultado: string | null;
   closer_id: string | null;
+  usuario_id: string;
 };
 
 const campoClasse =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
+  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -85,7 +92,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura"
+        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em"
       )
       .eq("id", id)
       .single(),
@@ -97,7 +104,7 @@ export default async function EditarLeadPage({
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("reunioes")
-      .select("id, agendada_para, marcada_em, status, resultado, closer_id")
+      .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id")
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
     supabase.from("usuarios").select("id, nome, funcao").order("nome"),
@@ -123,6 +130,15 @@ export default async function EditarLeadPage({
     souAdmin || leadTipado.responsavel_id === user?.id || souCloserAtivo;
   const podeReivindicar = !souAdmin && leadTipado.responsavel_id === null;
   const nomeResponsavel = usuarios.find((u) => u.id === leadTipado.responsavel_id)?.nome;
+  // SDR original = quem marcou a primeira reunião — depois que a reunião é
+  // realizada, o responsável do lead vira o Closer (ver transferir_lead_
+  // para_closer), então esse é o único jeito de saber quem foi o SDR.
+  const sdrOriginalId = reunioes.length
+    ? [...reunioes].sort(
+        (a, b) => new Date(a.marcada_em).getTime() - new Date(b.marcada_em).getTime()
+      )[0].usuario_id
+    : null;
+  const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
   const registrarNotaComId = registrarNota.bind(null, leadTipado.id);
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
 
@@ -145,6 +161,23 @@ export default async function EditarLeadPage({
           <p className="text-xs text-neutral-400">
             Lead adicionado em {formatarData(leadTipado.declarado_em)}
           </p>
+
+          {(nomeResponsavel || nomeSdrOriginal) && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">
+              <p>
+                <span className="text-neutral-500">Responsável atual: </span>
+                <span className="font-medium text-neutral-800">
+                  {nomeResponsavel ?? "sem responsável"}
+                </span>
+              </p>
+              {nomeSdrOriginal && (
+                <p>
+                  <span className="text-neutral-500">SDR responsável: </span>
+                  <span className="font-medium text-neutral-800">{nomeSdrOriginal}</span>
+                </p>
+              )}
+            </div>
+          )}
 
           {podeReivindicar && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -173,24 +206,31 @@ export default async function EditarLeadPage({
         </div>
 
         <div className="flex flex-col gap-4">
+          {podeEditar && leadTipado.status !== "vendido" && (
+            <ProximoContatoForm
+              leadId={leadTipado.id}
+              proximoContatoEm={leadTipado.proximo_follow_em}
+            />
+          )}
+
           {leadTipado.status === "vendido" ? (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-              <h2 className="text-sm font-semibold text-emerald-800">
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-green-800">
                 ✓ Vendido
               </h2>
               {leadTipado.produto && (
-                <p className="mt-1 text-sm text-emerald-700">
+                <p className="mt-1 text-sm text-green-700">
                   Produto: {leadTipado.produto}
                 </p>
               )}
-              <p className="mt-1 text-sm text-emerald-700">
+              <p className="mt-1 text-sm text-green-700">
                 Venda:{" "}
                 {leadTipado.valor_venda?.toLocaleString("pt-BR", {
                   style: "currency",
                   currency: "BRL",
                 })}
               </p>
-              <p className="text-sm text-emerald-700">
+              <p className="text-sm text-green-700">
                 Receita:{" "}
                 {leadTipado.receita_venda?.toLocaleString("pt-BR", {
                   style: "currency",
@@ -198,13 +238,25 @@ export default async function EditarLeadPage({
                 }) ?? "não informada"}
               </p>
               {leadTipado.vendido_em && (
-                <p className="mt-1 text-xs text-emerald-600">
+                <p className="mt-1 text-xs text-green-600">
                   {formatarData(leadTipado.vendido_em)}
                 </p>
               )}
             </div>
           ) : (
-            podeEditar && <MarcarVendidoForm leadId={leadTipado.id} />
+            podeEditar && (
+              <>
+                <RegistrarPropostaForm
+                  leadId={leadTipado.id}
+                  propostaAtual={{
+                    valor: leadTipado.proposta_valor,
+                    enviadaEm: leadTipado.proposta_enviada_em,
+                    observacao: leadTipado.proposta_observacao,
+                  }}
+                />
+                <MarcarVendidoForm leadId={leadTipado.id} />
+              </>
+            )
           )}
 
           {podeEditar && (
@@ -222,7 +274,7 @@ export default async function EditarLeadPage({
                 />
                 <button
                   type="submit"
-                  className="w-full rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100"
+                  className="w-full rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
                 >
                   Adicionar à linha do tempo
                 </button>

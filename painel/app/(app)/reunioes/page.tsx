@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
-import { FiltroUsuarioSelect } from "@/components/filtro-usuario-select";
+import { FiltrosLeads } from "@/components/filtros-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import {
@@ -17,7 +17,11 @@ import {
   type NivelResumo,
 } from "@/lib/niveis";
 
-const NIVEL_OPORTUNIDADES = 6;
+const NIVEL_OPORTUNIDADES = 7;
+
+function formatarMoeda(valor: number) {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 
 type LeadResumo = {
   id: string;
@@ -30,14 +34,17 @@ type LeadResumo = {
   status: string;
   responsavel_id: string | null;
   oportunidade_futura: boolean;
+  valor_venda: number | null;
+  proposta_valor: number | null;
+  proximo_follow_em: string | null;
 };
 
 export default async function VendasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ usuario?: string }>;
+  searchParams: Promise<{ usuario?: string; origem?: string }>;
 }) {
-  const { usuario: usuarioFiltro } = await searchParams;
+  const { usuario: usuarioFiltro, origem: origemFiltro } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -47,7 +54,7 @@ export default async function VendasPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura"
+      "id, nome, telefone_e164, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, valor_venda, proposta_valor, proximo_follow_em"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
@@ -57,16 +64,35 @@ export default async function VendasPage({
   if (usuarioFiltro) {
     consulta = consulta.eq("responsavel_id", usuarioFiltro);
   }
+  if (origemFiltro) {
+    consulta = consulta.eq("origem", origemFiltro);
+  }
 
-  const [{ data: niveisData }, { data: leadsData }, { data: usuarioAtual }, { data: usuariosData }] =
-    await Promise.all([
-      supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
-      consulta,
-      user
-        ? supabase.from("usuarios").select("org_id, papel").eq("id", user.id).single()
-        : Promise.resolve({ data: null }),
-      supabase.from("usuarios").select("id, nome").order("nome"),
-    ]);
+  const [
+    { data: niveisData },
+    { data: leadsData },
+    { data: usuarioAtual },
+    { data: usuariosData },
+    { data: origensData },
+  ] = await Promise.all([
+    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
+    consulta,
+    user
+      ? supabase.from("usuarios").select("org_id, papel").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
+    supabase.from("usuarios").select("id, nome").order("nome"),
+    supabase
+      .from("leads")
+      .select("origem")
+      .is("arquivado_em", null)
+      .neq("status", "vendido")
+      .in("nivel_ordem", NIVEIS_VENDAS)
+      .not("origem", "is", null),
+  ]);
+
+  const origens = Array.from(
+    new Set((origensData ?? []).map((lead) => lead.origem as string))
+  ).sort();
 
   const todosNiveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(todosNiveis);
@@ -77,6 +103,12 @@ export default async function VendasPage({
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
+
+  const leadsComProposta = leads.filter((lead) => lead.proposta_valor != null);
+  const totalPropostas = leadsComProposta.reduce(
+    (soma, lead) => soma + Number(lead.proposta_valor),
+    0
+  );
 
   const agora = new Date();
   const amanha = new Date(agora);
@@ -96,7 +128,7 @@ export default async function VendasPage({
 
   const leadsPorNivel: Record<number, typeof leadsComAtividade> = {};
   for (const lead of leadsComAtividade) {
-    // "Oportunidades futuras" é uma divisão visual dentro do nível 6, não
+    // "Oportunidades futuras" é uma divisão visual dentro do nível 7, não
     // um nível separado — separa aqui na hora de montar as colunas.
     const chave =
       lead.nivel_ordem === NIVEL_OPORTUNIDADES && lead.oportunidade_futura
@@ -110,11 +142,29 @@ export default async function VendasPage({
   return (
     <>
       <PageHeader
-        titulo="Vendas"
-        acao={<FiltroUsuarioSelect usuarios={usuarios} valorInicial={usuarioFiltro} baseHref="/reunioes" />}
+        titulo="Gestão de vendas"
+        acao={
+          <FiltrosLeads
+            usuarios={usuarios}
+            origens={origens}
+            usuarioInicial={usuarioFiltro}
+            origemInicial={origemFiltro}
+            baseHref="/reunioes"
+          />
+        }
       />
 
       <main className="px-6 py-6">
+        {leadsComProposta.length > 0 && (
+          <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
+            <span>💰</span>
+            <span>
+              {leadsComProposta.length} proposta{leadsComProposta.length === 1 ? "" : "s"} em
+              aberto — {formatarMoeda(totalPropostas)}
+            </span>
+          </div>
+        )}
+
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-neutral-500">
             {leads.length} lead{leads.length === 1 ? "" : "s"} em vendas
@@ -134,6 +184,8 @@ export default async function VendasPage({
           leadsPorNivel={leadsPorNivel}
           souAdmin={souAdmin}
           usuarioAtualId={user?.id ?? null}
+          usuarios={usuarios}
+          mostrarValor
           numerosVisiveis={numerosVisiveis}
         />
       </main>

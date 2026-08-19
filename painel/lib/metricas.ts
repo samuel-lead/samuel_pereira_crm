@@ -321,7 +321,9 @@ export async function calcularReceitaOrg(
 export type MetricasUsuario = Metricas & { usuarioId: string; nome: string };
 
 // Performance individual de cada usuário da org no período — pra comparar
-// SDRs lado a lado (só admin vê essa visão).
+// SDRs lado a lado (só admin vê essa visão). Admin sempre entra aqui mesmo
+// sem função escolhida — ele acumula todas as funções, não precisa se
+// declarar SDR pra contar.
 export async function calcularMetricasPorUsuario(
   supabase: SupabaseServerClient,
   orgId: string,
@@ -332,6 +334,7 @@ export async function calcularMetricasPorUsuario(
     .from("usuarios")
     .select("id, nome")
     .eq("org_id", orgId)
+    .or("funcao.eq.sdr,papel.eq.admin")
     .order("nome");
 
   const lista = usuarios ?? [];

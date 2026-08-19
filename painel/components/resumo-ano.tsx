@@ -26,15 +26,15 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950 via-emerald-700 to-teal-500 p-7 text-white shadow-2xl shadow-emerald-950/50 ring-1 ring-white/10">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
-        <p className="relative text-xs font-bold uppercase tracking-widest text-emerald-200">
+        <p className="relative text-xs font-bold uppercase tracking-widest text-green-200">
           Receita do ano{mesAtual > 0 ? " até agora" : ""}
         </p>
         <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
           {formatarMoeda(totalReceita)}
         </p>
-        <p className="relative mt-2 text-sm font-medium text-emerald-100">
+        <p className="relative mt-2 text-sm font-medium text-green-100">
           Meta de receita acumulada {formatarMoeda(totalMeta)} · Faturamento
           acumulado {formatarMoeda(totalFaturamento)}
         </p>
@@ -55,14 +55,14 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
             const bateu = meta !== null ? linha.receita >= meta : null;
             const ehMesAtual = linha.mes === mesAtual;
             const corBarra =
-              bateu === null ? "bg-neutral-300" : bateu ? "bg-emerald-500" : "bg-amber-500";
+              bateu === null ? "bg-neutral-300" : bateu ? "bg-green-500" : "bg-amber-500";
 
             return (
               <div
                 key={linha.mes}
                 className={`rounded-lg border p-3 transition ${
                   ehMesAtual
-                    ? "border-emerald-300 bg-emerald-50/50"
+                    ? "border-green-300 bg-green-50/50"
                     : "border-neutral-100 bg-neutral-50/40"
                 }`}
               >
@@ -70,7 +70,7 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
                   <span className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
                     {NOMES_MESES[linha.mes - 1]}
                     {ehMesAtual && (
-                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                      <span className="rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-bold text-white">
                         agora
                       </span>
                     )}
@@ -97,7 +97,7 @@ export function ResumoAno({ dados, mesAtual }: { dados: ResumoMes[]; mesAtual: n
                       bateu === null
                         ? "text-neutral-400"
                         : bateu
-                          ? "text-emerald-600"
+                          ? "text-green-600"
                           : "text-amber-600"
                     }`}
                   >

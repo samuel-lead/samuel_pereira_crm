@@ -37,7 +37,7 @@ export function AlternarStatusOrgButton({
       className={`rounded-md border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
         vaiSuspender
           ? "border-red-200 text-red-600 hover:bg-red-50"
-          : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+          : "border-green-200 text-green-700 hover:bg-green-50"
       }`}
     >
       {emTransicao ? "..." : vaiSuspender ? "Suspender" : "Reativar"}

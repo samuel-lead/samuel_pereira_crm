@@ -11,7 +11,8 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
-const NIVEL_REUNIAO_FEITA = 6;
+const NIVEL_FOLLOW_POS_REUNIAO = 6;
+const NIVEL_REUNIAO_FEITA = 7;
 
 async function contextoUsuario() {
   const supabase = await createClient();
@@ -92,8 +93,8 @@ function mensagemAmigavel(codigo: string | undefined, mensagemOriginal: string) 
 // Mantém a tabela `reunioes` em sincronia com a mudança de nível.
 // Entrando em "Reunião marcada": cria a reunião (data de agendamento = o
 // que a pessoa informou, default agora — data da reunião = o que a pessoa
-// informou). Saindo de "Reunião marcada" pra "No Show" ou "Reunião feita":
-// atualiza o status da reunião mais recente.
+// informou). Saindo de "Reunião marcada" pra "No Show", "Follow após
+// reunião" ou "Oportunidades": atualiza o status da reunião mais recente.
 async function sincronizarReuniao(
   supabase: SupabaseServerClient,
   params: {
@@ -144,7 +145,9 @@ async function sincronizarReuniao(
 
   if (
     deOrdem === NIVEL_REUNIAO_MARCADA &&
-    (paraOrdem === NIVEL_NO_SHOW || paraOrdem === NIVEL_REUNIAO_FEITA)
+    (paraOrdem === NIVEL_NO_SHOW ||
+      paraOrdem === NIVEL_FOLLOW_POS_REUNIAO ||
+      paraOrdem === NIVEL_REUNIAO_FEITA)
   ) {
     const { data: reuniao } = await supabase
       .from("reunioes")
@@ -163,8 +166,12 @@ async function sincronizarReuniao(
         .eq("id", reuniao.id);
       if (error) return error.message;
 
-      // Reunião realizada: o lead passa a ser 100% do Closer que fez a call.
-      if (paraOrdem === NIVEL_REUNIAO_FEITA && reuniao.closer_id) {
+      // Reunião realizada (foi pra Follow ou já virou Oportunidade): o
+      // lead passa a ser 100% do Closer que fez a call.
+      if (
+        (paraOrdem === NIVEL_FOLLOW_POS_REUNIAO || paraOrdem === NIVEL_REUNIAO_FEITA) &&
+        reuniao.closer_id
+      ) {
         const { error: erroTransferencia } = await supabase.rpc(
           "transferir_lead_para_closer",
           { p_lead_id: leadId, p_closer_id: reuniao.closer_id }
@@ -494,6 +501,113 @@ export async function marcarVendido(
   revalidatePath("/leads/lista");
   revalidatePath(`/leads/${leadId}`);
   return { erro: null };
+}
+
+export async function registrarProposta(
+  leadId: string,
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    return { erro: erroPermissao };
+  }
+
+  const valorRaw = String(formData.get("proposta_valor") ?? "").trim();
+  const valor = valorRaw ? Number(valorRaw) : null;
+
+  if (!valor || valor <= 0) {
+    return { erro: "Informe o valor da proposta" };
+  }
+
+  const observacao = String(formData.get("proposta_observacao") ?? "").trim() || null;
+
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      proposta_valor: valor,
+      proposta_enviada_em: new Date().toISOString(),
+      proposta_observacao: observacao,
+    })
+    .eq("id", leadId);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  const valorFormatado = valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+
+  await supabase.from("interacoes").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    tipo: "nota",
+    canal: "manual",
+    conteudo: `Proposta enviada: ${valorFormatado}${observacao ? ` — ${observacao}` : ""}`,
+    ocorreu_em: new Date().toISOString(),
+    origem: "declarado",
+  });
+
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
+export async function marcarProximoContato(leadId: string, formData: FormData) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
+
+  const dataHora = String(formData.get("proximo_follow_em") ?? "").trim();
+  if (!dataHora) {
+    throw new Error("Escolha data e hora do próximo contato");
+  }
+
+  const data = new Date(dataHora);
+  if (Number.isNaN(data.getTime())) {
+    throw new Error("Data inválida");
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ proximo_follow_em: data.toISOString() })
+    .eq("id", leadId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
+}
+
+export async function cancelarProximoContato(leadId: string) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ proximo_follow_em: null })
+    .eq("id", leadId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
 }
 
 export async function registrarNota(leadId: string, formData: FormData) {

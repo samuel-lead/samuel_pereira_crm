@@ -38,7 +38,7 @@ export function VendasPorCanal({ dados }: { dados: VendaPorCanal[] }) {
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
                   <div
-                    className="h-full rounded-full bg-violet-500"
+                    className="h-full rounded-full bg-blue-500"
                     style={{ width: `${pct}%` }}
                   />
                 </div>

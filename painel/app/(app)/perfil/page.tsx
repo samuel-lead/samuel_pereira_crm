@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { FotoPerfilForm } from "@/components/foto-perfil-form";
+import { TrocarSenhaForm } from "@/components/trocar-senha-form";
 
 export default async function PerfilPage() {
   const supabase = await createClient();
@@ -49,6 +50,17 @@ export default async function PerfilPage() {
           </p>
 
           <FotoPerfilForm nome={usuario?.nome ?? ""} fotoUrl={usuario?.foto_url ?? null} />
+        </div>
+
+        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+            Trocar senha
+          </h2>
+          <p className="mb-4 text-xs text-neutral-500">
+            Depois de trocar, você continua logado — não precisa entrar de novo.
+          </p>
+
+          <TrocarSenhaForm />
         </div>
       </main>
     </>

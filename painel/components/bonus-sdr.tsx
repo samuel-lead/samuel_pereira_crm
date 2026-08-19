@@ -12,10 +12,10 @@ function formatarPercentual(valor: number | null) {
 
 const ESQUEMAS = {
   violeta: {
-    fundo: "bg-violet-50",
-    borda: "border-violet-200",
-    icone: "bg-violet-600 text-white",
-    texto: "text-violet-700",
+    fundo: "bg-blue-50",
+    borda: "border-blue-200",
+    icone: "bg-blue-600 text-white",
+    texto: "text-blue-700",
   },
   ceu: {
     fundo: "bg-sky-50",
@@ -24,10 +24,10 @@ const ESQUEMAS = {
     texto: "text-sky-700",
   },
   esmeralda: {
-    fundo: "bg-emerald-50",
-    borda: "border-emerald-200",
-    icone: "bg-emerald-600 text-white",
-    texto: "text-emerald-700",
+    fundo: "bg-green-50",
+    borda: "border-green-200",
+    icone: "bg-green-600 text-white",
+    texto: "text-green-700",
   },
   rosa: {
     fundo: "bg-rose-50",
@@ -65,7 +65,7 @@ function LinhaBonus({ label, valor }: { label: string; valor: number }) {
   return (
     <div className="flex items-center justify-between rounded-lg px-3 py-2 text-sm">
       <span className="text-neutral-500">{label}</span>
-      <span className={`font-bold tabular-nums ${bateu ? "text-emerald-600" : "text-neutral-400"}`}>
+      <span className={`font-bold tabular-nums ${bateu ? "text-green-600" : "text-neutral-400"}`}>
         {formatarMoeda(valor)}
       </span>
     </div>
@@ -104,7 +104,7 @@ export function BonusSdrTabela({ dados, periodo }: { dados: BonusSdr[]; periodo?
           >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-base font-bold text-neutral-900">{linha.nome}</h3>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold tabular-nums text-emerald-700">
+              <span className="rounded-full bg-green-50 px-3 py-1 text-sm font-bold tabular-nums text-green-700">
                 {formatarMoeda(linha.totalBonus)} de bônus
               </span>
             </div>

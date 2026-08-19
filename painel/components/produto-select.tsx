@@ -5,7 +5,7 @@ import { useState } from "react";
 export const PRODUTOS = ["Agenda Previsível", "Treinamento comercial"];
 
 const campoClasse =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
+  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 
 export function ProdutoSelect({ valorInicial }: { valorInicial?: string }) {
   const ehConhecido = valorInicial ? PRODUTOS.includes(valorInicial) : false;

@@ -39,6 +39,7 @@ export default async function ListaLeadsPage({
       "id, nome, telefone_e164, origem, nivel_ordem, declarado_em, ultimo_contato_em"
     )
     .is("arquivado_em", null)
+    .neq("status", "vendido")
     .order("declarado_em", { ascending: false });
 
   if (nivel) {
@@ -68,7 +69,7 @@ export default async function ListaLeadsPage({
         acao={
           <Link
             href="/leads/novo"
-            className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
           >
             + Novo lead
           </Link>
@@ -86,7 +87,7 @@ export default async function ListaLeadsPage({
               name="busca"
               defaultValue={busca ?? ""}
               placeholder="Ex.: Marcos"
-              className="w-48 rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              className="w-48 rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -98,7 +99,7 @@ export default async function ListaLeadsPage({
               id="nivel"
               name="nivel"
               defaultValue={nivel ?? ""}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Todos</option>
               {niveis.map((n) => (
@@ -118,7 +119,7 @@ export default async function ListaLeadsPage({
               name="de"
               type="date"
               defaultValue={de ?? ""}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -131,7 +132,7 @@ export default async function ListaLeadsPage({
               name="ate"
               type="date"
               defaultValue={ate ?? ""}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 

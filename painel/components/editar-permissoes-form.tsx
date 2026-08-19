@@ -33,7 +33,7 @@ export function EditarPermissoesForm({
           id="funcao"
           name="funcao"
           defaultValue={funcaoAtual ?? ""}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         >
           <option value="">— Não definida —</option>
           <option value="sdr">SDR</option>
@@ -99,7 +99,7 @@ export function EditarPermissoesForm({
 
       <button
         type="submit"
-        className="w-full rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+        className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
       >
         Salvar permissões
       </button>

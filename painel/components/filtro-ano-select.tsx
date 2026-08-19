@@ -24,7 +24,7 @@ export function FiltroAnoSelect({
     <select
       value={anoSelecionado}
       onChange={aoMudar}
-      className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+      className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
     >
       {anos.map((ano) => (
         <option key={ano} value={ano}>

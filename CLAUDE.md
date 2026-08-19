@@ -40,7 +40,7 @@ nenhum do código, banco, interface ou mensagem.**
 2. **Em qualificação** — conversa engatou, levantando os 3 critérios
 3. **Topou reunião, sem horário** definido
 4. **Reunião marcada** — dia e hora definidos
-5. **No Show** — a reunião estava marcada e o lead não compareceu
+5. **No-show** — a reunião estava marcada e o lead não compareceu
 6. **Reunião feita, sem fechar** — proposta na mesa
 7. **Base** — passou por tudo e não virou nada
 

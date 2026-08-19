@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
-import { FiltroUsuarioSelect } from "@/components/filtro-usuario-select";
+import { FiltrosLeads } from "@/components/filtros-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import {
@@ -22,14 +22,15 @@ type LeadResumo = {
   entrou_nivel_em: string;
   status: string;
   responsavel_id: string | null;
+  proximo_follow_em: string | null;
 };
 
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ usuario?: string }>;
+  searchParams: Promise<{ usuario?: string; origem?: string }>;
 }) {
-  const { usuario: usuarioFiltro } = await searchParams;
+  const { usuario: usuarioFiltro, origem: origemFiltro } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -39,7 +40,7 @@ export default async function LeadsPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id"
+      "id, nome, telefone_e164, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, proximo_follow_em"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
@@ -49,20 +50,42 @@ export default async function LeadsPage({
   if (usuarioFiltro) {
     consulta = consulta.eq("responsavel_id", usuarioFiltro);
   }
+  if (origemFiltro) {
+    consulta = consulta.eq("origem", origemFiltro);
+  }
 
-  const [{ data: niveisData }, { data: leadsData }, { data: usuarioAtual }, { data: usuariosData }] =
-    await Promise.all([
-      supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
-      consulta,
-      user
-        ? supabase.from("usuarios").select("org_id, papel").eq("id", user.id).single()
-        : Promise.resolve({ data: null }),
-      supabase.from("usuarios").select("id, nome").order("nome"),
-    ]);
+  const [
+    { data: niveisData },
+    { data: leadsData },
+    { data: usuarioAtual },
+    { data: usuariosData },
+    { data: origensData },
+  ] = await Promise.all([
+    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
+    consulta,
+    user
+      ? supabase.from("usuarios").select("org_id, papel").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
+    supabase.from("usuarios").select("id, nome").order("nome"),
+    supabase
+      .from("leads")
+      .select("origem")
+      .is("arquivado_em", null)
+      .neq("status", "vendido")
+      .in("nivel_ordem", NIVEIS_PRE_VENDAS)
+      .not("origem", "is", null),
+  ]);
+
+  const origens = Array.from(
+    new Set((origensData ?? []).map((lead) => lead.origem as string))
+  ).sort();
 
   const todosNiveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(todosNiveis);
-  const niveis = todosNiveis.filter((nivel) => NIVEIS_PRE_VENDAS.includes(nivel.ordem));
+  const nivelPorOrdem = new Map(todosNiveis.map((nivel) => [nivel.ordem, nivel]));
+  const niveis = NIVEIS_PRE_VENDAS.map((ordem) => nivelPorOrdem.get(ordem)).filter(
+    (nivel): nivel is NivelResumo => !!nivel
+  );
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
@@ -93,13 +116,18 @@ export default async function LeadsPage({
   return (
     <>
       <PageHeader
-        titulo="Leads"
+        titulo="Gestão dos leads"
         acao={
           <div className="flex items-center gap-3">
-            <FiltroUsuarioSelect usuarios={usuarios} valorInicial={usuarioFiltro} />
+            <FiltrosLeads
+              usuarios={usuarios}
+              origens={origens}
+              usuarioInicial={usuarioFiltro}
+              origemInicial={origemFiltro}
+            />
             <Link
               href="/leads/novo"
-              className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
             >
               + Novo lead
             </Link>
@@ -127,6 +155,7 @@ export default async function LeadsPage({
           leadsPorNivel={leadsPorNivel}
           souAdmin={souAdmin}
           usuarioAtualId={user?.id ?? null}
+          usuarios={usuarios}
           numerosVisiveis={numerosVisiveis}
         />
       </main>

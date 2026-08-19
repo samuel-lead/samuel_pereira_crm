@@ -66,13 +66,13 @@ export function MetaReceitaWidget({
           className={`rounded-md border px-3 py-2 text-sm text-neutral-900 outline-none focus:ring-1 ${
             ehMesNovo
               ? "border-amber-300 bg-white focus:border-amber-500 focus:ring-amber-500"
-              : "border-neutral-300 focus:border-violet-500 focus:ring-violet-500"
+              : "border-neutral-300 focus:border-blue-500 focus:ring-blue-500"
           } ${compacta ? "w-56" : "w-64"}`}
         />
         <button
           type="submit"
           className={`shrink-0 rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition ${
-            ehMesNovo ? "bg-amber-600 hover:bg-amber-700" : "bg-violet-600 hover:bg-violet-700"
+            ehMesNovo ? "bg-amber-600 hover:bg-amber-700" : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
           Salvar meta
@@ -134,7 +134,7 @@ export function MetaReceitaWidget({
           Meta do mês: {formatarMoeda(meta)}
         </span>
         <span className="text-neutral-300">·</span>
-        <span className={`font-semibold ${bateu ? "text-emerald-600" : "text-amber-600"}`}>
+        <span className={`font-semibold ${bateu ? "text-green-600" : "text-amber-600"}`}>
           {bateu ? "Meta batida! 🎉" : `Falta ${formatarMoeda(falta)}`}
         </span>
       </>
@@ -168,7 +168,7 @@ export function MetaReceitaWidget({
           <button
             type="button"
             onClick={() => setEditando(true)}
-            className="text-xs font-medium text-violet-600 hover:text-violet-700"
+            className="text-xs font-medium text-blue-600 hover:text-blue-700"
           >
             Editar
           </button>
@@ -187,7 +187,7 @@ export function MetaReceitaWidget({
         <div className="h-full w-full overflow-hidden rounded-full bg-neutral-100">
           <div
             className={`flex h-full items-center justify-end rounded-full pr-2 transition-all ${
-              bateu ? "bg-emerald-500" : "bg-violet-500"
+              bateu ? "bg-green-500" : "bg-blue-500"
             }`}
             style={{ width: `${pct}%` }}
           >
@@ -207,7 +207,7 @@ export function MetaReceitaWidget({
       </div>
       <p className="mt-2 text-sm">
         {bateu ? (
-          <span className="font-semibold text-emerald-600">Meta batida! 🎉</span>
+          <span className="font-semibold text-green-600">Meta batida! 🎉</span>
         ) : (
           <>
             Falta <span className="font-bold text-amber-600">{formatarMoeda(falta)}</span>{" "}

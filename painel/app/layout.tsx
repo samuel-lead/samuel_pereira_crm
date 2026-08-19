@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
+
+const fonte = Manrope({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "CRM",
@@ -12,8 +15,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
-      <body>{children}</body>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try {
+              if (localStorage.getItem("tema") === "escuro") {
+                document.documentElement.classList.add("dark");
+              }
+            } catch (e) {}`,
+          }}
+        />
+      </head>
+      <body className={fonte.className}>{children}</body>
     </html>
   );
 }

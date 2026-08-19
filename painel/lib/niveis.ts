@@ -38,22 +38,22 @@ export const CORES_NIVEL: Record<
     solido: "bg-gradient-to-br from-sky-500 to-sky-600",
   },
   3: {
-    faixa: "bg-violet-500",
-    texto: "text-violet-700",
-    badge: "bg-violet-200 text-violet-700",
-    header: "bg-violet-50",
-    borda: "border-violet-200",
-    pilula: "bg-violet-600 text-white",
-    solido: "bg-gradient-to-br from-violet-500 to-violet-600",
+    faixa: "bg-blue-500",
+    texto: "text-blue-700",
+    badge: "bg-blue-200 text-blue-700",
+    header: "bg-blue-50",
+    borda: "border-blue-200",
+    pilula: "bg-blue-600 text-white",
+    solido: "bg-gradient-to-br from-blue-500 to-blue-600",
   },
   4: {
-    faixa: "bg-emerald-500",
-    texto: "text-emerald-700",
-    badge: "bg-emerald-200 text-emerald-700",
-    header: "bg-emerald-50",
-    borda: "border-emerald-200",
-    pilula: "bg-emerald-600 text-white",
-    solido: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+    faixa: "bg-green-600",
+    texto: "text-green-700",
+    badge: "bg-green-200 text-green-700",
+    header: "bg-green-50",
+    borda: "border-green-300",
+    pilula: "bg-green-700 text-white",
+    solido: "bg-gradient-to-br from-green-600 to-green-700",
   },
   5: {
     faixa: "bg-red-500",
@@ -65,15 +65,24 @@ export const CORES_NIVEL: Record<
     solido: "bg-gradient-to-br from-red-500 to-red-600",
   },
   6: {
-    faixa: "bg-amber-500",
-    texto: "text-amber-700",
-    badge: "bg-amber-200 text-amber-700",
-    header: "bg-amber-50",
-    borda: "border-amber-200",
-    pilula: "bg-amber-600 text-white",
-    solido: "bg-gradient-to-br from-amber-500 to-amber-600",
+    faixa: "bg-green-600",
+    texto: "text-green-700",
+    badge: "bg-green-200 text-green-700",
+    header: "bg-green-50",
+    borda: "border-green-300",
+    pilula: "bg-green-700 text-white",
+    solido: "bg-gradient-to-br from-green-600 to-green-700",
   },
   7: {
+    faixa: "bg-green-600",
+    texto: "text-green-700",
+    badge: "bg-green-200 text-green-700",
+    header: "bg-green-50",
+    borda: "border-green-300",
+    pilula: "bg-green-700 text-white",
+    solido: "bg-gradient-to-br from-green-600 to-green-700",
+  },
+  8: {
     faixa: "bg-stone-500",
     texto: "text-stone-700",
     badge: "bg-stone-200 text-stone-700",
@@ -103,18 +112,18 @@ export function corDoNivel(ordem: number) {
 
 // O funil virou dois quadros. "Reunião marcada" aparece nos dois — o SDR
 // continua vendo o compromisso que marcou, e o Closer já vê na fila dele.
-// Pré-vendas: antes da reunião, + Reunião marcada, + quem levou No Show
+// Pré-vendas: antes da reunião, + Reunião marcada, + quem levou No-show
 // (volta pra ser remarcado). Vendas: Reunião marcada em diante — depois
 // que a call acontece, o lead sai do Pré-vendas (o responsável virou o
 // Closer) e só fica em Vendas.
 export const NIVEIS_PRE_VENDAS = [0, 1, 2, 3, 4, 5];
-export const NIVEIS_VENDAS = [4, 6];
+export const NIVEIS_VENDAS = [4, 6, 7];
 
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
-// do nível 6, pro lead que já fez a reunião (ICP qualificado) mas avisou
-// que só fecha depois. Usada só no quadro Vendas — nunca é gravada como
-// nivel_ordem no banco, só serve pra identificar a coluna no Kanban e no
-// drag-and-drop.
+// do nível 7 (Oportunidades), pro lead que já fez a reunião (ICP
+// qualificado) mas avisou que só fecha depois. Usada só no quadro Vendas —
+// nunca é gravada como nivel_ordem no banco, só serve pra identificar a
+// coluna no Kanban e no drag-and-drop.
 export const ORDEM_OPORTUNIDADE_FUTURA = 1006;
 
 export type NivelResumo = {

@@ -21,7 +21,7 @@ export const INTEGRACOES: Integracao[] = [
     descricaoCurta:
       "Canal principal do CRM — leads e comandos por voz/texto chegam por aqui.",
     status: "conectado",
-    corIcone: "bg-emerald-100 text-emerald-700",
+    corIcone: "bg-green-100 text-green-700",
     letraIcone: "W",
     oQueFaz:
       "Todo comando de voz ou texto que você manda no WhatsApp passa por aqui — o agente interpreta, executa no banco e responde. É o caminho principal do CRM, por decisão do projeto.",
@@ -79,7 +79,7 @@ export const INTEGRACOES: Integracao[] = [
     descricaoCurta:
       "Sincroniza as reuniões marcadas no CRM com a agenda de verdade.",
     status: "nao_conectado",
-    corIcone: "bg-violet-100 text-violet-700",
+    corIcone: "bg-blue-100 text-blue-700",
     letraIcone: "C",
     oQueFaz:
       "Toda vez que uma reunião é marcada aqui no CRM (nível 'Reunião marcada'), cria um evento automático na agenda do Google do Closer responsável — sem precisar lançar duas vezes.",
@@ -121,7 +121,7 @@ export function buscarIntegracao(id: string) {
 }
 
 export const STATUS_LABEL: Record<StatusIntegracao, { texto: string; classe: string }> = {
-  conectado: { texto: "Conectado", classe: "bg-emerald-100 text-emerald-700" },
+  conectado: { texto: "Conectado", classe: "bg-green-100 text-green-700" },
   nao_conectado: { texto: "Não conectado", classe: "bg-neutral-200 text-neutral-600" },
   em_breve: { texto: "Em breve", classe: "bg-amber-100 text-amber-700" },
 };

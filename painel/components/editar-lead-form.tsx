@@ -7,7 +7,7 @@ import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
 const NIVEL_REUNIAO_MARCADA = "4";
-const NIVEL_OPORTUNIDADES = "6";
+const NIVEL_OPORTUNIDADES = "7";
 
 function agoraParaInputLocal() {
   const agora = new Date();
@@ -30,7 +30,7 @@ type Lead = {
 };
 
 const campoClasse =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500";
+  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500";
 const labelClasse = "text-sm font-medium text-neutral-700";
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -147,9 +147,9 @@ export function EditarLeadForm({
           </select>
 
           {vaiEntrarEmReuniaoMarcada && (
-            <div className="mt-2 space-y-3 rounded-md border border-emerald-200 bg-emerald-50 p-3">
+            <div className="mt-2 space-y-3 rounded-md border border-green-200 bg-green-50 p-3">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-emerald-800" htmlFor="marcada_em">
+                <label className="text-sm font-medium text-green-800" htmlFor="marcada_em">
                   Data em que foi marcada
                 </label>
                 <input
@@ -160,14 +160,14 @@ export function EditarLeadForm({
                   defaultValue={agoraParaInputLocal()}
                   className={`${campoClasse} bg-white`}
                 />
-                <p className="text-xs text-emerald-700">
+                <p className="text-xs text-green-700">
                   Já vem preenchido com agora — troque se estiver registrando
                   uma reunião que foi marcada em outro dia.
                 </p>
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-emerald-800" htmlFor="reuniao_data">
+                <label className="text-sm font-medium text-green-800" htmlFor="reuniao_data">
                   Data e hora da reunião
                 </label>
                 <input
@@ -180,7 +180,7 @@ export function EditarLeadForm({
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-emerald-800" htmlFor="closer_id">
+                <label className="text-sm font-medium text-green-800" htmlFor="closer_id">
                   Closer (quem vai fazer a reunião)
                 </label>
                 <ResponsavelSelect
@@ -289,7 +289,7 @@ export function EditarLeadForm({
         {podeEditar && (
           <button
             type="submit"
-            className="w-full rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700"
+            className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
           >
             Salvar alterações
           </button>

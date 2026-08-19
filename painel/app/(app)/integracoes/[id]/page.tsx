@@ -59,8 +59,8 @@ export default async function IntegracaoDetalhePage({
           </div>
 
           {integracao.infoConexao && (
-            <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-3">
-              <p className="text-sm text-emerald-800">{integracao.infoConexao}</p>
+            <div className="mt-5 rounded-md border border-green-200 bg-green-50 p-3">
+              <p className="text-sm text-green-800">{integracao.infoConexao}</p>
             </div>
           )}
 

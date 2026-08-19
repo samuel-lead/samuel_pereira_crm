@@ -31,7 +31,7 @@ function CampoMoeda({
 
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-emerald-800">
+      <label className="mb-1 block text-xs font-medium text-green-800">
         {label}
       </label>
       <input
@@ -40,7 +40,7 @@ function CampoMoeda({
         value={centavos ? formatarCentavos(centavos) : ""}
         onChange={aoDigitar}
         placeholder={placeholder}
-        className="w-full rounded-md border border-emerald-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
       />
       <input type="hidden" name={name} value={centavos ? (centavos / 100).toFixed(2) : ""} />
     </div>
@@ -52,11 +52,11 @@ export function MarcarVendidoForm({ leadId }: { leadId: string }) {
   const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
 
   return (
-    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-      <h2 className="mb-1 text-sm font-semibold text-emerald-800">
+    <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
+      <h2 className="mb-1 text-sm font-semibold text-green-800">
         Fechar venda
       </h2>
-      <p className="mb-3 text-xs text-emerald-700">
+      <p className="mb-3 text-xs text-green-700">
         Ao marcar como vendido, o lead sai do Funil e vai para Clientes.
       </p>
       <form action={acaoFormulario} className="space-y-2">
@@ -75,13 +75,13 @@ export function MarcarVendidoForm({ leadId }: { leadId: string }) {
         )}
         <button
           type="submit"
-          className="w-full rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+          className="w-full rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-700"
         >
           Marcar como vendido
         </button>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-emerald-800">
+          <label className="mb-1 block text-xs font-medium text-green-800">
             Produto
           </label>
           <ProdutoSelect />

@@ -1,65 +1,94 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
-import { KanbanBoard } from "@/components/kanban-board";
-import type { NivelResumo } from "@/lib/niveis";
+import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 
-type LeadResumo = {
-  id: string;
-  nome: string;
-  telefone_e164: string | null;
-  origem: string | null;
-  nivel_ordem: number;
-  responsavel_id: string | null;
+type LeadComHistorico = LeadBase & {
+  criterio_problema: string | null;
+  criterio_urgencia: string;
+  criterio_capacidade: string;
+  proposta_enviada_em: string | null;
 };
+
+// Por que o lead não virou venda — calculado a partir do que já aconteceu
+// com ele, ninguém precisa marcar isso na mão.
+function calcularMotivo(
+  lead: LeadComHistorico,
+  ultimaReuniaoStatus: string | undefined
+): MotivoBase {
+  if (lead.proposta_enviada_em) return "proposta_nao_comprou";
+
+  if (ultimaReuniaoStatus === "nao_compareceu" || ultimaReuniaoStatus === "cancelada") {
+    return "nao_reagendados";
+  }
+
+  const foiQualificado =
+    !!lead.criterio_problema ||
+    lead.criterio_urgencia !== "desconhecida" ||
+    lead.criterio_capacidade !== "desconhecida";
+
+  return foiQualificado ? "qualificou_sumiu" : "nao_iniciou_conversa";
+}
 
 export default async function BasePage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: leadsData } = await supabase
+    .from("leads")
+    .select(
+      "id, nome, telefone_e164, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor"
+    )
+    .eq("nivel_ordem", 8)
+    .neq("status", "vendido")
+    .is("arquivado_em", null)
+    .order("entrou_nivel_em", { ascending: false });
 
-  const [{ data: niveisData }, { data: leadsData }, { data: usuarioAtual }] = await Promise.all([
-    supabase.from("niveis").select("ordem, nome, numerado, destacado").eq("ordem", 7),
-    supabase
-      .from("leads")
-      .select("id, nome, telefone_e164, origem, nivel_ordem, responsavel_id")
-      .eq("nivel_ordem", 7)
-      .neq("status", "vendido")
-      .is("arquivado_em", null)
-      .order("entrou_nivel_em", { ascending: false }),
-    user
-      ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
-      : Promise.resolve({ data: null }),
+  const leads = (leadsData ?? []) as LeadComHistorico[];
+  const leadIds = leads.map((l) => l.id);
+
+  const [{ data: reunioesData }, { data: usuariosData }] = await Promise.all([
+    leadIds.length
+      ? supabase
+          .from("reunioes")
+          .select("lead_id, status, agendada_para")
+          .in("lead_id", leadIds)
+          .order("agendada_para", { ascending: false })
+      : Promise.resolve({ data: [] as { lead_id: string; status: string; agendada_para: string }[] }),
+    supabase.from("usuarios").select("id, nome"),
   ]);
 
-  // Sem numeração aqui — "Nível X" só faz sentido dentro da sequência
-  // completa do funil, não num quadro de coluna única. E usando a cor do
-  // ordem 0 (preto, mesma da coluna "Leads" do funil) — a paleta do nível 7
-  // é outra cor (stone), então o "ordem" aqui é só pra pegar a cor certa,
-  // não representa o nível de verdade do lead.
-  const niveis = ((niveisData ?? []) as NivelResumo[]).map((nivel) => ({
-    ...nivel,
-    ordem: 0,
-    numerado: false,
-    destacado: true,
-  }));
-  const leads = (leadsData ?? []) as LeadResumo[];
-  const souAdmin = usuarioAtual?.papel === "admin";
+  // A mais recente por lead — reunioesData já vem ordenado por data desc.
+  const ultimaReuniaoPorLead = new Map<string, string>();
+  for (const reuniao of reunioesData ?? []) {
+    if (!ultimaReuniaoPorLead.has(reuniao.lead_id)) {
+      ultimaReuniaoPorLead.set(reuniao.lead_id, reuniao.status);
+    }
+  }
 
-  const leadsPorNivel: Record<number, LeadResumo[]> = { 0: leads };
+  const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
+
+  const leadsPorMotivo: Record<MotivoBase, LeadBase[]> = {
+    nao_reagendados: [],
+    proposta_nao_comprou: [],
+    nao_iniciou_conversa: [],
+    qualificou_sumiu: [],
+  };
+
+  for (const lead of leads) {
+    const motivo = calcularMotivo(lead, ultimaReuniaoPorLead.get(lead.id));
+    leadsPorMotivo[motivo].push(lead);
+  }
 
   return (
     <>
-      <PageHeader titulo="Base de Leads" />
+      <PageHeader titulo="Base de leads" />
 
       <main className="px-6 py-6">
-        <KanbanBoard
-          niveis={niveis}
-          leadsPorNivel={leadsPorNivel}
-          souAdmin={souAdmin}
-          usuarioAtualId={user?.id ?? null}
-        />
+        <p className="mb-4 text-sm text-neutral-500">
+          {leads.length} lead{leads.length === 1 ? "" : "s"} que não viraram vendas,
+          divididos pelos motivos
+        </p>
+
+        <BaseLeadsBoard leadsPorMotivo={leadsPorMotivo} nomePorUsuario={nomePorUsuario} />
       </main>
     </>
   );

@@ -1,7 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
+import { FiltroPeriodoVendas } from "@/components/filtro-periodo-vendas";
 import { IconeMoeda } from "@/components/icons";
+
+const NOMES_MES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
 
 type LeadVendido = {
   id: string;
@@ -30,24 +36,57 @@ function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default async function VendasPage() {
+export default async function VendasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periodo?: string }>;
+}) {
+  const { periodo: periodoFiltro } = await searchParams;
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: leadsData }, { data: usuarioAtual }] = await Promise.all([
-    supabase
-      .from("leads")
-      .select("id, nome, telefone_e164, valor_venda, receita_venda, vendido_em, responsavel_id")
-      .eq("status", "vendido")
-      .is("arquivado_em", null)
-      .order("vendido_em", { ascending: false }),
+  let consulta = supabase
+    .from("leads")
+    .select("id, nome, telefone_e164, valor_venda, receita_venda, vendido_em, responsavel_id")
+    .eq("status", "vendido")
+    .is("arquivado_em", null)
+    .order("vendido_em", { ascending: false });
+
+  if (periodoFiltro && /^\d{4}-\d{2}$/.test(periodoFiltro)) {
+    const [ano, mes] = periodoFiltro.split("-").map(Number);
+    const inicio = new Date(ano, mes - 1, 1);
+    const fim = new Date(ano, mes, 1);
+    consulta = consulta.gte("vendido_em", inicio.toISOString()).lt("vendido_em", fim.toISOString());
+  }
+
+  const [{ data: leadsData }, { data: usuarioAtual }, { data: todasVendasData }] = await Promise.all([
+    consulta,
     user
       ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("leads")
+      .select("vendido_em")
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .not("vendido_em", "is", null),
   ]);
+
+  const chavesPeriodo = new Set(
+    (todasVendasData ?? []).map((v) => {
+      const data = new Date(v.vendido_em as string);
+      return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
+    })
+  );
+  const periodos = Array.from(chavesPeriodo)
+    .sort((a, b) => (a < b ? 1 : -1))
+    .map((chave) => {
+      const [ano, mes] = chave.split("-").map(Number);
+      return { valor: chave, nome: `${NOMES_MES[mes - 1]} de ${ano}` };
+    });
 
   const leads = (leadsData ?? []) as LeadVendido[];
   const souAdmin = usuarioAtual?.papel === "admin";
@@ -72,21 +111,28 @@ export default async function VendasPage() {
 
   return (
     <>
-      <PageHeader titulo="Clientes" />
+      <PageHeader
+        titulo="Clientes"
+        acao={
+          periodos.length > 0 ? (
+            <FiltroPeriodoVendas periodos={periodos} periodoInicial={periodoFiltro} />
+          ) : undefined
+        }
+      />
 
       <main className="px-6 py-6">
-        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950 via-emerald-700 to-teal-500 p-7 text-white shadow-2xl shadow-emerald-950/50 ring-1 ring-white/10">
+        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
           <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
 
-          <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-emerald-200">
+          <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
             <IconeMoeda className="h-3.5 w-3.5" />
             Receita total em vendas
           </p>
           <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
             {formatarMoeda(totalReceita)}
           </p>
-          <p className="relative mt-2 text-sm font-medium text-emerald-100">
+          <p className="relative mt-2 text-sm font-medium text-green-100">
             {leads.length} venda{leads.length === 1 ? "" : "s"} fechada
             {leads.length === 1 ? "" : "s"}
           </p>
