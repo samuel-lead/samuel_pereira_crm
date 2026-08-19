@@ -250,7 +250,7 @@ export function KanbanBoard({
                         }
                         className={`kanban-card group rounded-xl border p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg ${
                           atrasado
-                            ? "border-red-300 bg-red-50"
+                            ? "border-red-400 bg-red-100"
                             : "border-neutral-200 bg-white"
                         } ${arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"}`}
                       >

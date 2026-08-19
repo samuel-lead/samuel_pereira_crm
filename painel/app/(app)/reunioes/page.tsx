@@ -6,7 +6,9 @@ import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import {
   buscarMetaReceitaMes,
+  buscarUltimaVenda,
   calcularReceitaOrg,
+  calcularVendasHoje,
   inicioDoMes,
 } from "@/lib/metricas";
 import {
@@ -21,6 +23,18 @@ const NIVEL_OPORTUNIDADES = 7;
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatarTempoDecorrido(dataISO: string) {
+  const diffMs = Date.now() - new Date(dataISO).getTime();
+  const minutos = Math.floor(diffMs / 60_000);
+  const horas = Math.floor(minutos / 60);
+  const dias = Math.floor(horas / 24);
+
+  if (dias > 0) return `há ${dias} dia${dias === 1 ? "" : "s"}`;
+  if (horas > 0) return `há ${horas} hora${horas === 1 ? "" : "s"}`;
+  if (minutos > 0) return `há ${minutos} minuto${minutos === 1 ? "" : "s"}`;
+  return "agora mesmo";
 }
 
 type LeadResumo = {
@@ -117,12 +131,17 @@ export default async function VendasPage({
 
   const orgId = usuarioAtual?.org_id ?? null;
 
-  const [receitaOrgMes, metaReceita] = orgId
+  const inicioHoje = new Date(agora);
+  inicioHoje.setHours(0, 0, 0, 0);
+
+  const [receitaOrgMes, metaReceita, vendasHoje, ultimaVenda] = orgId
     ? await Promise.all([
         calcularReceitaOrg(supabase, orgId, inicioDoMes(agora), amanha),
         buscarMetaReceitaMes(supabase, orgId, agora.getFullYear(), agora.getMonth() + 1),
+        calcularVendasHoje(supabase, orgId, inicioHoje, amanha),
+        buscarUltimaVenda(supabase, orgId),
       ])
-    : [null, null];
+    : [null, null, null, null];
 
   const leadsComAtividade = await anexarUltimaAtividade(supabase, leads);
 
@@ -166,9 +185,31 @@ export default async function VendasPage({
         )}
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-neutral-500">
-            {leads.length} lead{leads.length === 1 ? "" : "s"} em vendas
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm text-neutral-500">
+              {leads.length} lead{leads.length === 1 ? "" : "s"} em vendas
+            </p>
+            {vendasHoje !== null && (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                {vendasHoje.vendas} venda{vendasHoje.vendas === 1 ? "" : "s"} hoje
+              </span>
+            )}
+            {vendasHoje !== null && (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                {formatarMoeda(vendasHoje.faturamento)} faturamento hoje
+              </span>
+            )}
+            {vendasHoje !== null && (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                {formatarMoeda(vendasHoje.receita)} receita hoje
+              </span>
+            )}
+            {ultimaVenda !== null && (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                Última venda {formatarTempoDecorrido(ultimaVenda)}
+              </span>
+            )}
+          </div>
           {receitaOrgMes !== null && (
             <MetaReceitaWidget
               compacta

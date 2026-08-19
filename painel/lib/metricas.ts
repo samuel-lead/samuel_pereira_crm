@@ -160,6 +160,62 @@ export async function calcularMetricas(
   };
 }
 
+export type VendasHoje = {
+  vendas: number;
+  faturamento: number;
+  receita: number;
+};
+
+// Vendas fechadas hoje — soma tudo da org, é visão de time (mesma regra da
+// receita do mês, que também é da empresa toda).
+export async function calcularVendasHoje(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicioHoje: Date,
+  amanha: Date
+): Promise<VendasHoje> {
+  const { data } = await supabase
+    .from("leads")
+    .select("valor_venda, receita_venda")
+    .eq("org_id", orgId)
+    .eq("status", "vendido")
+    .is("arquivado_em", null)
+    .gte("vendido_em", inicioHoje.toISOString())
+    .lt("vendido_em", amanha.toISOString());
+
+  const vendas = data?.length ?? 0;
+  const faturamento = (data ?? []).reduce(
+    (soma, l) => soma + Number(l.valor_venda ?? 0),
+    0
+  );
+  const receita = (data ?? []).reduce(
+    (soma, l) => soma + Number(l.receita_venda ?? 0),
+    0
+  );
+
+  return { vendas, faturamento, receita };
+}
+
+// Quando foi a última venda fechada pela org, não importa quem — usado pra
+// mostrar "há quanto tempo não vende ninguém".
+export async function buscarUltimaVenda(
+  supabase: SupabaseServerClient,
+  orgId: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("leads")
+    .select("vendido_em")
+    .eq("org_id", orgId)
+    .eq("status", "vendido")
+    .is("arquivado_em", null)
+    .not("vendido_em", "is", null)
+    .order("vendido_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return data?.vendido_em ?? null;
+}
+
 export type VendaPorCanal = {
   canal: string;
   quantidade: number;

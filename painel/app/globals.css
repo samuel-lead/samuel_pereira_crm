@@ -381,9 +381,9 @@ body {
   border-color: #e5e5e5;
 }
 
-.dark .kanban-card.border-red-300 {
-  background-color: #fef2f2;
-  border-color: #fca5a5;
+.dark .kanban-card.border-red-400 {
+  background-color: #fee2e2;
+  border-color: #f87171;
 }
 
 .dark .kanban-card .text-neutral-900 {
