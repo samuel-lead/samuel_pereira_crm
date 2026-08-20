@@ -35,11 +35,11 @@ export default function LoginPage() {
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-900 p-6">
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-600/30 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 right-1/4 h-80 w-80 rounded-full bg-sky-500/20 blur-3xl" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#2563eb]/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 right-1/4 h-80 w-80 rounded-full bg-[#60a5fa]/15 blur-3xl" />
 
       <div className="relative z-10 mb-8 flex flex-col items-center gap-3">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-sky-500 text-lg font-bold text-white shadow-lg shadow-blue-900/40">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2563eb] text-lg font-bold text-white shadow-lg shadow-black/30">
           MV
         </span>
         <span className="text-2xl font-bold text-white">Meu Vendedor</span>
@@ -83,7 +83,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={carregando}
-          className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-900/30 transition hover:brightness-110 disabled:opacity-50"
+          className="w-full rounded-lg bg-[#2563eb] px-3 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 transition hover:brightness-110 disabled:opacity-50"
         >
           {carregando ? "Entrando..." : "Entrar"}
         </button>

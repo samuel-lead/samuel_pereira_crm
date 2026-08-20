@@ -11,16 +11,18 @@ const estadoInicial: EstadoFormulario = { erro: null };
 
 export function NovoLeadForm({
   usuarios,
+  origens,
   souAdmin = true,
 }: {
   usuarios: { id: string; nome: string; funcao?: string | null }[];
+  origens: { id: string; nome: string }[];
   souAdmin?: boolean;
 }) {
   const [estado, acaoFormulario] = useActionState(criarLead, estadoInicial);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-sky-500 px-6 py-6 text-white">
+      <div className="relative overflow-hidden bg-[#2563eb] px-6 py-6 text-white">
         <IconePessoaMais className="pointer-events-none absolute -right-4 -top-4 h-28 w-28 text-white/10" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -79,7 +81,7 @@ export function NovoLeadForm({
           <label className="text-sm font-medium text-neutral-700">
             Origem
           </label>
-          <OrigemSelect />
+          <OrigemSelect origens={origens} />
         </div>
 
         <div className="space-y-1">
@@ -111,7 +113,7 @@ export function NovoLeadForm({
 
         <button
           type="submit"
-          className="w-full rounded-md bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md hover:brightness-105"
+          className="w-full rounded-md bg-[#2563eb] px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md hover:brightness-105"
         >
           Salvar lead
         </button>

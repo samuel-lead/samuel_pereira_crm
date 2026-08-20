@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
@@ -165,28 +166,28 @@ export default async function LeadsPage({
 
   return (
     <>
-      <PageHeader
-        titulo="Gestão dos leads"
-        acao={
-          <div className="flex items-center gap-3">
-            <FiltrosLeads
-              usuarios={usuarios}
-              origens={origens}
-              usuarioInicial={usuarioFiltro}
-              origemInicial={origemFiltro}
-            />
-            <Link
-              href="/leads/novo"
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-            >
-              + Novo lead
-            </Link>
-          </div>
-        }
-      />
+      <BarraFixaKanban>
+        <PageHeader
+          titulo="Gestão dos leads"
+          acao={
+            <div className="flex items-center gap-3">
+              <FiltrosLeads
+                usuarios={usuarios}
+                origens={origens}
+                usuarioInicial={usuarioFiltro}
+                origemInicial={origemFiltro}
+              />
+              <Link
+                href="/leads/novo"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+              >
+                + Novo lead
+              </Link>
+            </div>
+          }
+        />
 
-      <main className="px-6 py-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-6 py-4">
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-sm text-neutral-500">
               {leads.length} lead{leads.length === 1 ? "" : "s"} sendo trabalhados
@@ -221,7 +222,12 @@ export default async function LeadsPage({
             />
           )}
         </div>
+      </BarraFixaKanban>
 
+      <main
+        className="flex flex-col overflow-hidden px-6 py-6"
+        style={{ height: "calc(100vh - var(--kanban-barra-altura, 0px))" }}
+      >
         <KanbanBoard
           niveis={niveis}
           leadsPorNivel={leadsPorNivel}

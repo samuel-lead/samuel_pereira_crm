@@ -29,22 +29,22 @@ export const CORES_NIVEL: Record<
     solido: "bg-gradient-to-br from-slate-500 to-slate-600",
   },
   2: {
-    faixa: "bg-sky-500",
-    texto: "text-sky-700",
-    badge: "bg-sky-200 text-sky-700",
-    header: "bg-sky-50",
-    borda: "border-sky-200",
-    pilula: "bg-sky-600 text-white",
-    solido: "bg-gradient-to-br from-sky-500 to-sky-600",
+    faixa: "bg-slate-500",
+    texto: "text-slate-700",
+    badge: "bg-slate-200 text-slate-700",
+    header: "bg-slate-50",
+    borda: "border-slate-200",
+    pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
   },
   3: {
-    faixa: "bg-blue-500",
-    texto: "text-blue-700",
-    badge: "bg-blue-200 text-blue-700",
-    header: "bg-blue-50",
-    borda: "border-blue-200",
-    pilula: "bg-blue-600 text-white",
-    solido: "bg-gradient-to-br from-blue-500 to-blue-600",
+    faixa: "bg-slate-500",
+    texto: "text-slate-700",
+    badge: "bg-slate-200 text-slate-700",
+    header: "bg-slate-50",
+    borda: "border-slate-200",
+    pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
   },
   4: {
     faixa: "bg-green-600",
@@ -65,13 +65,13 @@ export const CORES_NIVEL: Record<
     solido: "bg-gradient-to-br from-red-500 to-red-600",
   },
   6: {
-    faixa: "bg-green-600",
-    texto: "text-green-700",
-    badge: "bg-green-200 text-green-700",
-    header: "bg-green-50",
-    borda: "border-green-300",
-    pilula: "bg-green-700 text-white",
-    solido: "bg-gradient-to-br from-green-600 to-green-700",
+    faixa: "bg-slate-500",
+    texto: "text-slate-700",
+    badge: "bg-slate-200 text-slate-700",
+    header: "bg-slate-50",
+    borda: "border-slate-200",
+    pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
   },
   7: {
     faixa: "bg-green-600",
@@ -106,7 +106,6 @@ export const CORES_NIVEL: Record<
 };
 
 export function corDoNivel(ordem: number) {
-  if (ordem === 2 || ordem === 3) return CORES_NIVEL[1];
   return CORES_NIVEL[ordem] ?? CORES_NIVEL[1];
 }
 

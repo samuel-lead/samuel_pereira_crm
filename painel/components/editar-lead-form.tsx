@@ -39,6 +39,7 @@ export function EditarLeadForm({
   niveis,
   numerosVisiveis,
   usuarios,
+  origens,
   souAdmin = true,
   podeEditar = true,
   preSelecionarReuniao = false,
@@ -47,6 +48,7 @@ export function EditarLeadForm({
   niveis: NivelResumo[];
   numerosVisiveis: Record<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
+  origens: { id: string; nome: string }[];
   souAdmin?: boolean;
   podeEditar?: boolean;
   preSelecionarReuniao?: boolean;
@@ -105,7 +107,7 @@ export function EditarLeadForm({
 
         <div className="space-y-1">
           <label className={labelClasse}>Origem</label>
-          <OrigemSelect valorInicial={lead.origem ?? ""} />
+          <OrigemSelect origens={origens} valorInicial={lead.origem ?? ""} />
         </div>
 
         <div className="space-y-1">

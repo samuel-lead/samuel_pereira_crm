@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ORDEM_OPORTUNIDADE_FUTURA } from "@/lib/niveis";
+import { garantirOrigem } from "@/lib/origens/actions";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -216,6 +217,8 @@ export async function criarLead(
     return { erro: mensagemAmigavel(error.code, error.message) };
   }
 
+  await garantirOrigem(supabase, usuario.org_id, origem);
+
   revalidatePath("/leads");
   redirect("/leads");
 }
@@ -338,6 +341,8 @@ export async function atualizarLead(
   if (error) {
     return { erro: mensagemAmigavel(error.code, error.message) };
   }
+
+  await garantirOrigem(supabase, usuario.org_id, origem);
 
   if (nivelMudou) {
     const { error: erroHistorico } = await supabase

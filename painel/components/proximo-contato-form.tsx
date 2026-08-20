@@ -53,12 +53,12 @@ export function ProximoContatoForm({
   const atrasado = proximoContatoEm ? new Date(proximoContatoEm).getTime() < Date.now() : false;
 
   return (
-    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm">
-      <h2 className="mb-1 text-sm font-semibold text-blue-800">Próximo contato</h2>
+    <div className="rounded-lg border border-teal-200 bg-teal-50 p-4 shadow-sm">
+      <h2 className="mb-1 text-sm font-semibold text-teal-800">Próximo contato</h2>
 
       {proximoContatoEm ? (
-        <div className="mb-3 flex items-center justify-between gap-2 rounded-md border border-blue-200 bg-white/60 p-2 text-xs">
-          <p className={atrasado ? "font-semibold text-red-600" : "font-semibold text-blue-800"}>
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-md border border-teal-200 bg-white/60 p-2 text-xs">
+          <p className={atrasado ? "font-semibold text-red-600" : "font-semibold text-teal-800"}>
             {atrasado ? "Atrasado — era pra " : "Marcado pra "}
             {formatarData(proximoContatoEm)}
           </p>
@@ -66,13 +66,13 @@ export function ProximoContatoForm({
             type="button"
             onClick={aoCancelar}
             disabled={pendente}
-            className="shrink-0 text-blue-600 underline hover:text-blue-800 disabled:opacity-50"
+            className="shrink-0 text-teal-600 underline hover:text-teal-800 disabled:opacity-50"
           >
             Cancelar
           </button>
         </div>
       ) : (
-        <p className="mb-3 text-xs text-blue-700">
+        <p className="mb-3 text-xs text-teal-700">
           Marque quando um lead pediu para entrar em contato ou quando será a sua
           próxima atividade com ele.
         </p>
@@ -83,7 +83,7 @@ export function ProximoContatoForm({
           type="datetime-local"
           name="proximo_follow_em"
           required
-          className="w-full rounded-md border border-blue-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-md border border-teal-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
 
         {erro && <p className="text-sm text-red-600">{erro}</p>}

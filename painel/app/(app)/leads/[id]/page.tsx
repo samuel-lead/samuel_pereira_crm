@@ -88,6 +88,7 @@ export default async function EditarLeadPage({
     { data: reunioesData },
     { data: usuariosData },
     { data: usuarioAtual },
+    { data: origensData },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -112,6 +113,7 @@ export default async function EditarLeadPage({
     user
       ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
       : Promise.resolve({ data: null }),
+    supabase.from("origens").select("id, nome").order("nome"),
   ]);
 
   if (!lead) {
@@ -123,6 +125,7 @@ export default async function EditarLeadPage({
   const interacoes = (interacoesData ?? []) as Interacao[];
   const reunioes = (reunioesData ?? []) as Reuniao[];
   const usuarios = usuariosData ?? [];
+  const origens = origensData ?? [];
   const souAdmin = usuarioAtual?.papel === "admin";
   const souCloserAtivo = reunioes.some(
     (r) => r.status === "marcada" && r.closer_id === user?.id
@@ -201,6 +204,7 @@ export default async function EditarLeadPage({
             niveis={niveis}
             numerosVisiveis={numerosVisiveis}
             usuarios={usuarios}
+            origens={origens}
             souAdmin={souAdmin}
             podeEditar={podeEditar}
             preSelecionarReuniao={marcarReuniao === "1"}
@@ -287,7 +291,7 @@ export default async function EditarLeadPage({
                 />
                 <button
                   type="submit"
-                  className="w-full rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+                  className="w-full rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-700 transition hover:bg-teal-100"
                 >
                   Adicionar à linha do tempo
                 </button>

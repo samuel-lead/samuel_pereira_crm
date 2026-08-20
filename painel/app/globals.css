@@ -194,6 +194,10 @@ body {
   background-color: rgba(220, 38, 38, 0.15);
 }
 
+.dark .bg-red-100 {
+  background-color: rgba(248, 113, 113, 0.28);
+}
+
 .dark .bg-sky-50 {
   background-color: rgba(2, 132, 199, 0.15);
 }
@@ -220,6 +224,14 @@ body {
 
 .dark .bg-green-50 {
   background-color: rgba(22, 163, 74, 0.15);
+}
+
+.dark .bg-violet-50 {
+  background-color: rgba(124, 58, 237, 0.15);
+}
+
+.dark .bg-emerald-50 {
+  background-color: rgba(5, 150, 105, 0.15);
 }
 
 /* Selos/etiquetas coloridos (ícone de integração, cargo do usuário, chip
@@ -310,6 +322,14 @@ body {
   background-color: rgba(22, 163, 74, 0.3);
 }
 
+.dark .bg-violet-200 {
+  background-color: rgba(124, 58, 237, 0.3);
+}
+
+.dark .bg-emerald-200 {
+  background-color: rgba(5, 150, 105, 0.3);
+}
+
 .dark .text-slate-700 {
   color: #cbd5e1;
 }
@@ -371,110 +391,94 @@ body {
   border-color: rgba(22, 163, 74, 0.5);
 }
 
-/* Pedido do Samuel: os cards de lead no Kanban continuam brancos mesmo no
-   modo escuro — "flutuam" no fundo escuro em vez de escurecer junto. Como
-   as regras acima escurecem essas mesmas classes em qualquer lugar, aqui
-   a gente devolve a cor clara original só para o que está dentro de um
-   ".kanban-card" (mais específico, então ganha da regra genérica). */
-.dark .kanban-card {
+.dark .text-red-600 {
+  color: #f87171;
+}
+
+/* O Samuel prefere os cards do Kanban brancos mesmo no modo escuro — só o
+   resto da tela escurece. Cada regra abaixo tem 3 classes (".dark .kanban-card
+   .algo" ou ".dark .kanban-card.algo"), então é mais específica que as
+   genéricas ".dark .bg-white" etc. acima e ganha só dentro do card. */
+.dark .kanban-card.bg-white {
   background-color: #f8f8f6;
+}
+
+.dark .kanban-card.border-neutral-200 {
   border-color: #e5e5e5;
 }
 
-.dark .kanban-card.border-red-400 {
-  background-color: #fee2e2;
-  border-color: #f87171;
+.dark .kanban-card.border-t-neutral-200 {
+  border-top-color: #e5e5e5;
+}
+
+.dark .kanban-card.border-t-red-400 {
+  border-top-color: #f87171;
+}
+
+.dark .kanban-card .bg-neutral-200 {
+  background-color: #e5e5e5;
 }
 
 .dark .kanban-card .text-neutral-900 {
   color: #171717;
 }
 
-.dark .kanban-card .text-neutral-500 {
-  color: #737373;
+.dark .kanban-card .text-neutral-700 {
+  color: #404040;
 }
 
 .dark .kanban-card .text-neutral-600 {
   color: #525252;
 }
 
-.dark .kanban-card .text-neutral-800 {
-  color: #262626;
+.dark .kanban-card .text-neutral-500 {
+  color: #737373;
+}
+
+.dark .kanban-card .text-neutral-400 {
+  color: #a3a3a3;
+}
+
+.dark .kanban-card .border-neutral-100 {
+  border-color: #f5f5f5;
+}
+
+.dark .kanban-card .bg-red-100 {
+  background-color: #fee2e2;
+}
+
+.dark .kanban-card .text-red-700 {
+  color: #b91c1c;
 }
 
 .dark .kanban-card .text-red-600 {
   color: #dc2626;
 }
 
-.dark .kanban-card .bg-neutral-100 {
-  background-color: #f5f5f5;
+.dark .kanban-card .text-teal-600 {
+  color: #0d9488;
 }
 
-.dark .kanban-card .bg-neutral-300 {
-  background-color: #d4d4d4;
-}
-
-.dark .kanban-card .bg-slate-200 {
-  background-color: #e2e8f0;
-}
-.dark .kanban-card .text-slate-700 {
-  color: #334155;
-}
-
-.dark .kanban-card .bg-sky-200 {
-  background-color: #bae6fd;
-}
-.dark .kanban-card .text-sky-700 {
-  color: #0369a1;
-}
-
-.dark .kanban-card .bg-blue-200 {
-  background-color: #bfdbfe;
-}
-.dark .kanban-card .text-blue-700 {
-  color: #1d4ed8;
-}
-
-/* Mesmos selos, mas na tonalidade -100 (ex.: chip "Proposta: R$X", valor
-   da venda) — reaproveita o texto -700 já restaurado acima. */
 .dark .kanban-card .bg-green-100 {
   background-color: #dcfce7;
 }
+
+.dark .kanban-card .text-green-700 {
+  color: #15803d;
+}
+
 .dark .kanban-card .bg-amber-100 {
   background-color: #fef3c7;
 }
-.dark .kanban-card .bg-sky-100 {
-  background-color: #e0f2fe;
-}
-.dark .kanban-card .bg-blue-100 {
-  background-color: #dbeafe;
-}
 
-
-.dark .kanban-card .bg-red-200 {
-  background-color: #fecaca;
-}
-.dark .kanban-card .text-red-700 {
-  color: #b91c1c;
-}
-
-.dark .kanban-card .bg-amber-200 {
-  background-color: #fde68a;
-}
 .dark .kanban-card .text-amber-700 {
   color: #b45309;
 }
 
-.dark .kanban-card .bg-stone-200 {
-  background-color: #e7e5e4;
-}
-.dark .kanban-card .text-stone-700 {
-  color: #44403c;
-}
-
-.dark .kanban-card .bg-green-200 {
-  background-color: #bbf7d0;
-}
-.dark .kanban-card .text-green-700 {
-  color: #15803d;
+/* No modo claro, a coluna do Kanban (bg-neutral-50) ficava quase da mesma
+   cor do fundo da página e dos cards brancos — tudo parecia "apagado",
+   sem separação visual. Escurece só a coluna, só no claro (o escuro já
+   ficou bom, não mexe nele). */
+.kanban-column {
+  background-color: #f4f5f7;
 }

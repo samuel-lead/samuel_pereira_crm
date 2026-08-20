@@ -12,10 +12,10 @@ function formatarPercentual(valor: number | null) {
 
 const ESQUEMAS = {
   violeta: {
-    fundo: "bg-blue-50",
-    borda: "border-blue-200",
-    icone: "bg-blue-600 text-white",
-    texto: "text-blue-700",
+    fundo: "bg-violet-50",
+    borda: "border-violet-200",
+    icone: "bg-violet-600 text-white",
+    texto: "text-violet-700",
   },
   ceu: {
     fundo: "bg-sky-50",
@@ -77,7 +77,7 @@ export function BonusSdrTabela({ dados, periodo }: { dados: BonusSdr[]; periodo?
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-600 via-amber-500 to-orange-400 p-7 text-white shadow-2xl shadow-amber-950/30 ring-1 ring-white/10">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-600 via-amber-500 to-blue-400 p-7 text-white shadow-2xl shadow-amber-950/30 ring-1 ring-white/10">
         <IconeEstrela className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.12]" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
 

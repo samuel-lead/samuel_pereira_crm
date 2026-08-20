@@ -118,3 +118,78 @@ export async function atualizarMetasConfig(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/metricas");
 }
+
+export type EstadoOrigem = { erro: string | null };
+
+async function usuarioAdminOuErro() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Não autenticado");
+  }
+
+  const { data: usuario, error } = await supabase
+    .from("usuarios")
+    .select("org_id, papel")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !usuario) {
+    throw new Error("Usuário não encontrado");
+  }
+
+  if (usuario.papel !== "admin") {
+    throw new Error("Só admin pode gerenciar as origens");
+  }
+
+  return { supabase, usuario };
+}
+
+export async function criarOrigem(
+  _estadoAnterior: EstadoOrigem,
+  formData: FormData
+): Promise<EstadoOrigem> {
+  const { supabase, usuario } = await usuarioAdminOuErro();
+
+  const nome = String(formData.get("nome") ?? "").trim();
+  if (!nome) {
+    return { erro: "Digite o nome da origem" };
+  }
+
+  const { error } = await supabase.from("origens").insert({ org_id: usuario.org_id, nome });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { erro: "Essa origem já existe" };
+    }
+    return { erro: error.message };
+  }
+
+  revalidatePath("/configuracoes");
+  return { erro: null };
+}
+
+export async function renomearOrigem(origemId: string, novoNome: string) {
+  const { supabase } = await usuarioAdminOuErro();
+
+  const nome = novoNome.trim();
+  if (!nome) {
+    throw new Error("O nome da origem não pode ficar em branco");
+  }
+
+  const { error } = await supabase.rpc("renomear_origem", {
+    origem_id: origemId,
+    novo_nome: nome,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/leads");
+  revalidatePath("/leads/novo");
+}

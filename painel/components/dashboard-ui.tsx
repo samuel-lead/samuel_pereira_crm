@@ -26,10 +26,10 @@ function formatarPercentual(valor: number | null) {
 
 const ESQUEMAS = {
   violeta: {
-    fundo: "bg-blue-50",
-    borda: "border-blue-200",
-    icone: "bg-blue-600 text-white",
-    texto: "text-blue-700",
+    fundo: "bg-violet-50",
+    borda: "border-violet-200",
+    icone: "bg-violet-600 text-white",
+    texto: "text-violet-700",
   },
   ceu: {
     fundo: "bg-sky-50",

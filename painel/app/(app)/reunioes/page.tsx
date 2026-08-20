@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
@@ -162,66 +163,73 @@ export default async function VendasPage({
 
   return (
     <>
-      <PageHeader
-        titulo="Gestão de vendas"
-        acao={
-          <FiltrosLeads
-            usuarios={usuarios}
-            origens={origens}
-            usuarioInicial={usuarioFiltro}
-            origemInicial={origemFiltro}
-            baseHref="/reunioes"
-          />
-        }
-      />
-
-      <main className="px-6 py-6">
-        {leadsComProposta.length > 0 && (
-          <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
-            <span>💰</span>
-            <span>
-              {leadsComProposta.length} proposta{leadsComProposta.length === 1 ? "" : "s"} em
-              aberto — {formatarMoeda(totalPropostas)}
-            </span>
-          </div>
-        )}
-
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-sm text-neutral-500">
-              {leads.length} lead{leads.length === 1 ? "" : "s"} em vendas
-            </p>
-            {vendasHoje !== null && (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                {vendasHoje.vendas} venda{vendasHoje.vendas === 1 ? "" : "s"} hoje
-              </span>
-            )}
-            {vendasHoje !== null && (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                {formatarMoeda(vendasHoje.faturamento)} faturamento hoje
-              </span>
-            )}
-            {vendasHoje !== null && (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                {formatarMoeda(vendasHoje.receita)} receita hoje
-              </span>
-            )}
-            {ultimaVenda !== null && (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                Última venda {formatarTempoDecorrido(ultimaVenda)}
-              </span>
-            )}
-          </div>
-          {receitaOrgMes !== null && (
-            <MetaReceitaWidget
-              compacta
-              metaReceita={metaReceita}
-              receitaAtual={receitaOrgMes}
-              podeEditar={souAdmin}
+      <BarraFixaKanban>
+        <PageHeader
+          titulo="Gestão de vendas"
+          acao={
+            <FiltrosLeads
+              usuarios={usuarios}
+              origens={origens}
+              usuarioInicial={usuarioFiltro}
+              origemInicial={origemFiltro}
+              baseHref="/reunioes"
             />
-          )}
-        </div>
+          }
+        />
 
+        <div className="space-y-3 border-b border-neutral-200 px-6 py-4">
+          {leadsComProposta.length > 0 && (
+            <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
+              <span>💰</span>
+              <span>
+                {leadsComProposta.length} proposta{leadsComProposta.length === 1 ? "" : "s"} em
+                aberto — {formatarMoeda(totalPropostas)}
+              </span>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm text-neutral-500">
+                {leads.length} lead{leads.length === 1 ? "" : "s"} em vendas
+              </p>
+              {vendasHoje !== null && (
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                  {vendasHoje.vendas} venda{vendasHoje.vendas === 1 ? "" : "s"} hoje
+                </span>
+              )}
+              {vendasHoje !== null && (
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                  {formatarMoeda(vendasHoje.faturamento)} faturamento hoje
+                </span>
+              )}
+              {vendasHoje !== null && (
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                  {formatarMoeda(vendasHoje.receita)} receita hoje
+                </span>
+              )}
+              {ultimaVenda !== null && (
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                  Última venda {formatarTempoDecorrido(ultimaVenda)}
+                </span>
+              )}
+            </div>
+            {receitaOrgMes !== null && (
+              <MetaReceitaWidget
+                compacta
+                metaReceita={metaReceita}
+                receitaAtual={receitaOrgMes}
+                podeEditar={souAdmin}
+              />
+            )}
+          </div>
+        </div>
+      </BarraFixaKanban>
+
+      <main
+        className="flex flex-col overflow-hidden px-6 py-6"
+        style={{ height: "calc(100vh - var(--kanban-barra-altura, 0px))" }}
+      >
         <KanbanBoard
           niveis={niveis}
           leadsPorNivel={leadsPorNivel}

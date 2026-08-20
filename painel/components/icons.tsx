@@ -98,6 +98,39 @@ export function IconeMoeda(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconeChevronBaixo(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" {...props}>
+      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconeTelefone(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M4 5c0-.6.4-1 1-1h2.6c.5 0 .9.3 1 .8l1 3.6c.1.4 0 .8-.3 1.1L7.9 10.9c1 2.4 3 4.4 5.4 5.4l1.4-1.4c.3-.3.7-.4 1.1-.3l3.6 1c.5.1.8.5.8 1V19c0 .6-.4 1-1 1h-1.5C9.5 20 4 14.5 4 6.5V5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconeTag(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M11.5 4H6a1 1 0 0 0-1 1v5.5c0 .3.1.5.3.7l8 8c.4.4 1 .4 1.4 0l5.5-5.5c.4-.4.4-1 0-1.4l-8-8c-.2-.2-.4-.3-.7-.3Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconeWhatsapp(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
