@@ -175,7 +175,7 @@ export function KanbanBoard({
                     title={nivel.nome}
                     className="truncate text-sm font-semibold text-neutral-900"
                   >
-                    {numeroVisivel ? `N${numeroVisivel} ` : ""}
+                    {numeroVisivel ? `N${numeroVisivel} - ` : ""}
                     {nivel.nome}
                   </h2>
                   <p className="mt-0.5 truncate text-xs text-neutral-400">
