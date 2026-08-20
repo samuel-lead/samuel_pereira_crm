@@ -74,7 +74,7 @@ export async function updateSession(request: NextRequest) {
   ) {
     const { data: usuario } = await supabase
       .from("usuarios")
-      .select("papel, paginas_permitidas, super_admin, orgs(status)")
+      .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status)")
       .eq("id", user.id)
       .single();
 
@@ -119,6 +119,29 @@ export async function updateSession(request: NextRequest) {
           return NextResponse.redirect(url);
         }
       }
+    }
+
+    // O middleware já buscou o usuário aqui — manda pro resto da
+    // requisição via header em vez de layout e página consultarem o
+    // Supabase de novo pra achar a mesma coisa (isso dobrava o tempo de
+    // toda navegação: duas idas no banco no middleware + duas de novo
+    // na página).
+    if (usuario) {
+      supabaseResponse.headers.set("x-user-id", user.id);
+      supabaseResponse.headers.set("x-user-email", encodeURIComponent(user.email ?? ""));
+      supabaseResponse.headers.set("x-user-org-id", usuario.org_id ?? "");
+      supabaseResponse.headers.set("x-user-nome", encodeURIComponent(usuario.nome ?? ""));
+      supabaseResponse.headers.set("x-user-papel", usuario.papel ?? "");
+      supabaseResponse.headers.set("x-user-funcao", usuario.funcao ?? "");
+      supabaseResponse.headers.set(
+        "x-user-paginas-permitidas",
+        encodeURIComponent(JSON.stringify(usuario.paginas_permitidas ?? []))
+      );
+      supabaseResponse.headers.set(
+        "x-user-foto-url",
+        encodeURIComponent(usuario.foto_url ?? "")
+      );
+      supabaseResponse.headers.set("x-user-super-admin", usuario.super_admin ? "1" : "0");
     }
   }
 

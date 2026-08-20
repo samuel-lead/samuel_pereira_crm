@@ -1,5 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 
@@ -41,13 +41,41 @@ export type UsuarioAtual = {
 };
 
 // auth.getUser() e a busca em "usuarios" rodavam de novo em CADA página E no
-// layout — várias idas na rede pra pegar a mesma coisa numa só requisição.
-// React.cache() garante que só executa uma vez por requisição, mesmo
-// chamado de vários Server Components diferentes.
+// layout, além do middleware já ter feito as duas antes — cada navegação
+// batia no Supabase 4 vezes só pra saber quem tá logado. O middleware
+// (lib/supabase/middleware.ts) já busca isso e manda via header; aqui só
+// lê o header. React.cache() garante que roda uma vez por requisição, não
+// importa quantos componentes chamem. Só volta a consultar o Supabase se,
+// por algum motivo, a requisição não passou pelo middleware.
 export const usuarioAutenticado = cache(async (): Promise<{
   user: User | null;
   usuario: UsuarioAtual | null;
 }> => {
+  const headerList = await headers();
+  const idViaHeader = headerList.get("x-user-id");
+
+  if (idViaHeader) {
+    const usuario: UsuarioAtual = {
+      id: idViaHeader,
+      org_id: headerList.get("x-user-org-id") ?? "",
+      nome: decodeURIComponent(headerList.get("x-user-nome") ?? ""),
+      papel: headerList.get("x-user-papel") ?? "",
+      funcao: headerList.get("x-user-funcao") || null,
+      paginas_permitidas: JSON.parse(
+        decodeURIComponent(headerList.get("x-user-paginas-permitidas") ?? "%5B%5D")
+      ),
+      foto_url: decodeURIComponent(headerList.get("x-user-foto-url") ?? "") || null,
+      super_admin: headerList.get("x-user-super-admin") === "1",
+    };
+
+    const user = {
+      id: idViaHeader,
+      email: decodeURIComponent(headerList.get("x-user-email") ?? "") || undefined,
+    } as User;
+
+    return { user, usuario };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
