@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
-import { registrarNota, registrarLigacao, excluirInteracao } from "@/lib/leads/actions";
+import { registrarNota, excluirInteracao } from "@/lib/leads/actions";
+import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
@@ -137,7 +138,6 @@ export default async function EditarLeadPage({
     : null;
   const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
   const registrarNotaComId = registrarNota.bind(null, leadTipado.id);
-  const registrarLigacaoComId = registrarLigacao.bind(null, leadTipado.id);
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
 
   return (
@@ -258,16 +258,7 @@ export default async function EditarLeadPage({
             )
           )}
 
-          {podeEditar && (
-            <form action={registrarLigacaoComId}>
-              <button
-                type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-              >
-                Registrar ligação
-              </button>
-            </form>
-          )}
+          {podeEditar && <RegistrarLigacaoButton leadId={leadTipado.id} />}
 
           {podeEditar && (
             <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
