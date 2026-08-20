@@ -1,11 +1,8 @@
 import { Sidebar } from "@/components/sidebar";
-import { createClient } from "@/lib/supabase/server";
+import { usuarioAutenticado } from "@/lib/supabase/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { usuario } = await usuarioAutenticado();
 
   let isAdmin = true;
   let paginasPermitidas: string[] = [];
@@ -13,17 +10,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let fotoUsuario: string | null = null;
   let cargo = "Membro";
 
-  if (user) {
-    const { data: usuario } = await supabase
-      .from("usuarios")
-      .select("papel, funcao, paginas_permitidas, nome, foto_url")
-      .eq("id", user.id)
-      .single();
-
-    isAdmin = usuario?.papel === "admin";
-    paginasPermitidas = usuario?.paginas_permitidas ?? [];
-    nomeUsuario = usuario?.nome ?? "";
-    fotoUsuario = usuario?.foto_url ?? null;
+  if (usuario) {
+    isAdmin = usuario.papel === "admin";
+    paginasPermitidas = usuario.paginas_permitidas ?? [];
+    nomeUsuario = usuario.nome ?? "";
+    fotoUsuario = usuario.foto_url ?? null;
     cargo = isAdmin
       ? "Admin"
       : usuario?.funcao === "sdr"

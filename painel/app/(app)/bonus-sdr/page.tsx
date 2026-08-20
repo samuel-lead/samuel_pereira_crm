@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { BonusSdrTabela } from "@/components/bonus-sdr";
 import { calcularBonusPorSdr, inicioDoMes } from "@/lib/metricas";
@@ -20,16 +20,7 @@ const MESES = [
 
 export default async function BonusSdrPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("org_id")
-    .eq("id", user!.id)
-    .single();
+  const { usuario } = await usuarioAutenticado();
 
   const agora = new Date();
   const amanha = new Date(agora);

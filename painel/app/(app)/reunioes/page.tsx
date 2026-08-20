@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { KanbanBoard } from "@/components/kanban-board";
@@ -61,10 +61,7 @@ export default async function VendasPage({
 }) {
   const { usuario: usuarioFiltro, origem: origemFiltro } = await searchParams;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, usuario: usuarioAtual } = await usuarioAutenticado();
 
   let consulta = supabase
     .from("leads")
@@ -86,15 +83,11 @@ export default async function VendasPage({
   const [
     { data: niveisData },
     { data: leadsData },
-    { data: usuarioAtual },
     { data: usuariosData },
     { data: origensData },
   ] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     consulta,
-    user
-      ? supabase.from("usuarios").select("org_id, papel").eq("id", user.id).single()
-      : Promise.resolve({ data: null }),
     supabase.from("usuarios").select("id, nome").order("nome"),
     supabase
       .from("leads")

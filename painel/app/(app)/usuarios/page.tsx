@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { ExcluirUsuarioButton } from "@/components/excluir-usuario-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
@@ -26,13 +26,8 @@ function formatarData(iso: string) {
 
 export default async function UsuariosPage() {
   const supabase = await createClient();
-  const [
-    {
-      data: { user },
-    },
-    { data },
-  ] = await Promise.all([
-    supabase.auth.getUser(),
+  const [{ user }, { data }] = await Promise.all([
+    usuarioAutenticado(),
     supabase.rpc("listar_usuarios_da_org"),
   ]);
   const usuarios = (data ?? []) as UsuarioLinha[];

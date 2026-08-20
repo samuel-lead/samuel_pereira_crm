@@ -1,22 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { NovoLeadForm } from "@/components/novo-lead-form";
 
 export default async function NovoLeadPage() {
   const supabase = await createClient();
+  const { usuario: usuarioAtual } = await usuarioAutenticado();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const [{ data: usuariosData }, { data: usuarioAtual }, { data: origensData }] =
-    await Promise.all([
-      supabase.from("usuarios").select("id, nome, funcao").order("nome"),
-      user
-        ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
-        : Promise.resolve({ data: null }),
-      supabase.from("origens").select("id, nome").order("nome"),
-    ]);
+  const [{ data: usuariosData }, { data: origensData }] = await Promise.all([
+    supabase.from("usuarios").select("id, nome, funcao").order("nome"),
+    supabase.from("origens").select("id, nome").order("nome"),
+  ]);
 
   const usuarios = usuariosData ?? [];
   const origens = origensData ?? [];

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { ResumoAno } from "@/components/resumo-ano";
 import { FiltroAnoSelect } from "@/components/filtro-ano-select";
@@ -12,16 +12,7 @@ export default async function AnoPage({
 }) {
   const { ano: anoParam } = await searchParams;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("org_id")
-    .eq("id", user!.id)
-    .single();
+  const { usuario } = await usuarioAutenticado();
 
   const agora = new Date();
   const anoAtual = agora.getFullYear();

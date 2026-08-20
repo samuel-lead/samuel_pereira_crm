@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FiltroPeriodoVendas } from "@/components/filtro-periodo-vendas";
@@ -43,10 +43,7 @@ export default async function VendasPage({
 }) {
   const { periodo: periodoFiltro } = await searchParams;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, usuario: usuarioAtual } = await usuarioAutenticado();
 
   let consulta = supabase
     .from("leads")
@@ -62,11 +59,8 @@ export default async function VendasPage({
     consulta = consulta.gte("vendido_em", inicio.toISOString()).lt("vendido_em", fim.toISOString());
   }
 
-  const [{ data: leadsData }, { data: usuarioAtual }, { data: todasVendasData }] = await Promise.all([
+  const [{ data: leadsData }, { data: todasVendasData }] = await Promise.all([
     consulta,
-    user
-      ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
-      : Promise.resolve({ data: null }),
     supabase
       .from("leads")
       .select("vendido_em")

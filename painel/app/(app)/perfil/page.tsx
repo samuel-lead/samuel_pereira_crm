@@ -1,19 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { FotoPerfilForm } from "@/components/foto-perfil-form";
 import { TrocarSenhaForm } from "@/components/trocar-senha-form";
 
 export default async function PerfilPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("nome, foto_url")
-    .eq("id", user!.id)
-    .single();
+  const { user, usuario } = await usuarioAutenticado();
 
   return (
     <>

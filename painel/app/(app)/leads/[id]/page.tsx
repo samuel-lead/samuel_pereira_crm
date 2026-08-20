@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { registrarNota, registrarLigacao, excluirInteracao } from "@/lib/leads/actions";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
@@ -76,10 +76,7 @@ export default async function EditarLeadPage({
   const { id } = await params;
   const { marcarReuniao } = await searchParams;
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, usuario: usuarioAtual } = await usuarioAutenticado();
 
   const [
     { data: lead },
@@ -87,7 +84,6 @@ export default async function EditarLeadPage({
     { data: interacoesData },
     { data: reunioesData },
     { data: usuariosData },
-    { data: usuarioAtual },
     { data: origensData },
   ] = await Promise.all([
     supabase
@@ -110,9 +106,6 @@ export default async function EditarLeadPage({
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
     supabase.from("usuarios").select("id, nome, funcao").order("nome"),
-    user
-      ? supabase.from("usuarios").select("papel").eq("id", user.id).single()
-      : Promise.resolve({ data: null }),
     supabase.from("origens").select("id, nome").order("nome"),
   ]);
 

@@ -20,6 +20,7 @@ export function PageHeader({
     // encolhe assim que alguma delas passar do topo — só volta ao tamanho
     // normal quando todas voltarem pro topo.
     const roladas = new Set<EventTarget>();
+    let quadroAgendado = false;
 
     function aoRolar(evento: Event) {
       const alvo = evento.target as HTMLElement | null;
@@ -30,7 +31,16 @@ export function PageHeader({
       } else {
         roladas.delete(alvo);
       }
-      setEncolhido(roladas.size > 0);
+
+      // Rolagem dispara muitas vezes por segundo — sem isso, cada card do
+      // Kanban rolando forçava um re-render do cabeçalho a cada pixel.
+      if (!quadroAgendado) {
+        quadroAgendado = true;
+        requestAnimationFrame(() => {
+          quadroAgendado = false;
+          setEncolhido(roladas.size > 0);
+        });
+      }
     }
 
     document.addEventListener("scroll", aoRolar, true);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
@@ -26,15 +26,7 @@ function formatarDataCurta(d: Date) {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, org_id, papel")
-    .eq("id", user!.id)
-    .single();
+  const { usuario } = await usuarioAutenticado();
 
   const agora = new Date();
   const amanha = new Date(agora);

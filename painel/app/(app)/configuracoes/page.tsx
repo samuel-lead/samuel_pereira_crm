@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { atualizarMetasConfig } from "@/lib/configuracoes/actions";
 import { OrigensConfig } from "@/components/origens-config";
@@ -18,15 +18,7 @@ const labelClasse = "text-sm font-medium text-neutral-700";
 
 export default async function ConfiguracoesPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("org_id, papel, super_admin")
-    .eq("id", user!.id)
-    .single();
+  const { usuario } = await usuarioAutenticado();
 
   const souSuperAdmin = usuario?.super_admin === true;
   const souAdmin = usuario?.papel === "admin";
