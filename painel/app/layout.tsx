@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   description: "Sistema de gestão de clientes",
 };
 
+// O banco (Supabase) fica em São Paulo. Sem isso, a Vercel roda as
+// funções nos EUA por padrão — toda consulta ao banco cruzava o
+// continente e voltava, e isso sozinho já custava a maior parte do
+// tempo de carregamento de cada página.
+export const preferredRegion = "gru1";
+
 export default function RootLayout({
   children,
 }: {
