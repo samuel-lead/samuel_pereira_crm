@@ -15,6 +15,16 @@ const NIVEL_NO_SHOW = 5;
 const NIVEL_FOLLOW_POS_REUNIAO = 6;
 const NIVEL_REUNIAO_FEITA = 7;
 
+// <input type="datetime-local"> manda um horário "solto", sem fuso (ex.:
+// "2026-08-25T14:30"). O servidor roda em UTC — sem isso, "new Date(...)"
+// direto interpretava esse horário como UTC e a hora salva saía errada
+// (3h a menos do que a pessoa digitou). Todo usuário aqui é do Brasil
+// (America/Sao_Paulo, UTC-3, sem horário de verão), então fixamos o fuso.
+function parseDataHoraLocal(valor: string): Date {
+  const comSegundos = valor.length === 16 ? `${valor}:00` : valor;
+  return new Date(`${comSegundos}-03:00`);
+}
+
 async function contextoUsuario() {
   const supabase = await createClient();
   const {
@@ -116,14 +126,14 @@ async function sincronizarReuniao(
       return "Informe a data e hora da reunião.";
     }
 
-    const data = new Date(agendadaPara);
+    const data = parseDataHoraLocal(agendadaPara);
     if (Number.isNaN(data.getTime())) {
       return "Data da reunião inválida.";
     }
 
     let dataMarcada = new Date();
     if (marcadaEm) {
-      const parsed = new Date(marcadaEm);
+      const parsed = parseDataHoraLocal(marcadaEm);
       if (Number.isNaN(parsed.getTime())) {
         return "Data de agendamento inválida.";
       }
@@ -576,7 +586,7 @@ export async function marcarProximoContato(leadId: string, formData: FormData) {
     throw new Error("Escolha data e hora do próximo contato");
   }
 
-  const data = new Date(dataHora);
+  const data = parseDataHoraLocal(dataHora);
   if (Number.isNaN(data.getTime())) {
     throw new Error("Data inválida");
   }

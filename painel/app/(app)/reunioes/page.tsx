@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FiltrosLeads } from "@/components/filtros-leads";
+import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import {
@@ -57,9 +58,9 @@ type LeadResumo = {
 export default async function VendasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ usuario?: string; origem?: string }>;
+  searchParams: Promise<{ usuario?: string; origem?: string; busca?: string }>;
 }) {
-  const { usuario: usuarioFiltro, origem: origemFiltro } = await searchParams;
+  const { usuario: usuarioFiltro, origem: origemFiltro, busca: buscaFiltro } = await searchParams;
   const supabase = await createClient();
   const { user, usuario: usuarioAtual } = await usuarioAutenticado();
 
@@ -71,13 +72,16 @@ export default async function VendasPage({
     .is("arquivado_em", null)
     .neq("status", "vendido")
     .in("nivel_ordem", NIVEIS_VENDAS)
-    .order("declarado_em", { ascending: false });
+    .order("entrou_nivel_em", { ascending: false });
 
   if (usuarioFiltro) {
     consulta = consulta.eq("responsavel_id", usuarioFiltro);
   }
   if (origemFiltro) {
     consulta = consulta.eq("origem", origemFiltro);
+  }
+  if (buscaFiltro) {
+    consulta = consulta.ilike("nome", `%${buscaFiltro}%`);
   }
 
   const [
@@ -160,13 +164,16 @@ export default async function VendasPage({
         <PageHeader
           titulo="Gestão de vendas"
           acao={
-            <FiltrosLeads
-              usuarios={usuarios}
-              origens={origens}
-              usuarioInicial={usuarioFiltro}
-              origemInicial={origemFiltro}
-              baseHref="/reunioes"
-            />
+            <div className="flex items-center gap-3">
+              <BuscaLeads />
+              <FiltrosLeads
+                usuarios={usuarios}
+                origens={origens}
+                usuarioInicial={usuarioFiltro}
+                origemInicial={origemFiltro}
+                baseHref="/reunioes"
+              />
+            </div>
           }
         />
 

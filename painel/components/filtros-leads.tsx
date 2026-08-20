@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { IconeChevronBaixo } from "@/components/icons";
 
 function DropdownFiltro({
@@ -99,11 +99,16 @@ export function FiltrosLeads({
   baseHref?: string;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   function construirUrl(usuario: string, origem: string) {
-    const params = new URLSearchParams();
+    // Preserva outros parâmetros já na URL (ex.: "busca") — sem isso,
+    // trocar um filtro apagava o que a pessoa tinha digitado na busca.
+    const params = new URLSearchParams(searchParams.toString());
     if (usuario) params.set("usuario", usuario);
+    else params.delete("usuario");
     if (origem) params.set("origem", origem);
+    else params.delete("origem");
     const query = params.toString();
     return query ? `${baseHref}?${query}` : baseHref;
   }

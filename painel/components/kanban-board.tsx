@@ -154,6 +154,7 @@ export function KanbanBoard({
           {niveis.map((nivel) => {
             const leadsDoNivel = leadsPorNivel[nivel.ordem] ?? [];
             const cor = corDoNivel(nivel.ordem);
+            const numeroVisivel = numerosVisiveis.get(nivel.ordem);
             const recebendoArrasto = colunaAlvo === nivel.ordem;
 
             return (
@@ -174,6 +175,7 @@ export function KanbanBoard({
                     title={nivel.nome}
                     className="truncate text-sm font-semibold text-neutral-900"
                   >
+                    {numeroVisivel ? `${numeroVisivel}. ` : ""}
                     {nivel.nome}
                   </h2>
                   <p className="mt-0.5 truncate text-xs text-neutral-400">
@@ -234,7 +236,7 @@ export function KanbanBoard({
                             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-bold text-neutral-700">
                               {iniciais(lead.nome)}
                             </span>
-                            <p className="truncate text-sm font-semibold text-neutral-900 group-hover:underline">
+                            <p className="truncate text-[15px] font-bold text-neutral-900 group-hover:underline">
                               {lead.nome}
                             </p>
                           </div>
