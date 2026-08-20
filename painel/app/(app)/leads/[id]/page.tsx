@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
-import { registrarNota, excluirInteracao } from "@/lib/leads/actions";
+import { registrarNota } from "@/lib/leads/actions";
 import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
+import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
@@ -335,15 +336,10 @@ export default async function EditarLeadPage({
                       </p>
                     </div>
                     {podeEditar && (
-                      <form action={excluirInteracao.bind(null, leadTipado.id, interacao.id)}>
-                        <button
-                          type="submit"
-                          title="Excluir esse registro"
-                          className="rounded-md px-2 py-1 text-xs text-neutral-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
-                        >
-                          Excluir
-                        </button>
-                      </form>
+                      <ExcluirInteracaoButton
+                        leadId={leadTipado.id}
+                        interacaoId={interacao.id}
+                      />
                     )}
                   </li>
                 ))}
