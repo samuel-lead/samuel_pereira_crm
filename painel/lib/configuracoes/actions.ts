@@ -193,3 +193,17 @@ export async function renomearOrigem(origemId: string, novoNome: string) {
   revalidatePath("/leads");
   revalidatePath("/leads/novo");
 }
+
+export async function excluirOrigem(origemId: string) {
+  const { supabase } = await usuarioAdminOuErro();
+
+  const { error } = await supabase.rpc("excluir_origem", { origem_id: origemId });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/leads");
+  revalidatePath("/leads/novo");
+}
