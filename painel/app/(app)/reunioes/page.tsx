@@ -53,6 +53,7 @@ type LeadResumo = {
   valor_venda: number | null;
   proposta_valor: number | null;
   proximo_follow_em: string | null;
+  reuniao_agendada_para?: string | null;
 };
 
 export default async function VendasPage({
@@ -132,7 +133,9 @@ export default async function VendasPage({
   const inicioHoje = new Date(agora);
   inicioHoje.setHours(0, 0, 0, 0);
 
-  const [[receitaOrgMes, metaReceita, vendasHoje, ultimaVenda], leadsComAtividade] =
+  const leadIds = leads.map((lead) => lead.id);
+
+  const [[receitaOrgMes, metaReceita, vendasHoje, ultimaVenda], { data: reunioesMarcadasData }] =
     await Promise.all([
       orgId
         ? Promise.all([
@@ -142,8 +145,32 @@ export default async function VendasPage({
             buscarUltimaVenda(supabase, orgId),
           ])
         : Promise.resolve([null, null, null, null] as const),
-      anexarUltimaAtividade(supabase, leads),
+      leadIds.length
+        ? supabase
+            .from("reunioes")
+            .select("lead_id, agendada_para")
+            .in("lead_id", leadIds)
+            .eq("status", "marcada")
+            .order("marcada_em", { ascending: false })
+        : Promise.resolve({ data: [] as { lead_id: string; agendada_para: string }[] }),
     ]);
+
+  // Um lead pode ter mais de uma reunião "marcada" ao longo do tempo (ex.:
+  // remarcações) — pega só a mais recente pra mostrar no card.
+  const reuniaoAgendadaPorLead = new Map<string, string>();
+  for (const reuniao of reunioesMarcadasData ?? []) {
+    if (!reuniaoAgendadaPorLead.has(reuniao.lead_id)) {
+      reuniaoAgendadaPorLead.set(reuniao.lead_id, reuniao.agendada_para);
+    }
+  }
+
+  const leadsComAtividade = await anexarUltimaAtividade(
+    supabase,
+    leads.map((lead) => ({
+      ...lead,
+      reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
+    }))
+  );
 
   const leadsPorNivel: Record<number, typeof leadsComAtividade> = {};
   for (const lead of leadsComAtividade) {

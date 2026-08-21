@@ -146,6 +146,16 @@ export default async function LeadsPage({
         .lt("agendada_para", amanha.toISOString())
     : null;
 
+  const consultaNoShowHoje = user
+    ? supabase
+        .from("reunioes")
+        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .eq("status", "nao_compareceu")
+        .is("leads.arquivado_em", null)
+        .gte("agendada_para", inicioHoje.toISOString())
+        .lt("agendada_para", amanha.toISOString())
+    : null;
+
   function filtrarPorEscopo<T extends { eq: (coluna: string, valor: string) => T }>(
     consulta: T
   ) {
@@ -159,6 +169,7 @@ export default async function LeadsPage({
     { count: callsMarcadasHoje },
     { count: reagendamentosHoje },
     { count: callsRealizadasHoje },
+    { count: noShowHoje },
     [receitaOrgMes, metaReceita],
     leadsComAtividade,
   ] = await Promise.all([
@@ -166,6 +177,7 @@ export default async function LeadsPage({
     consultaCallsMarcadasHoje ? filtrarPorEscopo(consultaCallsMarcadasHoje) : { count: null },
     consultaReagendamentosHoje ? filtrarPorEscopo(consultaReagendamentosHoje) : { count: null },
     consultaCallsRealizadasHoje ? filtrarPorEscopo(consultaCallsRealizadasHoje) : { count: null },
+    consultaNoShowHoje ? filtrarPorEscopo(consultaNoShowHoje) : { count: null },
     orgId
       ? Promise.all([
           calcularReceitaOrg(supabase, orgId, inicioDoMes(agora), amanha),
@@ -283,6 +295,12 @@ export default async function LeadsPage({
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                 {callsRealizadasHoje} call{callsRealizadasHoje === 1 ? "" : "s"} realizada
                 {callsRealizadasHoje === 1 ? "" : "s"} hoje
+                {souAdmin ? " (equipe)" : ""}
+              </span>
+            )}
+            {noShowHoje !== null && noShowHoje > 0 && (
+              <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                {noShowHoje} no-show{noShowHoje === 1 ? "" : "s"} hoje
                 {souAdmin ? " (equipe)" : ""}
               </span>
             )}

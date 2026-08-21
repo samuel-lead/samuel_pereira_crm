@@ -6,7 +6,7 @@ import { corDoNivel, numerarNiveis, ORDEM_OPORTUNIDADE_FUTURA, type NivelResumo 
 import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
-import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag } from "@/components/icons";
+import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_FOLLOW_POS_REUNIAO = 6;
@@ -23,6 +23,7 @@ type LeadResumo = {
   valor_venda?: number | null;
   proposta_valor?: number | null;
   proximo_follow_em?: string | null;
+  reuniao_agendada_para?: string | null;
 };
 
 function formatarDataHora(iso: string) {
@@ -288,6 +289,12 @@ export function KanbanBoard({
                               <span className="font-medium text-neutral-600">
                                 {nomePorUsuario.get(lead.responsavel_id)}
                               </span>
+                            </p>
+                          )}
+                          {lead.reuniao_agendada_para && (
+                            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-700">
+                              <IconeCalendario className="h-3 w-3 shrink-0" />
+                              Reunião: {formatarDataHora(lead.reuniao_agendada_para)}
                             </p>
                           )}
                           {temProximoContato && (
