@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { BuscaLeads } from "@/components/busca-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 
 type LeadComHistorico = LeadBase & {
@@ -7,14 +8,18 @@ type LeadComHistorico = LeadBase & {
   criterio_urgencia: string;
   criterio_capacidade: string;
   proposta_enviada_em: string | null;
+  motivo_base: string | null;
 };
 
-// Por que o lead não virou venda — calculado a partir do que já aconteceu
-// com ele, ninguém precisa marcar isso na mão.
+// Motivo já vem escolhido na hora de mover o lead pra Base (ver
+// editar-lead-form.tsx). Isso aqui é só reserva pra lead antigo que caiu
+// aqui antes dessa escolha existir e nunca teve o motivo salvo.
 function calcularMotivo(
   lead: LeadComHistorico,
   ultimaReuniaoStatus: string | undefined
 ): MotivoBase {
+  if (lead.motivo_base) return lead.motivo_base as MotivoBase;
+
   if (lead.proposta_enviada_em) return "proposta_nao_comprou";
 
   if (ultimaReuniaoStatus === "nao_compareceu" || ultimaReuniaoStatus === "cancelada") {
@@ -29,19 +34,30 @@ function calcularMotivo(
   return foiQualificado ? "qualificou_sumiu" : "nao_iniciou_conversa";
 }
 
-export default async function BasePage() {
+export default async function BasePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ busca?: string }>;
+}) {
+  const { busca: buscaFiltro } = await searchParams;
   const supabase = await createClient();
 
+  let consulta = supabase
+    .from("leads")
+    .select(
+      "id, nome, telefone_e164, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor, motivo_base"
+    )
+    .eq("nivel_ordem", 8)
+    .neq("status", "vendido")
+    .is("arquivado_em", null)
+    .order("entrou_nivel_em", { ascending: false });
+
+  if (buscaFiltro) {
+    consulta = consulta.ilike("nome", `%${buscaFiltro}%`);
+  }
+
   const [{ data: leadsData }, { data: usuariosData }] = await Promise.all([
-    supabase
-      .from("leads")
-      .select(
-        "id, nome, telefone_e164, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor"
-      )
-      .eq("nivel_ordem", 8)
-      .neq("status", "vendido")
-      .is("arquivado_em", null)
-      .order("entrou_nivel_em", { ascending: false }),
+    consulta,
     supabase.from("usuarios").select("id, nome"),
   ]);
 
@@ -80,7 +96,7 @@ export default async function BasePage() {
 
   return (
     <>
-      <PageHeader titulo="Base de leads" />
+      <PageHeader titulo="Base de leads" acao={<BuscaLeads />} />
 
       <main className="px-6 py-6">
         <p className="mb-4 text-sm text-neutral-500">

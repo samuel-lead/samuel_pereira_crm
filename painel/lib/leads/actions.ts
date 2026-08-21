@@ -14,6 +14,7 @@ const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_FOLLOW_POS_REUNIAO = 6;
 const NIVEL_REUNIAO_FEITA = 7;
+const NIVEL_BASE = 8;
 
 // <input type="datetime-local"> manda um horário "solto", sem fuso (ex.:
 // "2026-08-25T14:30"). O servidor roda em UTC — sem isso, "new Date(...)"
@@ -256,6 +257,7 @@ export async function atualizarLead(
   const reuniaoData = String(formData.get("reuniao_data") ?? "").trim() || null;
   const reuniaoMarcadaEm = String(formData.get("marcada_em") ?? "").trim() || null;
   const closerId = String(formData.get("closer_id") ?? "").trim() || null;
+  const motivoBaseForm = String(formData.get("motivo_base") ?? "").trim() || null;
   // Só faz sentido em Oportunidades (nível 6) — fora dele, fica sempre false.
   const oportunidadeFutura =
     novoNivel === NIVEL_REUNIAO_FEITA && formData.get("oportunidade_futura") === "on";
@@ -266,7 +268,7 @@ export async function atualizarLead(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id")
+    .select("nivel_ordem, responsavel_id, motivo_base")
     .eq("id", leadId)
     .single();
 
@@ -315,6 +317,14 @@ export async function atualizarLead(
     }
   }
 
+  // Igual à reunião: ninguém move pra Base sem dizer o motivo — precisa pra
+  // separar certo nas colunas de "por que não virou venda".
+  if (nivelMudou && novoNivel === NIVEL_BASE && !motivoBaseForm) {
+    return { erro: "Escolha o motivo pelo qual esse lead está indo pra Base." };
+  }
+
+  const motivoBase = novoNivel === NIVEL_BASE ? motivoBaseForm ?? leadAtual.motivo_base : null;
+
   if (nivelMudou) {
     const erroReuniao = await sincronizarReuniao(supabase, {
       orgId: usuario.org_id,
@@ -343,6 +353,7 @@ export async function atualizarLead(
       criterio_capacidade: criterioCapacidade,
       nivel_ordem: novoNivel,
       oportunidade_futura: oportunidadeFutura,
+      motivo_base: motivoBase,
       ...(transferenciaParaCloser ? {} : { responsavel_id: responsavelId }),
       ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString() } : {}),
     })

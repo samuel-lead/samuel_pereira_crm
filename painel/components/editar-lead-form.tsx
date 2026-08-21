@@ -8,6 +8,14 @@ import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
 const NIVEL_REUNIAO_MARCADA = "4";
 const NIVEL_OPORTUNIDADES = "7";
+const NIVEL_BASE = "8";
+
+const MOTIVOS_BASE = [
+  { valor: "nao_iniciou_conversa", nome: "Não consegui iniciar conversa" },
+  { valor: "qualificou_sumiu", nome: "Iniciei conversa, qualifiquei e sumiu" },
+  { valor: "nao_reagendados", nome: "Não reagendados" },
+  { valor: "proposta_nao_comprou", nome: "Fiz proposta e não comprou" },
+] as const;
 
 function agoraParaInputLocal() {
   const agora = new Date();
@@ -27,6 +35,7 @@ type Lead = {
   criterio_capacidade: string;
   responsavel_id: string | null;
   oportunidade_futura: boolean;
+  motivo_base: string | null;
 };
 
 const campoClasse =
@@ -60,6 +69,8 @@ export function EditarLeadForm({
   );
   const vaiEntrarEmReuniaoMarcada =
     nivelSelecionado === NIVEL_REUNIAO_MARCADA && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA;
+  const vaiEntrarEmBase =
+    nivelSelecionado === NIVEL_BASE && String(lead.nivel_ordem) !== NIVEL_BASE;
   const nomeResponsavelAtual =
     usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
 
@@ -209,6 +220,30 @@ export function EditarLeadForm({
                   avisou que só fecha depois (não é pra fechar esse mês).
                 </span>
               </label>
+            </div>
+          )}
+
+          {vaiEntrarEmBase && (
+            <div className="mt-2 space-y-1 rounded-md border border-neutral-300 bg-neutral-50 p-3">
+              <label className="text-sm font-medium text-neutral-700" htmlFor="motivo_base">
+                Por que esse lead está indo pra Base?
+              </label>
+              <select
+                id="motivo_base"
+                name="motivo_base"
+                required
+                defaultValue={lead.motivo_base ?? ""}
+                className={`${campoClasse} bg-white`}
+              >
+                <option value="" disabled>
+                  Selecione o motivo...
+                </option>
+                {MOTIVOS_BASE.map((motivo) => (
+                  <option key={motivo.valor} value={motivo.valor}>
+                    {motivo.nome}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
         </div>
