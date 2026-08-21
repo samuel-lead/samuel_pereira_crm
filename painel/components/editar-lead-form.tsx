@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { Fragment, useActionState, useState } from "react";
 import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
@@ -9,6 +9,7 @@ import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = "4";
 const NIVEL_OPORTUNIDADES = "7";
 const NIVEL_BASE = "8";
+const OPCAO_OPORTUNIDADE_FUTURA = "oportunidade_futura";
 
 const MOTIVOS_BASE = [
   { valor: "nao_iniciou_conversa", nome: "Não consegui iniciar conversa" },
@@ -67,10 +68,37 @@ export function EditarLeadForm({
   const [nivelSelecionado, setNivelSelecionado] = useState(
     preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
   );
+  const [oportunidadeFutura, setOportunidadeFutura] = useState(lead.oportunidade_futura);
+
+  // "Oportunidades futuras" não é um nível de verdade no banco — é o nível
+  // 7 (Leads para fim do mês) + essa marcação. Mas o SDR quer escolher ela
+  // direto no menu Nível, sem precisar primeiro escolher outro nível e
+  // depois achar um checkbox separado. Por isso entra como uma opção a
+  // mais dentro do <select>, logo abaixo de "Leads para fim do mês".
+  function aoMudarNivel(novoValor: string) {
+    if (novoValor === OPCAO_OPORTUNIDADE_FUTURA) {
+      setNivelSelecionado(NIVEL_OPORTUNIDADES);
+      setOportunidadeFutura(true);
+    } else {
+      setNivelSelecionado(novoValor);
+      if (novoValor !== NIVEL_OPORTUNIDADES) setOportunidadeFutura(false);
+    }
+  }
+  const valorMenuNivel =
+    nivelSelecionado === NIVEL_OPORTUNIDADES && oportunidadeFutura
+      ? OPCAO_OPORTUNIDADE_FUTURA
+      : nivelSelecionado;
   const vaiEntrarEmReuniaoMarcada =
     nivelSelecionado === NIVEL_REUNIAO_MARCADA && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA;
   const vaiEntrarEmBase =
     nivelSelecionado === NIVEL_BASE && String(lead.nivel_ordem) !== NIVEL_BASE;
+  // "Sobre o lead" só faz sentido a partir de Reunião marcada — é ali que
+  // o SDR precisa preencher pra marcar a call. Antes disso (Sem conversa,
+  // Em qualificação, Topou reunião sem horário) só existe "Registrar
+  // nota", pra não confundir o SDR achando que precisa preencher isso
+  // toda vez que só liga e anota o retorno. Uma vez preenchido, continua
+  // aparecendo pra sempre, mesmo o lead indo pra No-show/Base/Oportunidade.
+  const mostrarSobreLead = Number(nivelSelecionado) >= Number(NIVEL_REUNIAO_MARCADA);
   const nomeResponsavelAtual =
     usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
 
@@ -147,17 +175,24 @@ export function EditarLeadForm({
           </label>
           <select
             id="nivel_ordem"
-            name="nivel_ordem"
-            value={nivelSelecionado}
-            onChange={(e) => setNivelSelecionado(e.target.value)}
+            value={valorMenuNivel}
+            onChange={(e) => aoMudarNivel(e.target.value)}
             className={campoClasse}
           >
             {niveis.map((nivel) => (
-              <option key={nivel.ordem} value={nivel.ordem}>
-                {rotuloNivel(nivel, numerosVisiveis[nivel.ordem])}
-              </option>
+              <Fragment key={nivel.ordem}>
+                <option value={nivel.ordem}>
+                  {rotuloNivel(nivel, numerosVisiveis[nivel.ordem])}
+                </option>
+                {String(nivel.ordem) === NIVEL_OPORTUNIDADES && (
+                  <option value={OPCAO_OPORTUNIDADE_FUTURA}>
+                    ↳ Oportunidades futuras
+                  </option>
+                )}
+              </Fragment>
             ))}
           </select>
+          <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
 
           {vaiEntrarEmReuniaoMarcada && (
             <div className="mt-2 space-y-3 rounded-md border border-green-200 bg-green-50 p-3">
@@ -212,7 +247,8 @@ export function EditarLeadForm({
                 <input
                   type="checkbox"
                   name="oportunidade_futura"
-                  defaultChecked={lead.oportunidade_futura}
+                  checked={oportunidadeFutura}
+                  onChange={(e) => setOportunidadeFutura(e.target.checked)}
                   className="mt-0.5"
                 />
                 <span>
@@ -248,73 +284,81 @@ export function EditarLeadForm({
           )}
         </div>
 
-        <fieldset className="space-y-3 rounded-md border border-neutral-200 bg-neutral-50 p-3">
-          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-            Sobre o lead
-          </legend>
+        {mostrarSobreLead ? (
+          <fieldset className="space-y-3 rounded-md border border-neutral-200 bg-neutral-50 p-3">
+            <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              Sobre o lead
+            </legend>
 
-          <div className="space-y-1">
-            <label className={labelClasse} htmlFor="criterio_problema">
-              Me conte sobre o lead — qual é o perfil dele?
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                "Situação hoje",
-                "O que já tentou",
-                "Onde quer chegar",
-                "Autonomia de decisão",
-              ].map((dica) => (
-                <span
-                  key={dica}
-                  className="rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs text-neutral-600"
-                >
-                  {dica}
-                </span>
-              ))}
+            <div className="space-y-1">
+              <label className={labelClasse} htmlFor="criterio_problema">
+                Me conte sobre o lead — qual é o perfil dele?
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  "Situação hoje",
+                  "O que já tentou",
+                  "Onde quer chegar",
+                  "Autonomia de decisão",
+                ].map((dica) => (
+                  <span
+                    key={dica}
+                    className="rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs text-neutral-600"
+                  >
+                    {dica}
+                  </span>
+                ))}
+              </div>
+              <textarea
+                id="criterio_problema"
+                name="criterio_problema"
+                rows={4}
+                defaultValue={lead.criterio_problema ?? ""}
+                className={`${campoClasse} bg-white`}
+              />
             </div>
-            <textarea
-              id="criterio_problema"
-              name="criterio_problema"
-              rows={4}
-              defaultValue={lead.criterio_problema ?? ""}
-              className={`${campoClasse} bg-white`}
-            />
-          </div>
 
-          <div className="space-y-1">
-            <label className={labelClasse} htmlFor="criterio_urgencia">
-              Tem urgência em resolver
-            </label>
-            <select
-              id="criterio_urgencia"
-              name="criterio_urgencia"
-              defaultValue={lead.criterio_urgencia}
-              className={`${campoClasse} bg-white`}
-            >
-              <option value="desconhecida">Ainda não sei</option>
-              <option value="alta">Alta</option>
-              <option value="media">Média</option>
-              <option value="baixa">Baixa</option>
-            </select>
-          </div>
+            <div className="space-y-1">
+              <label className={labelClasse} htmlFor="criterio_urgencia">
+                Tem urgência em resolver
+              </label>
+              <select
+                id="criterio_urgencia"
+                name="criterio_urgencia"
+                defaultValue={lead.criterio_urgencia}
+                className={`${campoClasse} bg-white`}
+              >
+                <option value="desconhecida">Ainda não sei</option>
+                <option value="alta">Alta</option>
+                <option value="media">Média</option>
+                <option value="baixa">Baixa</option>
+              </select>
+            </div>
 
-          <div className="space-y-1">
-            <label className={labelClasse} htmlFor="criterio_capacidade">
-              Consegue pagar a solução
-            </label>
-            <select
-              id="criterio_capacidade"
-              name="criterio_capacidade"
-              defaultValue={lead.criterio_capacidade}
-              className={`${campoClasse} bg-white`}
-            >
-              <option value="desconhecida">Ainda não sei</option>
-              <option value="sim">Sim</option>
-              <option value="parcial">Parcial</option>
-              <option value="nao">Não</option>
-            </select>
-          </div>
-        </fieldset>
+            <div className="space-y-1">
+              <label className={labelClasse} htmlFor="criterio_capacidade">
+                Consegue pagar a solução
+              </label>
+              <select
+                id="criterio_capacidade"
+                name="criterio_capacidade"
+                defaultValue={lead.criterio_capacidade}
+                className={`${campoClasse} bg-white`}
+              >
+                <option value="desconhecida">Ainda não sei</option>
+                <option value="sim">Sim</option>
+                <option value="parcial">Parcial</option>
+                <option value="nao">Não</option>
+              </select>
+            </div>
+          </fieldset>
+        ) : (
+          <>
+            <input type="hidden" name="criterio_problema" value={lead.criterio_problema ?? ""} />
+            <input type="hidden" name="criterio_urgencia" value={lead.criterio_urgencia} />
+            <input type="hidden" name="criterio_capacidade" value={lead.criterio_capacidade} />
+          </>
+        )}
       </fieldset>
 
         {estado.erro && (
