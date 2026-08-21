@@ -15,7 +15,7 @@ type LeadLinha = {
 
 function formatarData(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("pt-BR");
+  return new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
 export default async function ListaLeadsPage({

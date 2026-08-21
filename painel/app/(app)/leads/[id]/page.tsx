@@ -60,7 +60,11 @@ const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 
 function formatarData(iso: string) {
+  // Sem timeZone explícito, o servidor formata no fuso dele (UTC na
+  // Vercel), não no do Brasil — uma ligação das 15h aparecia como se
+  // fosse mais tarde. Todo mundo aqui é do Brasil, então fixa o fuso.
   return new Date(iso).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
