@@ -166,10 +166,14 @@ export default async function LeadsPage({
 
   // Mesmo critério do selo vermelho "Xd parado" de cada card — aqui é só a
   // contagem geral, pra dar pra ver de longe quantos leads estão esfriando
-  // sem precisar abrir cada coluna.
-  const leadsParados = leadsComAtividade.filter(
-    (lead) => diasDesde(lead.ultima_atividade_em) >= 1
-  ).length;
+  // sem precisar abrir cada coluna. Lead com próximo contato marcado (e
+  // ainda não vencido) não conta — já tem plano, só volta a contar depois
+  // que a data passar sem ninguém ter mexido nele.
+  const leadsParados = leadsComAtividade.filter((lead) => {
+    const proximoContatoPendente =
+      !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
+    return diasDesde(lead.ultima_atividade_em) >= 1 && !proximoContatoPendente;
+  }).length;
 
   return (
     <>

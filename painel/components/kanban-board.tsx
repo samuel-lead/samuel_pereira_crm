@@ -202,10 +202,14 @@ export function KanbanBoard({
                     leadsDoNivel.map((lead) => {
                       const arrastavel = podeArrastar(lead);
                       const diasParado = diasSemAtividade(lead.ultima_atividade_em);
-                      const atrasado = mostrarParado && diasParado >= 1;
                       const temProximoContato = !!lead.proximo_follow_em;
                       const contatoAtrasado =
                         temProximoContato && new Date(lead.proximo_follow_em!).getTime() < Date.now();
+                      // Lead com próximo contato marcado (e ainda não vencido)
+                      // não é "parado" — já tem plano. Só volta a contar
+                      // depois que a data passar sem ninguém ter mexido nele.
+                      const proximoContatoPendente = temProximoContato && !contatoAtrasado;
+                      const atrasado = mostrarParado && diasParado >= 1 && !proximoContatoPendente;
                       return (
                       <div
                         key={lead.id}
