@@ -361,20 +361,22 @@ export function EditarLeadForm({
         )}
       </fieldset>
 
-        {estado.erro && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
-            {estado.erro}
-          </p>
-        )}
+        <div className="sticky bottom-0 -mx-6 -mb-6 space-y-2 rounded-b-lg border-t border-neutral-200 bg-white px-6 py-4">
+          {estado.erro && (
+            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+              {estado.erro}
+            </p>
+          )}
 
-        {podeEditar && (
-          <button
-            type="submit"
-            className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-          >
-            Salvar alterações
-          </button>
-        )}
+          {podeEditar && (
+            <button
+              type="submit"
+              className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+            >
+              Salvar alterações
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );
