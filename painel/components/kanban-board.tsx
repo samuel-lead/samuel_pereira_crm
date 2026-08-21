@@ -55,6 +55,7 @@ export function KanbanBoard({
   usuarioAtualId = null,
   usuarios = [],
   mostrarValor = false,
+  mostrarParado = true,
   numerosVisiveis: numerosVisiveisExternos,
 }: {
   niveis: NivelResumo[];
@@ -67,6 +68,9 @@ export function KanbanBoard({
   // Valor só faz sentido em Vendas — em Pré-vendas o lead ainda nem
   // negociou nada, então o quadro de Leads nunca passa isso como true.
   mostrarValor?: boolean;
+  // "Parado" é alarme de lead esfriando no funil — não faz sentido em
+  // Clientes, onde é normal ficar dias/meses sem mexer depois de vendido.
+  mostrarParado?: boolean;
   // Quando o quadro mostra só um pedaço dos níveis (ex.: Vendas, que é a
   // continuação do Pré-vendas), a numeração "Nível X" precisa vir calculada
   // com base em TODOS os níveis, senão recomeça do 1 dentro do recorte.
@@ -204,7 +208,7 @@ export function KanbanBoard({
                     leadsDoNivel.map((lead) => {
                       const arrastavel = podeArrastar(lead);
                       const diasParado = diasSemAtividade(lead.ultima_atividade_em);
-                      const atrasado = diasParado >= 1;
+                      const atrasado = mostrarParado && diasParado >= 1;
                       const temProximoContato = !!lead.proximo_follow_em;
                       const contatoAtrasado =
                         temProximoContato && new Date(lead.proximo_follow_em!).getTime() < Date.now();

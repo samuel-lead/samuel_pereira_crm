@@ -139,6 +139,7 @@ export default async function VendasPage({
           leadsPorNivel={{ 4: leadsKanban }}
           souAdmin={souAdmin}
           usuarioAtualId={user?.id ?? null}
+          mostrarParado={false}
         />
       </main>
     </>
