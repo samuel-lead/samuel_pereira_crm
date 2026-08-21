@@ -742,7 +742,7 @@ export async function registrarNota(leadId: string, formData: FormData) {
   revalidatePath(`/leads/${leadId}`);
 }
 
-export async function registrarLigacao(leadId: string) {
+export async function registrarLigacao(leadId: string, atendida: boolean) {
   const { supabase, usuario } = await contextoUsuario();
 
   const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
@@ -756,7 +756,7 @@ export async function registrarLigacao(leadId: string) {
     lead_id: leadId,
     tipo: "ligacao",
     canal: "manual",
-    conteudo: "Ligação registrada",
+    conteudo: atendida ? "Ligação atendida" : "Ligação não atendida",
     ocorreu_em: new Date().toISOString(),
     origem: "declarado",
   });
