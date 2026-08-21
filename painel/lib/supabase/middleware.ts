@@ -11,6 +11,7 @@ const ROTA_DA_PAGINA: Record<string, string> = {
 
 function paginaDaRota(pathname: string): string | null {
   if (pathname === "/leads/lista" || pathname.startsWith("/leads/lista/")) return "lista";
+  if (pathname === "/leads/excluidos" || pathname.startsWith("/leads/excluidos/")) return "admin";
   if (pathname === "/leads" || pathname.startsWith("/leads/")) return "funil";
   if (pathname === "/atividades" || pathname.startsWith("/atividades/")) return "atividades";
   if (pathname === "/reunioes" || pathname.startsWith("/reunioes/")) return "reunioes";

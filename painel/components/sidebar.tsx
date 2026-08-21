@@ -7,7 +7,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeIntegracao } from "@/components/icons";
+import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeIntegracao, IconeLixeira } from "@/components/icons";
 
 const GRUPOS = [
   {
@@ -32,6 +32,7 @@ const GRUPOS = [
     titulo: "Admin",
     itens: [
       { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios, pagina: "admin" },
+      { href: "/leads/excluidos", label: "Excluídos", Icone: IconeLixeira, pagina: "admin" },
       { href: "/integracoes", label: "Integrações", Icone: IconeIntegracao, pagina: "admin" },
       { href: "/configuracoes", label: "Configurações", Icone: IconeConfig, pagina: "admin" },
     ],
