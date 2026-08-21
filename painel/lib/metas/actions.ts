@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { diasUteisEntre, inicioDoMes } from "@/lib/metricas";
+import { UM_DIA_MS } from "@/lib/datas";
 
 export type EstadoMeta = { erro: string | null };
 
@@ -45,8 +46,9 @@ export async function definirMetaReceita(
   }
 
   const agora = new Date();
-  const ano = agora.getFullYear();
-  const mes = agora.getMonth() + 1;
+  const inicio = inicioDoMes(agora);
+  const ano = inicio.getUTCFullYear();
+  const mes = inicio.getUTCMonth() + 1;
 
   const { data: org } = await supabase
     .from("orgs")
@@ -55,8 +57,9 @@ export async function definirMetaReceita(
     .single();
 
   const ticketMedio = Number(org?.ticket_medio_padrao ?? 0);
-  const inicio = inicioDoMes(agora);
-  const inicioProximoMes = new Date(ano, mes, 1);
+  // Pula uns dias pra cair com certeza no mês seguinte, depois volta pro
+  // dia 1 dele — evita `new Date(ano, mes, 1)`, que usa o fuso do servidor.
+  const inicioProximoMes = inicioDoMes(new Date(inicio.getTime() + 32 * UM_DIA_MS));
   const diasUteis = diasUteisEntre(inicio, inicioProximoMes);
 
   const { error } = await supabase.from("metas_mensais").upsert(

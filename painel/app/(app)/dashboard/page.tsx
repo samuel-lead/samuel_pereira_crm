@@ -20,6 +20,7 @@ import {
   fimDaSemana,
   inicioDoMes,
 } from "@/lib/metricas";
+import { inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 
 function formatarDataCurta(d: Date) {
   return d.toLocaleDateString("pt-BR", {
@@ -34,16 +35,13 @@ export default async function DashboardPage() {
   const { usuario } = await usuarioAutenticado();
 
   const agora = new Date();
-  const amanha = new Date(agora);
-  amanha.setDate(amanha.getDate() + 1);
-  amanha.setHours(0, 0, 0, 0);
+  const inicioHoje = inicioDoDia(agora);
+  const amanha = new Date(inicioHoje.getTime() + UM_DIA_MS);
 
   const souAdmin = usuario!.papel === "admin";
   const inicioSemana = inicioDaSemana(agora);
   const fimSemana = fimDaSemana(inicioSemana);
   const inicioMes = inicioDoMes(agora);
-  const inicioHoje = new Date(agora);
-  inicioHoje.setHours(0, 0, 0, 0);
   const subtituloSemana = `domingo a sábado · ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`;
 
   const [
@@ -80,7 +78,7 @@ export default async function DashboardPage() {
       ? calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioMes, amanha)
       : Promise.resolve([]),
     calcularReceitaOrg(supabase, usuario!.org_id, inicioMes, amanha),
-    buscarMetaReceitaMes(supabase, usuario!.org_id, agora.getFullYear(), agora.getMonth() + 1),
+    buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMes.getUTCFullYear(), inicioMes.getUTCMonth() + 1),
     supabase
       .from("metas_config")
       .select(

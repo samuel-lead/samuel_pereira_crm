@@ -1,11 +1,17 @@
 import type { createClient } from "@/lib/supabase/server";
+import { UM_DIA_MS } from "@/lib/datas";
+
+export { inicioDaSemana, inicioDoMes } from "@/lib/datas";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+const FUSO_BRASIL_MS = 3 * 60 * 60 * 1000; // UTC-3, sem horário de verão
 
 export type Metricas = {
   leadsTrabalhados: number;
   ligacoes: number;
   reunioesMarcadas: number;
+  reunioesReagendadas: number;
   reunioesRealizadas: number;
   reunioesComProposta: number;
   noShow: number;
@@ -19,36 +25,24 @@ export type Metricas = {
   diasUteis: number;
 };
 
-// Semana sempre domingo a sábado (não segunda a domingo) — combinado com
-// o Samuel, senão as contas de "esta semana" batem errado.
-export function inicioDaSemana(data: Date) {
-  const d = new Date(data);
-  const dia = d.getDay(); // 0 = domingo
-  d.setDate(d.getDate() - dia);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
+// Fim da semana é só pra mostrar a data (ex.: "16/08 a 22/08") — a query em
+// si sempre usa "amanhã" como limite superior, não isso aqui.
 export function fimDaSemana(inicioSemana: Date) {
-  const d = new Date(inicioSemana);
-  d.setDate(d.getDate() + 6);
-  d.setHours(23, 59, 59, 999);
-  return d;
+  return new Date(inicioSemana.getTime() + 6 * UM_DIA_MS);
 }
 
-export function inicioDoMes(data: Date) {
-  const d = new Date(data.getFullYear(), data.getMonth(), 1);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
+// Quantos dias úteis (fuso Brasil) existem entre duas datas — usado pra
+// saber quanto já "andou" do piso de leads/reuniões no período.
 export function diasUteisEntre(inicio: Date, fim: Date) {
+  const inicioLocal = new Date(inicio.getTime() - FUSO_BRASIL_MS);
+  const fimLocal = new Date(fim.getTime() - FUSO_BRASIL_MS);
+  const diaInicio = Date.UTC(inicioLocal.getUTCFullYear(), inicioLocal.getUTCMonth(), inicioLocal.getUTCDate());
+  const diaFim = Date.UTC(fimLocal.getUTCFullYear(), fimLocal.getUTCMonth(), fimLocal.getUTCDate());
+
   let contador = 0;
-  const cursor = new Date(inicio);
-  while (cursor < fim) {
-    const diaSemana = cursor.getDay();
+  for (let cursor = diaInicio; cursor < diaFim; cursor += UM_DIA_MS) {
+    const diaSemana = new Date(cursor).getUTCDay();
     if (diaSemana !== 0 && diaSemana !== 6) contador += 1;
-    cursor.setDate(cursor.getDate() + 1);
   }
   return contador;
 }
@@ -66,18 +60,25 @@ export async function calcularMetricas(
     { data: leadsDeclarados },
     { count: ligacoes },
     { data: reunioesDoPeriodo },
+    { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesComProposta },
     { count: noShow },
     { data: vendasData },
   ] = await Promise.all([
+    // Quem TRABALHA o lead é o responsável atual, não quem digitou ele no
+    // sistema (usuario_id é só quem criou o registro — às vezes é um admin
+    // cadastrando em nome de um SDR). Todo o resto abaixo segue a mesma
+    // lógica: métrica de SDR é sobre quem tem o lead hoje.
     supabase
       .from("leads")
       .select("id")
-      .eq("usuario_id", usuarioId)
+      .eq("responsavel_id", usuarioId)
       .is("arquivado_em", null)
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
+    // Ligação é diferente: conta pra quem realmente discou, não pra quem é
+    // o responsável do lead — por isso continua em usuario_id.
     supabase
       .from("interacoes")
       .select("id", { count: "exact", head: true })
@@ -94,16 +95,24 @@ export async function calcularMetricas(
     // elas usavam datas diferentes (marcada_em vs agendada_para).
     supabase
       .from("reunioes")
-      .select("id, lead_id, leads!inner(arquivado_em)")
-      .eq("usuario_id", usuarioId)
+      .select("id, lead_id, leads!inner(arquivado_em, responsavel_id)")
+      .eq("leads.responsavel_id", usuarioId)
       .is("leads.arquivado_em", null)
       .or(
         `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
       ),
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
-      .eq("usuario_id", usuarioId)
+      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
+      .eq("leads.responsavel_id", usuarioId)
+      .eq("reagendada", true)
+      .is("leads.arquivado_em", null)
+      .gte("marcada_em", inicioISO)
+      .lt("marcada_em", fimISO),
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
+      .eq("leads.responsavel_id", usuarioId)
       .eq("status", "realizada")
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
@@ -115,8 +124,8 @@ export async function calcularMetricas(
     // necessariamente feita naquela reunião específica.
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, proposta_valor)", { count: "exact", head: true })
-      .eq("usuario_id", usuarioId)
+      .select("id, leads!inner(arquivado_em, responsavel_id, proposta_valor)", { count: "exact", head: true })
+      .eq("leads.responsavel_id", usuarioId)
       .eq("status", "realizada")
       .is("leads.arquivado_em", null)
       .not("leads.proposta_valor", "is", null)
@@ -124,8 +133,8 @@ export async function calcularMetricas(
       .lt("agendada_para", fimISO),
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
-      .eq("usuario_id", usuarioId)
+      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
+      .eq("leads.responsavel_id", usuarioId)
       .eq("status", "nao_compareceu")
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
@@ -133,7 +142,7 @@ export async function calcularMetricas(
     supabase
       .from("leads")
       .select("receita_venda, valor_venda, proposta_valor")
-      .eq("usuario_id", usuarioId)
+      .eq("responsavel_id", usuarioId)
       .eq("status", "vendido")
       .is("arquivado_em", null)
       .gte("vendido_em", inicioISO)
@@ -172,6 +181,7 @@ export async function calcularMetricas(
     leadsTrabalhados: leads,
     ligacoes: ligacoes ?? 0,
     reunioesMarcadas: marcadas,
+    reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
     reunioesComProposta: comProposta,
     noShow: noShow ?? 0,

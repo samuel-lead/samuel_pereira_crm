@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { registrarNota } from "@/lib/leads/actions";
+import { BotaoVoltar } from "@/components/botao-voltar";
 import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { PageHeader } from "@/components/page-header";
@@ -152,12 +152,10 @@ export default async function EditarLeadPage({
       <PageHeader
         titulo={leadTipado.nome}
         acao={
-          <Link
-            href="/leads"
+          <BotaoVoltar
+            fallbackHref="/leads"
             className="text-sm text-neutral-500 hover:text-neutral-700"
-          >
-            Voltar
-          </Link>
+          />
         }
       />
 

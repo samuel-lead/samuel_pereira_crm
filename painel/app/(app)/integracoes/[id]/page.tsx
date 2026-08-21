@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { BotaoVoltar } from "@/components/botao-voltar";
 import { buscarIntegracao, STATUS_LABEL } from "@/lib/integracoes";
 
 export default async function IntegracaoDetalhePage({
@@ -22,12 +22,10 @@ export default async function IntegracaoDetalhePage({
       <PageHeader
         titulo={integracao.nome}
         acao={
-          <Link
-            href="/integracoes"
+          <BotaoVoltar
+            fallbackHref="/integracoes"
             className="text-sm text-neutral-500 hover:text-neutral-700"
-          >
-            Voltar
-          </Link>
+          />
         }
       />
 

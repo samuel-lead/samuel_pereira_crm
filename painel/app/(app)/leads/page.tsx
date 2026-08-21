@@ -7,7 +7,7 @@ import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
-import { diasUteisDesde } from "@/lib/datas";
+import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 import {
   buscarMetaReceitaMes,
   calcularReceitaOrg,
@@ -97,14 +97,11 @@ export default async function LeadsPage({
   const usuarios = usuariosData ?? [];
 
   const agora = new Date();
-  const amanha = new Date(agora);
-  amanha.setDate(amanha.getDate() + 1);
-  amanha.setHours(0, 0, 0, 0);
+  const inicioHoje = inicioDoDia(agora);
+  const amanha = new Date(inicioHoje.getTime() + UM_DIA_MS);
+  const inicioMes = inicioDoMes(agora);
 
   const orgId = usuarioAtual?.org_id ?? null;
-
-  const inicioHoje = new Date(agora);
-  inicioHoje.setHours(0, 0, 0, 0);
 
   const consultaLigacoesHoje = user
     ? supabase
@@ -180,8 +177,8 @@ export default async function LeadsPage({
     consultaNoShowHoje ? filtrarPorEscopo(consultaNoShowHoje) : { count: null },
     orgId
       ? Promise.all([
-          calcularReceitaOrg(supabase, orgId, inicioDoMes(agora), amanha),
-          buscarMetaReceitaMes(supabase, orgId, agora.getFullYear(), agora.getMonth() + 1),
+          calcularReceitaOrg(supabase, orgId, inicioMes, amanha),
+          buscarMetaReceitaMes(supabase, orgId, inicioMes.getUTCFullYear(), inicioMes.getUTCMonth() + 1),
         ])
       : Promise.resolve([null, null] as const),
     anexarUltimaAtividade(supabase, leads),

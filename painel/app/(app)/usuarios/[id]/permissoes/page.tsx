@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { BotaoVoltar } from "@/components/botao-voltar";
 import { EditarPermissoesForm } from "@/components/editar-permissoes-form";
 
 type UsuarioLinha = {
@@ -33,12 +33,10 @@ export default async function PermissoesUsuarioPage({
       <PageHeader
         titulo={`Permissões de ${usuario.nome}`}
         acao={
-          <Link
-            href="/usuarios"
+          <BotaoVoltar
+            fallbackHref="/usuarios"
             className="text-sm text-neutral-500 hover:text-neutral-700"
-          >
-            Voltar
-          </Link>
+          />
         }
       />
 
