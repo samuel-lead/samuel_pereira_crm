@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { BuscaLeads } from "@/components/busca-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 
@@ -96,14 +97,21 @@ export default async function BasePage({
 
   return (
     <>
-      <PageHeader titulo="Base de leads" acao={<BuscaLeads />} />
+      <BarraFixaKanban>
+        <PageHeader titulo="Base de leads" acao={<BuscaLeads />} />
 
-      <main className="px-6 py-6">
-        <p className="mb-4 text-sm text-neutral-500">
-          {leads.length} lead{leads.length === 1 ? "" : "s"} que não viraram vendas,
-          divididos pelos motivos
-        </p>
+        <div className="border-b border-neutral-200 px-6 py-4">
+          <p className="text-sm text-neutral-500">
+            {leads.length} lead{leads.length === 1 ? "" : "s"} que não viraram vendas,
+            divididos pelos motivos
+          </p>
+        </div>
+      </BarraFixaKanban>
 
+      <main
+        className="flex flex-col overflow-hidden px-6 py-6"
+        style={{ height: "calc(100vh - var(--kanban-barra-altura, 0px))" }}
+      >
         <BaseLeadsBoard leadsPorMotivo={leadsPorMotivo} nomePorUsuario={nomePorUsuario} />
       </main>
     </>

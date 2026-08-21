@@ -69,15 +69,16 @@ export function BaseLeadsBoard({
   const router = useRouter();
 
   return (
-    <div className="flex gap-5 overflow-x-auto pb-6 pl-1 pr-1">
+    <div className="relative h-full min-h-0 flex-1">
+      <div className="scrollbar-kanban flex h-full gap-5 overflow-x-auto pb-2 pl-1 pr-1">
       {COLUNAS.map((coluna) => {
         const leads = leadsPorMotivo[coluna.chave] ?? [];
         return (
           <section
             key={coluna.chave}
-            className={`flex w-72 shrink-0 flex-col rounded-xl border bg-neutral-50 shadow-sm ${coluna.cor.borda}`}
+            className={`kanban-column flex h-full w-72 shrink-0 flex-col rounded-xl border bg-neutral-50 shadow-sm ${coluna.cor.borda}`}
           >
-            <div className={`rounded-t-[10px] border-b-2 ${coluna.cor.borda} ${coluna.cor.header} px-4 py-3.5`}>
+            <div className={`shrink-0 rounded-t-[10px] border-b-2 ${coluna.cor.borda} ${coluna.cor.header} px-4 py-3.5`}>
               <div className="mb-2 flex items-center justify-between">
                 <span
                   className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ${coluna.cor.badge}`}
@@ -88,7 +89,7 @@ export function BaseLeadsBoard({
               <h2 className="text-sm font-semibold text-neutral-800">{coluna.nome}</h2>
             </div>
 
-            <div className="flex flex-1 flex-col gap-2.5 p-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-3">
               {leads.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-neutral-300 bg-white/50 px-3 py-6 text-center text-xs text-neutral-400">
                   Nenhum lead aqui
@@ -167,6 +168,7 @@ export function BaseLeadsBoard({
           </section>
         );
       })}
+      </div>
     </div>
   );
 }
