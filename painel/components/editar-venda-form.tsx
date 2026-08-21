@@ -53,11 +53,13 @@ export function EditarVendaForm({
   valorVenda,
   receitaVenda,
   produto,
+  produtos,
 }: {
   leadId: string;
   valorVenda: number | null;
   receitaVenda: number | null;
   produto: string | null;
+  produtos: string[];
 }) {
   const [aberto, setAberto] = useState(false);
   const acaoComId = editarVenda.bind(null, leadId);
@@ -83,7 +85,7 @@ export function EditarVendaForm({
         <label className="mb-1 block text-xs font-medium text-green-800">
           Produto
         </label>
-        <ProdutoSelect valorInicial={produto ?? undefined} />
+        <ProdutoSelect produtos={produtos} valorInicial={produto ?? undefined} />
       </div>
       {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}
       <div className="flex gap-2">

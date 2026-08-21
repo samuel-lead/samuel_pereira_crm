@@ -50,9 +50,11 @@ function CampoMoeda({
 export function MarcarVendidoForm({
   leadId,
   temProposta = true,
+  produtos,
 }: {
   leadId: string;
   temProposta?: boolean;
+  produtos: string[];
 }) {
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
@@ -97,7 +99,7 @@ export function MarcarVendidoForm({
           <label className="mb-1 block text-xs font-medium text-green-800">
             Produto
           </label>
-          <ProdutoSelect />
+          <ProdutoSelect produtos={produtos} />
         </div>
       </form>
     </div>

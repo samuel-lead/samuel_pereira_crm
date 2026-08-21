@@ -93,6 +93,7 @@ export default async function EditarLeadPage({
     { data: reunioesData },
     { data: usuariosData },
     { data: origensData },
+    { data: produtosData },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -115,6 +116,7 @@ export default async function EditarLeadPage({
       .order("agendada_para", { ascending: false }),
     supabase.from("usuarios").select("id, nome, funcao").order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
+    supabase.from("produtos").select("nome").order("nome"),
   ]);
 
   if (!lead) {
@@ -127,6 +129,7 @@ export default async function EditarLeadPage({
   const reunioes = (reunioesData ?? []) as Reuniao[];
   const usuarios = usuariosData ?? [];
   const origens = origensData ?? [];
+  const produtos = (produtosData ?? []).map((p) => p.nome);
   const souAdmin = usuarioAtual?.papel === "admin";
   const souCloserAtivo = reunioes.some(
     (r) => r.status === "marcada" && r.closer_id === user?.id
@@ -254,6 +257,7 @@ export default async function EditarLeadPage({
                     valorVenda={leadTipado.valor_venda}
                     receitaVenda={leadTipado.receita_venda}
                     produto={leadTipado.produto}
+                    produtos={produtos}
                   />
                 </div>
               )}
@@ -272,6 +276,7 @@ export default async function EditarLeadPage({
                 <MarcarVendidoForm
                   leadId={leadTipado.id}
                   temProposta={leadTipado.proposta_valor != null}
+                  produtos={produtos}
                 />
               </>
             )

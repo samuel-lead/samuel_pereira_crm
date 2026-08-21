@@ -207,3 +207,63 @@ export async function excluirOrigem(origemId: string) {
   revalidatePath("/leads");
   revalidatePath("/leads/novo");
 }
+
+export type EstadoProduto = { erro: string | null };
+
+export async function criarProduto(
+  _estadoAnterior: EstadoProduto,
+  formData: FormData
+): Promise<EstadoProduto> {
+  const { supabase, usuario } = await usuarioAdminOuErro();
+
+  const nome = String(formData.get("nome") ?? "").trim();
+  if (!nome) {
+    return { erro: "Digite o nome do produto" };
+  }
+
+  const { error } = await supabase.from("produtos").insert({ org_id: usuario.org_id, nome });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { erro: "Esse produto já existe" };
+    }
+    return { erro: error.message };
+  }
+
+  revalidatePath("/configuracoes");
+  return { erro: null };
+}
+
+export async function renomearProduto(produtoId: string, novoNome: string) {
+  const { supabase } = await usuarioAdminOuErro();
+
+  const nome = novoNome.trim();
+  if (!nome) {
+    throw new Error("O nome do produto não pode ficar em branco");
+  }
+
+  const { error } = await supabase.rpc("renomear_produto", {
+    produto_id: produtoId,
+    novo_nome: nome,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/leads");
+}
+
+export async function excluirProduto(produtoId: string) {
+  const { supabase } = await usuarioAdminOuErro();
+
+  const { error } = await supabase.rpc("excluir_produto", { produto_id: produtoId });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/leads");
+}

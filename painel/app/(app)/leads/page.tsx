@@ -249,7 +249,7 @@ export default async function LeadsPage({
             <p className="text-sm text-neutral-500">
               {mostrarSoParados
                 ? `${leadsExibidos.length} lead${leadsExibidos.length === 1 ? "" : "s"} parado${leadsExibidos.length === 1 ? "" : "s"} sendo mostrados`
-                : `${leads.length} lead${leads.length === 1 ? "" : "s"} sendo trabalhados`}
+                : `${leads.length} lead${leads.length === 1 ? "" : "s"} ao todo`}
             </p>
             {mostrarSoParados ? (
               <Link

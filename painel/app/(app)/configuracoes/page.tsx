@@ -3,6 +3,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { atualizarMetasConfig } from "@/lib/configuracoes/actions";
 import { OrigensConfig } from "@/components/origens-config";
+import { ProdutosConfig } from "@/components/produtos-config";
 
 type MetasConfig = {
   piso_leads_dia: number;
@@ -23,7 +24,7 @@ export default async function ConfiguracoesPage() {
   const souSuperAdmin = usuario?.super_admin === true;
   const souAdmin = usuario?.papel === "admin";
 
-  const [{ data: metasData }, { data: origensData }] = await Promise.all([
+  const [{ data: metasData }, { data: origensData }, { data: produtosData }] = await Promise.all([
     supabase
       .from("metas_config")
       .select(
@@ -34,10 +35,14 @@ export default async function ConfiguracoesPage() {
     souAdmin
       ? supabase.from("origens").select("id, nome").order("nome")
       : Promise.resolve({ data: null }),
+    souAdmin
+      ? supabase.from("produtos").select("id, nome").order("nome")
+      : Promise.resolve({ data: null }),
   ]);
 
   const metas = metasData as MetasConfig | null;
   const origens = origensData ?? [];
+  const produtos = produtosData ?? [];
 
   return (
     <>
@@ -174,6 +179,19 @@ export default async function ConfiguracoesPage() {
               que já usam ela.
             </p>
             <OrigensConfig origens={origens} />
+          </div>
+        )}
+
+        {souAdmin && (
+          <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+              Produtos
+            </h2>
+            <p className="mb-4 text-xs text-neutral-500">
+              Lista que aparece ao marcar uma venda. Renomear um produto
+              atualiza todos os leads que já usam ele.
+            </p>
+            <ProdutosConfig produtos={produtos} />
           </div>
         )}
       </main>

@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 
-export const PRODUTOS = ["Agenda Previsível", "Treinamento comercial"];
-
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 
-export function ProdutoSelect({ valorInicial }: { valorInicial?: string }) {
-  const ehConhecido = valorInicial ? PRODUTOS.includes(valorInicial) : false;
+export function ProdutoSelect({
+  produtos,
+  valorInicial,
+}: {
+  produtos: string[];
+  valorInicial?: string;
+}) {
+  const ehConhecido = valorInicial ? produtos.includes(valorInicial) : false;
   const [selecionado, setSelecionado] = useState(
     valorInicial ? (ehConhecido ? valorInicial : "Outro") : ""
   );
@@ -23,7 +27,7 @@ export function ProdutoSelect({ valorInicial }: { valorInicial?: string }) {
         className={campoClasse}
       >
         <option value="">Selecione o produto...</option>
-        {PRODUTOS.map((produto) => (
+        {produtos.map((produto) => (
           <option key={produto} value={produto}>
             {produto}
           </option>
