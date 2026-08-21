@@ -1,5 +1,5 @@
 import type { createClient } from "@/lib/supabase/server";
-import { UM_DIA_MS } from "@/lib/datas";
+import { UM_DIA_MS, diaDaSemana } from "@/lib/datas";
 
 export { inicioDaSemana, inicioDoMes } from "@/lib/datas";
 
@@ -618,8 +618,8 @@ export async function calcularBonusPorSdr(
         .lt("agendada_para", fimISO);
 
       const callsMarcadasNoFimDeSemana = (realizadasNoPeriodo ?? []).filter((r) => {
-        const diaDaSemana = new Date(r.marcada_em).getDay();
-        return diaDaSemana === 0 || diaDaSemana === 6;
+        const dia = diaDaSemana(r.marcada_em);
+        return dia === 0 || dia === 6;
       }).length;
 
       const bonusPorCallRealizada =

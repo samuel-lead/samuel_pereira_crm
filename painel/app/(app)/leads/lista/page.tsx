@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { corDoNivel, numerarNiveis, rotuloNivel, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
+import { parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
 
 type LeadLinha = {
   id: string;
@@ -42,11 +43,10 @@ export default async function ListaLeadsPage({
     consulta = consulta.ilike("nome", `%${busca}%`);
   }
   if (de) {
-    consulta = consulta.gte("declarado_em", `${de}T00:00:00`);
+    consulta = consulta.gte("declarado_em", parseDataBrasil(de).toISOString());
   }
   if (ate) {
-    const fim = new Date(`${ate}T00:00:00`);
-    fim.setDate(fim.getDate() + 1);
+    const fim = new Date(parseDataBrasil(ate).getTime() + UM_DIA_MS);
     consulta = consulta.lt("declarado_em", fim.toISOString());
   }
 

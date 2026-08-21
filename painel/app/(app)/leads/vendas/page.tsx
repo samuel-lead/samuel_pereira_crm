@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FiltroPeriodoVendas } from "@/components/filtro-periodo-vendas";
 import { IconeMoeda } from "@/components/icons";
+import { anoMesBrasil, parseDataBrasil } from "@/lib/datas";
 
 const NOMES_MES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -56,8 +57,10 @@ export default async function VendasPage({
 
   if (periodoFiltro && /^\d{4}-\d{2}$/.test(periodoFiltro)) {
     const [ano, mes] = periodoFiltro.split("-").map(Number);
-    const inicio = new Date(ano, mes - 1, 1);
-    const fim = new Date(ano, mes, 1);
+    const inicio = parseDataBrasil(`${ano}-${String(mes).padStart(2, "0")}-01`);
+    const proximoMes = mes === 12 ? 1 : mes + 1;
+    const anoProximoMes = mes === 12 ? ano + 1 : ano;
+    const fim = parseDataBrasil(`${anoProximoMes}-${String(proximoMes).padStart(2, "0")}-01`);
     consulta = consulta.gte("vendido_em", inicio.toISOString()).lt("vendido_em", fim.toISOString());
   }
 
@@ -72,10 +75,7 @@ export default async function VendasPage({
   ]);
 
   const chavesPeriodo = new Set(
-    (todasVendasData ?? []).map((v) => {
-      const data = new Date(v.vendido_em as string);
-      return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
-    })
+    (todasVendasData ?? []).map((v) => anoMesBrasil(v.vendido_em as string))
   );
   const periodos = Array.from(chavesPeriodo)
     .sort((a, b) => (a < b ? 1 : -1))

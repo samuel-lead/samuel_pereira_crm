@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { ResumoAno } from "@/components/resumo-ano";
 import { FiltroAnoSelect } from "@/components/filtro-ano-select";
 import { calcularResumoAno } from "@/lib/metricas";
+import { inicioDoDia } from "@/lib/datas";
 
 export default async function AnoPage({
   searchParams,
@@ -15,7 +16,8 @@ export default async function AnoPage({
   const { usuario } = await usuarioAutenticado();
 
   const agora = new Date();
-  const anoAtual = agora.getFullYear();
+  const hojeBrasil = inicioDoDia(agora);
+  const anoAtual = hojeBrasil.getUTCFullYear();
   const anoNumero = anoParam ? Number(anoParam) : anoAtual;
   const ano = Number.isFinite(anoNumero) && anoNumero > 0 ? anoNumero : anoAtual;
 
@@ -39,7 +41,7 @@ export default async function AnoPage({
       />
 
       <main className="bg-[#f4f5f7] px-6 py-6">
-        <ResumoAno dados={resumo} mesAtual={ano === anoAtual ? agora.getMonth() + 1 : 0} />
+        <ResumoAno dados={resumo} mesAtual={ano === anoAtual ? hojeBrasil.getUTCMonth() + 1 : 0} />
       </main>
     </>
   );

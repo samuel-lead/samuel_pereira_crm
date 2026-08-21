@@ -30,6 +30,30 @@ export function inicioDoMes(agora: Date = new Date()) {
   return meiaNoiteBrasil(local.getUTCFullYear(), local.getUTCMonth(), 1);
 }
 
+// Dia da semana (0 = domingo ... 6 = sábado) de um instante, no fuso do
+// Brasil — não no fuso do servidor. Ex.: bônus de fim de semana, que dá
+// errado perto da meia-noite se calculado no fuso errado.
+export function diaDaSemana(dataIso: string) {
+  const local = new Date(new Date(dataIso).getTime() - FUSO_BRASIL_MS);
+  return local.getUTCDay();
+}
+
+// Parseia uma data "solta" tipo "2026-08-25" (de um <input type="date">)
+// como meia-noite no fuso do Brasil — sem isso, o servidor (UTC) interpreta
+// como meia-noite UTC, que é 21h do dia anterior no Brasil.
+export function parseDataBrasil(dataStr: string) {
+  const [ano, mes, dia] = dataStr.split("-").map(Number);
+  return meiaNoiteBrasil(ano, mes - 1, dia);
+}
+
+// "YYYY-MM" de um instante, no fuso do Brasil — usado pra agrupar por mês
+// (ex.: filtro de período). Perto da meia-noite, o fuso do servidor podia
+// jogar uma venda pro mês errado.
+export function anoMesBrasil(dataIso: string) {
+  const local = new Date(new Date(dataIso).getTime() - FUSO_BRASIL_MS);
+  return `${local.getUTCFullYear()}-${String(local.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 // Quantos dias de calendário (fuso Brasil) já se passaram desde a data —
 // não é "quantas horas completas passaram". Uma atividade de ontem às 23h
 // já é "1 dia" às 00h01 de hoje, mesmo tendo passado só alguns minutos —
