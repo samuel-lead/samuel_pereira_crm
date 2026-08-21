@@ -105,8 +105,12 @@ export async function updateSession(request: NextRequest) {
 
     if (pagina) {
       const ehAdmin = usuario?.papel === "admin";
+      // Bônus SDR não é liberado por checkbox de permissão — é automático
+      // pra quem tem função SDR, mesmo sem ser admin. Closer não entra.
+      const ehBonusSdr = pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/");
+      const podeVerBonusSdr = ehBonusSdr && usuario?.funcao === "sdr";
 
-      if (!ehAdmin) {
+      if (!ehAdmin && !podeVerBonusSdr) {
         const paginasPermitidas: string[] = usuario?.paginas_permitidas ?? [];
         const permitido = pagina !== "admin" && paginasPermitidas.includes(pagina);
 

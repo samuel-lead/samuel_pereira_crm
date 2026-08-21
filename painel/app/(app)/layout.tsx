@@ -9,12 +9,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let nomeUsuario = "";
   let fotoUsuario: string | null = null;
   let cargo = "Membro";
+  let funcao: string | null = null;
 
   if (usuario) {
     isAdmin = usuario.papel === "admin";
     paginasPermitidas = usuario.paginas_permitidas ?? [];
     nomeUsuario = usuario.nome ?? "";
     fotoUsuario = usuario.foto_url ?? null;
+    funcao = usuario.funcao ?? null;
     cargo = isAdmin
       ? "Admin"
       : usuario?.funcao === "sdr"
@@ -32,6 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         nomeUsuario={nomeUsuario}
         fotoUsuario={fotoUsuario}
         cargo={cargo}
+        funcao={funcao}
       />
       <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
     </div>

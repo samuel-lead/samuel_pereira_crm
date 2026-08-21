@@ -44,20 +44,26 @@ export function Sidebar({
   nomeUsuario = "",
   fotoUsuario = null,
   cargo = "Membro",
+  funcao = null,
 }: {
   isAdmin?: boolean;
   paginasPermitidas?: string[];
   nomeUsuario?: string;
   fotoUsuario?: string | null;
   cargo?: string;
+  funcao?: string | null;
 }) {
   const pathname = usePathname();
   const [colapsado, setColapsado] = useState(false);
   const gruposVisiveis = GRUPOS.map((grupo) => ({
     ...grupo,
-    itens: grupo.itens.filter((item) =>
-      isAdmin ? true : item.pagina !== "admin" && paginasPermitidas.includes(item.pagina)
-    ),
+    itens: grupo.itens.filter((item) => {
+      if (isAdmin) return true;
+      // Bônus SDR é automático pra quem tem função SDR, não depende das
+      // páginas liberadas manualmente — Closer não vê essa página.
+      if (item.href === "/bonus-sdr") return funcao === "sdr";
+      return item.pagina !== "admin" && paginasPermitidas.includes(item.pagina);
+    }),
   })).filter((grupo) => grupo.itens.length > 0);
 
   return (
