@@ -7,6 +7,7 @@ import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
+import { diasDesde } from "@/lib/datas";
 import {
   buscarMetaReceitaMes,
   calcularReceitaOrg,
@@ -163,6 +164,13 @@ export default async function LeadsPage({
     leadsPorNivel[lead.nivel_ordem] = lista;
   }
 
+  // Mesmo critério do selo vermelho "Xd parado" de cada card — aqui é só a
+  // contagem geral, pra dar pra ver de longe quantos leads estão esfriando
+  // sem precisar abrir cada coluna.
+  const leadsParados = leadsComAtividade.filter(
+    (lead) => diasDesde(lead.ultima_atividade_em) >= 1
+  ).length;
+
   return (
     <>
       <BarraFixaKanban>
@@ -192,6 +200,11 @@ export default async function LeadsPage({
             <p className="text-sm text-neutral-500">
               {leads.length} lead{leads.length === 1 ? "" : "s"} sendo trabalhados
             </p>
+            {leadsParados > 0 && (
+              <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                {leadsParados} lead{leadsParados === 1 ? "" : "s"} parado{leadsParados === 1 ? "" : "s"}
+              </span>
+            )}
             {ligacoesHoje !== null && (
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                 {ligacoesHoje} ligaç{ligacoesHoje === 1 ? "ão" : "ões"} hoje
