@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
-import { linkWhatsApp } from "@/lib/whatsapp";
+import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag } from "@/components/icons";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -84,14 +84,16 @@ export function KanbanBoard({
     return souAdmin || lead.responsavel_id === usuarioAtualId;
   }
 
-  function abrirWhatsapp(e: React.MouseEvent, telefone: string) {
+  function aoClicarWhatsapp(e: React.MouseEvent, telefone: string) {
     e.preventDefault();
     e.stopPropagation();
-    window.open(
-      linkWhatsApp(telefone),
-      "whatsapp",
-      "width=420,height=680,noopener,noreferrer"
-    );
+    abrirWhatsApp(telefone, () => {
+      window.open(
+        linkWhatsApp(telefone),
+        "whatsapp",
+        "width=420,height=680,noopener,noreferrer"
+      );
+    });
   }
 
   function rolar(direcao: "esquerda" | "direita") {
@@ -307,7 +309,7 @@ export function KanbanBoard({
                           {lead.telefone_e164 && (
                             <a
                               href={linkWhatsApp(lead.telefone_e164)}
-                              onClick={(e) => abrirWhatsapp(e, lead.telefone_e164!)}
+                              onClick={(e) => aoClicarWhatsapp(e, lead.telefone_e164!)}
                               title="Chamar no WhatsApp"
                               className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-600"
                             >
