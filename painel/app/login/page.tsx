@@ -43,7 +43,7 @@ export default function LoginPage() {
           MV
         </span>
         <span className="text-2xl font-bold text-white">Meu Vendedor</span>
-        <span className="text-sm text-slate-400">Entre para gerenciar seus leads</span>
+        <span className="text-sm text-slate-400">Entre para gerenciar seu time de vendas</span>
       </div>
 
       <form
