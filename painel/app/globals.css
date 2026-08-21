@@ -367,6 +367,10 @@ body {
   border-color: rgba(37, 99, 235, 0.4);
 }
 
+.dark .border-blue-300 {
+  border-color: rgba(37, 99, 235, 0.5);
+}
+
 .dark .border-blue-400 {
   border-color: rgba(37, 99, 235, 0.6);
 }
@@ -413,6 +417,10 @@ body {
 
 .dark .kanban-card.border-t-red-400 {
   border-top-color: #f87171;
+}
+
+.dark .kanban-card .bg-neutral-100 {
+  background-color: #e5e5e5;
 }
 
 .dark .kanban-card .bg-neutral-200 {
