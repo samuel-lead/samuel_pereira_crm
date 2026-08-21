@@ -14,17 +14,19 @@ export function PageHeader({
   const [encolhido, setEncolhido] = useState(false);
 
   useEffect(() => {
-    // Nem toda página rola do mesmo jeito: a maioria rola a página inteira,
-    // mas o Kanban rola cada coluna por dentro. Captura o scroll de
-    // qualquer área rolável da tela (fase de captura, no document) e
-    // encolhe assim que alguma delas passar do topo — só volta ao tamanho
-    // normal quando todas voltarem pro topo.
+    // Nem toda página rola do mesmo jeito: a maioria rola a página inteira.
+    // Captura o scroll de qualquer área rolável da tela (fase de captura,
+    // no document) e encolhe assim que alguma delas passar do topo — só
+    // volta ao tamanho normal quando todas voltarem pro topo. As colunas do
+    // Kanban rolam por dentro sem parar enquanto o SDR trabalha os leads —
+    // ignora esse scroll aqui, senão o cabeçalho fica piscando o tempo todo.
     const roladas = new Set<EventTarget>();
     let quadroAgendado = false;
 
     function aoRolar(evento: Event) {
       const alvo = evento.target as HTMLElement | null;
       if (!alvo || typeof alvo.scrollTop !== "number") return;
+      if (alvo.closest("[data-scroll-interno]")) return;
 
       if (alvo.scrollTop > LIMIAR_ENCOLHER) {
         roladas.add(alvo);
