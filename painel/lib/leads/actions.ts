@@ -156,6 +156,14 @@ async function sincronizarReuniao(
       dataMarcada = parsed;
     }
 
+    // Se o lead já teve alguma reunião antes, essa aqui é um reagendamento
+    // (ex.: veio de um No-show), não uma call nova — não pode contar como
+    // "call marcada" nova na métrica do dia.
+    const { count: reunioesAnteriores } = await supabase
+      .from("reunioes")
+      .select("id", { count: "exact", head: true })
+      .eq("lead_id", leadId);
+
     const { error } = await supabase.from("reunioes").insert({
       org_id: orgId,
       usuario_id: usuarioId,
@@ -164,6 +172,7 @@ async function sincronizarReuniao(
       marcada_em: dataMarcada.toISOString(),
       closer_id: closerId || null,
       status: "marcada",
+      reagendada: !!reunioesAnteriores && reunioesAnteriores > 0,
     });
 
     if (error) return error.message;

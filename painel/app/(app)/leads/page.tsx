@@ -121,6 +121,17 @@ export default async function LeadsPage({
         .from("reunioes")
         .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
         .is("leads.arquivado_em", null)
+        .eq("reagendada", false)
+        .gte("marcada_em", inicioHoje.toISOString())
+        .lt("marcada_em", amanha.toISOString())
+    : null;
+
+  const consultaReagendamentosHoje = user
+    ? supabase
+        .from("reunioes")
+        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .is("leads.arquivado_em", null)
+        .eq("reagendada", true)
         .gte("marcada_em", inicioHoje.toISOString())
         .lt("marcada_em", amanha.toISOString())
     : null;
@@ -146,12 +157,14 @@ export default async function LeadsPage({
   const [
     { count: ligacoesHoje },
     { count: callsMarcadasHoje },
+    { count: reagendamentosHoje },
     { count: callsRealizadasHoje },
     [receitaOrgMes, metaReceita],
     leadsComAtividade,
   ] = await Promise.all([
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
     consultaCallsMarcadasHoje ? filtrarPorEscopo(consultaCallsMarcadasHoje) : { count: null },
+    consultaReagendamentosHoje ? filtrarPorEscopo(consultaReagendamentosHoje) : { count: null },
     consultaCallsRealizadasHoje ? filtrarPorEscopo(consultaCallsRealizadasHoje) : { count: null },
     orgId
       ? Promise.all([
@@ -257,6 +270,12 @@ export default async function LeadsPage({
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                 {callsMarcadasHoje} call{callsMarcadasHoje === 1 ? "" : "s"} marcada
                 {callsMarcadasHoje === 1 ? "" : "s"} hoje
+                {souAdmin ? " (equipe)" : ""}
+              </span>
+            )}
+            {reagendamentosHoje !== null && reagendamentosHoje > 0 && (
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                {reagendamentosHoje} reagendamento{reagendamentosHoje === 1 ? "" : "s"} hoje
                 {souAdmin ? " (equipe)" : ""}
               </span>
             )}
