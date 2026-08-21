@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
-import { linkWhatsApp } from "@/lib/whatsapp";
+import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag } from "@/components/icons";
 
@@ -90,11 +90,7 @@ export function KanbanBoard({
   function aoClicarWhatsapp(e: React.MouseEvent, telefone: string) {
     e.preventDefault();
     e.stopPropagation();
-    window.open(
-      linkWhatsApp(telefone),
-      "whatsapp",
-      "width=420,height=680,noopener,noreferrer"
-    );
+    abrirWhatsApp(telefone);
   }
 
   function rolar(direcao: "esquerda" | "direita") {

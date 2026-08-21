@@ -19,12 +19,27 @@ function digitosWhatsApp(telefone: string) {
 export function linkWhatsApp(telefone: string) {
   // Vai direto pro WhatsApp Web com a conversa aberta — o wa.me mostra uma
   // tela de propaganda/download antes, o que a gente não quer aqui.
-  //
-  // Já existiu uma tentativa de abrir o app do WhatsApp instalado no
-  // computador (esquema "whatsapp://") antes de cair pro Web. Removida:
-  // no Mac o navegador mostra um aviso de permissão pra abrir o app, e
-  // como isso não fecha a aba nem esconde a página a tempo, a lógica de
-  // fallback também abria o Web ao mesmo tempo — duas telas brigando,
-  // o usuário precisava clicar várias vezes pra sair da confusão.
   return `https://web.whatsapp.com/send?phone=55${digitosWhatsApp(telefone)}`;
+}
+
+// Esquema que o app do WhatsApp instalado no computador (Mac/Windows)
+// reconhece e abre a conversa direto nele, sem passar pelo navegador.
+function linkWhatsAppApp(telefone: string) {
+  return `whatsapp://send?phone=55${digitosWhatsApp(telefone)}`;
+}
+
+// Dispara o app E o Web ao mesmo tempo, sem tentar adivinhar antes se o
+// app está instalado — não dá pra saber isso de forma confiável (o
+// navegador não avisa a tempo, então uma tentativa anterior de "tenta o
+// app, e só abre o Web se não abriu" acabava abrindo os dois de qualquer
+// jeito, só que atrasado e confuso). Disparando junto: se o app existir,
+// abre os dois (a aba Web fica sobrando, mas não atrapalha); se não
+// existir, só a aba Web abre.
+export function abrirWhatsApp(telefone: string) {
+  window.open(
+    linkWhatsApp(telefone),
+    "whatsapp",
+    "width=420,height=680,noopener,noreferrer"
+  );
+  window.location.href = linkWhatsAppApp(telefone);
 }

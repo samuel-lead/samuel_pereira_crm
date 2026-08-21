@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { IconeWhatsapp } from "@/components/icons";
-import { linkWhatsApp } from "@/lib/whatsapp";
+import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
 
 export type LeadBase = {
@@ -145,7 +145,11 @@ export function BaseLeadsBoard({
                           {lead.telefone_e164 && (
                             <a
                               href={linkWhatsApp(lead.telefone_e164)}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                abrirWhatsApp(lead.telefone_e164!);
+                              }}
                               title="Chamar no WhatsApp"
                               className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-600"
                             >
