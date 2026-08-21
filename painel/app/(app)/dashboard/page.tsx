@@ -10,6 +10,7 @@ import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { CompartilharRelatorioButton } from "@/components/compartilhar-relatorio-button";
 import {
   calcularMetricas,
+  calcularMetricasOrg,
   calcularVendasPorCanal,
   calcularVendasPorProduto,
   calcularMetricasPorUsuario,
@@ -57,8 +58,15 @@ export default async function DashboardPage() {
     metaReceita,
     { data: metasData },
   ] = await Promise.all([
-    calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
-    calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
+    // Admin vê a organização inteira aqui (não só a produção pessoal dele —
+    // ele geralmente não é quem mais vende, é quem acompanha o time todo).
+    // SDR continua vendo só a própria produção, pra bater a meta individual.
+    souAdmin
+      ? calcularMetricasOrg(supabase, usuario!.org_id, inicioSemana, amanha)
+      : calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
+    souAdmin
+      ? calcularMetricasOrg(supabase, usuario!.org_id, inicioMes, amanha)
+      : calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
     souAdmin
       ? calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha)
       : Promise.resolve([]),

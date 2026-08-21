@@ -196,6 +196,137 @@ export async function calcularMetricas(
   };
 }
 
+// Mesmo cálculo do calcularMetricas, mas da organização inteira, não de uma
+// pessoa só. É o que aparece pro admin em "Esta semana"/"Este mês" — antes
+// mostrava só a produção pessoal do admin (quase sempre zero, já que quem
+// vende de verdade é o time), parecendo que não tinha faturamento nenhum.
+export async function calcularMetricasOrg(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<Metricas> {
+  const inicioISO = inicio.toISOString();
+  const fimISO = fim.toISOString();
+
+  const [
+    { data: leadsDeclarados },
+    { count: ligacoes },
+    { data: reunioesDoPeriodo },
+    { count: reunioesReagendadas },
+    { count: reunioesRealizadas },
+    { count: reunioesComProposta },
+    { count: noShow },
+    { data: vendasData },
+  ] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("id")
+      .eq("org_id", orgId)
+      .is("arquivado_em", null)
+      .gte("declarado_em", inicioISO)
+      .lt("declarado_em", fimISO),
+    supabase
+      .from("interacoes")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("tipo", "ligacao")
+      .is("excluido_em", null)
+      .gte("ocorreu_em", inicioISO)
+      .lt("ocorreu_em", fimISO),
+    supabase
+      .from("reunioes")
+      .select("id, lead_id, leads!inner(arquivado_em)")
+      .eq("org_id", orgId)
+      .is("leads.arquivado_em", null)
+      .or(
+        `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
+      ),
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("reagendada", true)
+      .is("leads.arquivado_em", null)
+      .gte("marcada_em", inicioISO)
+      .lt("marcada_em", fimISO),
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("status", "realizada")
+      .is("leads.arquivado_em", null)
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", fimISO),
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em, proposta_valor)", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("status", "realizada")
+      .is("leads.arquivado_em", null)
+      .not("leads.proposta_valor", "is", null)
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", fimISO),
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("status", "nao_compareceu")
+      .is("leads.arquivado_em", null)
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", fimISO),
+    supabase
+      .from("leads")
+      .select("receita_venda, valor_venda, proposta_valor")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicioISO)
+      .lt("vendido_em", fimISO),
+  ]);
+
+  const vendas = vendasData?.length ?? 0;
+  const vendasComProposta = (vendasData ?? []).filter(
+    (l) => l.proposta_valor != null
+  ).length;
+  const receita = (vendasData ?? []).reduce(
+    (soma, l) => soma + Number(l.receita_venda ?? 0),
+    0
+  );
+  const faturamento = (vendasData ?? []).reduce(
+    (soma, l) => soma + Number(l.valor_venda ?? 0),
+    0
+  );
+
+  const idsTrabalhados = new Set<string>([
+    ...(leadsDeclarados ?? []).map((l) => l.id),
+    ...(reunioesDoPeriodo ?? []).map((r) => r.lead_id),
+  ]);
+
+  const leads = idsTrabalhados.size;
+  const marcadas = reunioesDoPeriodo?.length ?? 0;
+  const realizadas = reunioesRealizadas ?? 0;
+  const comProposta = reunioesComProposta ?? 0;
+
+  return {
+    leadsTrabalhados: leads,
+    ligacoes: ligacoes ?? 0,
+    reunioesMarcadas: marcadas,
+    reunioesReagendadas: reunioesReagendadas ?? 0,
+    reunioesRealizadas: realizadas,
+    reunioesComProposta: comProposta,
+    noShow: noShow ?? 0,
+    vendas,
+    receita,
+    faturamento,
+    ticketMedio: vendas > 0 ? receita / vendas : null,
+    taxaAgendamento: leads > 0 ? marcadas / leads : null,
+    taxaComparecimento: marcadas > 0 ? realizadas / marcadas : null,
+    taxaVenda: comProposta > 0 ? vendasComProposta / comProposta : null,
+    diasUteis: diasUteisEntre(inicio, fim < new Date() ? fim : new Date()),
+  };
+}
+
 export type VendasHoje = {
   vendas: number;
   faturamento: number;
