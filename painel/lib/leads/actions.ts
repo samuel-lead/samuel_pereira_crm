@@ -529,6 +529,49 @@ export async function marcarVendido(
   return { erro: null };
 }
 
+export async function editarVenda(
+  leadId: string,
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    return { erro: erroPermissao };
+  }
+
+  const valorRaw = String(formData.get("valor_venda") ?? "").trim();
+  const valor = valorRaw ? Number(valorRaw) : null;
+
+  if (!valor || valor <= 0) {
+    return { erro: "Informe o valor da venda" };
+  }
+
+  const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
+  const receita = receitaRaw ? Number(receitaRaw) : null;
+
+  if (!receita || receita <= 0) {
+    return { erro: "Informe a receita recebida" };
+  }
+
+  const produto = String(formData.get("produto") ?? "").trim() || null;
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ valor_venda: valor, receita_venda: receita, produto })
+    .eq("id", leadId)
+    .eq("status", "vendido");
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  revalidatePath("/leads/vendas");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
 export async function registrarProposta(
   leadId: string,
   _estadoAnterior: EstadoFormulario,

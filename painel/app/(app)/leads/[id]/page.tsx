@@ -7,6 +7,7 @@ import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
+import { EditarVendaForm } from "@/components/editar-venda-form";
 import { RegistrarPropostaForm } from "@/components/registrar-proposta-form";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
@@ -246,6 +247,16 @@ export default async function EditarLeadPage({
                 <p className="mt-1 text-xs text-green-600">
                   {formatarData(leadTipado.vendido_em)}
                 </p>
+              )}
+              {podeEditar && (
+                <div className="mt-3">
+                  <EditarVendaForm
+                    leadId={leadTipado.id}
+                    valorVenda={leadTipado.valor_venda}
+                    receitaVenda={leadTipado.receita_venda}
+                    produto={leadTipado.produto}
+                  />
+                </div>
               )}
             </div>
           ) : (
