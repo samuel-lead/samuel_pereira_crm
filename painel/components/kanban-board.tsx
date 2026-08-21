@@ -2,13 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
-import { corDoNivel, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { corDoNivel, numerarNiveis, ORDEM_OPORTUNIDADE_FUTURA, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag } from "@/components/icons";
 
 const NIVEL_REUNIAO_MARCADA = 4;
+const NIVEL_FOLLOW_POS_REUNIAO = 6;
+const NIVEL_REUNIAO_FEITA = 7;
 
 type LeadResumo = {
   id: string;
@@ -102,8 +104,9 @@ export function KanbanBoard({
     });
   }
 
-  function aoComecarArrastar(e: React.DragEvent, leadId: string) {
+  function aoComecarArrastar(e: React.DragEvent, leadId: string, nivelOrigem: number) {
     e.dataTransfer.setData("text/plain", leadId);
+    e.dataTransfer.setData("application/x-nivel-origem", String(nivelOrigem));
     e.dataTransfer.effectAllowed = "move";
   }
 
@@ -116,6 +119,7 @@ export function KanbanBoard({
   function aoSoltarNaColuna(e: React.DragEvent, ordem: number) {
     e.preventDefault();
     const leadId = e.dataTransfer.getData("text/plain");
+    const nivelOrigem = Number(e.dataTransfer.getData("application/x-nivel-origem"));
     setColunaAlvo(null);
     if (!leadId) return;
 
@@ -123,6 +127,21 @@ export function KanbanBoard({
     // editar em vez de mover na hora, pra usar o seletor de data de verdade.
     if (ordem === NIVEL_REUNIAO_MARCADA) {
       router.push(`/leads/${leadId}?marcarReuniao=1`);
+      return;
+    }
+
+    // Saindo de "Reunião marcada" pra "Follow após reunião" ou
+    // "Oportunidades": precisa confirmar se a reunião realmente aconteceu —
+    // senão conta errado na taxa de comparecimento. Manda pra tela de
+    // editar, igual "Reunião marcada" acima.
+    if (
+      nivelOrigem === NIVEL_REUNIAO_MARCADA &&
+      (ordem === NIVEL_FOLLOW_POS_REUNIAO ||
+        ordem === NIVEL_REUNIAO_FEITA ||
+        ordem === ORDEM_OPORTUNIDADE_FUTURA)
+    ) {
+      const alvo = ordem === ORDEM_OPORTUNIDADE_FUTURA ? "oportunidade_futura" : String(ordem);
+      router.push(`/leads/${leadId}?confirmarReuniao=${alvo}`);
       return;
     }
 
@@ -220,7 +239,7 @@ export function KanbanBoard({
                           if (e.key === "Enter") router.push(`/leads/${lead.id}`);
                         }}
                         draggable={arrastavel}
-                        onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead.id)}
+                        onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead.id, lead.nivel_ordem)}
                         title={
                           arrastavel
                             ? atrasado

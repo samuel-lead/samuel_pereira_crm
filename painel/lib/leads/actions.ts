@@ -118,9 +118,24 @@ async function sincronizarReuniao(
     agendadaPara?: string | null;
     marcadaEm?: string | null;
     closerId?: string | null;
+    // Só é perguntado saindo de "Reunião marcada" pra "Follow após reunião"
+    // ou "Oportunidades" — indica se a reunião realmente aconteceu. Se
+    // false, não conta como "realizada" (mesmo efeito de um No-show na
+    // taxa de comparecimento), mesmo o lead seguindo pro nível escolhido.
+    reuniaoAconteceu?: boolean;
   }
 ): Promise<string | null> {
-  const { orgId, usuarioId, leadId, deOrdem, paraOrdem, agendadaPara, marcadaEm, closerId } = params;
+  const {
+    orgId,
+    usuarioId,
+    leadId,
+    deOrdem,
+    paraOrdem,
+    agendadaPara,
+    marcadaEm,
+    closerId,
+    reuniaoAconteceu,
+  } = params;
 
   if (paraOrdem === NIVEL_REUNIAO_MARCADA && deOrdem !== NIVEL_REUNIAO_MARCADA) {
     if (!agendadaPara) {
@@ -171,19 +186,20 @@ async function sincronizarReuniao(
       .maybeSingle();
 
     if (reuniao) {
-      const novoStatus = paraOrdem === NIVEL_NO_SHOW ? "nao_compareceu" : "realizada";
+      const novoStatus =
+        paraOrdem === NIVEL_NO_SHOW || reuniaoAconteceu === false
+          ? "nao_compareceu"
+          : "realizada";
       const { error } = await supabase
         .from("reunioes")
         .update({ status: novoStatus })
         .eq("id", reuniao.id);
       if (error) return error.message;
 
-      // Reunião realizada (foi pra Follow ou já virou Oportunidade): o
-      // lead passa a ser 100% do Closer que fez a call.
-      if (
-        (paraOrdem === NIVEL_FOLLOW_POS_REUNIAO || paraOrdem === NIVEL_REUNIAO_FEITA) &&
-        reuniao.closer_id
-      ) {
+      // Reunião realizada de verdade (foi pra Follow ou já virou
+      // Oportunidade E a reunião de fato aconteceu): o lead passa a ser
+      // 100% do Closer que fez a call.
+      if (novoStatus === "realizada" && reuniao.closer_id) {
         const { error: erroTransferencia } = await supabase.rpc(
           "transferir_lead_para_closer",
           { p_lead_id: leadId, p_closer_id: reuniao.closer_id }
@@ -258,6 +274,7 @@ export async function atualizarLead(
   const reuniaoMarcadaEm = String(formData.get("marcada_em") ?? "").trim() || null;
   const closerId = String(formData.get("closer_id") ?? "").trim() || null;
   const motivoBaseForm = String(formData.get("motivo_base") ?? "").trim() || null;
+  const reuniaoAconteceuForm = String(formData.get("reuniao_aconteceu") ?? "").trim();
   // Só faz sentido em Oportunidades (nível 6) — fora dele, fica sempre false.
   const oportunidadeFutura =
     novoNivel === NIVEL_REUNIAO_FEITA && formData.get("oportunidade_futura") === "on";
@@ -323,6 +340,19 @@ export async function atualizarLead(
     return { erro: "Escolha o motivo pelo qual esse lead está indo pra Base." };
   }
 
+  // Saindo de "Reunião marcada" pra "Follow após reunião" ou
+  // "Oportunidades": confirma se a reunião realmente aconteceu, senão a
+  // taxa de comparecimento conta reunião que nunca rolou.
+  if (
+    nivelMudou &&
+    leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA &&
+    (novoNivel === NIVEL_FOLLOW_POS_REUNIAO || novoNivel === NIVEL_REUNIAO_FEITA) &&
+    reuniaoAconteceuForm !== "sim" &&
+    reuniaoAconteceuForm !== "nao"
+  ) {
+    return { erro: "Confirme se essa reunião realmente aconteceu." };
+  }
+
   const motivoBase = novoNivel === NIVEL_BASE ? motivoBaseForm ?? leadAtual.motivo_base : null;
 
   if (nivelMudou) {
@@ -335,6 +365,7 @@ export async function atualizarLead(
       agendadaPara: reuniaoData,
       marcadaEm: reuniaoMarcadaEm,
       closerId,
+      reuniaoAconteceu: reuniaoAconteceuForm === "sim",
     });
     if (erroReuniao) {
       return { erro: erroReuniao };

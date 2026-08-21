@@ -7,6 +7,7 @@ import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 
 const NIVEL_REUNIAO_MARCADA = "4";
+const NIVEL_FOLLOW_POS_REUNIAO = "6";
 const NIVEL_OPORTUNIDADES = "7";
 const NIVEL_BASE = "8";
 const OPCAO_OPORTUNIDADE_FUTURA = "oportunidade_futura";
@@ -54,6 +55,7 @@ export function EditarLeadForm({
   souAdmin = true,
   podeEditar = true,
   preSelecionarReuniao = false,
+  preSelecionarNivel,
 }: {
   lead: Lead;
   niveis: NivelResumo[];
@@ -63,13 +65,24 @@ export function EditarLeadForm({
   souAdmin?: boolean;
   podeEditar?: boolean;
   preSelecionarReuniao?: boolean;
+  // Veio do drag-and-drop no Kanban (saindo de "Reunião marcada" pra
+  // "Follow após reunião"/"Oportunidades"): já chega com o nível de
+  // destino escolhido, só falta confirmar se a reunião aconteceu.
+  preSelecionarNivel?: string;
 }) {
   const acaoComId = atualizarLead.bind(null, lead.id);
   const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
   const [nivelSelecionado, setNivelSelecionado] = useState(
-    preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
+    preSelecionarReuniao
+      ? NIVEL_REUNIAO_MARCADA
+      : preSelecionarNivel === OPCAO_OPORTUNIDADE_FUTURA
+        ? NIVEL_OPORTUNIDADES
+        : preSelecionarNivel ?? String(lead.nivel_ordem)
   );
-  const [oportunidadeFutura, setOportunidadeFutura] = useState(lead.oportunidade_futura);
+  const [oportunidadeFutura, setOportunidadeFutura] = useState(
+    preSelecionarNivel === OPCAO_OPORTUNIDADE_FUTURA ? true : lead.oportunidade_futura
+  );
+  const [reuniaoAconteceu, setReuniaoAconteceu] = useState("");
 
   // "Oportunidades futuras" não é um nível de verdade no banco — é o nível
   // 7 (Leads para fim do mês) + essa marcação. Mas o SDR quer escolher ela
@@ -93,6 +106,12 @@ export function EditarLeadForm({
     nivelSelecionado === NIVEL_REUNIAO_MARCADA && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA;
   const vaiEntrarEmBase =
     nivelSelecionado === NIVEL_BASE && String(lead.nivel_ordem) !== NIVEL_BASE;
+  // Saindo de "Reunião marcada" pra "Follow após reunião" ou
+  // "Oportunidades": a taxa de comparecimento só pode contar reunião que
+  // realmente aconteceu, então confirma antes de deixar salvar.
+  const vaiConfirmarReuniao =
+    String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA &&
+    (nivelSelecionado === NIVEL_FOLLOW_POS_REUNIAO || nivelSelecionado === NIVEL_OPORTUNIDADES);
   // "Sobre o lead" só faz sentido a partir de Reunião marcada — é ali que
   // o SDR precisa preencher pra marcar a call. Antes disso (Sem conversa,
   // Em qualificação, Topou reunião sem horário) só existe "Registrar
@@ -246,6 +265,41 @@ export function EditarLeadForm({
                   funcaoFiltro="closer"
                 />
               </div>
+            </div>
+          )}
+
+          {vaiConfirmarReuniao && (
+            <div className="mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm font-medium text-amber-800">
+                Essa reunião realmente aconteceu?
+              </p>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                  <input
+                    type="radio"
+                    name="reuniao_aconteceu"
+                    value="sim"
+                    checked={reuniaoAconteceu === "sim"}
+                    onChange={() => setReuniaoAconteceu("sim")}
+                    required
+                  />
+                  Sim
+                </label>
+                <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                  <input
+                    type="radio"
+                    name="reuniao_aconteceu"
+                    value="nao"
+                    checked={reuniaoAconteceu === "nao"}
+                    onChange={() => setReuniaoAconteceu("nao")}
+                  />
+                  Não
+                </label>
+              </div>
+              <p className="text-xs text-amber-700">
+                Se marcar &quot;Não&quot;, essa reunião não conta na taxa de
+                comparecimento — mesmo o lead seguindo pro nível escolhido.
+              </p>
             </div>
           )}
 
