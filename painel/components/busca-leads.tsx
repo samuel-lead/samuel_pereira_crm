@@ -42,7 +42,7 @@ export function BuscaLeads() {
         value={valor}
         onChange={(e) => aoDigitar(e.target.value)}
         placeholder="Buscar lead..."
-        className="w-52 rounded-lg border-2 border-blue-300 bg-blue-50 py-2.5 pl-9 pr-3 text-sm font-medium text-neutral-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-blue-700/70 focus:w-64 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
+        className="busca-lead-input w-52 rounded-lg border-2 border-blue-500 py-2.5 pl-9 pr-3 text-sm font-medium shadow-md outline-none transition focus:w-64 focus:ring-2 focus:ring-blue-400/40"
       />
     </div>
   );
