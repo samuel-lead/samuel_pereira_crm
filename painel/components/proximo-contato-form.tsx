@@ -83,6 +83,7 @@ export function ProximoContatoForm({
           type="datetime-local"
           name="proximo_follow_em"
           required
+          onClick={(e) => e.currentTarget.showPicker?.()}
           className="w-full rounded-md border border-teal-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
 

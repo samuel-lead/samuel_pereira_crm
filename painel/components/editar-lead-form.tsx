@@ -25,6 +25,13 @@ function agoraParaInputLocal() {
   return local.toISOString().slice(0, 16);
 }
 
+// Sem isso, só clicar no iconezinho de calendário no canto do campo abre o
+// seletor — clicar em qualquer outro lugar do campo só posiciona o cursor
+// pra digitar. Clicar em qualquer ponto do campo já abre o seletor.
+function abrirSeletorDeData(e: React.MouseEvent<HTMLInputElement>) {
+  e.currentTarget.showPicker?.();
+}
+
 type Lead = {
   id: string;
   nome: string;
@@ -233,6 +240,7 @@ export function EditarLeadForm({
                   type="datetime-local"
                   required
                   defaultValue={agoraParaInputLocal()}
+                  onClick={abrirSeletorDeData}
                   className={`${campoClasse} bg-white`}
                 />
                 <p className="text-xs text-green-700">
@@ -250,6 +258,7 @@ export function EditarLeadForm({
                   name="reuniao_data"
                   type="datetime-local"
                   required
+                  onClick={abrirSeletorDeData}
                   className={`${campoClasse} bg-white`}
                 />
               </div>
