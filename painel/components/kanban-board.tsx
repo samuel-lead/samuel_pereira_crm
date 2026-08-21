@@ -5,7 +5,7 @@ import { useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, ORDEM_OPORTUNIDADE_FUTURA, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
-import { diasDesde } from "@/lib/datas";
+import { diasUteisDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -37,7 +37,7 @@ function formatarDataHora(iso: string) {
 
 function diasSemAtividade(ultimaAtividadeEm?: string) {
   if (!ultimaAtividadeEm) return 0;
-  return diasDesde(ultimaAtividadeEm);
+  return diasUteisDesde(ultimaAtividadeEm);
 }
 
 function formatarMoeda(valor: number) {

@@ -7,7 +7,7 @@ import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
-import { diasDesde } from "@/lib/datas";
+import { diasUteisDesde } from "@/lib/datas";
 import {
   buscarMetaReceitaMes,
   calcularReceitaOrg,
@@ -194,7 +194,7 @@ export default async function LeadsPage({
   function ehParado(lead: (typeof leadsComAtividade)[number]) {
     const proximoContatoPendente =
       !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
-    return diasDesde(lead.ultima_atividade_em) >= 1 && !proximoContatoPendente;
+    return diasUteisDesde(lead.ultima_atividade_em) >= 1 && !proximoContatoPendente;
   }
 
   const leadsParados = leadsComAtividade.filter(ehParado).length;
