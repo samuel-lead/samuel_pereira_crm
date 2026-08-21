@@ -20,27 +20,6 @@ body {
   background-color: #f8f8f6;
 }
 
-/* Busca de lead: sempre a cor oposta do fundo da tela, pra sempre destacar
-   — preta no modo claro (fundo claro), branca no modo escuro (fundo
-   escuro). Nunca "meio termo" que quase some em qualquer um dos dois. */
-.busca-lead-input {
-  background-color: #171717;
-  color: #ffffff;
-}
-
-.busca-lead-input::placeholder {
-  color: #a3a3a3;
-}
-
-.dark .busca-lead-input {
-  background-color: #ffffff;
-  color: #171717;
-}
-
-.dark .busca-lead-input::placeholder {
-  color: #737373;
-}
-
 /* Modo escuro — sobrescreve as classes do Tailwind já usadas no app quando
    o <html> tem a classe "dark". O sistema inteiro usa um conjunto pequeno
    e consistente de cores (branco, cinza-neutro, e "chips" claros de cor),
