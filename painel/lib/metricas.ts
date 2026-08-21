@@ -7,6 +7,7 @@ export type Metricas = {
   ligacoes: number;
   reunioesMarcadas: number;
   reunioesRealizadas: number;
+  reunioesComProposta: number;
   noShow: number;
   vendas: number;
   receita: number;
@@ -66,6 +67,7 @@ export async function calcularMetricas(
     { count: ligacoes },
     { data: reunioesDoPeriodo },
     { count: reunioesRealizadas },
+    { count: reunioesComProposta },
     { count: noShow },
     { data: vendasData },
   ] = await Promise.all([
@@ -106,6 +108,20 @@ export async function calcularMetricas(
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
+    // Taxa de venda só pode contar reunião que teve proposta registrada —
+    // uma reunião realizada sem proposta não é uma chance de venda de
+    // verdade. `proposta_valor` é um campo no lead (não por reunião), então
+    // isso conta "o lead dessa reunião tem proposta registrada hoje", não
+    // necessariamente feita naquela reunião específica.
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em, proposta_valor)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
+      .eq("status", "realizada")
+      .is("leads.arquivado_em", null)
+      .not("leads.proposta_valor", "is", null)
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", fimISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -116,7 +132,7 @@ export async function calcularMetricas(
       .lt("agendada_para", fimISO),
     supabase
       .from("leads")
-      .select("receita_venda, valor_venda")
+      .select("receita_venda, valor_venda, proposta_valor")
       .eq("usuario_id", usuarioId)
       .eq("status", "vendido")
       .is("arquivado_em", null)
@@ -124,7 +140,15 @@ export async function calcularMetricas(
       .lt("vendido_em", fimISO),
   ]);
 
+  // Receita/faturamento contam TODA venda (é dinheiro real, não pode sumir
+  // do relatório por falta de burocracia). A taxa de conversão é outra
+  // coisa — mede processo, não caixa — por isso só credita venda cujo lead
+  // tem proposta registrada, senão passaria de 100% quando alguém vende
+  // sem passar pelo "Registrar proposta".
   const vendas = vendasData?.length ?? 0;
+  const vendasComProposta = (vendasData ?? []).filter(
+    (l) => l.proposta_valor != null
+  ).length;
   const receita = (vendasData ?? []).reduce(
     (soma, l) => soma + Number(l.receita_venda ?? 0),
     0
@@ -142,12 +166,14 @@ export async function calcularMetricas(
   const leads = idsTrabalhados.size;
   const marcadas = reunioesDoPeriodo?.length ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
+  const comProposta = reunioesComProposta ?? 0;
 
   return {
     leadsTrabalhados: leads,
     ligacoes: ligacoes ?? 0,
     reunioesMarcadas: marcadas,
     reunioesRealizadas: realizadas,
+    reunioesComProposta: comProposta,
     noShow: noShow ?? 0,
     vendas,
     receita,
@@ -155,7 +181,7 @@ export async function calcularMetricas(
     ticketMedio: vendas > 0 ? receita / vendas : null,
     taxaAgendamento: leads > 0 ? marcadas / leads : null,
     taxaComparecimento: marcadas > 0 ? realizadas / marcadas : null,
-    taxaVenda: realizadas > 0 ? vendas / realizadas : null,
+    taxaVenda: comProposta > 0 ? vendasComProposta / comProposta : null,
     diasUteis: diasUteisEntre(inicio, fim < new Date() ? fim : new Date()),
   };
 }

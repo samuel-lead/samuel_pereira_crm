@@ -271,7 +271,10 @@ export default async function EditarLeadPage({
                     observacao: leadTipado.proposta_observacao,
                   }}
                 />
-                <MarcarVendidoForm leadId={leadTipado.id} />
+                <MarcarVendidoForm
+                  leadId={leadTipado.id}
+                  temProposta={leadTipado.proposta_valor != null}
+                />
               </>
             )
           )}

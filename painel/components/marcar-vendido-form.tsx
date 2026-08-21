@@ -47,7 +47,13 @@ function CampoMoeda({
   );
 }
 
-export function MarcarVendidoForm({ leadId }: { leadId: string }) {
+export function MarcarVendidoForm({
+  leadId,
+  temProposta = true,
+}: {
+  leadId: string;
+  temProposta?: boolean;
+}) {
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
 
@@ -59,6 +65,13 @@ export function MarcarVendidoForm({ leadId }: { leadId: string }) {
       <p className="mb-3 text-xs text-green-700">
         Ao marcar como vendido, o lead sai do Funil e vai para Clientes.
       </p>
+      {!temProposta && (
+        <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Esse lead ainda não tem proposta registrada. Sem isso, essa venda
+          não vai contar na sua taxa de conversão — registre a proposta
+          acima antes de marcar como vendido, se quiser que ela conte.
+        </p>
+      )}
       <form action={acaoFormulario} className="space-y-2">
         <CampoMoeda
           name="valor_venda"
