@@ -490,3 +490,15 @@ body {
 .kanban-column {
   background-color: #f4f5f7;
 }
+
+/* Busca de lead: no modo escuro a borda azul quase some no fundo escuro —
+   troca pra branca, que destaca de verdade. Vem no final do arquivo de
+   propósito, pra ganhar do ".dark .border-blue-300" genérico lá em cima
+   (mesma especificidade — quem vem depois no arquivo é que vale). */
+.dark .busca-lead-input {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.dark .busca-lead-input:focus {
+  border-color: rgba(255, 255, 255, 0.9);
+}
