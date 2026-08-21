@@ -190,10 +190,7 @@ export function KanbanBoard({
                   </p>
                 </div>
 
-                <div
-                  data-scroll-interno
-                  className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-3"
-                >
+                <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-3">
                   {leadsDoNivel.length === 0 ? (
                     <p
                       className={`rounded-lg border border-dashed px-3 py-6 text-center text-xs ${
