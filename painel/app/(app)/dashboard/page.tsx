@@ -7,6 +7,7 @@ import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
+import { CompartilharRelatorioButton } from "@/components/compartilhar-relatorio-button";
 import {
   calcularMetricas,
   calcularVendasPorCanal,
@@ -41,6 +42,8 @@ export default async function DashboardPage() {
   const inicioSemana = inicioDaSemana(agora);
   const fimSemana = fimDaSemana(inicioSemana);
   const inicioMes = inicioDoMes(agora);
+  const inicioHoje = new Date(agora);
+  inicioHoje.setHours(0, 0, 0, 0);
   const subtituloSemana = `domingo a sábado · ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`;
 
   const [
@@ -48,6 +51,7 @@ export default async function DashboardPage() {
     metricasMes,
     vendasPorCanal,
     vendasPorProduto,
+    performanceDiaSdr,
     performanceSemanaSdr,
     leadsPorOrigemSemana,
     leadsPorOrigemMes,
@@ -62,6 +66,9 @@ export default async function DashboardPage() {
       : Promise.resolve([]),
     souAdmin
       ? calcularVendasPorProduto(supabase, usuario!.org_id, inicioMes, amanha)
+      : Promise.resolve([]),
+    souAdmin
+      ? calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha)
       : Promise.resolve([]),
     souAdmin
       ? calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha)
@@ -103,6 +110,13 @@ export default async function DashboardPage() {
               subtitulo={subtituloSemana}
               metricas={metricasSemana}
               metas={metas}
+              acao={
+                <CompartilharRelatorioButton
+                  titulo="Performance da semana"
+                  subtitulo={subtituloSemana}
+                  metricas={metricasSemana}
+                />
+              }
             />
             <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} />
           </>
@@ -139,8 +153,14 @@ export default async function DashboardPage() {
               <VendasPorCanal dados={vendasPorCanal} />
               <VendasPorProduto dados={vendasPorProduto} />
               <PerformanceSdr
+                titulo="Performance do dia por SDR"
+                dados={performanceDiaSdr}
+                periodo={`Hoje, ${formatarDataCurta(agora)}.`}
+              />
+              <PerformanceSdr
+                titulo="Performance da semana por SDR"
                 dados={performanceSemanaSdr}
-                periodo={`${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`}
+                periodo={`Semana de ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)} (domingo a sábado).`}
               />
             </div>
           </section>

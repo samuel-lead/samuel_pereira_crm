@@ -133,20 +133,25 @@ export function SecaoPeriodo({
   subtitulo,
   metricas,
   metas,
+  acao,
 }: {
   titulo: string;
   subtitulo?: string;
   metricas: Metricas;
   metas: MetasConfig;
+  acao?: React.ReactNode;
 }) {
   const pisoLeads = metas.piso_leads_dia * metricas.diasUteis;
   const pisoReunioes = metas.piso_reunioes_dia * metricas.diasUteis;
 
   return (
     <section>
-      <div className="mb-3 flex items-baseline gap-2">
-        <h2 className="text-lg font-bold text-neutral-900">{titulo}</h2>
-        {subtitulo && <span className="text-xs text-neutral-400">{subtitulo}</span>}
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-lg font-bold text-neutral-900">{titulo}</h2>
+          {subtitulo && <span className="text-xs text-neutral-400">{subtitulo}</span>}
+        </div>
+        {acao}
       </div>
 
       <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">

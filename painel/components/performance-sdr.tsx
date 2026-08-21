@@ -10,20 +10,20 @@ function formatarPercentual(valor: number | null) {
 }
 
 export function PerformanceSdr({
+  titulo = "Performance da semana por SDR",
   dados,
   periodo,
 }: {
+  titulo?: string;
   dados: MetricasUsuario[];
   periodo?: string;
 }) {
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <h2 className="mb-1 text-sm font-semibold text-neutral-800">
-        Performance da semana por SDR
-      </h2>
+      <h2 className="mb-1 text-sm font-semibold text-neutral-800">{titulo}</h2>
       <p className="mb-4 text-xs text-neutral-500">
         Só admin vê essa comparação entre a equipe.
-        {periodo && <> Semana de {periodo} (domingo a sábado).</>}
+        {periodo && <> {periodo}</>}
       </p>
 
       <div className="overflow-x-auto">
