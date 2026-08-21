@@ -13,6 +13,8 @@ type LeadVendido = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  origem: string | null;
+  produto: string | null;
   valor_venda: number | null;
   receita_venda: number | null;
   vendido_em: string | null;
@@ -24,14 +26,13 @@ type LeadResumo = {
   nome: string;
   telefone_e164: string | null;
   origem: string | null;
+  produto: string | null;
+  valor_venda: number | null;
+  receita_venda: number | null;
   nivel_ordem: number;
   responsavel_id: string | null;
   ultima_atividade_em?: string;
 };
-
-function formatarData(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-}
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -48,7 +49,7 @@ export default async function VendasPage({
 
   let consulta = supabase
     .from("leads")
-    .select("id, nome, telefone_e164, valor_venda, receita_venda, vendido_em, responsavel_id")
+    .select("id, nome, telefone_e164, origem, produto, valor_venda, receita_venda, vendido_em, responsavel_id")
     .eq("status", "vendido")
     .is("arquivado_em", null)
     .order("vendido_em", { ascending: false });
@@ -87,19 +88,16 @@ export default async function VendasPage({
   const souAdmin = usuarioAtual?.papel === "admin";
   const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
 
-  // Reaproveita o card do Kanban do funil — o "origem" vira a receita + data,
-  // pra mostrar isso de um jeito bonito (o mesmo selo que já existe pro
-  // card), em vez de um rodapé solto.
+  // Reaproveita o card do Kanban do funil — os selos de venda/receita/
+  // produto já existem ali (mostrarValor), só passa os dados reais.
   const leadsKanban: LeadResumo[] = leads.map((lead) => ({
     id: lead.id,
     nome: lead.nome,
     telefone_e164: lead.telefone_e164,
-    origem:
-      lead.receita_venda != null
-        ? `${formatarMoeda(Number(lead.receita_venda))}${
-            lead.vendido_em ? ` · ${formatarData(lead.vendido_em)}` : ""
-          }`
-        : null,
+    origem: lead.origem,
+    produto: lead.produto,
+    valor_venda: lead.valor_venda,
+    receita_venda: lead.receita_venda,
     nivel_ordem: 4,
     responsavel_id: lead.responsavel_id,
     ultima_atividade_em: lead.vendido_em ?? undefined,
@@ -140,6 +138,7 @@ export default async function VendasPage({
           souAdmin={souAdmin}
           usuarioAtualId={user?.id ?? null}
           mostrarParado={false}
+          mostrarValor
         />
       </main>
     </>

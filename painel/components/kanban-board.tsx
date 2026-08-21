@@ -21,6 +21,8 @@ type LeadResumo = {
   responsavel_id: string | null;
   ultima_atividade_em?: string;
   valor_venda?: number | null;
+  receita_venda?: number | null;
+  produto?: string | null;
   proposta_valor?: number | null;
   proximo_follow_em?: string | null;
   reuniao_agendada_para?: string | null;
@@ -321,7 +323,17 @@ export function KanbanBoard({
                             </span>
                             {mostrarValor && lead.valor_venda != null && (
                               <span className="inline-block rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700">
-                                {formatarMoeda(lead.valor_venda)}
+                                Venda: {formatarMoeda(lead.valor_venda)}
+                              </span>
+                            )}
+                            {mostrarValor && lead.receita_venda != null && (
+                              <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                                Receita: {formatarMoeda(lead.receita_venda)}
+                              </span>
+                            )}
+                            {mostrarValor && lead.produto && (
+                              <span className="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                {lead.produto}
                               </span>
                             )}
                             {lead.proposta_valor != null && (
