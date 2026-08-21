@@ -36,13 +36,13 @@ export function BuscaLeads() {
 
   return (
     <div className="relative">
-      <IconeBusca className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+      <IconeBusca className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-600" />
       <input
         type="search"
         value={valor}
         onChange={(e) => aoDigitar(e.target.value)}
         placeholder="Buscar lead..."
-        className="w-48 rounded-lg border-2 border-neutral-300 bg-white py-2 pl-9 pr-3 text-sm font-medium text-neutral-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-neutral-500 focus:w-60 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-52 rounded-lg border-2 border-blue-300 bg-blue-50 py-2.5 pl-9 pr-3 text-sm font-medium text-neutral-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-blue-700/70 focus:w-64 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
       />
     </div>
   );
