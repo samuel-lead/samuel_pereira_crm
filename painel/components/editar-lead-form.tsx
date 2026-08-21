@@ -37,6 +37,7 @@ type Lead = {
   responsavel_id: string | null;
   oportunidade_futura: boolean;
   motivo_base: string | null;
+  status: string;
 };
 
 const campoClasse =
@@ -99,6 +100,10 @@ export function EditarLeadForm({
   // toda vez que só liga e anota o retorno. Uma vez preenchido, continua
   // aparecendo pra sempre, mesmo o lead indo pra No-show/Base/Oportunidade.
   const mostrarSobreLead = Number(nivelSelecionado) >= Number(NIVEL_REUNIAO_MARCADA);
+  // Depois de vendido, o lead saiu do funil de vez — mudar o nível dele
+  // não faz mais sentido (não existe "voltar pra qualificação" de quem já
+  // fechou). O valor fica travado no que já estava, só sem aparecer.
+  const vendido = lead.status === "vendido";
   const nomeResponsavelAtual =
     usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
 
@@ -169,6 +174,9 @@ export function EditarLeadForm({
           )}
         </div>
 
+        {vendido ? (
+          <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
+        ) : (
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="nivel_ordem">
             Nível
@@ -283,6 +291,7 @@ export function EditarLeadForm({
             </div>
           )}
         </div>
+        )}
 
         {mostrarSobreLead ? (
           <fieldset className="space-y-3 rounded-md border border-neutral-200 bg-neutral-50 p-3">
