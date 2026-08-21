@@ -7,7 +7,6 @@ import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
-import { CompartilharRelatorioButton } from "@/components/compartilhar-relatorio-button";
 import {
   calcularMetricas,
   calcularMetricasOrg,
@@ -116,13 +115,6 @@ export default async function DashboardPage() {
               subtitulo={subtituloSemana}
               metricas={metricasSemana}
               metas={metas}
-              acao={
-                <CompartilharRelatorioButton
-                  titulo="Performance da semana"
-                  subtitulo={subtituloSemana}
-                  metricas={metricasSemana}
-                />
-              }
             />
             <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} />
           </>
@@ -162,6 +154,7 @@ export default async function DashboardPage() {
                 titulo="Performance do dia por SDR"
                 dados={performanceDiaSdr}
                 periodo={`Hoje, ${formatarDataCurta(agora)}.`}
+                dataRelatorio={agora}
               />
               <PerformanceSdr
                 titulo="Performance da semana por SDR"

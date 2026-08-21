@@ -43,16 +43,3 @@ export function abrirWhatsApp(telefone: string) {
   );
   window.location.href = linkWhatsAppApp(telefone);
 }
-
-// Pra mandar um texto (ex.: relatório) sem destinatário fixo — a pessoa
-// escolhe pra quem manda dentro do próprio WhatsApp. Mesma lógica de
-// disparar app + Web juntos que o abrirWhatsApp usa.
-export function compartilharNoWhatsApp(texto: string) {
-  const textoCodificado = encodeURIComponent(texto);
-  window.open(
-    `https://wa.me/?text=${textoCodificado}`,
-    "whatsapp",
-    "width=420,height=680,noopener,noreferrer"
-  );
-  window.location.href = `whatsapp://send?text=${textoCodificado}`;
-}
