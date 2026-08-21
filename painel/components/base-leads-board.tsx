@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { IconeWhatsapp } from "@/components/icons";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
+import { diasDesde } from "@/lib/datas";
 
 export type LeadBase = {
   id: string;
@@ -51,8 +52,7 @@ function iniciais(nome: string) {
 }
 
 function diasNaBase(entrouNivelEm: string) {
-  const passou = Date.now() - new Date(entrouNivelEm).getTime();
-  return Math.max(0, Math.floor(passou / (24 * 60 * 60 * 1000)));
+  return diasDesde(entrouNivelEm);
 }
 
 function formatarMoeda(valor: number) {

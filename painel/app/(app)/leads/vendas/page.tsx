@@ -26,6 +26,7 @@ type LeadResumo = {
   origem: string | null;
   nivel_ordem: number;
   responsavel_id: string | null;
+  ultima_atividade_em?: string;
 };
 
 function formatarData(iso: string) {
@@ -101,6 +102,7 @@ export default async function VendasPage({
         : null,
     nivel_ordem: 4,
     responsavel_id: lead.responsavel_id,
+    ultima_atividade_em: lead.vendido_em ?? undefined,
   }));
 
   return (

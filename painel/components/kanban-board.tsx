@@ -5,10 +5,10 @@ import { useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
+import { diasDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag } from "@/components/icons";
 
 const NIVEL_REUNIAO_MARCADA = 4;
-const UM_DIA_MS = 24 * 60 * 60 * 1000;
 
 type LeadResumo = {
   id: string;
@@ -34,8 +34,7 @@ function formatarDataHora(iso: string) {
 
 function diasSemAtividade(ultimaAtividadeEm?: string) {
   if (!ultimaAtividadeEm) return 0;
-  const passou = Date.now() - new Date(ultimaAtividadeEm).getTime();
-  return Math.floor(passou / UM_DIA_MS);
+  return diasDesde(ultimaAtividadeEm);
 }
 
 function formatarMoeda(valor: number) {
