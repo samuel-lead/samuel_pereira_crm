@@ -111,9 +111,19 @@ export function corDoNivel(ordem: number) {
 
 // O funil virou dois quadros. Pré-vendas: antes da reunião marcada, + quem
 // levou No-show (volta pra ser remarcado). Assim que o lead vira "Reunião
-// marcada" ele sai do Pré-vendas e só aparece em Vendas dali em diante.
+// marcada" ele sai do Pré-vendas e só aparece em Vendas dali em diante — por
+// isso "Reunião marcada" NÃO entra aqui: essa lista é o que filtra quais
+// leads aparecem no quadro.
 export const NIVEIS_PRE_VENDAS = [0, 1, 2, 3, 5];
 export const NIVEIS_VENDAS = [4, 6, 7];
+
+// Diferente de NIVEIS_PRE_VENDAS: essa é a lista de COLUNAS mostradas no
+// quadro de Pré-vendas — inclui "Reunião marcada" (ordem 4) mesmo ela nunca
+// tendo lead de verdade ali (olhe NIVEIS_PRE_VENDAS acima). A coluna existe
+// só como alvo pro SDR arrastar o card e abrir o formulário de marcar a
+// reunião; a coluna sempre aparece vazia porque o lead sai do Pré-vendas
+// assim que entra nela.
+export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 4, 5];
 
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
 // do nível 7 (Oportunidades), pro lead que já fez a reunião (ICP

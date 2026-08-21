@@ -12,7 +12,7 @@ import {
   calcularReceitaOrg,
   inicioDoMes,
 } from "@/lib/metricas";
-import { NIVEIS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
 type LeadResumo = {
   id: string;
@@ -83,7 +83,7 @@ export default async function LeadsPage({
   const todosNiveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const nivelPorOrdem = new Map(todosNiveis.map((nivel) => [nivel.ordem, nivel]));
-  const niveis = NIVEIS_PRE_VENDAS.map((ordem) => nivelPorOrdem.get(ordem)).filter(
+  const niveis = COLUNAS_PRE_VENDAS.map((ordem) => nivelPorOrdem.get(ordem)).filter(
     (nivel): nivel is NivelResumo => !!nivel
   );
   const leads = (leadsData ?? []) as LeadResumo[];
