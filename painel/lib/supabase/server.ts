@@ -29,6 +29,23 @@ export async function createClient() {
   );
 }
 
+// Mesmo cuidado do middleware.ts: auth.getUser() tenta renovar o login
+// sozinho quando o token expirou, e o Supabase troca o refresh token nessa
+// hora — se duas requisições disputarem essa renovação ao mesmo tempo, uma
+// recebe um erro (AuthApiError) em vez do usuário. Toda Server Action que
+// precisa saber quem tá logado deve usar isso, nunca chamar
+// supabase.auth.getUser() direto — senão o erro sobe sem tratamento e a
+// Server Action quebra com uma mensagem genérica (Next.js apaga o texto de
+// erro de verdade em produção).
+export async function usuarioDoToken(supabase: Awaited<ReturnType<typeof createClient>>) {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data.user;
+  } catch {
+    return null;
+  }
+}
+
 export type UsuarioAtual = {
   id: string;
   org_id: string;

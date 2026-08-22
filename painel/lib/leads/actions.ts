@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { ORDEM_OPORTUNIDADE_FUTURA } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 
@@ -28,9 +28,7 @@ function parseDataHoraLocal(valor: string): Date {
 
 async function contextoUsuario() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioDoToken(supabase);
 
   if (!user) {
     throw new Error("Não autenticado");

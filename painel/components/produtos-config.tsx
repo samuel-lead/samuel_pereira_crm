@@ -26,13 +26,13 @@ function LinhaProduto({ produto }: { produto: { id: string; nome: string } }) {
     }
     setExcluindo(true);
     setErro(null);
-    try {
-      await excluirProduto(produto.id);
-      router.refresh();
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não deu pra excluir");
+    const resultado = await excluirProduto(produto.id);
+    if (resultado.erro) {
+      setErro(resultado.erro);
       setExcluindo(false);
+      return;
     }
+    router.refresh();
   }
 
   async function salvar() {
@@ -44,15 +44,14 @@ function LinhaProduto({ produto }: { produto: { id: string; nome: string } }) {
     }
     setSalvando(true);
     setErro(null);
-    try {
-      await renomearProduto(produto.id, novoNome);
-      setEditando(false);
-      router.refresh();
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não deu pra renomear");
-    } finally {
-      setSalvando(false);
+    const resultado = await renomearProduto(produto.id, novoNome);
+    setSalvando(false);
+    if (resultado.erro) {
+      setErro(resultado.erro);
+      return;
     }
+    setEditando(false);
+    router.refresh();
   }
 
   if (editando) {

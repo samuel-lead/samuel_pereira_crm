@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 
 export type EstadoFoto = { erro: string | null };
 
@@ -12,9 +12,7 @@ export async function atualizarFotoPerfil(
   formData: FormData
 ): Promise<EstadoFoto> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioDoToken(supabase);
 
   if (!user) {
     return { erro: "Não autenticado" };
@@ -61,9 +59,7 @@ export async function atualizarFotoPerfil(
 
 export async function atualizarMetasConfig(formData: FormData) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioDoToken(supabase);
 
   if (!user) {
     throw new Error("Não autenticado");
@@ -123,9 +119,7 @@ export type EstadoOrigem = { erro: string | null };
 
 async function usuarioAdminOuErro() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioDoToken(supabase);
 
   if (!user) {
     throw new Error("Não autenticado");
@@ -172,40 +166,59 @@ export async function criarOrigem(
   return { erro: null };
 }
 
-export async function renomearOrigem(origemId: string, novoNome: string) {
-  const { supabase } = await usuarioAdminOuErro();
+// renomearOrigem/excluirOrigem/renomearProduto/excluirProduto RETORNAM o
+// erro (nunca lançam exceção) de propósito: Server Action do Next.js que
+// lança erro tem a mensagem apagada em produção (vira um texto genérico
+// tipo "Minified React error #441"), escondendo justamente o aviso útil
+// ("essa origem está sendo usada por N leads..."). Retornando o erro como
+// valor normal, ele sempre chega certinho na tela.
+export async function renomearOrigem(
+  origemId: string,
+  novoNome: string
+): Promise<EstadoOrigem> {
+  try {
+    const { supabase } = await usuarioAdminOuErro();
 
-  const nome = novoNome.trim();
-  if (!nome) {
-    throw new Error("O nome da origem não pode ficar em branco");
+    const nome = novoNome.trim();
+    if (!nome) {
+      return { erro: "O nome da origem não pode ficar em branco" };
+    }
+
+    const { error } = await supabase.rpc("renomear_origem", {
+      origem_id: origemId,
+      novo_nome: nome,
+    });
+
+    if (error) {
+      return { erro: error.message };
+    }
+
+    revalidatePath("/configuracoes");
+    revalidatePath("/leads");
+    revalidatePath("/leads/novo");
+    return { erro: null };
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : "Não deu pra renomear" };
   }
-
-  const { error } = await supabase.rpc("renomear_origem", {
-    origem_id: origemId,
-    novo_nome: nome,
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/configuracoes");
-  revalidatePath("/leads");
-  revalidatePath("/leads/novo");
 }
 
-export async function excluirOrigem(origemId: string) {
-  const { supabase } = await usuarioAdminOuErro();
+export async function excluirOrigem(origemId: string): Promise<EstadoOrigem> {
+  try {
+    const { supabase } = await usuarioAdminOuErro();
 
-  const { error } = await supabase.rpc("excluir_origem", { origem_id: origemId });
+    const { error } = await supabase.rpc("excluir_origem", { origem_id: origemId });
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      return { erro: error.message };
+    }
+
+    revalidatePath("/configuracoes");
+    revalidatePath("/leads");
+    revalidatePath("/leads/novo");
+    return { erro: null };
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : "Não deu pra excluir" };
   }
-
-  revalidatePath("/configuracoes");
-  revalidatePath("/leads");
-  revalidatePath("/leads/novo");
 }
 
 export type EstadoProduto = { erro: string | null };
@@ -234,36 +247,49 @@ export async function criarProduto(
   return { erro: null };
 }
 
-export async function renomearProduto(produtoId: string, novoNome: string) {
-  const { supabase } = await usuarioAdminOuErro();
+export async function renomearProduto(
+  produtoId: string,
+  novoNome: string
+): Promise<EstadoProduto> {
+  try {
+    const { supabase } = await usuarioAdminOuErro();
 
-  const nome = novoNome.trim();
-  if (!nome) {
-    throw new Error("O nome do produto não pode ficar em branco");
+    const nome = novoNome.trim();
+    if (!nome) {
+      return { erro: "O nome do produto não pode ficar em branco" };
+    }
+
+    const { error } = await supabase.rpc("renomear_produto", {
+      produto_id: produtoId,
+      novo_nome: nome,
+    });
+
+    if (error) {
+      return { erro: error.message };
+    }
+
+    revalidatePath("/configuracoes");
+    revalidatePath("/leads");
+    return { erro: null };
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : "Não deu pra renomear" };
   }
-
-  const { error } = await supabase.rpc("renomear_produto", {
-    produto_id: produtoId,
-    novo_nome: nome,
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/configuracoes");
-  revalidatePath("/leads");
 }
 
-export async function excluirProduto(produtoId: string) {
-  const { supabase } = await usuarioAdminOuErro();
+export async function excluirProduto(produtoId: string): Promise<EstadoProduto> {
+  try {
+    const { supabase } = await usuarioAdminOuErro();
 
-  const { error } = await supabase.rpc("excluir_produto", { produto_id: produtoId });
+    const { error } = await supabase.rpc("excluir_produto", { produto_id: produtoId });
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      return { erro: error.message };
+    }
+
+    revalidatePath("/configuracoes");
+    revalidatePath("/leads");
+    return { erro: null };
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : "Não deu pra excluir" };
   }
-
-  revalidatePath("/configuracoes");
-  revalidatePath("/leads");
 }

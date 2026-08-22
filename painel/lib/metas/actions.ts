@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { diasUteisEntre, inicioDoMes } from "@/lib/metricas";
 import { UM_DIA_MS } from "@/lib/datas";
 
@@ -15,10 +15,7 @@ export async function definirMetaReceita(
   formData: FormData
 ): Promise<EstadoMeta> {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioDoToken(supabase);
 
   if (!user) {
     return { erro: "Não autenticado" };

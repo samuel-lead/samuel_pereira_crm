@@ -26,13 +26,13 @@ function LinhaOrigem({ origem }: { origem: { id: string; nome: string } }) {
     }
     setExcluindo(true);
     setErro(null);
-    try {
-      await excluirOrigem(origem.id);
-      router.refresh();
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não deu pra excluir");
+    const resultado = await excluirOrigem(origem.id);
+    if (resultado.erro) {
+      setErro(resultado.erro);
       setExcluindo(false);
+      return;
     }
+    router.refresh();
   }
 
   async function salvar() {
@@ -44,15 +44,14 @@ function LinhaOrigem({ origem }: { origem: { id: string; nome: string } }) {
     }
     setSalvando(true);
     setErro(null);
-    try {
-      await renomearOrigem(origem.id, novoNome);
-      setEditando(false);
-      router.refresh();
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não deu pra renomear");
-    } finally {
-      setSalvando(false);
+    const resultado = await renomearOrigem(origem.id, novoNome);
+    setSalvando(false);
+    if (resultado.erro) {
+      setErro(resultado.erro);
+      return;
     }
+    setEditando(false);
+    router.refresh();
   }
 
   if (editando) {
