@@ -22,12 +22,9 @@ export default async function PerfilPage() {
 
       <main className="max-w-2xl px-6 py-6 space-y-6">
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+          <h2 className="mb-4 text-sm font-semibold text-neutral-800">
             Meus dados
           </h2>
-          <p className="mb-4 text-xs text-neutral-500">
-            Só pra conferir — editar nome ou e-mail ainda não dá por aqui.
-          </p>
 
           <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>

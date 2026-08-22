@@ -168,7 +168,7 @@ export function Sidebar({
             href="/perfil"
             className="mb-2 flex w-full items-center justify-center rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-700"
           >
-            Trocar minha senha
+            Meu perfil
           </Link>
         )}
 
