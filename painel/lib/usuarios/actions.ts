@@ -136,6 +136,71 @@ export async function atualizarPropriaFuncao(formData: FormData) {
   revalidatePath("/usuarios");
 }
 
+// Admin trocando a função de QUALQUER usuário da equipe, direto na lista —
+// mantém o papel e as páginas do alvo como estão, só troca a função. A
+// checagem de "é admin?" já é feita dentro do RPC também, mas falha aqui
+// primeiro com uma mensagem melhor.
+export async function atualizarFuncaoDoUsuario(formData: FormData) {
+  const { usuario } = await usuarioAutenticado();
+  if (!usuario || usuario.papel !== "admin") {
+    throw new Error("Só administradores podem fazer isso");
+  }
+
+  const usuarioIdAlvo = String(formData.get("usuario_id") ?? "");
+  const papelAtual = String(formData.get("papel_atual") ?? "membro");
+  const paginasAtuais = formData.getAll("paginas_atuais").map(String);
+  const novaFuncao = String(formData.get("funcao") ?? "").trim() || null;
+
+  if (!usuarioIdAlvo) {
+    throw new Error("Usuário inválido");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("atualizar_permissoes_usuario", {
+    usuario_id_alvo: usuarioIdAlvo,
+    novo_papel: papelAtual,
+    novas_paginas: paginasAtuais,
+    nova_funcao: novaFuncao,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/usuarios");
+}
+
+// Promove um membro a admin com um clique. Só nessa direção (membro →
+// admin) — a volta (admin → membro) continua exigindo passar pela tela de
+// Permissões, porque ali dá pra escolher as páginas que ele mantém; virar
+// membro sem escolher página nenhuma deixaria a pessoa sem acesso a nada.
+export async function tornarAdmin(usuarioId: string) {
+  const { usuario } = await usuarioAutenticado();
+  if (!usuario || usuario.papel !== "admin") {
+    throw new Error("Só administradores podem fazer isso");
+  }
+
+  const supabase = await createClient();
+  const { data: alvo } = await supabase
+    .from("usuarios")
+    .select("funcao")
+    .eq("id", usuarioId)
+    .single();
+
+  const { error } = await supabase.rpc("atualizar_permissoes_usuario", {
+    usuario_id_alvo: usuarioId,
+    novo_papel: "admin",
+    novas_paginas: [],
+    nova_funcao: alvo?.funcao ?? null,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/usuarios");
+}
+
 // Cada usuário troca o próprio WhatsApp — não precisa ser admin, só logado.
 // Igual atualizarPropriaFuncao: o id vem de usuarioAutenticado(), nunca do
 // formulário, então a pessoa só consegue mexer no próprio número.
