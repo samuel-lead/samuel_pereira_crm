@@ -734,18 +734,22 @@ export async function cancelarProximoContato(leadId: string) {
   revalidatePath(`/leads/${leadId}`);
 }
 
-export async function registrarNota(leadId: string, formData: FormData) {
+export async function registrarNota(
+  leadId: string,
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
   const { supabase, usuario } = await contextoUsuario();
 
   const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
   if (erroPermissao) {
-    throw new Error(erroPermissao);
+    return { erro: erroPermissao };
   }
 
   const conteudo = String(formData.get("conteudo") ?? "").trim();
 
   if (!conteudo) {
-    throw new Error("Escreva algo pra registrar");
+    return { erro: "Escreva algo pra registrar" };
   }
 
   const { error } = await supabase.from("interacoes").insert({
@@ -760,10 +764,11 @@ export async function registrarNota(leadId: string, formData: FormData) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    return { erro: error.message };
   }
 
   revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
 }
 
 export async function registrarLigacao(leadId: string, atendida: boolean) {
@@ -813,12 +818,16 @@ export async function excluirInteracao(leadId: string, interacaoId: string) {
   revalidatePath(`/leads/${leadId}`);
 }
 
-export async function arquivarLead(leadId: string) {
+export async function arquivarLead(
+  leadId: string,
+  _estadoAnterior: EstadoFormulario,
+  _formData: FormData
+): Promise<EstadoFormulario> {
   const { supabase, usuario } = await contextoUsuario();
 
   const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
   if (erroPermissao) {
-    throw new Error(erroPermissao);
+    return { erro: erroPermissao };
   }
 
   const { error } = await supabase
@@ -827,7 +836,7 @@ export async function arquivarLead(leadId: string) {
     .eq("id", leadId);
 
   if (error) {
-    throw new Error(error.message);
+    return { erro: error.message };
   }
 
   revalidatePath("/leads");
@@ -839,7 +848,11 @@ export async function arquivarLead(leadId: string) {
 
 // Lead sem responsável (ex.: chegou de uma campanha, sem dono definido)
 // pode ser "pego" por qualquer usuário com acesso ao Funil.
-export async function reivindicarLead(leadId: string) {
+export async function reivindicarLead(
+  leadId: string,
+  _estadoAnterior: EstadoFormulario,
+  _formData: FormData
+): Promise<EstadoFormulario> {
   const { supabase, usuario } = await contextoUsuario();
 
   const { data: lead, error: erroAtual } = await supabase
@@ -849,11 +862,11 @@ export async function reivindicarLead(leadId: string) {
     .single();
 
   if (erroAtual || !lead) {
-    throw new Error("Lead não encontrado");
+    return { erro: "Lead não encontrado" };
   }
 
   if (lead.responsavel_id !== null) {
-    throw new Error("Esse lead já tem responsável.");
+    return { erro: "Esse lead já tem responsável." };
   }
 
   const { error } = await supabase
@@ -862,9 +875,10 @@ export async function reivindicarLead(leadId: string) {
     .eq("id", leadId);
 
   if (error) {
-    throw new Error(mensagemAmigavel(error.code, error.message));
+    return { erro: mensagemAmigavel(error.code, error.message) };
   }
 
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
 }

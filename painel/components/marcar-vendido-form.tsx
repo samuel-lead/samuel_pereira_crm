@@ -57,7 +57,7 @@ export function MarcarVendidoForm({
   produtos: string[];
 }) {
   const acaoComId = marcarVendido.bind(null, leadId);
-  const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
+  const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
 
   return (
     <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
@@ -90,9 +90,10 @@ export function MarcarVendidoForm({
         )}
         <button
           type="submit"
-          className="w-full rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-700"
+          disabled={pendente}
+          className="w-full rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
         >
-          Marcar como vendido
+          {pendente ? "Salvando..." : "Marcar como vendido"}
         </button>
 
         <div>

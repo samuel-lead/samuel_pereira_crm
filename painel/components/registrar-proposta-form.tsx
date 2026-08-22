@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, type ChangeEvent } from "react";
+import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { registrarProposta, type EstadoFormulario } from "@/lib/leads/actions";
 
 const estadoInicial: EstadoFormulario = { erro: null };
@@ -34,8 +34,25 @@ export function RegistrarPropostaForm({
   };
 }) {
   const acaoComId = registrarProposta.bind(null, leadId);
-  const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
+  const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [centavos, setCentavos] = useState(0);
+  const [salvo, setSalvo] = useState(false);
+  const enviandoRef = useRef(false);
+
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        setSalvo(true);
+        const timeout = setTimeout(() => setSalvo(false), 2000);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [pendente, estado]);
 
   function aoDigitarValor(evento: ChangeEvent<HTMLInputElement>) {
     const somenteDigitos = evento.target.value.replace(/\D/g, "");
@@ -105,9 +122,18 @@ export function RegistrarPropostaForm({
 
         <button
           type="submit"
-          className="w-full rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-amber-700"
+          disabled={pendente}
+          className={`w-full rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
+            salvo ? "bg-green-600 hover:bg-green-600" : "bg-amber-600 hover:bg-amber-700"
+          }`}
         >
-          {temProposta ? "Atualizar proposta" : "Registrar proposta"}
+          {pendente
+            ? "Salvando..."
+            : salvo
+              ? "Salvo ✓"
+              : temProposta
+                ? "Atualizar proposta"
+                : "Registrar proposta"}
         </button>
       </form>
     </div>

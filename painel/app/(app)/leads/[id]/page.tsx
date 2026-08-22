@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
-import { registrarNota } from "@/lib/leads/actions";
 import { BotaoVoltar } from "@/components/botao-voltar";
+import { RegistrarNotaForm } from "@/components/registrar-nota-form";
 import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { PageHeader } from "@/components/page-header";
@@ -147,7 +147,6 @@ export default async function EditarLeadPage({
       )[0].usuario_id
     : null;
   const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
-  const registrarNotaComId = registrarNota.bind(null, leadTipado.id);
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
 
   return (
@@ -289,21 +288,7 @@ export default async function EditarLeadPage({
               <h2 className="mb-3 text-sm font-semibold text-neutral-800">
                 Registrar nota
               </h2>
-              <form action={registrarNotaComId} className="space-y-2">
-                <textarea
-                  name="conteudo"
-                  required
-                  rows={3}
-                  placeholder="Ex.: liguei, ficou de ver a agenda e responder amanhã..."
-                  className={campoClasse}
-                />
-                <button
-                  type="submit"
-                  className="w-full rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-700 transition hover:bg-teal-100"
-                >
-                  Adicionar à linha do tempo
-                </button>
-              </form>
+              <RegistrarNotaForm leadId={leadTipado.id} />
             </div>
           )}
 

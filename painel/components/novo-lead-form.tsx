@@ -18,7 +18,7 @@ export function NovoLeadForm({
   origens: { id: string; nome: string }[];
   souAdmin?: boolean;
 }) {
-  const [estado, acaoFormulario] = useActionState(criarLead, estadoInicial);
+  const [estado, acaoFormulario, pendente] = useActionState(criarLead, estadoInicial);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
@@ -113,9 +113,10 @@ export function NovoLeadForm({
 
         <button
           type="submit"
-          className="w-full rounded-md bg-[#2563eb] px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md hover:brightness-105"
+          disabled={pendente}
+          className="w-full rounded-md bg-[#2563eb] px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md hover:brightness-105 disabled:opacity-60"
         >
-          Salvar lead
+          {pendente ? "Salvando..." : "Salvar lead"}
         </button>
       </form>
     </div>

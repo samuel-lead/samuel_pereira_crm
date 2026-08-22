@@ -78,7 +78,7 @@ export function EditarLeadForm({
   preSelecionarNivel?: string;
 }) {
   const acaoComId = atualizarLead.bind(null, lead.id);
-  const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
+  const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [nivelSelecionado, setNivelSelecionado] = useState(
     preSelecionarReuniao
       ? NIVEL_REUNIAO_MARCADA
@@ -467,9 +467,10 @@ export function EditarLeadForm({
           {podeEditar && (
             <button
               type="submit"
-              className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+              disabled={pendente}
+              className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
             >
-              Salvar alterações
+              {pendente ? "Salvando..." : "Salvar alterações"}
             </button>
           )}
         </div>
