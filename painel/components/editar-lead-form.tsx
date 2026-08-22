@@ -90,6 +90,8 @@ export function EditarLeadForm({
     preSelecionarNivel === OPCAO_OPORTUNIDADE_FUTURA ? true : lead.oportunidade_futura
   );
   const [reuniaoAconteceu, setReuniaoAconteceu] = useState("");
+  const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
+  const ehIndicacao = origemAtual.toLowerCase().includes("indica");
 
   // "Oportunidades futuras" não é um nível de verdade no banco — é o nível
   // 7 (Leads para fim do mês) + essa marcação. Mas o SDR quer escolher ela
@@ -177,8 +179,30 @@ export function EditarLeadForm({
 
         <div className="space-y-1">
           <label className={labelClasse}>Origem</label>
-          <OrigemSelect origens={origens} valorInicial={lead.origem ?? ""} />
+          <OrigemSelect
+            origens={origens}
+            valorInicial={lead.origem ?? ""}
+            onChange={setOrigemAtual}
+          />
         </div>
+
+        {ehIndicacao && (
+          <div className="space-y-1">
+            <label className={labelClasse} htmlFor="quem_indicou">
+              Quem indicou?
+            </label>
+            <textarea
+              id="quem_indicou"
+              name="quem_indicou"
+              rows={3}
+              placeholder="Nome de quem indicou, características, se já é cliente..."
+              className={campoClasse}
+            />
+            <p className="text-xs text-neutral-400">
+              Isso vai ficar registrado nas notas do lead.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="responsavel_id">

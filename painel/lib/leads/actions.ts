@@ -270,6 +270,7 @@ export async function atualizarLead(
   const telefone = String(formData.get("telefone") ?? "").trim() || null;
   const email = String(formData.get("email") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
+  const quemIndicou = String(formData.get("quem_indicou") ?? "").trim();
   const criterioProblema =
     String(formData.get("criterio_problema") ?? "").trim() || null;
   const criterioUrgencia = String(
@@ -404,6 +405,22 @@ export async function atualizarLead(
   }
 
   await garantirOrigem(supabase, usuario.org_id, origem);
+
+  // Origem "Indicação" (qualquer variante) + campo preenchido: grava quem
+  // indicou direto nas notas do lead, pra não perder esse contexto solto
+  // numa conversa por fora.
+  if (origem && origem.toLowerCase().includes("indica") && quemIndicou) {
+    await supabase.from("interacoes").insert({
+      org_id: usuario.org_id,
+      usuario_id: usuario.id,
+      lead_id: leadId,
+      tipo: "nota",
+      canal: "manual",
+      conteudo: `Indicação — quem indicou: ${quemIndicou}`,
+      ocorreu_em: new Date().toISOString(),
+      origem: "declarado",
+    });
+  }
 
   if (nivelMudou) {
     const { error: erroHistorico } = await supabase

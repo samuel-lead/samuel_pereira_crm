@@ -8,9 +8,11 @@ const campoClasse =
 export function OrigemSelect({
   origens,
   valorInicial,
+  onChange,
 }: {
   origens: { id: string; nome: string }[];
   valorInicial?: string;
+  onChange?: (valor: string) => void;
 }) {
   const nomes = origens.map((o) => o.nome);
   const ehConhecida = valorInicial ? nomes.includes(valorInicial) : false;
@@ -19,12 +21,22 @@ export function OrigemSelect({
   );
   const [outro, setOutro] = useState(ehConhecida ? "" : valorInicial ?? "");
 
+  function aoMudarSelecionado(valor: string) {
+    setSelecionado(valor);
+    onChange?.(valor === "Outro" ? outro : valor);
+  }
+
+  function aoMudarOutro(valor: string) {
+    setOutro(valor);
+    onChange?.(valor);
+  }
+
   return (
     <div className="space-y-2">
       <select
         aria-label="Origem"
         value={selecionado}
-        onChange={(e) => setSelecionado(e.target.value)}
+        onChange={(e) => aoMudarSelecionado(e.target.value)}
         className={campoClasse}
       >
         <option value="">Selecione a origem...</option>
@@ -39,7 +51,7 @@ export function OrigemSelect({
       {selecionado === "Outro" && (
         <input
           value={outro}
-          onChange={(e) => setOutro(e.target.value)}
+          onChange={(e) => aoMudarOutro(e.target.value)}
           placeholder="Qual? Fica salva pra próxima vez"
           className={campoClasse}
         />
