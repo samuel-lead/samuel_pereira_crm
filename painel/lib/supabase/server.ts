@@ -77,9 +77,16 @@ export const usuarioAutenticado = cache(async (): Promise<{
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Mesmo cuidado do middleware.ts: o refresh token pode já ter sido
+  // trocado por outra requisição concorrente — trata como "não logado" em
+  // vez de deixar o erro quebrar a página inteira.
+  let user: User | null = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    user = null;
+  }
 
   if (!user) {
     return { user: null, usuario: null };

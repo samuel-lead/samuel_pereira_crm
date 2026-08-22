@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import type { User } from "@supabase/supabase-js";
 
 const ROTA_DA_PAGINA: Record<string, string> = {
   funil: "/leads",
@@ -48,9 +49,21 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getUser() tenta renovar o login sozinho quando o token de acesso venceu
+  // — usando o refresh token. Se duas requisições disputarem essa renovação
+  // ao mesmo tempo (ex.: uma navegação de verdade e um pré-carregamento de
+  // link em segundo plano), uma "aposenta" o token antes da outra terminar
+  // de usá-lo, e a segunda recebe um erro (AuthApiError). Sem tratar isso,
+  // a tela quebrava com um erro cru. Trata como "não logado" — manda pro
+  // login, que na prática resolve sozinho (o cookie já foi renovado pela
+  // primeira requisição).
+  let user: User | null = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    user = null;
+  }
 
   const { pathname } = request.nextUrl;
   const isLoginPage = pathname === "/login";
