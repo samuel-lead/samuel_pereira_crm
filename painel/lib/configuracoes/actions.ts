@@ -57,12 +57,17 @@ export async function atualizarFotoPerfil(
   return { erro: null };
 }
 
-export async function atualizarMetasConfig(formData: FormData) {
+export type EstadoMetasConfig = { erro: string | null };
+
+export async function atualizarMetasConfig(
+  _estadoAnterior: EstadoMetasConfig,
+  formData: FormData
+): Promise<EstadoMetasConfig> {
   const supabase = await createClient();
   const user = await usuarioDoToken(supabase);
 
   if (!user) {
-    throw new Error("Não autenticado");
+    return { erro: "Não autenticado" };
   }
 
   const { data: usuario, error: erroUsuario } = await supabase
@@ -72,11 +77,11 @@ export async function atualizarMetasConfig(formData: FormData) {
     .single();
 
   if (erroUsuario || !usuario) {
-    throw new Error("Usuário não encontrado");
+    return { erro: "Usuário não encontrado" };
   }
 
   if (usuario.papel !== "admin") {
-    throw new Error("Só admin pode editar metas e taxas do sistema");
+    return { erro: "Só admin pode editar metas e taxas do sistema" };
   }
 
   const pisoLeadsDia = Number(formData.get("piso_leads_dia"));
@@ -92,7 +97,7 @@ export async function atualizarMetasConfig(formData: FormData) {
     !Number.isFinite(taxaComparecimentoMin) || taxaComparecimentoMin <= 0 || taxaComparecimentoMin > 1 ||
     !Number.isFinite(taxaVendaMin) || taxaVendaMin <= 0 || taxaVendaMin > 1
   ) {
-    throw new Error("Valores inválidos — piso maior que zero, taxas entre 1% e 100%");
+    return { erro: "Valores inválidos — piso maior que zero, taxas entre 1% e 100%" };
   }
 
   const { error } = await supabase
@@ -107,12 +112,13 @@ export async function atualizarMetasConfig(formData: FormData) {
     .eq("org_id", usuario.org_id);
 
   if (error) {
-    throw new Error(error.message);
+    return { erro: error.message };
   }
 
   revalidatePath("/configuracoes");
   revalidatePath("/dashboard");
   revalidatePath("/metricas");
+  return { erro: null };
 }
 
 export type EstadoOrigem = { erro: string | null };
