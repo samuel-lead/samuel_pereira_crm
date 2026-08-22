@@ -176,6 +176,7 @@ Deno.serve(async (req: Request) => {
     org_id: novaOrg.id,
     nome: nomeAdmin,
     papel: "admin",
+    dono: true,
   });
 
   if (erroUsuario) {

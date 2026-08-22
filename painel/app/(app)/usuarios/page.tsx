@@ -16,6 +16,7 @@ type UsuarioLinha = {
   funcao: string | null;
   paginas_permitidas: string[];
   foto_url: string | null;
+  dono: boolean;
 };
 
 const FUNCAO_LABEL: Record<string, string> = {
@@ -29,11 +30,12 @@ function formatarData(iso: string) {
 
 export default async function UsuariosPage() {
   const supabase = await createClient();
-  const [{ user }, { data }] = await Promise.all([
+  const [{ user, usuario: usuarioAtual }, { data }] = await Promise.all([
     usuarioAutenticado(),
     supabase.rpc("listar_usuarios_da_org"),
   ]);
   const usuarios = (data ?? []) as UsuarioLinha[];
+  const souSuperAdmin = usuarioAtual?.super_admin === true;
 
   return (
     <>
@@ -71,6 +73,14 @@ export default async function UsuariosPage() {
                     {usuario.id === user?.id && (
                       <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700">
                         você
+                      </span>
+                    )}
+                    {usuario.dono && (
+                      <span
+                        title="Dono da empresa — só o dono da plataforma pode mexer nele"
+                        className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700"
+                      >
+                        Dono
                       </span>
                     )}
                     <span
@@ -111,7 +121,7 @@ export default async function UsuariosPage() {
                 </div>
               </div>
 
-              {usuario.id !== user?.id && (
+              {usuario.id !== user?.id && (!usuario.dono || souSuperAdmin) && (
                 <div className="flex shrink-0 flex-col items-end gap-2">
                   <Link
                     href={`/usuarios/${usuario.id}/permissoes`}
