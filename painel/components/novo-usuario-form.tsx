@@ -36,6 +36,23 @@ export function NovoUsuarioForm() {
       </div>
 
       <div className="space-y-1">
+        <label className={labelClasse} htmlFor="wpp_comercial">
+          WhatsApp *
+        </label>
+        <input
+          id="wpp_comercial"
+          name="wpp_comercial"
+          type="tel"
+          required
+          placeholder="+55 62 99999-9999"
+          className={campoClasse}
+        />
+        <p className="text-xs text-neutral-400">
+          Usamos esse número pra avisos importantes, tipo lembrete de contato.
+        </p>
+      </div>
+
+      <div className="space-y-1">
         <label className={labelClasse} htmlFor="funcao">
           Função
         </label>

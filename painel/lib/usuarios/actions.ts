@@ -46,8 +46,10 @@ export async function criarUsuario(
   const funcao = String(formData.get("funcao") ?? "").trim() || null;
   const paginasPermitidas = formData.getAll("paginas_permitidas").map(String);
 
-  if (!nome || !email || senha.length < 6) {
-    return { erro: "Nome, e-mail e senha (mínimo 6 caracteres) são obrigatórios" };
+  if (!nome || !email || senha.length < 6 || !wppComercial) {
+    return {
+      erro: "Nome, e-mail, WhatsApp e senha (mínimo 6 caracteres) são obrigatórios",
+    };
   }
 
   const { error } = await supabase.functions.invoke("criar-usuario", {
@@ -132,4 +134,35 @@ export async function atualizarPropriaFuncao(formData: FormData) {
   }
 
   revalidatePath("/usuarios");
+}
+
+// Cada usuário troca o próprio WhatsApp — não precisa ser admin, só logado.
+// Igual atualizarPropriaFuncao: o id vem de usuarioAutenticado(), nunca do
+// formulário, então a pessoa só consegue mexer no próprio número.
+export async function atualizarMeuTelefone(
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const { usuario } = await usuarioAutenticado();
+  if (!usuario) {
+    return { erro: "Não autenticado" };
+  }
+
+  const telefone = String(formData.get("wpp_comercial") ?? "").trim();
+  if (!telefone) {
+    return { erro: "WhatsApp é obrigatório" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("usuarios")
+    .update({ wpp_comercial_e164: telefone })
+    .eq("id", usuario.id);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  revalidatePath("/perfil");
+  return { erro: null };
 }

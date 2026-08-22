@@ -70,9 +70,9 @@ Deno.serve(async (req: Request) => {
   const funcaoRaw = String(body.funcao ?? "").trim();
   const funcao = FUNCOES_VALIDAS.includes(funcaoRaw) ? funcaoRaw : null;
 
-  if (!nome || !email || senha.length < 6) {
+  if (!nome || !email || senha.length < 6 || !wppComercial) {
     return json(400, {
-      erro: "Nome, e-mail e senha (mínimo 6 caracteres) são obrigatórios",
+      erro: "Nome, e-mail, WhatsApp e senha (mínimo 6 caracteres) são obrigatórios",
     });
   }
 
