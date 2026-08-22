@@ -338,8 +338,12 @@ body {
   color: #7dd3fc;
 }
 
+/* Esses selos "bg-blue-100 text-blue-700" (produto no card, etc.) ficam
+   sempre em cima de um card branco, mesmo no modo escuro — texto claro
+   (#93c5fd) virava quase ilegível em cima do fundo azul claro do selo.
+   Mantém a mesma cor escura do modo claro, que já tem contraste bom ali. */
 .dark .text-blue-700 {
-  color: #93c5fd;
+  color: #1d4ed8;
 }
 
 .dark .text-red-700 {
