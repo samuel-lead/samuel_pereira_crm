@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 
 export type EstadoExclusao = { erro: string | null; precisaTransferir?: boolean };
 export type EstadoFormulario = { erro: string | null };
@@ -104,4 +104,32 @@ export async function atualizarPermissoes(
 
   revalidatePath("/usuarios");
   redirect("/usuarios");
+}
+
+// Admin escolhendo a própria função (SDR/Closer) pra aparecer certo nos
+// seletores filtrados por função (ex.: Closer da reunião) — continua admin,
+// só isso muda. Não usa atualizarPermissoes porque aquele formulário fica
+// escondido pra você mesmo (pra não se autoexcluir do admin sem querer);
+// aqui mantém o papel e as páginas exatamente como estão, só troca a função.
+export async function atualizarPropriaFuncao(formData: FormData) {
+  const { usuario } = await usuarioAutenticado();
+  if (!usuario || usuario.papel !== "admin") {
+    throw new Error("Só administradores podem fazer isso");
+  }
+
+  const novaFuncao = String(formData.get("funcao") ?? "").trim() || null;
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("atualizar_permissoes_usuario", {
+    usuario_id_alvo: usuario.id,
+    novo_papel: usuario.papel,
+    novas_paginas: usuario.paginas_permitidas,
+    nova_funcao: novaFuncao,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/usuarios");
 }

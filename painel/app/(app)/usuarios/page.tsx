@@ -3,6 +3,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { ExcluirUsuarioButton } from "@/components/excluir-usuario-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
+import { MinhaFuncaoSelect } from "@/components/minha-funcao-select";
 
 type UsuarioLinha = {
   id: string;
@@ -79,7 +80,9 @@ export default async function UsuariosPage() {
                     >
                       {usuario.papel === "admin" ? "Administrador" : "Membro"}
                     </span>
-                    {usuario.funcao ? (
+                    {usuario.id === user?.id && usuario.papel === "admin" ? (
+                      <MinhaFuncaoSelect funcaoAtual={usuario.funcao} />
+                    ) : usuario.funcao ? (
                       <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700">
                         {FUNCAO_LABEL[usuario.funcao] ?? usuario.funcao}
                       </span>
