@@ -5,8 +5,9 @@ import { KanbanBoard } from "@/components/kanban-board";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
+import Link from "next/link";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
-import { inicioDoDia, UM_DIA_MS } from "@/lib/datas";
+import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 import {
   buscarMetaReceitaMes,
   buscarUltimaVenda,
@@ -60,9 +61,14 @@ type LeadResumo = {
 export default async function VendasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ usuario?: string; origem?: string; busca?: string }>;
+  searchParams: Promise<{ usuario?: string; origem?: string; busca?: string; parado?: string }>;
 }) {
-  const { usuario: usuarioFiltro, origem: origemFiltro, busca: buscaFiltro } = await searchParams;
+  const {
+    usuario: usuarioFiltro,
+    origem: origemFiltro,
+    busca: buscaFiltro,
+    parado: paradoFiltro,
+  } = await searchParams;
   const supabase = await createClient();
   const { user, usuario: usuarioAtual } = await usuarioAutenticado();
 
@@ -170,8 +176,27 @@ export default async function VendasPage({
     }))
   );
 
+  // Mesmo critério do selo vermelho "Xd parado" de cada card, igual em
+  // Pré-vendas. Lead com próximo contato marcado (e ainda não vencido) não
+  // conta — já tem plano, só volta a contar depois que a data passar sem
+  // ninguém ter mexido nele.
+  function ehParado(lead: (typeof leadsComAtividade)[number]) {
+    const proximoContatoPendente =
+      !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
+    return diasUteisDesde(lead.ultima_atividade_em) >= 1 && !proximoContatoPendente;
+  }
+
+  const leadsParados = leadsComAtividade.filter(ehParado).length;
+
+  // Clicar no selo "X leads parados" filtra o quadro inteiro pra mostrar só
+  // eles — sem precisar abrir cada coluna procurando.
+  const mostrarSoParados = paradoFiltro === "1";
+  const leadsExibidos = mostrarSoParados
+    ? leadsComAtividade.filter(ehParado)
+    : leadsComAtividade;
+
   const leadsPorNivel: Record<number, typeof leadsComAtividade> = {};
-  for (const lead of leadsComAtividade) {
+  for (const lead of leadsExibidos) {
     // "Oportunidades futuras" é uma divisão visual dentro do nível 7, não
     // um nível separado — separa aqui na hora de montar as colunas.
     const chave =
@@ -182,6 +207,16 @@ export default async function VendasPage({
     lista.push(lead);
     leadsPorNivel[chave] = lista;
   }
+
+  const parametrosFiltro = new URLSearchParams();
+  if (usuarioFiltro) parametrosFiltro.set("usuario", usuarioFiltro);
+  if (origemFiltro) parametrosFiltro.set("origem", origemFiltro);
+  if (buscaFiltro) parametrosFiltro.set("busca", buscaFiltro);
+  const parametrosSemParado = parametrosFiltro.toString();
+  parametrosFiltro.set("parado", "1");
+  const parametrosComParado = parametrosFiltro.toString();
+  const hrefLigarParado = `/reunioes${parametrosComParado ? `?${parametrosComParado}` : ""}`;
+  const hrefTirarParado = `/reunioes${parametrosSemParado ? `?${parametrosSemParado}` : ""}`;
 
   return (
     <>
@@ -216,8 +251,28 @@ export default async function VendasPage({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-sm text-neutral-500">
-                {leads.length} lead{leads.length === 1 ? "" : "s"} em vendas
+                {mostrarSoParados
+                  ? `${leadsExibidos.length} lead${leadsExibidos.length === 1 ? "" : "s"} parado${leadsExibidos.length === 1 ? "" : "s"} sendo mostrados`
+                  : `${leads.length} lead${leads.length === 1 ? "" : "s"} em vendas`}
               </p>
+              {mostrarSoParados ? (
+                <Link
+                  href={hrefTirarParado}
+                  className="rounded-full border border-red-600 bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-700"
+                >
+                  Ver todos ✕
+                </Link>
+              ) : (
+                leadsParados > 0 && (
+                  <Link
+                    href={hrefLigarParado}
+                    title="Clique pra ver só os leads parados"
+                    className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-100"
+                  >
+                    {leadsParados} lead{leadsParados === 1 ? "" : "s"} parado{leadsParados === 1 ? "" : "s"}
+                  </Link>
+                )
+              )}
               {vendasHoje !== null && (
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                   {vendasHoje.vendas} venda{vendasHoje.vendas === 1 ? "" : "s"} hoje
