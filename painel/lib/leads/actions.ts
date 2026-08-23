@@ -296,7 +296,7 @@ export async function atualizarLead(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id, motivo_base")
+    .select("nivel_ordem, responsavel_id, motivo_base, proposta_valor")
     .eq("id", leadId)
     .single();
 
@@ -349,6 +349,25 @@ export async function atualizarLead(
   // separar certo nas colunas de "por que não virou venda".
   if (nivelMudou && novoNivel === NIVEL_BASE && !motivoBaseForm) {
     return { erro: "Escolha o motivo pelo qual esse lead está indo pra Base." };
+  }
+
+  // "Fiz proposta e não comprou" só faz sentido se a proposta e o perfil
+  // do lead já estiverem registrados — senão fica um lead na Base sem
+  // nenhum contexto de por que não fechou.
+  if (
+    nivelMudou &&
+    novoNivel === NIVEL_BASE &&
+    motivoBaseForm === "proposta_nao_comprou"
+  ) {
+    const faltando: string[] = [];
+    if (!criterioProblema) faltando.push("o perfil do lead");
+    if (leadAtual.proposta_valor == null) faltando.push("a proposta (registre acima antes de mover)");
+
+    if (faltando.length > 0) {
+      return {
+        erro: `Antes de mover pra Base como "Fiz proposta e não comprou", preencha: ${faltando.join(", ")}.`,
+      };
+    }
   }
 
   // Saindo de "Reunião marcada" pra "Follow após reunião" ou
@@ -533,6 +552,18 @@ export async function marcarVendido(
   const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
   if (erroPermissao) {
     return { erro: erroPermissao };
+  }
+
+  const { data: leadAtual } = await supabase
+    .from("leads")
+    .select("criterio_problema")
+    .eq("id", leadId)
+    .single();
+
+  if (!leadAtual?.criterio_problema) {
+    return {
+      erro: "Preencha o perfil do lead (acima, em \"Sobre o lead\") antes de marcar como vendido.",
+    };
   }
 
   const valorRaw = String(formData.get("valor_venda") ?? "").trim();
