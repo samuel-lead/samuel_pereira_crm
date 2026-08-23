@@ -62,25 +62,50 @@ export default async function IntegracaoDetalhePage({
             </div>
           )}
 
+          {integracao.avisoImportante && (
+            <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm text-amber-800">
+                <span className="font-semibold">Antes de começar: </span>
+                {integracao.avisoImportante}
+              </p>
+            </div>
+          )}
+
           {integracao.comoConectar && (
             <div className="mt-5 space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Como conectar
+                Passo a passo pra conectar
               </h3>
               {integracao.comoConectar.map((passo) => (
                 <div
-                  key={passo.titulo}
-                  className="rounded-md border border-neutral-200 bg-neutral-50 p-3"
+                  key={passo.numero}
+                  className="flex gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-3"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                    {passo.titulo}
-                  </p>
-                  <p className="mt-1 text-sm text-neutral-700">{passo.descricao}</p>
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold text-neutral-700">
+                    {passo.numero}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-neutral-800">
+                        {passo.titulo}
+                      </p>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          passo.quemFaz === "voce"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {passo.quemFaz === "voce" ? "Você faz" : "Eu construo"}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-neutral-600">{passo.descricao}</p>
+                  </div>
                 </div>
               ))}
               <p className="text-xs text-neutral-400">
-                Quando quiser seguir com essa, me avisa que a gente combina os
-                próximos passos.
+                Quando quiser seguir com essa, me avisa que a gente começa
+                pelos passos que são seus.
               </p>
             </div>
           )}
