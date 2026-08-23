@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { ORDEM_OPORTUNIDADE_FUTURA } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
+import { normalizarTelefone } from "@/lib/telefone";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -227,7 +228,8 @@ export async function criarLead(
   const { supabase, usuario } = await contextoUsuario();
 
   const nome = String(formData.get("nome") ?? "").trim();
-  const telefone = String(formData.get("telefone") ?? "").trim() || null;
+  const telefoneDigitado = String(formData.get("telefone") ?? "").trim();
+  const telefone = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
   const responsavelId =
     usuario.papel === "admin"
@@ -265,7 +267,8 @@ export async function atualizarLead(
   const { supabase, usuario } = await contextoUsuario();
 
   const nome = String(formData.get("nome") ?? "").trim();
-  const telefone = String(formData.get("telefone") ?? "").trim() || null;
+  const telefoneDigitado = String(formData.get("telefone") ?? "").trim();
+  const telefone = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
   const email = String(formData.get("email") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
   const quemIndicou = String(formData.get("quem_indicou") ?? "").trim();
