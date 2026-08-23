@@ -14,6 +14,9 @@ import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
+const NIVEL_FOLLOW_POS_REUNIAO = 6;
+const NIVEL_OPORTUNIDADES = 7;
+
 type Lead = {
   id: string;
   nome: string;
@@ -262,7 +265,10 @@ export default async function EditarLeadPage({
               )}
             </div>
           ) : (
-            podeEditar && (
+            podeEditar &&
+            (leadTipado.nivel_ordem === NIVEL_FOLLOW_POS_REUNIAO ||
+              (leadTipado.nivel_ordem === NIVEL_OPORTUNIDADES &&
+                !leadTipado.oportunidade_futura)) && (
               <>
                 <RegistrarPropostaForm
                   leadId={leadTipado.id}
