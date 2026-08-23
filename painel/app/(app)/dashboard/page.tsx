@@ -7,6 +7,7 @@ import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
+import { CopiarResultadoSemanaButton } from "@/components/copiar-resultado-semana-button";
 import {
   calcularMetricas,
   calcularMetricasOrg,
@@ -15,6 +16,7 @@ import {
   calcularMetricasPorUsuario,
   calcularLeadsPorOrigem,
   calcularReceitaOrg,
+  calcularNegociacoesAbertas,
   buscarMetaReceitaMes,
   inicioDaSemana,
   fimDaSemana,
@@ -55,6 +57,7 @@ export default async function DashboardPage() {
     leadsPorOrigemMes,
     receitaOrgMes,
     metaReceita,
+    negociacoesAbertas,
     { data: metasData },
   ] = await Promise.all([
     // Admin vê a organização inteira aqui (não só a produção pessoal dele —
@@ -86,6 +89,9 @@ export default async function DashboardPage() {
       : Promise.resolve([]),
     calcularReceitaOrg(supabase, usuario!.org_id, inicioMes, amanha),
     buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMes.getUTCFullYear(), inicioMes.getUTCMonth() + 1),
+    souAdmin
+      ? calcularNegociacoesAbertas(supabase, usuario!.org_id)
+      : Promise.resolve({ quantidade: 0, valor: 0 }),
     supabase
       .from("metas_config")
       .select(
@@ -115,6 +121,15 @@ export default async function DashboardPage() {
               subtitulo={subtituloSemana}
               metricas={metricasSemana}
               metas={metas}
+              acao={
+                souAdmin ? (
+                  <CopiarResultadoSemanaButton
+                    periodo={`${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`}
+                    metricas={metricasSemana}
+                    negociacoes={negociacoesAbertas}
+                  />
+                ) : undefined
+              }
             />
             <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} />
           </>

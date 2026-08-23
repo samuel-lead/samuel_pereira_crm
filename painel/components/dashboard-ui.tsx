@@ -146,11 +146,9 @@ export function SecaoPeriodo({
 
   return (
     <section>
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-lg font-bold text-neutral-900">{titulo}</h2>
-          {subtitulo && <span className="text-xs text-neutral-400">{subtitulo}</span>}
-        </div>
+      <div className="mb-3 flex flex-wrap items-baseline gap-2">
+        <h2 className="text-lg font-bold text-neutral-900">{titulo}</h2>
+        {subtitulo && <span className="text-xs text-neutral-400">{subtitulo}</span>}
         {acao}
       </div>
 

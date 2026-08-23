@@ -552,6 +552,32 @@ export async function calcularReceitaOrg(
   return (data ?? []).reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
 }
 
+export type NegociacoesAbertas = {
+  quantidade: number;
+  valor: number;
+};
+
+// Propostas em aberto agora, não é uma métrica de período: lead ainda ativo
+// (nem vendido, nem perdido) com valor de proposta registrado — é uma foto
+// do momento, não muda se a semana já acabou ou não.
+export async function calcularNegociacoesAbertas(
+  supabase: SupabaseServerClient,
+  orgId: string
+): Promise<NegociacoesAbertas> {
+  const { data } = await supabase
+    .from("leads")
+    .select("proposta_valor")
+    .eq("org_id", orgId)
+    .eq("status", "ativo")
+    .is("arquivado_em", null)
+    .not("proposta_valor", "is", null);
+
+  const quantidade = data?.length ?? 0;
+  const valor = (data ?? []).reduce((soma, l) => soma + Number(l.proposta_valor ?? 0), 0);
+
+  return { quantidade, valor };
+}
+
 export type MetricasUsuario = Metricas & { usuarioId: string; nome: string };
 
 // Performance individual de cada usuário da org no período — pra comparar
