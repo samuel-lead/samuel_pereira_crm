@@ -403,88 +403,21 @@ body {
   color: #f87171;
 }
 
-/* O Samuel prefere os cards do Kanban brancos mesmo no modo escuro — só o
-   resto da tela escurece. Cada regra abaixo tem 3 classes (".dark .kanban-card
-   .algo" ou ".dark .kanban-card.algo"), então é mais específica que as
-   genéricas ".dark .bg-white" etc. acima e ganha só dentro do card. */
-.dark .kanban-card.bg-white {
-  background-color: #f8f8f6;
-}
-
-.dark .kanban-card.border-neutral-200 {
-  border-color: #e5e5e5;
-}
-
-.dark .kanban-card.border-t-neutral-200 {
-  border-top-color: #e5e5e5;
-}
-
-.dark .kanban-card.border-t-red-400 {
-  border-top-color: #f87171;
-}
-
-.dark .kanban-card .bg-neutral-100 {
-  background-color: #e5e5e5;
-}
-
-.dark .kanban-card .bg-neutral-200 {
-  background-color: #e5e5e5;
-}
-
+/* Card do Kanban no modo escuro: telefone, origem e "Responsável: fulano"
+   (neutral-500/600) ficam branco puro, igual o nome — pedido explícito do
+   Samuel, tudo que é informação do lead destaca igual. Só o contador de
+   dias parado (neutral-400, embaixo do card) fica de fora de propósito —
+   continua com a cor de status dele (cinza/vermelho), não vira branco. */
 .dark .kanban-card .text-neutral-900 {
-  color: #171717;
-}
-
-.dark .kanban-card .text-neutral-700 {
-  color: #404040;
-}
-
-.dark .kanban-card .text-neutral-600 {
-  color: #525252;
+  color: #ffffff;
 }
 
 .dark .kanban-card .text-neutral-500 {
-  color: #737373;
+  color: #ffffff;
 }
 
-.dark .kanban-card .text-neutral-400 {
-  color: #a3a3a3;
-}
-
-.dark .kanban-card .border-neutral-100 {
-  border-color: #f5f5f5;
-}
-
-.dark .kanban-card .bg-red-100 {
-  background-color: #fee2e2;
-}
-
-.dark .kanban-card .text-red-700 {
-  color: #b91c1c;
-}
-
-.dark .kanban-card .text-red-600 {
-  color: #dc2626;
-}
-
-.dark .kanban-card .text-teal-600 {
-  color: #0d9488;
-}
-
-.dark .kanban-card .bg-green-100 {
-  background-color: #dcfce7;
-}
-
-.dark .kanban-card .text-green-700 {
-  color: #15803d;
-}
-
-.dark .kanban-card .bg-amber-100 {
-  background-color: #fef3c7;
-}
-
-.dark .kanban-card .text-amber-700 {
-  color: #b45309;
+.dark .kanban-card .text-neutral-600 {
+  color: #ffffff;
 }
 
 /* No modo claro, a coluna do Kanban (bg-neutral-50) ficava quase da mesma
