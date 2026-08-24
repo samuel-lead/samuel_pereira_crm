@@ -259,6 +259,93 @@ export async function criarLead(
   redirect("/leads");
 }
 
+const NIVEL_LEADS = 0;
+
+export type ResultadoImportacao = {
+  erro: string | null;
+  criados: number;
+  duplicados: number;
+  invalidos: number;
+  total: number;
+};
+
+// Cola de planilha (Excel/Sheets) manda TAB entre colunas — prioriza isso,
+// e cai pra vírgula/ponto-e-vírgula/pipe se a pessoa digitou a lista à mão.
+function dividirLinhaImportacao(linha: string): string[] {
+  if (linha.includes("\t")) return linha.split("\t");
+  if (linha.includes("|")) return linha.split("|");
+  if (linha.includes(";")) return linha.split(";");
+  return linha.split(",");
+}
+
+// Importação em massa pro SDR prospectar (ex.: lista de prospecção fria) —
+// cada linha "Nome, Telefone" vira um lead direto na coluna "Leads"
+// (nivel_ordem 0), sem responsável, pronto pra alguém reivindicar e
+// começar a abordar. Insere um por um (não em lote só) porque precisa
+// contar quantos foram criados/ignorados por telefone duplicado, pra dar
+// o resumo pra quem importou.
+export async function importarLeads(
+  _estadoAnterior: ResultadoImportacao,
+  formData: FormData
+): Promise<ResultadoImportacao> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const lista = String(formData.get("lista") ?? "");
+  const origemPadrao =
+    String(formData.get("origem") ?? "").trim() || "Prospecção fria";
+
+  const linhas = lista
+    .split("\n")
+    .map((linha) => linha.trim())
+    .filter(Boolean);
+
+  let criados = 0;
+  let duplicados = 0;
+  let invalidos = 0;
+
+  for (const linha of linhas) {
+    const partes = dividirLinhaImportacao(linha)
+      .map((parte) => parte.trim())
+      .filter(Boolean);
+    const nome = partes[0];
+    const telefoneDigitado = partes[1];
+    const origemLinha = partes[2] || origemPadrao;
+
+    if (!nome) {
+      invalidos++;
+      continue;
+    }
+
+    const telefone = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
+
+    const { error } = await supabase.from("leads").insert({
+      org_id: usuario.org_id,
+      usuario_id: usuario.id,
+      nome,
+      telefone_e164: telefone,
+      origem: origemLinha,
+      nivel_ordem: NIVEL_LEADS,
+      responsavel_id: null,
+    });
+
+    if (error) {
+      if (error.code === "23505") {
+        duplicados++;
+      } else {
+        invalidos++;
+      }
+      continue;
+    }
+
+    criados++;
+    await garantirOrigem(supabase, usuario.org_id, origemLinha);
+  }
+
+  revalidatePath("/leads");
+
+  return { erro: null, criados, duplicados, invalidos, total: linhas.length };
+}
+
 export async function atualizarLead(
   leadId: string,
   _estadoAnterior: EstadoFormulario,

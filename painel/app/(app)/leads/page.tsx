@@ -257,6 +257,12 @@ export default async function LeadsPage({
                 origemInicial={origemFiltro}
               />
               <Link
+                href="/leads/importar"
+                className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+              >
+                Importar leads
+              </Link>
+              <Link
                 href="/leads/novo"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
               >
