@@ -234,6 +234,35 @@ body {
   background-color: rgba(5, 150, 105, 0.15);
 }
 
+/* Teal (card "Próximo contato" e o selo "X com próximo contato") tinha
+   ficado de fora desse tratamento — fundo -50 continuava claro e sólido,
+   e o box "Marcado pra..." (bg-white/60, que já escurece no modo escuro)
+   ficava com texto teal escuro em cima de um fundo agora escuro. Mesmo
+   padrão das outras cores: fundo tingido translúcido, texto claro. */
+.dark .bg-teal-50 {
+  background-color: rgba(13, 148, 136, 0.15);
+}
+
+.dark .border-teal-200 {
+  border-color: rgba(13, 148, 136, 0.4);
+}
+
+.dark .border-teal-300 {
+  border-color: rgba(13, 148, 136, 0.4);
+}
+
+.dark .text-teal-600 {
+  color: #2dd4bf;
+}
+
+.dark .text-teal-700 {
+  color: #5eead4;
+}
+
+.dark .text-teal-800 {
+  color: #99f6e4;
+}
+
 /* Selos/etiquetas coloridos (ícone de integração, cargo do usuário, chip
    "Proposta: R$X" etc.) usam fundo -100 + texto -700. O texto -700 já vira
    claro no modo escuro (regras abaixo), mas sem isso o fundo -100
