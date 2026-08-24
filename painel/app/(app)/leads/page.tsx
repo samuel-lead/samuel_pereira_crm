@@ -3,6 +3,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { KanbanBoard } from "@/components/kanban-board";
+import { ProximosContatosLista } from "@/components/proximos-contatos-lista";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
@@ -31,13 +32,20 @@ type LeadResumo = {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ usuario?: string; origem?: string; busca?: string; parado?: string }>;
+  searchParams: Promise<{
+    usuario?: string;
+    origem?: string;
+    busca?: string;
+    parado?: string;
+    contato?: string;
+  }>;
 }) {
   const {
     usuario: usuarioFiltro,
     origem: origemFiltro,
     busca: buscaFiltro,
     parado: paradoFiltro,
+    contato: contatoFiltro,
   } = await searchParams;
   const supabase = await createClient();
   const { user, usuario: usuarioAtual } = await usuarioAutenticado();
@@ -210,6 +218,12 @@ export default async function LeadsPage({
     leadsPorNivel[lead.nivel_ordem] = lista;
   }
 
+  // Leads com próximo contato marcado — modo à parte do Kanban por nível:
+  // troca as colunas por uma lista só, dividida em "hoje" e "futuros", pra
+  // planejar o dia sem precisar procurar coluna por coluna.
+  const leadsComProximoContato = leadsComAtividade.filter((lead) => !!lead.proximo_follow_em);
+  const mostrarSoContato = contatoFiltro === "1";
+
   const parametrosFiltro = new URLSearchParams();
   if (usuarioFiltro) parametrosFiltro.set("usuario", usuarioFiltro);
   if (origemFiltro) parametrosFiltro.set("origem", origemFiltro);
@@ -219,6 +233,14 @@ export default async function LeadsPage({
   const parametrosComParado = parametrosFiltro.toString();
   const hrefLigarParado = `/leads${parametrosComParado ? `?${parametrosComParado}` : ""}`;
   const hrefTirarParado = `/leads${parametrosSemParado ? `?${parametrosSemParado}` : ""}`;
+
+  const parametrosParaContato = new URLSearchParams();
+  if (usuarioFiltro) parametrosParaContato.set("usuario", usuarioFiltro);
+  if (origemFiltro) parametrosParaContato.set("origem", origemFiltro);
+  if (buscaFiltro) parametrosParaContato.set("busca", buscaFiltro);
+  parametrosParaContato.set("contato", "1");
+  const hrefLigarContato = `/leads?${parametrosParaContato.toString()}`;
+  const hrefTirarContato = `/leads${parametrosSemParado ? `?${parametrosSemParado}` : ""}`;
 
   return (
     <>
@@ -301,6 +323,24 @@ export default async function LeadsPage({
                 {souAdmin ? " (equipe)" : ""}
               </span>
             )}
+            {mostrarSoContato ? (
+              <Link
+                href={hrefTirarContato}
+                className="rounded-full border border-teal-600 bg-teal-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-teal-700"
+              >
+                Ver todos ✕
+              </Link>
+            ) : (
+              leadsComProximoContato.length > 0 && (
+                <Link
+                  href={hrefLigarContato}
+                  title="Clique pra ver só os leads com próximo contato marcado"
+                  className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 transition hover:border-teal-300 hover:bg-teal-100"
+                >
+                  {leadsComProximoContato.length} com próximo contato
+                </Link>
+              )
+            )}
           </div>
           {receitaOrgMes !== null && (
             <MetaReceitaWidget
@@ -317,14 +357,18 @@ export default async function LeadsPage({
         className="flex flex-col overflow-hidden px-6 py-6"
         style={{ height: "calc(100vh - var(--kanban-barra-altura, 0px))" }}
       >
-        <KanbanBoard
-          niveis={niveis}
-          leadsPorNivel={leadsPorNivel}
-          souAdmin={souAdmin}
-          usuarioAtualId={user?.id ?? null}
-          usuarios={usuarios}
-          numerosVisiveis={numerosVisiveis}
-        />
+        {mostrarSoContato ? (
+          <ProximosContatosLista leads={leadsComProximoContato} usuarios={usuarios} />
+        ) : (
+          <KanbanBoard
+            niveis={niveis}
+            leadsPorNivel={leadsPorNivel}
+            souAdmin={souAdmin}
+            usuarioAtualId={user?.id ?? null}
+            usuarios={usuarios}
+            numerosVisiveis={numerosVisiveis}
+          />
+        )}
       </main>
     </>
   );
