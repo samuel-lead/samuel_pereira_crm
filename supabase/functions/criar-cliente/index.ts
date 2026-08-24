@@ -1,7 +1,7 @@
-// Cadastra uma empresa cliente nova: cria a org, o funil padrão (os 8
-// níveis de sempre), as metas/taxas padrão, e o primeiro usuário admin
-// dela. Só o dono da plataforma (super_admin) pode chamar isso — cada
-// empresa fica isolada na própria org_id, como todo o resto do sistema.
+// Cadastra uma empresa cliente nova: cria a org, o funil padrão (os 9
+// níveis de sempre, 0 a 8), as metas/taxas padrão, e o primeiro usuário
+// admin dela. Só o dono da plataforma (super_admin) pode chamar isso —
+// cada empresa fica isolada na própria org_id, como todo o resto do sistema.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -29,7 +29,7 @@ const NIVEIS_PADRAO = [
     definicao:
       'Mandei mensagem; o lead só visualizou, não respondeu, ou respondeu só "boa tarde" sem engatar',
     prazo_dias: 5,
-    destino_ao_estourar: 7,
+    destino_ao_estourar: 8,
     etiqueta_wpp: "Sem conversa iniciada",
     numerado: true,
     destacado: false,
@@ -76,6 +76,17 @@ const NIVEIS_PADRAO = [
   },
   {
     ordem: 6,
+    nome: "Follow após reunião",
+    definicao:
+      "A reunião aconteceu, mas ainda não deu pra saber se vira oportunidade ou não — precisa de retorno",
+    prazo_dias: null,
+    destino_ao_estourar: null,
+    etiqueta_wpp: "Follow após reunião",
+    numerado: false,
+    destacado: true,
+  },
+  {
+    ordem: 7,
     nome: "Oportunidades para o fim do mês",
     definicao: "Reuniu, proposta na mesa, não comprou ainda",
     prazo_dias: null,
@@ -85,7 +96,7 @@ const NIVEIS_PADRAO = [
     destacado: false,
   },
   {
-    ordem: 7,
+    ordem: 8,
     nome: "Base",
     definicao:
       "Passou por todo o processo e não virou nada. Também recebe os do nível 1 que estouraram os 5 dias",
