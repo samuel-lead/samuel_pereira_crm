@@ -7,7 +7,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeIntegracao, IconeLixeira } from "@/components/icons";
+import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeIntegracao, IconeLixeira, IconeCasa } from "@/components/icons";
 
 const GRUPOS = [
   {
@@ -17,6 +17,7 @@ const GRUPOS = [
       { href: "/reunioes", label: "Vendas", Icone: IconeMoeda, pagina: "reunioes" },
       { href: "/leads/base", label: "Base de leads", Icone: IconeAlvo, pagina: "funil" },
       { href: "/leads/vendas", label: "Clientes", Icone: IconeClientePagante, pagina: "funil" },
+      { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
     ],
   },
   {
@@ -46,6 +47,7 @@ export function Sidebar({
   fotoUsuario = null,
   cargo = "Membro",
   funcao = null,
+  publicoOrg = "mentoria",
 }: {
   isAdmin?: boolean;
   paginasPermitidas?: string[];
@@ -53,12 +55,16 @@ export function Sidebar({
   fotoUsuario?: string | null;
   cargo?: string;
   funcao?: string | null;
+  publicoOrg?: string;
 }) {
   const pathname = usePathname();
   const [colapsado, setColapsado] = useState(false);
   const gruposVisiveis = GRUPOS.map((grupo) => ({
     ...grupo,
     itens: grupo.itens.filter((item) => {
+      // Imóveis é exclusivo do público imobiliário — vale pra admin
+      // também, diferente do resto (que admin sempre vê tudo).
+      if (item.somenteImobiliario && publicoOrg !== "imobiliario") return false;
       if (isAdmin) return true;
       // Bônus SDR é automático pra quem tem função SDR, não depende das
       // páginas liberadas manualmente — Closer não vê essa página.

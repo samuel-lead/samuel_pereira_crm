@@ -10,6 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let fotoUsuario: string | null = null;
   let cargo = "Membro";
   let funcao: string | null = null;
+  let publicoOrg = "mentoria";
 
   if (usuario) {
     isAdmin = usuario.papel === "admin";
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     nomeUsuario = usuario.nome ?? "";
     fotoUsuario = usuario.foto_url ?? null;
     funcao = usuario.funcao ?? null;
+    publicoOrg = usuario.publico_org ?? "mentoria";
     cargo = isAdmin
       ? "Admin"
       : usuario?.funcao === "sdr"
@@ -35,6 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         fotoUsuario={fotoUsuario}
         cargo={cargo}
         funcao={funcao}
+        publicoOrg={publicoOrg}
       />
       <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
     </div>

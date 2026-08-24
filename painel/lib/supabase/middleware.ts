@@ -8,6 +8,7 @@ const ROTA_DA_PAGINA: Record<string, string> = {
   atividades: "/atividades",
   reunioes: "/reunioes",
   metricas: "/dashboard",
+  imoveis: "/imoveis",
 };
 
 function paginaDaRota(pathname: string): string | null {
@@ -22,6 +23,7 @@ function paginaDaRota(pathname: string): string | null {
   if (pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/")) return "admin";
   if (pathname === "/ano" || pathname.startsWith("/ano/")) return "admin";
   if (pathname === "/integracoes" || pathname.startsWith("/integracoes/")) return "admin";
+  if (pathname === "/imoveis" || pathname.startsWith("/imoveis/")) return "imoveis";
   return null;
 }
 
@@ -114,6 +116,17 @@ export async function updateSession(request: NextRequest) {
     // quem não tem NENHUMA página liberada, o que não é o caso aqui).
     const ehPaginaDaPlataforma = pathname === "/empresas" || pathname.startsWith("/empresas/");
     if (ehPaginaDaPlataforma && !ehSuperAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/leads";
+      return NextResponse.redirect(url);
+    }
+
+    // Imóveis é exclusivo do público imobiliário — mesmo admin não entra
+    // se a empresa for de mentoria/serviço. Diferente das outras páginas,
+    // isso não passa pela checagem de "página permitida" (que só vale pra
+    // quem não é admin) — precisa bloquear todo mundo da org errada.
+    const ehPaginaDeImoveis = pathname === "/imoveis" || pathname.startsWith("/imoveis/");
+    if (ehPaginaDeImoveis && publicoOrg !== "imobiliario") {
       const url = request.nextUrl.clone();
       url.pathname = "/leads";
       return NextResponse.redirect(url);
