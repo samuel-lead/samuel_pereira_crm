@@ -19,6 +19,7 @@ type LeadResumo = {
   origem: string | null;
   nivel_ordem: number;
   responsavel_id: string | null;
+  declarado_em?: string;
   ultima_atividade_em?: string;
   valor_venda?: number | null;
   receita_venda?: number | null;
@@ -29,7 +30,10 @@ type LeadResumo = {
 };
 
 function formatarDataHora(iso: string) {
+  // Sem timeZone explícito, o servidor formata no fuso dele (UTC na
+  // Vercel), não no do Brasil — todo mundo aqui é do Brasil, fixa o fuso.
   return new Date(iso).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -273,6 +277,12 @@ export function KanbanBoard({
                         </div>
 
                         <div className="space-y-1">
+                          {lead.declarado_em && (
+                            <p className="flex items-center gap-1.5 truncate text-xs text-neutral-500">
+                              <IconeCalendario className="h-3 w-3 shrink-0" />
+                              Entrou: {formatarDataHora(lead.declarado_em)}
+                            </p>
+                          )}
                           {lead.telefone_e164 && (
                             <p className="flex items-center gap-1.5 truncate text-xs text-neutral-500">
                               <IconeTelefone className="h-3 w-3 shrink-0" />
