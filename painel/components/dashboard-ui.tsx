@@ -6,6 +6,7 @@ import {
   IconeMoeda,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
+import { Reunioes } from "@/lib/terminologia";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -134,12 +135,14 @@ export function SecaoPeriodo({
   metricas,
   metas,
   acao,
+  publicoOrg = "mentoria",
 }: {
   titulo: string;
   subtitulo?: string;
   metricas: Metricas;
   metas: MetasConfig;
   acao?: React.ReactNode;
+  publicoOrg?: string;
 }) {
   const pisoLeads = metas.piso_leads_dia * metricas.diasUteis;
   const pisoReunioes = metas.piso_reunioes_dia * metricas.diasUteis;
@@ -184,14 +187,14 @@ export function SecaoPeriodo({
           Icone={IconeAlvo}
         />
         <CardNumero
-          titulo="Reuniões marcadas"
+          titulo={`${Reunioes(publicoOrg)} marcadas`}
           valor={metricas.reunioesMarcadas}
           meta={pisoReunioes}
           esquema="ceu"
           Icone={IconeCalendario}
         />
         <CardNumero
-          titulo="Reuniões realizadas"
+          titulo={`${Reunioes(publicoOrg)} realizadas`}
           valor={metricas.reunioesRealizadas}
           esquema="esmeralda"
           Icone={IconeCheck}

@@ -1,5 +1,6 @@
 import type { BonusSdr } from "@/lib/metricas";
 import { IconeEstrela, IconeCalendario, IconeCheck, IconeAlerta, IconeMoeda } from "@/components/icons";
+import { Calls, calls, call } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -72,7 +73,15 @@ function LinhaBonus({ label, valor }: { label: string; valor: number }) {
   );
 }
 
-export function BonusSdrTabela({ dados, periodo }: { dados: BonusSdr[]; periodo?: string }) {
+export function BonusSdrTabela({
+  dados,
+  periodo,
+  publicoOrg = "mentoria",
+}: {
+  dados: BonusSdr[];
+  periodo?: string;
+  publicoOrg?: string;
+}) {
   const totalEquipe = dados.reduce((soma, d) => soma + d.totalBonus, 0);
 
   return (
@@ -89,9 +98,7 @@ export function BonusSdrTabela({ dados, periodo }: { dados: BonusSdr[]; periodo?
           {formatarMoeda(totalEquipe)}
         </p>
         <p className="relative mt-2 text-sm font-medium text-amber-50">
-          Calls realizadas (≥60/80/100 → R$300/R$500/R$1.000) + R$20 por call
-          marcada no fim de semana e realizada + faturamento do mês
-          (≥R$50mil/80mil/100mil → R$1.000/R$2.000/R$3.000).
+          {`${Calls(publicoOrg)} realizadas (≥60/80/100 → R$300/R$500/R$1.000) + R$20 por ${call(publicoOrg)} marcada no fim de semana e realizada + faturamento do mês (≥R$50mil/80mil/100mil → R$1.000/R$2.000/R$3.000).`}
           {periodo && <> Mês de {periodo}.</>}
         </p>
       </div>
@@ -111,13 +118,13 @@ export function BonusSdrTabela({ dados, periodo }: { dados: BonusSdr[]; periodo?
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <MiniCard
-                titulo="Calls marcadas"
+                titulo={`${Calls(publicoOrg)} marcadas`}
                 valor={linha.reunioesMarcadas}
                 esquema="violeta"
                 Icone={IconeCalendario}
               />
               <MiniCard
-                titulo="Calls realizadas"
+                titulo={`${Calls(publicoOrg)} realizadas`}
                 valor={linha.reunioesRealizadas}
                 esquema="esmeralda"
                 Icone={IconeCheck}
@@ -137,8 +144,8 @@ export function BonusSdrTabela({ dados, periodo }: { dados: BonusSdr[]; periodo?
             </div>
 
             <div className="mt-3 divide-y divide-neutral-100 rounded-lg border border-neutral-100 bg-neutral-50/60">
-              <LinhaBonus label="Bônus por calls realizadas" valor={linha.bonusPorCallRealizada} />
-              <LinhaBonus label="Bônus por call no fim de semana" valor={linha.bonusFimDeSemana} />
+              <LinhaBonus label={`Bônus por ${calls(publicoOrg)} realizadas`} valor={linha.bonusPorCallRealizada} />
+              <LinhaBonus label={`Bônus por ${call(publicoOrg)} no fim de semana`} valor={linha.bonusFimDeSemana} />
               <LinhaBonus label="Bônus por faturamento" valor={linha.bonusPorFaturamento} />
             </div>
           </div>

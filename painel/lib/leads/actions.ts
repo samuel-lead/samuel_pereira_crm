@@ -6,6 +6,7 @@ import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { ORDEM_OPORTUNIDADE_FUTURA } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
+import { reuniao } from "@/lib/terminologia";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -37,7 +38,7 @@ async function contextoUsuario() {
 
   const { data: usuario, error } = await supabase
     .from("usuarios")
-    .select("id, org_id, papel")
+    .select("id, org_id, papel, orgs(publico)")
     .eq("id", user.id)
     .single();
 
@@ -45,7 +46,10 @@ async function contextoUsuario() {
     throw new Error("Usuário não encontrado");
   }
 
-  return { supabase, usuario };
+  const orgInfo = usuario.orgs as { publico?: string } | { publico?: string }[] | null;
+  const publicoOrg = (Array.isArray(orgInfo) ? orgInfo[0]?.publico : orgInfo?.publico) ?? "mentoria";
+
+  return { supabase, usuario: { ...usuario, publico_org: publicoOrg } };
 }
 
 type UsuarioContexto = { id: string; org_id: string; papel: string };
@@ -122,6 +126,7 @@ async function sincronizarReuniao(
     // false, não conta como "realizada" (mesmo efeito de um No-show na
     // taxa de comparecimento), mesmo o lead seguindo pro nível escolhido.
     reuniaoAconteceu?: boolean;
+    publicoOrg?: string;
   }
 ): Promise<string | null> {
   const {
@@ -134,16 +139,17 @@ async function sincronizarReuniao(
     marcadaEm,
     closerId,
     reuniaoAconteceu,
+    publicoOrg = "mentoria",
   } = params;
 
   if (paraOrdem === NIVEL_REUNIAO_MARCADA && deOrdem !== NIVEL_REUNIAO_MARCADA) {
     if (!agendadaPara) {
-      return "Informe a data e hora da reunião.";
+      return `Informe a data e hora da ${reuniao(publicoOrg)}.`;
     }
 
     const data = parseDataHoraLocal(agendadaPara);
     if (Number.isNaN(data.getTime())) {
-      return "Data da reunião inválida.";
+      return `Data da ${reuniao(publicoOrg)} inválida.`;
     }
 
     let dataMarcada = new Date();
@@ -427,7 +433,7 @@ export async function atualizarLead(
 
     if (faltando.length > 0) {
       return {
-        erro: `Antes de marcar a reunião, preencha: ${faltando.join(", ")}.`,
+        erro: `Antes de marcar a ${reuniao(usuario.publico_org)}, preencha: ${faltando.join(", ")}.`,
       };
     }
   }
@@ -467,7 +473,7 @@ export async function atualizarLead(
     reuniaoAconteceuForm !== "sim" &&
     reuniaoAconteceuForm !== "nao"
   ) {
-    return { erro: "Confirme se essa reunião realmente aconteceu." };
+    return { erro: `Confirme se essa ${reuniao(usuario.publico_org)} realmente aconteceu.` };
   }
 
   const motivoBase = novoNivel === NIVEL_BASE ? motivoBaseForm ?? leadAtual.motivo_base : null;
@@ -483,6 +489,7 @@ export async function atualizarLead(
       marcadaEm: reuniaoMarcadaEm,
       closerId,
       reuniaoAconteceu: reuniaoAconteceuForm === "sim",
+      publicoOrg: usuario.publico_org,
     });
     if (erroReuniao) {
       return { erro: erroReuniao };
@@ -593,6 +600,7 @@ export async function moverLeadNivel(
     deOrdem: leadAtual.nivel_ordem,
     paraOrdem: nivelReal,
     agendadaPara,
+    publicoOrg: usuario.publico_org,
   });
   if (erroReuniao) {
     throw new Error(erroReuniao);

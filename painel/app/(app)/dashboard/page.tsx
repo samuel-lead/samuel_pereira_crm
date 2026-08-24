@@ -24,6 +24,7 @@ import {
   inicioDoMes,
 } from "@/lib/metricas";
 import { inicioDoDia, UM_DIA_MS } from "@/lib/datas";
+import { call, calls, reunioes } from "@/lib/terminologia";
 
 function formatarDataCurta(d: Date) {
   return d.toLocaleDateString("pt-BR", {
@@ -98,6 +99,7 @@ export default async function DashboardPage() {
   ]);
 
   const metas = metasData as MetasConfig | null;
+  const publicoOrg = usuario!.publico_org;
 
   return (
     <>
@@ -109,7 +111,8 @@ export default async function DashboardPage() {
             <div>
               <h2 className="text-sm font-semibold text-neutral-800">Meu relatório de hoje</h2>
               <p className="text-xs text-neutral-500">
-                {metricasHoje.reunioesMarcadas} call{metricasHoje.reunioesMarcadas === 1 ? "" : "s"} marcada
+                {metricasHoje.reunioesMarcadas}{" "}
+                {metricasHoje.reunioesMarcadas === 1 ? call(publicoOrg) : calls(publicoOrg)} marcada
                 {metricasHoje.reunioesMarcadas === 1 ? "" : "s"} · {metricasHoje.ligacoes} ligaç
                 {metricasHoje.ligacoes === 1 ? "ão" : "ões"}, {formatarDataCurta(agora)}.
               </p>
@@ -119,6 +122,7 @@ export default async function DashboardPage() {
               callsMarcadas={metricasHoje.reunioesMarcadas}
               callsReagendadas={metricasHoje.reunioesReagendadas}
               ligacoesFeitas={metricasHoje.ligacoes}
+              publicoOrg={publicoOrg}
             />
           </section>
         )}
@@ -136,17 +140,19 @@ export default async function DashboardPage() {
               subtitulo={subtituloSemana}
               metricas={metricasSemana}
               metas={metas}
+              publicoOrg={publicoOrg}
               acao={
                 souAdmin ? (
                   <CopiarResultadoSemanaButton
                     periodo={`${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`}
                     metricas={metricasSemana}
                     negociacoes={negociacoesAbertas}
+                    publicoOrg={publicoOrg}
                   />
                 ) : undefined
               }
             />
-            <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} />
+            <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} publicoOrg={publicoOrg} />
           </>
         ) : (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -154,7 +160,7 @@ export default async function DashboardPage() {
               <>
                 Ainda não tem metas configuradas pra essa organização.{" "}
                 <Link href="/configuracoes" className="font-medium underline">
-                  Defina o piso de leads/reuniões e as taxas em Configurações
+                  Defina o piso de leads/{reunioes(publicoOrg)} e as taxas em Configurações
                 </Link>{" "}
                 pra ver o progresso aqui.
               </>
@@ -184,11 +190,13 @@ export default async function DashboardPage() {
               dados={performanceDiaSdr}
               periodo={`Hoje, ${formatarDataCurta(agora)}.`}
               dataRelatorio={agora}
+              publicoOrg={publicoOrg}
             />
             <PerformanceSdr
               titulo="Performance da semana por SDR"
               dados={performanceSemanaSdr}
               periodo={`Semana de ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)} (domingo a sábado).`}
+              publicoOrg={publicoOrg}
             />
           </div>
         </section>

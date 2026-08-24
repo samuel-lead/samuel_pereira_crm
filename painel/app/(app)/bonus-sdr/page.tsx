@@ -34,7 +34,11 @@ export default async function BonusSdrPage() {
       <PageHeader titulo="Bônus SDR" />
 
       <main className="space-y-4 bg-[#f4f5f7] px-6 py-6">
-        <BonusSdrTabela dados={bonus} periodo={MESES[inicioMes.getUTCMonth()]} />
+        <BonusSdrTabela
+          dados={bonus}
+          periodo={MESES[inicioMes.getUTCMonth()]}
+          publicoOrg={usuario!.publico_org}
+        />
       </main>
     </>
   );

@@ -26,6 +26,17 @@ Samuel, vendendo **mentoria** para corretores de imóveis.
 **O encontro comercial se chama REUNIÃO. Nunca escreva "visita" em lugar
 nenhum do código, banco, interface ou mensagem.**
 
+**Exceção explícita (2026-08-26):** o CRM passou a atender dois públicos —
+`orgs.publico` é `'mentoria'` ou `'imobiliario'`. Pra empresa `imobiliario`,
+todo texto visível pro usuário (não nome de tabela/coluna/função no banco)
+troca "Reunião"/"Call" por
+"Visita" — é assim que o mercado imobiliário fala, não existe esse
+vocabulário lá. Use os helpers de `painel/lib/terminologia.ts`
+(`Reuniao`, `reuniao`, `Reunioes`, `reunioes`, `Call`, `call`, `Calls`,
+`calls`) em vez de escrever a palavra solta em qualquer texto novo. A
+regra "nunca escreva visita" continua valendo 100% pro público mentoria —
+a troca é condicional por `publico`, nunca hardcoded pros dois.
+
 ## Stack
 
 - **Supabase** — Postgres, Edge Functions (Deno/TypeScript), Auth, pg_cron, Storage

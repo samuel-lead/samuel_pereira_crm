@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Metricas, NegociacoesAbertas } from "@/lib/metricas";
+import { Reunioes } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -15,7 +16,8 @@ function formatarPercentual(valor: number | null) {
 function montarRelatorio(
   periodo: string,
   metricas: Metricas,
-  negociacoes: NegociacoesAbertas
+  negociacoes: NegociacoesAbertas,
+  publicoOrg: string
 ) {
   const taxaNoShow =
     metricas.reunioesMarcadas > 0 ? metricas.noShow / metricas.reunioesMarcadas : null;
@@ -27,8 +29,8 @@ function montarRelatorio(
     `🗓️ Período: ${periodo}`,
     "",
     `➡ Leads trabalhados: ${metricas.leadsTrabalhados}`,
-    `➡ Reuniões marcadas: ${metricas.reunioesMarcadas}`,
-    `➡ Reuniões realizadas: ${metricas.reunioesRealizadas}`,
+    `➡ ${Reunioes(publicoOrg)} marcadas: ${metricas.reunioesMarcadas}`,
+    `➡ ${Reunioes(publicoOrg)} realizadas: ${metricas.reunioesRealizadas}`,
     `➡ Vendas: ${metricas.vendas}`,
     "",
     "📈 Taxas",
@@ -51,15 +53,17 @@ export function CopiarResultadoSemanaButton({
   periodo,
   metricas,
   negociacoes,
+  publicoOrg = "mentoria",
 }: {
   periodo: string;
   metricas: Metricas;
   negociacoes: NegociacoesAbertas;
+  publicoOrg?: string;
 }) {
   const [copiado, setCopiado] = useState(false);
 
   function aoClicar() {
-    const texto = montarRelatorio(periodo, metricas, negociacoes);
+    const texto = montarRelatorio(periodo, metricas, negociacoes, publicoOrg);
     navigator.clipboard?.writeText(texto).catch(() => {});
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);

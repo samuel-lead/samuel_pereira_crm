@@ -5,6 +5,7 @@ import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
+import { reuniao } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = "4";
 const NIVEL_FOLLOW_POS_REUNIAO = "6";
@@ -63,6 +64,7 @@ export function EditarLeadForm({
   podeEditar = true,
   preSelecionarReuniao = false,
   preSelecionarNivel,
+  publicoOrg = "mentoria",
 }: {
   lead: Lead;
   niveis: NivelResumo[];
@@ -72,6 +74,7 @@ export function EditarLeadForm({
   souAdmin?: boolean;
   podeEditar?: boolean;
   preSelecionarReuniao?: boolean;
+  publicoOrg?: string;
   // Veio do drag-and-drop no Kanban (saindo de "Reunião marcada" pra
   // "Follow após reunião"/"Oportunidades"): já chega com o nível de
   // destino escolhido, só falta confirmar se a reunião aconteceu.
@@ -269,13 +272,13 @@ export function EditarLeadForm({
                 />
                 <p className="text-xs text-green-700">
                   Já vem preenchido com agora — troque se estiver registrando
-                  uma reunião que foi marcada em outro dia.
+                  uma {reuniao(publicoOrg)} que foi marcada em outro dia.
                 </p>
               </div>
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="reuniao_data">
-                  Data e hora da reunião
+                  Data e hora da {reuniao(publicoOrg)}
                 </label>
                 <input
                   id="reuniao_data"
@@ -289,7 +292,7 @@ export function EditarLeadForm({
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="closer_id">
-                  Closer (quem vai fazer a reunião)
+                  Closer (quem vai fazer a {reuniao(publicoOrg)})
                 </label>
                 <ResponsavelSelect
                   usuarios={usuarios}
@@ -304,7 +307,7 @@ export function EditarLeadForm({
           {vaiConfirmarReuniao && (
             <div className="mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
               <p className="text-sm font-medium text-amber-800">
-                Essa reunião realmente aconteceu?
+                Essa {reuniao(publicoOrg)} realmente aconteceu?
               </p>
               <div className="flex gap-4">
                 <label className="flex items-center gap-1.5 text-sm text-amber-800">
@@ -330,7 +333,7 @@ export function EditarLeadForm({
                 </label>
               </div>
               <p className="text-xs text-amber-700">
-                Se marcar &quot;Não&quot;, essa reunião não conta na taxa de
+                Se marcar &quot;Não&quot;, essa {reuniao(publicoOrg)} não conta na taxa de
                 comparecimento — mesmo o lead seguindo pro nível escolhido.
               </p>
             </div>
@@ -347,7 +350,7 @@ export function EditarLeadForm({
                   className="mt-0.5"
                 />
                 <span>
-                  Oportunidade futura — fez a reunião, é ICP qualificado, mas
+                  Oportunidade futura — fez a {reuniao(publicoOrg)}, é ICP qualificado, mas
                   avisou que só fecha depois (não é pra fechar esse mês).
                 </span>
               </label>

@@ -131,6 +131,7 @@ export default async function VendasPage({
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
+  const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
 
   const leadsComProposta = leads.filter((lead) => lead.proposta_valor != null);
   const totalPropostas = leadsComProposta.reduce(
@@ -360,6 +361,7 @@ export default async function VendasPage({
             usuarios={usuarios}
             mostrarValor
             numerosVisiveis={numerosVisiveis}
+            publicoOrg={publicoOrg}
           />
         )}
       </main>

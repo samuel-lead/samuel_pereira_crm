@@ -12,101 +12,107 @@ function json(status: number, body: unknown) {
   });
 }
 
-const NIVEIS_PADRAO = [
-  {
-    ordem: 0,
-    nome: "Leads",
-    definicao: "Lead cadastrado, ainda não abordado (nenhuma mensagem enviada)",
-    prazo_dias: null,
-    destino_ao_estourar: null,
-    etiqueta_wpp: "Leads",
-    numerado: false,
-    destacado: true,
-  },
-  {
-    ordem: 1,
-    nome: "Sem conversa iniciada",
-    definicao:
-      'Mandei mensagem; o lead só visualizou, não respondeu, ou respondeu só "boa tarde" sem engatar',
-    prazo_dias: 5,
-    destino_ao_estourar: 8,
-    etiqueta_wpp: "Sem conversa iniciada",
-    numerado: true,
-    destacado: false,
-  },
-  {
-    ordem: 2,
-    nome: "Em qualificação",
-    definicao: "Conversa engatou, atendimento rolando, levantando os 3 critérios",
-    prazo_dias: null,
-    destino_ao_estourar: null,
-    etiqueta_wpp: "Em qualificação",
-    numerado: true,
-    destacado: false,
-  },
-  {
-    ordem: 3,
-    nome: "Topou reunião, horário a definir",
-    definicao: "Qualificado e aceitou reunir, mas dia e hora não definidos",
-    prazo_dias: null,
-    destino_ao_estourar: null,
-    etiqueta_wpp: "Topou reunião, sem horário",
-    numerado: true,
-    destacado: false,
-  },
-  {
-    ordem: 4,
-    nome: "Reunião marcada",
-    definicao: "Dia e hora definidos",
-    prazo_dias: null,
-    destino_ao_estourar: null,
-    etiqueta_wpp: "Reunião marcada",
-    numerado: false,
-    destacado: true,
-  },
-  {
-    ordem: 5,
-    nome: "No Show",
-    definicao: "A reunião estava marcada e o lead não compareceu",
-    prazo_dias: null,
-    destino_ao_estourar: null,
-    etiqueta_wpp: "No Show",
-    numerado: true,
-    destacado: false,
-  },
-  {
-    ordem: 6,
-    nome: "Follow após reunião",
-    definicao:
-      "A reunião aconteceu, mas ainda não deu pra saber se vira oportunidade ou não — precisa de retorno",
-    prazo_dias: null,
-    destino_ao_estourar: null,
-    etiqueta_wpp: "Follow após reunião",
-    numerado: false,
-    destacado: true,
-  },
-  {
-    ordem: 7,
-    nome: "Oportunidades para o fim do mês",
-    definicao: "Reuniu, proposta na mesa, não comprou ainda",
-    prazo_dias: null,
-    destino_ao_estourar: null,
-    etiqueta_wpp: "Reunião feita, sem fechar",
-    numerado: true,
-    destacado: false,
-  },
-  {
-    ordem: 8,
-    nome: "Base",
-    definicao:
-      "Passou por todo o processo e não virou nada. Também recebe os do nível 1 que estouraram os 5 dias",
-    prazo_dias: null,
-    destino_ao_estourar: null,
-    etiqueta_wpp: "Base",
-    numerado: true,
-    destacado: false,
-  },
-];
+// Imobiliário fala "visita", não "reunião"/"call" — o resto do funil é
+// idêntico, só troca essa palavra nos níveis que citam encontro com o lead.
+function niveisPadrao(publico: string) {
+  const palavra = publico === "imobiliario" ? "visita" : "reunião";
+  const Palavra = publico === "imobiliario" ? "Visita" : "Reunião";
+
+  return [
+    {
+      ordem: 0,
+      nome: "Leads",
+      definicao: "Lead cadastrado, ainda não abordado (nenhuma mensagem enviada)",
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: "Leads",
+      numerado: false,
+      destacado: true,
+    },
+    {
+      ordem: 1,
+      nome: "Sem conversa iniciada",
+      definicao:
+        'Mandei mensagem; o lead só visualizou, não respondeu, ou respondeu só "boa tarde" sem engatar',
+      prazo_dias: 5,
+      destino_ao_estourar: 8,
+      etiqueta_wpp: "Sem conversa iniciada",
+      numerado: true,
+      destacado: false,
+    },
+    {
+      ordem: 2,
+      nome: "Em qualificação",
+      definicao: "Conversa engatou, atendimento rolando, levantando os 3 critérios",
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: "Em qualificação",
+      numerado: true,
+      destacado: false,
+    },
+    {
+      ordem: 3,
+      nome: `Topou ${palavra}, horário a definir`,
+      definicao: `Qualificado e aceitou ${publico === "imobiliario" ? "receber visita" : "reunir"}, mas dia e hora não definidos`,
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: `Topou ${palavra}, sem horário`,
+      numerado: true,
+      destacado: false,
+    },
+    {
+      ordem: 4,
+      nome: `${Palavra} marcada`,
+      definicao: "Dia e hora definidos",
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: `${Palavra} marcada`,
+      numerado: false,
+      destacado: true,
+    },
+    {
+      ordem: 5,
+      nome: "No Show",
+      definicao: `A ${palavra} estava marcada e o lead não compareceu`,
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: "No Show",
+      numerado: true,
+      destacado: false,
+    },
+    {
+      ordem: 6,
+      nome: `Follow após ${palavra}`,
+      definicao: `A ${palavra} aconteceu, mas ainda não deu pra saber se vira oportunidade ou não — precisa de retorno`,
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: `Follow após ${palavra}`,
+      numerado: false,
+      destacado: true,
+    },
+    {
+      ordem: 7,
+      nome: "Oportunidades para o fim do mês",
+      definicao: `${publico === "imobiliario" ? "Visitou" : "Reuniu"}, proposta na mesa, não comprou ainda`,
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: `${Palavra} feita, sem fechar`,
+      numerado: true,
+      destacado: false,
+    },
+    {
+      ordem: 8,
+      nome: "Base",
+      definicao:
+        "Passou por todo o processo e não virou nada. Também recebe os do nível 1 que estouraram os 5 dias",
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: "Base",
+      numerado: true,
+      destacado: false,
+    },
+  ];
+}
 
 Deno.serve(async (req: Request) => {
   const authHeader = req.headers.get("Authorization");
@@ -202,7 +208,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const { error: erroNiveis } = await admin.from("niveis").insert(
-    NIVEIS_PADRAO.map((nivel) => ({ ...nivel, org_id: novaOrg.id }))
+    niveisPadrao(publico).map((nivel) => ({ ...nivel, org_id: novaOrg.id }))
   );
 
   const { error: erroMetas } = await admin.from("metas_config").insert({

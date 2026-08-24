@@ -5,6 +5,7 @@ import {
   atualizarMetasConfig,
   type EstadoMetasConfig,
 } from "@/lib/configuracoes/actions";
+import { reunioes } from "@/lib/terminologia";
 
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
@@ -19,7 +20,13 @@ type MetasConfig = {
   taxa_venda_min: number;
 };
 
-export function MetasConfigForm({ metas }: { metas: MetasConfig }) {
+export function MetasConfigForm({
+  metas,
+  publicoOrg = "mentoria",
+}: {
+  metas: MetasConfig;
+  publicoOrg?: string;
+}) {
   const [estado, acaoFormulario, pendente] = useActionState(
     atualizarMetasConfig,
     estadoInicial
@@ -61,7 +68,7 @@ export function MetasConfigForm({ metas }: { metas: MetasConfig }) {
         </div>
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="piso_reunioes_dia">
-            Piso de reuniões/dia
+            Piso de {reunioes(publicoOrg)}/dia
           </label>
           <input
             id="piso_reunioes_dia"

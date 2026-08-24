@@ -7,6 +7,7 @@ import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasUteisDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
+import { Reuniao } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_FOLLOW_POS_REUNIAO = 6;
@@ -66,11 +67,13 @@ export function KanbanBoard({
   mostrarValor = false,
   mostrarParado = true,
   numerosVisiveis: numerosVisiveisExternos,
+  publicoOrg = "mentoria",
 }: {
   niveis: NivelResumo[];
   leadsPorNivel: Record<number, LeadResumo[]>;
   souAdmin?: boolean;
   usuarioAtualId?: string | null;
+  publicoOrg?: string;
   // Nome de cada responsável, pra mostrar "Responsável: Fulano" no card
   // sem precisar buscar de novo — a lista já vem carregada pro filtro.
   usuarios?: { id: string; nome: string }[];
@@ -306,7 +309,7 @@ export function KanbanBoard({
                           {lead.reuniao_agendada_para && (
                             <p className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-700">
                               <IconeCalendario className="h-3 w-3 shrink-0" />
-                              Reunião: {formatarDataHora(lead.reuniao_agendada_para)}
+                              {Reuniao(publicoOrg)}: {formatarDataHora(lead.reuniao_agendada_para)}
                             </p>
                           )}
                           {temProximoContato && (

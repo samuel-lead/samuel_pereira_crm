@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
-import { INTEGRACOES, STATUS_LABEL } from "@/lib/integracoes";
+import { integracoes, STATUS_LABEL } from "@/lib/integracoes";
+import { usuarioAutenticado } from "@/lib/supabase/server";
 
-export default function IntegracoesPage() {
+export default async function IntegracoesPage() {
+  const { usuario } = await usuarioAutenticado();
+
   return (
     <>
       <PageHeader titulo="Integrações" />
@@ -14,7 +17,7 @@ export default function IntegracoesPage() {
         </p>
 
         <div className="space-y-3">
-          {INTEGRACOES.map((integracao) => {
+          {integracoes(usuario!.publico_org).map((integracao) => {
             const status = STATUS_LABEL[integracao.status];
             return (
               <Link

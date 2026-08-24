@@ -1,3 +1,5 @@
+import { Reuniao, reuniao, reunioes } from "@/lib/terminologia";
+
 export type StatusIntegracao = "conectado" | "nao_conectado" | "em_breve";
 
 export type PassoConexao = {
@@ -25,7 +27,8 @@ export type Integracao = {
   avisoImportante?: string;
 };
 
-export const INTEGRACOES: Integracao[] = [
+export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
+  return [
   {
     id: "whatsapp",
     nome: "WhatsApp (Z-API)",
@@ -150,12 +153,12 @@ export const INTEGRACOES: Integracao[] = [
     id: "google-calendar",
     nome: "Google Calendar",
     descricaoCurta:
-      "Sincroniza as reuniões marcadas no CRM com a agenda de verdade.",
+      `Sincroniza as ${reunioes(publicoOrg)} marcadas no CRM com a agenda de verdade.`,
     status: "nao_conectado",
     corIcone: "bg-blue-100 text-blue-700",
     letraIcone: "C",
     oQueFaz:
-      "Toda vez que uma reunião é marcada aqui no CRM (nível 'Reunião marcada'), cria um evento automático na agenda do Google do Closer responsável — sem precisar lançar duas vezes.",
+      `Toda vez que uma ${reuniao(publicoOrg)} é marcada aqui no CRM (nível '${Reuniao(publicoOrg)} marcada'), cria um evento automático na agenda do Google do Closer responsável — sem precisar lançar duas vezes.`,
     comoConectar: [
       {
         numero: 1,
@@ -176,7 +179,7 @@ export const INTEGRACOES: Integracao[] = [
         quemFaz: "eu",
         titulo: "Construir a sincronização",
         descricao:
-          "Eu construo a criação/atualização automática do evento na sua agenda sempre que uma reunião for marcada, remarcada ou cancelada aqui no CRM.",
+          `Eu construo a criação/atualização automática do evento na sua agenda sempre que uma ${reuniao(publicoOrg)} for marcada, remarcada ou cancelada aqui no CRM.`,
       },
     ],
   },
@@ -254,10 +257,11 @@ export const INTEGRACOES: Integracao[] = [
       },
     ],
   },
-];
+  ];
+}
 
-export function buscarIntegracao(id: string) {
-  return INTEGRACOES.find((integracao) => integracao.id === id) ?? null;
+export function buscarIntegracao(id: string, publicoOrg: string = "mentoria") {
+  return integracoes(publicoOrg).find((integracao) => integracao.id === id) ?? null;
 }
 
 export const STATUS_LABEL: Record<StatusIntegracao, { texto: string; classe: string }> = {

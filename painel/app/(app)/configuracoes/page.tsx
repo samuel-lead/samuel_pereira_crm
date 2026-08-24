@@ -73,7 +73,7 @@ export default async function ConfiguracoesPage() {
               As taxas não mudam sozinhas por performance, só se você trocar
               aqui.
             </p>
-            <MetasConfigForm metas={metas} />
+            <MetasConfigForm metas={metas} publicoOrg={usuario!.publico_org} />
           </div>
         )}
 

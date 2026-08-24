@@ -1,5 +1,6 @@
 import type { MetricasUsuario } from "@/lib/metricas";
 import { CopiarRelatorioButton } from "@/components/copiar-relatorio-button";
+import { Calls } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -15,6 +16,7 @@ export function PerformanceSdr({
   dados,
   periodo,
   dataRelatorio,
+  publicoOrg = "mentoria",
 }: {
   titulo?: string;
   dados: MetricasUsuario[];
@@ -23,6 +25,7 @@ export function PerformanceSdr({
   // pro SDR mandar o relatório dele no WhatsApp. Não faz sentido na tabela
   // da semana (relatório é sempre do dia).
   dataRelatorio?: Date;
+  publicoOrg?: string;
 }) {
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -39,8 +42,8 @@ export function PerformanceSdr({
               <th className="px-3 py-2 text-left font-medium">SDR</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Leads</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Ligações</th>
-              <th className="w-28 px-3 py-2 text-center font-medium">Calls marcadas</th>
-              <th className="w-28 px-3 py-2 text-center font-medium">Calls realizadas</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">{Calls(publicoOrg)} marcadas</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">{Calls(publicoOrg)} realizadas</th>
               <th className="w-28 px-3 py-2 text-center font-medium">No-show</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Vendas</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Taxa de venda</th>
@@ -76,6 +79,7 @@ export function PerformanceSdr({
                       callsMarcadas={linha.reunioesMarcadas}
                       callsReagendadas={linha.reunioesReagendadas}
                       ligacoesFeitas={linha.ligacoes}
+                      publicoOrg={publicoOrg}
                     />
                   </td>
                 )}

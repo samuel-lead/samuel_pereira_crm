@@ -86,6 +86,7 @@ export default async function VendasPage({
 
   const leads = (leadsData ?? []) as LeadVendido[];
   const souAdmin = usuarioAtual?.papel === "admin";
+  const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
   const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
 
   // Reaproveita o card do Kanban do funil — os selos de venda/receita/
@@ -137,6 +138,7 @@ export default async function VendasPage({
           leadsPorNivel={{ 4: leadsKanban }}
           souAdmin={souAdmin}
           usuarioAtualId={user?.id ?? null}
+          publicoOrg={publicoOrg}
           mostrarParado={false}
           mostrarValor
         />

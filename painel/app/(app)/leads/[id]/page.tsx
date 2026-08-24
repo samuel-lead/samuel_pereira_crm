@@ -13,6 +13,7 @@ import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { Reuniao } from "@/lib/terminologia";
 
 const NIVEL_FOLLOW_POS_REUNIAO = 6;
 const NIVEL_OPORTUNIDADES = 7;
@@ -134,6 +135,7 @@ export default async function EditarLeadPage({
   const origens = origensData ?? [];
   const produtos = (produtosData ?? []).map((p) => p.nome);
   const souAdmin = usuarioAtual?.papel === "admin";
+  const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
   const souCloserAtivo = reunioes.some(
     (r) => r.status === "marcada" && r.closer_id === user?.id
   );
@@ -212,6 +214,7 @@ export default async function EditarLeadPage({
             podeEditar={podeEditar}
             preSelecionarReuniao={marcarReuniao === "1"}
             preSelecionarNivel={confirmarReuniao}
+            publicoOrg={publicoOrg}
           />
         </div>
 
@@ -312,7 +315,7 @@ export default async function EditarLeadPage({
                 {reunioes.map((reuniao) => (
                   <li key={`reuniao-${reuniao.id}`} className="border-l-2 border-amber-300 pl-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
-                      Reunião · {reuniao.status}
+                      {Reuniao(publicoOrg)} · {reuniao.status}
                     </p>
                     <p className="text-sm text-neutral-700">
                       Agendada para {formatarData(reuniao.agendada_para)}

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { Reuniao, reunioes as palavraReunioes } from "@/lib/terminologia";
 
 type InteracaoComLead = {
   id: string;
@@ -43,6 +44,8 @@ function formatarData(iso: string) {
 
 export default async function AtividadesPage() {
   const supabase = await createClient();
+  const { usuario } = await usuarioAutenticado();
+  const publicoOrg = usuario!.publico_org;
 
   const [{ data: interacoesData }, { data: reunioesData }] = await Promise.all([
     supabase
@@ -76,7 +79,7 @@ export default async function AtividadesPage() {
       data: r.agendada_para,
       leadId: r.lead_id,
       leadNome: r.leads?.nome ?? "Lead removido",
-      titulo: `Reunião · ${r.status}`,
+      titulo: `${Reuniao(publicoOrg)} · ${r.status}`,
       detalhe: r.resultado,
       cor: "border-amber-400",
     })),
@@ -88,13 +91,13 @@ export default async function AtividadesPage() {
 
       <main className="px-6 py-6">
         <p className="mb-4 text-sm text-neutral-500">
-          Últimas interações e reuniões registradas, de todos os leads.
+          Últimas interações e {palavraReunioes(publicoOrg)} registradas, de todos os leads.
         </p>
 
         {itens.length === 0 ? (
           <div className="rounded-lg border border-dashed border-neutral-300 bg-white px-6 py-16 text-center">
             <p className="text-sm text-neutral-400">
-              Nenhuma atividade registrada ainda. Notas e reuniões aparecem
+              Nenhuma atividade registrada ainda. Notas e {palavraReunioes(publicoOrg)} aparecem
               aqui assim que você registrar algo na página de um lead.
             </p>
           </div>

@@ -15,6 +15,7 @@ import {
   inicioDoMes,
 } from "@/lib/metricas";
 import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { call, calls } from "@/lib/terminologia";
 
 type LeadResumo = {
   id: string;
@@ -103,6 +104,7 @@ export default async function LeadsPage({
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
+  const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
 
   const agora = new Date();
   const inicioHoje = inicioDoDia(agora);
@@ -305,7 +307,7 @@ export default async function LeadsPage({
             )}
             {callsMarcadasHoje !== null && (
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                {callsMarcadasHoje} call{callsMarcadasHoje === 1 ? "" : "s"} marcada
+                {callsMarcadasHoje} {callsMarcadasHoje === 1 ? call(publicoOrg) : calls(publicoOrg)} marcada
                 {callsMarcadasHoje === 1 ? "" : "s"} hoje
                 {souAdmin ? " (equipe)" : ""}
               </span>
@@ -318,7 +320,7 @@ export default async function LeadsPage({
             )}
             {callsRealizadasHoje !== null && (
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                {callsRealizadasHoje} call{callsRealizadasHoje === 1 ? "" : "s"} realizada
+                {callsRealizadasHoje} {callsRealizadasHoje === 1 ? call(publicoOrg) : calls(publicoOrg)} realizada
                 {callsRealizadasHoje === 1 ? "" : "s"} hoje
                 {souAdmin ? " (equipe)" : ""}
               </span>
@@ -373,6 +375,7 @@ export default async function LeadsPage({
             usuarioAtualId={user?.id ?? null}
             usuarios={usuarios}
             numerosVisiveis={numerosVisiveis}
+            publicoOrg={publicoOrg}
           />
         )}
       </main>

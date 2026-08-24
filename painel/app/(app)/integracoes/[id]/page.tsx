@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { BotaoVoltar } from "@/components/botao-voltar";
 import { buscarIntegracao, STATUS_LABEL } from "@/lib/integracoes";
+import { usuarioAutenticado } from "@/lib/supabase/server";
 
 export default async function IntegracaoDetalhePage({
   params,
@@ -9,7 +10,8 @@ export default async function IntegracaoDetalhePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const integracao = buscarIntegracao(id);
+  const { usuario } = await usuarioAutenticado();
+  const integracao = buscarIntegracao(id, usuario!.publico_org);
 
   if (!integracao) {
     notFound();

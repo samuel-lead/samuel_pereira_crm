@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Calls } from "@/lib/terminologia";
 
 function formatarPeriodo(data: Date) {
   return data.toLocaleDateString("pt-BR", {
@@ -14,13 +15,14 @@ function montarRelatorio(
   data: Date,
   callsMarcadas: number,
   callsReagendadas: number,
-  ligacoesFeitas: number
+  ligacoesFeitas: number,
+  publicoOrg: string
 ) {
   return [
     `🗓️Período: ${formatarPeriodo(data)}`,
     "",
-    `➡ Calls marcadas: ${callsMarcadas}`,
-    `➡ Calls reagendadas: ${callsReagendadas}`,
+    `➡ ${Calls(publicoOrg)} marcadas: ${callsMarcadas}`,
+    `➡ ${Calls(publicoOrg)} reagendadas: ${callsReagendadas}`,
     `➡ Prospecções feitas no IG? `,
     `➡ Ligações feitas? ${ligacoesFeitas}`,
     `➡ Atualizou CRM? `,
@@ -32,16 +34,18 @@ export function CopiarRelatorioButton({
   callsMarcadas,
   callsReagendadas,
   ligacoesFeitas,
+  publicoOrg = "mentoria",
 }: {
   data: Date;
   callsMarcadas: number;
   callsReagendadas: number;
   ligacoesFeitas: number;
+  publicoOrg?: string;
 }) {
   const [copiado, setCopiado] = useState(false);
 
   function aoClicar() {
-    const texto = montarRelatorio(data, callsMarcadas, callsReagendadas, ligacoesFeitas);
+    const texto = montarRelatorio(data, callsMarcadas, callsReagendadas, ligacoesFeitas, publicoOrg);
     navigator.clipboard?.writeText(texto).catch(() => {});
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
