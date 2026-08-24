@@ -8,6 +8,7 @@ import { PerformanceSdr } from "@/components/performance-sdr";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { CopiarResultadoSemanaButton } from "@/components/copiar-resultado-semana-button";
+import { CopiarRelatorioButton } from "@/components/copiar-relatorio-button";
 import {
   calcularMetricas,
   calcularMetricasOrg,
@@ -47,6 +48,7 @@ export default async function DashboardPage() {
   const subtituloSemana = `domingo a sábado · ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`;
 
   const [
+    metricasHoje,
     metricasSemana,
     metricasMes,
     vendasPorCanal,
@@ -60,6 +62,11 @@ export default async function DashboardPage() {
     negociacoesAbertas,
     { data: metasData },
   ] = await Promise.all([
+    // Só o SDR usa isso — o admin já tem seu próprio dia na tabela
+    // "Performance do dia por SDR" (com o mesmo botão de copiar).
+    souAdmin
+      ? Promise.resolve(null)
+      : calcularMetricas(supabase, usuario!.id, inicioHoje, amanha),
     // Admin vê a organização inteira aqui (não só a produção pessoal dele —
     // ele geralmente não é quem mais vende, é quem acompanha o time todo).
     // SDR continua vendo só a própria produção, pra bater a meta individual.
@@ -108,6 +115,25 @@ export default async function DashboardPage() {
       <PageHeader titulo="Métricas" />
 
       <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
+        {!souAdmin && metricasHoje && (
+          <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <div>
+              <h2 className="text-sm font-semibold text-neutral-800">Meu relatório de hoje</h2>
+              <p className="text-xs text-neutral-500">
+                {metricasHoje.reunioesMarcadas} call{metricasHoje.reunioesMarcadas === 1 ? "" : "s"} marcada
+                {metricasHoje.reunioesMarcadas === 1 ? "" : "s"} · {metricasHoje.ligacoes} ligaç
+                {metricasHoje.ligacoes === 1 ? "ão" : "ões"}, {formatarDataCurta(agora)}.
+              </p>
+            </div>
+            <CopiarRelatorioButton
+              data={agora}
+              callsMarcadas={metricasHoje.reunioesMarcadas}
+              callsReagendadas={metricasHoje.reunioesReagendadas}
+              ligacoesFeitas={metricasHoje.ligacoes}
+            />
+          </section>
+        )}
+
         <MetaReceitaWidget
           metaReceita={metaReceita}
           receitaAtual={receitaOrgMes}
