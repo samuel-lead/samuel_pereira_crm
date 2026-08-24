@@ -72,7 +72,7 @@ export default async function EmpresasPage() {
                           : "bg-sky-100 text-sky-700"
                       }`}
                     >
-                      {empresa.publico === "imobiliario" ? "Imobiliário" : "Mentoria/consultoria"}
+                      {empresa.publico === "imobiliario" ? "Imobiliário" : "Serviço/Mentoria/Consultoria"}
                     </span>
                   </div>
                   <p className="truncate text-sm text-neutral-500">

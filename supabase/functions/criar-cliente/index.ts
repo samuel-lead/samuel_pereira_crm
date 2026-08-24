@@ -163,7 +163,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (publico !== "mentoria" && publico !== "imobiliario") {
-    return json(400, { erro: "Escolha o público da empresa: mentoria/consultoria ou imobiliário" });
+    return json(400, { erro: "Escolha o público da empresa: serviço/mentoria/consultoria ou imobiliário" });
   }
 
   const { data: novaOrg, error: erroOrg } = await admin

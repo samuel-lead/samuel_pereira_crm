@@ -32,7 +32,7 @@ export function NovaEmpresaForm() {
         </legend>
         <label className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700">
           <input type="radio" name="publico" value="mentoria" defaultChecked required />
-          Mentoria / consultoria
+          Serviço / Mentoria / Consultoria
         </label>
         <label className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700">
           <input type="radio" name="publico" value="imobiliario" required />
