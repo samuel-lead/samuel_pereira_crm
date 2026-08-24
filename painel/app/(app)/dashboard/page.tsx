@@ -67,38 +67,21 @@ export default async function DashboardPage() {
     souAdmin
       ? Promise.resolve(null)
       : calcularMetricas(supabase, usuario!.id, inicioHoje, amanha),
-    // Admin vê a organização inteira aqui (não só a produção pessoal dele —
-    // ele geralmente não é quem mais vende, é quem acompanha o time todo).
-    // SDR continua vendo só a própria produção, pra bater a meta individual.
-    souAdmin
-      ? calcularMetricasOrg(supabase, usuario!.org_id, inicioSemana, amanha)
-      : calcularMetricas(supabase, usuario!.id, inicioSemana, amanha),
-    souAdmin
-      ? calcularMetricasOrg(supabase, usuario!.org_id, inicioMes, amanha)
-      : calcularMetricas(supabase, usuario!.id, inicioMes, amanha),
-    souAdmin
-      ? calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha)
-      : Promise.resolve([]),
-    souAdmin
-      ? calcularVendasPorProduto(supabase, usuario!.org_id, inicioMes, amanha)
-      : Promise.resolve([]),
-    souAdmin
-      ? calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha)
-      : Promise.resolve([]),
-    souAdmin
-      ? calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha)
-      : Promise.resolve([]),
-    souAdmin
-      ? calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioSemana, amanha)
-      : Promise.resolve([]),
-    souAdmin
-      ? calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioMes, amanha)
-      : Promise.resolve([]),
+    // Todo mundo vê a organização inteira aqui — SDR também compete de
+    // igual pra igual com o time, não só com a própria produção. A única
+    // coisa que fica exclusiva do admin é o botão de copiar o resultado
+    // da semana (mais abaixo, na prop `acao`).
+    calcularMetricasOrg(supabase, usuario!.org_id, inicioSemana, amanha),
+    calcularMetricasOrg(supabase, usuario!.org_id, inicioMes, amanha),
+    calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha),
+    calcularVendasPorProduto(supabase, usuario!.org_id, inicioMes, amanha),
+    calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
+    calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha),
+    calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioSemana, amanha),
+    calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioMes, amanha),
     calcularReceitaOrg(supabase, usuario!.org_id, inicioMes, amanha),
     buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMes.getUTCFullYear(), inicioMes.getUTCMonth() + 1),
-    souAdmin
-      ? calcularNegociacoesAbertas(supabase, usuario!.org_id)
-      : Promise.resolve({ quantidade: 0, valor: 0 }),
+    calcularNegociacoesAbertas(supabase, usuario!.org_id),
     supabase
       .from("metas_config")
       .select(
@@ -175,36 +158,34 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {souAdmin && (
-          <section>
-            <h2 className="mb-3 text-lg font-bold text-neutral-900">Visão da equipe</h2>
-            <div className="space-y-4">
-              <LeadsPorOrigem
-                titulo={`Origem dos leads — semana (${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)})`}
-                dados={leadsPorOrigemSemana}
-                diasUteis={metricasSemana.diasUteis}
-              />
-              <LeadsPorOrigem
-                titulo="Origem dos leads — mês"
-                dados={leadsPorOrigemMes}
-                diasUteis={metricasMes.diasUteis}
-              />
-              <VendasPorCanal dados={vendasPorCanal} />
-              <VendasPorProduto dados={vendasPorProduto} />
-              <PerformanceSdr
-                titulo="Performance do dia por SDR"
-                dados={performanceDiaSdr}
-                periodo={`Hoje, ${formatarDataCurta(agora)}.`}
-                dataRelatorio={agora}
-              />
-              <PerformanceSdr
-                titulo="Performance da semana por SDR"
-                dados={performanceSemanaSdr}
-                periodo={`Semana de ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)} (domingo a sábado).`}
-              />
-            </div>
-          </section>
-        )}
+        <section>
+          <h2 className="mb-3 text-lg font-bold text-neutral-900">Visão da equipe</h2>
+          <div className="space-y-4">
+            <LeadsPorOrigem
+              titulo={`Origem dos leads — semana (${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)})`}
+              dados={leadsPorOrigemSemana}
+              diasUteis={metricasSemana.diasUteis}
+            />
+            <LeadsPorOrigem
+              titulo="Origem dos leads — mês"
+              dados={leadsPorOrigemMes}
+              diasUteis={metricasMes.diasUteis}
+            />
+            <VendasPorCanal dados={vendasPorCanal} />
+            <VendasPorProduto dados={vendasPorProduto} />
+            <PerformanceSdr
+              titulo="Performance do dia por SDR"
+              dados={performanceDiaSdr}
+              periodo={`Hoje, ${formatarDataCurta(agora)}.`}
+              dataRelatorio={agora}
+            />
+            <PerformanceSdr
+              titulo="Performance da semana por SDR"
+              dados={performanceSemanaSdr}
+              periodo={`Semana de ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)} (domingo a sábado).`}
+            />
+          </div>
+        </section>
 
         {souAdmin && (
           <div className="flex justify-center pt-2">
