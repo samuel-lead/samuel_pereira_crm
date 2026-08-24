@@ -60,6 +60,7 @@ export async function calcularMetricas(
     { data: leadsDeclarados },
     { count: ligacoes },
     { data: reunioesDoPeriodo },
+    { count: reunioesMarcadasNovas },
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesComProposta },
@@ -89,10 +90,9 @@ export async function calcularMetricas(
       .lt("ocorreu_em", fimISO),
     // Toda reunião "ativa" no período — marcada dentro dele OU com a call
     // dentro dele (mesmo que tenha sido marcada num período anterior, ex.:
-    // marcada em julho, call em agosto). Serve pra duas contas: "reuniões
-    // marcadas" do período e "lead trabalhado" do período (mais embaixo) —
-    // sem isso, "realizadas + no show" podia passar de "marcadas", porque
-    // elas usavam datas diferentes (marcada_em vs agendada_para).
+    // marcada em julho, call em agosto). Usada só pra "lead trabalhado" do
+    // período (mais embaixo) — NÃO é mais usada pra contar "reuniões
+    // marcadas" (ver query logo abaixo).
     supabase
       .from("reunioes")
       .select("id, lead_id, leads!inner(arquivado_em, responsavel_id)")
@@ -101,6 +101,18 @@ export async function calcularMetricas(
       .or(
         `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
       ),
+    // "Reuniões marcadas" de verdade: só agendamento NOVO feito dentro do
+    // período (marcada_em), não importa quando a call vai acontecer — e sem
+    // contar reagendamento (reagendada=true), que não é call nova, é a
+    // mesma call mudando de data.
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
+      .eq("leads.responsavel_id", usuarioId)
+      .eq("reagendada", false)
+      .is("leads.arquivado_em", null)
+      .gte("marcada_em", inicioISO)
+      .lt("marcada_em", fimISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
@@ -173,7 +185,7 @@ export async function calcularMetricas(
   ]);
 
   const leads = idsTrabalhados.size;
-  const marcadas = reunioesDoPeriodo?.length ?? 0;
+  const marcadas = reunioesMarcadasNovas ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
   const comProposta = reunioesComProposta ?? 0;
 
@@ -213,6 +225,7 @@ export async function calcularMetricasOrg(
     { data: leadsDeclarados },
     { count: ligacoes },
     { data: reunioesDoPeriodo },
+    { count: reunioesMarcadasNovas },
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesComProposta },
@@ -234,6 +247,8 @@ export async function calcularMetricasOrg(
       .is("excluido_em", null)
       .gte("ocorreu_em", inicioISO)
       .lt("ocorreu_em", fimISO),
+    // Usada só pra "lead trabalhado" do período — não conta mais "reuniões
+    // marcadas" (ver query logo abaixo).
     supabase
       .from("reunioes")
       .select("id, lead_id, leads!inner(arquivado_em)")
@@ -242,6 +257,17 @@ export async function calcularMetricasOrg(
       .or(
         `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
       ),
+    // "Reuniões marcadas" de verdade: só agendamento NOVO no período
+    // (marcada_em), sem contar reagendamento — mesma regra da versão
+    // individual em calcularMetricas, só que pra org inteira.
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("reagendada", false)
+      .is("leads.arquivado_em", null)
+      .gte("marcada_em", inicioISO)
+      .lt("marcada_em", fimISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -304,7 +330,7 @@ export async function calcularMetricasOrg(
   ]);
 
   const leads = idsTrabalhados.size;
-  const marcadas = reunioesDoPeriodo?.length ?? 0;
+  const marcadas = reunioesMarcadasNovas ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
   const comProposta = reunioesComProposta ?? 0;
 
