@@ -55,6 +55,10 @@ export type UsuarioAtual = {
   paginas_permitidas: string[];
   foto_url: string | null;
   super_admin: boolean;
+  // "mentoria" (público de sempre) ou "imobiliario" (corretores/imobiliária
+  // — features futuras exclusivas, tipo cartas contempladas, ficam atrás
+  // desse campo).
+  publico_org: string;
 };
 
 // auth.getUser() e a busca em "usuarios" rodavam de novo em CADA página E no
@@ -83,6 +87,7 @@ export const usuarioAutenticado = cache(async (): Promise<{
       ),
       foto_url: decodeURIComponent(headerList.get("x-user-foto-url") ?? "") || null,
       super_admin: headerList.get("x-user-super-admin") === "1",
+      publico_org: headerList.get("x-user-org-publico") || "mentoria",
     };
 
     const user = {
@@ -111,9 +116,19 @@ export const usuarioAutenticado = cache(async (): Promise<{
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("id, org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin")
+    .select("id, org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(publico)")
     .eq("id", user.id)
     .single();
 
-  return { user, usuario: usuario as UsuarioAtual | null };
+  if (!usuario) {
+    return { user, usuario: null };
+  }
+
+  const orgInfo = usuario.orgs as { publico?: string } | { publico?: string }[] | null;
+  const publicoOrg = Array.isArray(orgInfo) ? orgInfo[0]?.publico : orgInfo?.publico;
+
+  return {
+    user,
+    usuario: { ...usuario, publico_org: publicoOrg ?? "mentoria" } as UsuarioAtual,
+  };
 });

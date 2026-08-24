@@ -88,13 +88,17 @@ export async function updateSession(request: NextRequest) {
   ) {
     const { data: usuario } = await supabase
       .from("usuarios")
-      .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status)")
+      .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico)")
       .eq("id", user.id)
       .single();
 
     const ehSuperAdmin = usuario?.super_admin === true;
-    const orgInfo = usuario?.orgs as { status?: string } | { status?: string }[] | null;
+    const orgInfo = usuario?.orgs as
+      | { status?: string; publico?: string }
+      | { status?: string; publico?: string }[]
+      | null;
     const statusOrg = Array.isArray(orgInfo) ? orgInfo[0]?.status : orgInfo?.status;
+    const publicoOrg = Array.isArray(orgInfo) ? orgInfo[0]?.publico : orgInfo?.publico;
 
     // Empresa suspensa não entra em nada — exceto o dono da plataforma,
     // que nunca fica trancado pra fora por acidente.
@@ -160,6 +164,7 @@ export async function updateSession(request: NextRequest) {
         encodeURIComponent(usuario.foto_url ?? "")
       );
       supabaseResponse.headers.set("x-user-super-admin", usuario.super_admin ? "1" : "0");
+      supabaseResponse.headers.set("x-user-org-publico", publicoOrg ?? "mentoria");
     }
   }
 

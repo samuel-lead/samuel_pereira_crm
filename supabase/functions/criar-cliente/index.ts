@@ -154,6 +154,7 @@ Deno.serve(async (req: Request) => {
   const nomeAdmin = String(body.nome_admin ?? "").trim();
   const email = String(body.email ?? "").trim().toLowerCase();
   const senha = String(body.senha ?? "");
+  const publico = String(body.publico ?? "");
 
   if (!nomeEmpresa || !nomeAdmin || !email || senha.length < 6) {
     return json(400, {
@@ -161,9 +162,13 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  if (publico !== "mentoria" && publico !== "imobiliario") {
+    return json(400, { erro: "Escolha o público da empresa: mentoria/consultoria ou imobiliário" });
+  }
+
   const { data: novaOrg, error: erroOrg } = await admin
     .from("orgs")
-    .insert({ nome: nomeEmpresa })
+    .insert({ nome: nomeEmpresa, publico })
     .select("id")
     .single();
 

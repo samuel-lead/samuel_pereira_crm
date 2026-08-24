@@ -7,6 +7,7 @@ type OrgLinha = {
   id: string;
   nome: string;
   status: string;
+  publico: string;
   criado_em: string;
   admin_nome: string | null;
   admin_email: string | null;
@@ -63,6 +64,15 @@ export default async function EmpresasPage() {
                       }`}
                     >
                       {empresa.status === "ativo" ? "Ativo" : "Suspenso"}
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                        empresa.publico === "imobiliario"
+                          ? "bg-violet-100 text-violet-700"
+                          : "bg-sky-100 text-sky-700"
+                      }`}
+                    >
+                      {empresa.publico === "imobiliario" ? "Imobiliário" : "Mentoria/consultoria"}
                     </span>
                   </div>
                   <p className="truncate text-sm text-neutral-500">

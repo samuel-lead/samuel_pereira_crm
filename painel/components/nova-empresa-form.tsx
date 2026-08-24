@@ -26,6 +26,20 @@ export function NovaEmpresaForm() {
         />
       </div>
 
+      <fieldset className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-3">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          Público desta empresa
+        </legend>
+        <label className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700">
+          <input type="radio" name="publico" value="mentoria" defaultChecked required />
+          Mentoria / consultoria
+        </label>
+        <label className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700">
+          <input type="radio" name="publico" value="imobiliario" required />
+          Imobiliário (corretor, imobiliária)
+        </label>
+      </fieldset>
+
       <fieldset className="space-y-3 rounded-md border border-neutral-200 bg-neutral-50 p-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
           Primeiro usuário (admin da empresa)
@@ -76,7 +90,7 @@ export function NovaEmpresaForm() {
       </fieldset>
 
       <p className="text-xs text-neutral-400">
-        A empresa já entra com o funil padrão (os 8 níveis de sempre) e as
+        A empresa já entra com o funil padrão (os 9 níveis de sempre) e as
         metas/taxas padrão configuradas — dá pra ajustar depois em
         Configurações.
       </p>
