@@ -16,22 +16,35 @@ function LinhaOrigem({ origem }: { origem: { id: string; nome: string } }) {
   const [excluindo, setExcluindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  async function excluir() {
+  async function excluir(forcar = false) {
     if (
-      !confirm(
-        `Tem certeza que quer excluir a origem "${origem.nome}"? Só dá pra excluir se nenhum lead estiver usando ela.`
-      )
+      !forcar &&
+      !confirm(`Tem certeza que quer excluir a origem "${origem.nome}"?`)
     ) {
       return;
     }
     setExcluindo(true);
     setErro(null);
-    const resultado = await excluirOrigem(origem.id);
+    const resultado = await excluirOrigem(origem.id, forcar);
+
     if (resultado.erro) {
       setErro(resultado.erro);
       setExcluindo(false);
       return;
     }
+
+    if (resultado.bloqueadoPorUso) {
+      setExcluindo(false);
+      const quantidade = resultado.quantidadeLeads;
+      const confirmarMesmoAssim = confirm(
+        `Essa origem está sendo usada por ${quantidade} lead${quantidade === 1 ? "" : "s"}. Eles vão continuar com esse nome de origem, só que ela sai dessa lista. Excluir mesmo assim?`
+      );
+      if (confirmarMesmoAssim) {
+        await excluir(true);
+      }
+      return;
+    }
+
     router.refresh();
   }
 
@@ -109,7 +122,7 @@ function LinhaOrigem({ origem }: { origem: { id: string; nome: string } }) {
           </button>
           <button
             type="button"
-            onClick={excluir}
+            onClick={() => excluir()}
             disabled={excluindo}
             className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-60"
           >

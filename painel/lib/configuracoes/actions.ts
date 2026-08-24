@@ -208,22 +208,52 @@ export async function renomearOrigem(
   }
 }
 
-export async function excluirOrigem(origemId: string): Promise<EstadoOrigem> {
+export type ResultadoExclusaoOrigem = {
+  erro: string | null;
+  bloqueadoPorUso: boolean;
+  quantidadeLeads: number;
+};
+
+// Não trava mais a exclusão sozinha — se tem lead usando, devolve a
+// contagem pra tela perguntar "excluir mesmo assim?" e, se confirmado,
+// chama de novo com forcar=true. O texto da origem nesses leads não é
+// tocado (não tem FK com `origens`), só some da lista de cadastradas.
+export async function excluirOrigem(
+  origemId: string,
+  forcar = false
+): Promise<ResultadoExclusaoOrigem> {
   try {
     const { supabase } = await usuarioAdminOuErro();
 
-    const { error } = await supabase.rpc("excluir_origem", { origem_id: origemId });
+    const { data, error } = await supabase.rpc("excluir_origem", {
+      origem_id: origemId,
+      forcar,
+    });
 
     if (error) {
-      return { erro: error.message };
+      return { erro: error.message, bloqueadoPorUso: false, quantidadeLeads: 0 };
+    }
+
+    const resultado = data as { excluido: boolean; quantidade_leads: number };
+
+    if (!resultado.excluido) {
+      return {
+        erro: null,
+        bloqueadoPorUso: true,
+        quantidadeLeads: resultado.quantidade_leads,
+      };
     }
 
     revalidatePath("/configuracoes");
     revalidatePath("/leads");
     revalidatePath("/leads/novo");
-    return { erro: null };
+    return { erro: null, bloqueadoPorUso: false, quantidadeLeads: 0 };
   } catch (e) {
-    return { erro: e instanceof Error ? e.message : "Não deu pra excluir" };
+    return {
+      erro: e instanceof Error ? e.message : "Não deu pra excluir",
+      bloqueadoPorUso: false,
+      quantidadeLeads: 0,
+    };
   }
 }
 
