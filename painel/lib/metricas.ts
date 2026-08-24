@@ -51,8 +51,15 @@ export async function calcularMetricas(
   supabase: SupabaseServerClient,
   usuarioId: string,
   inicio: Date,
-  fim: Date
+  fim: Date,
+  // Relatório do DIA (Samuel pediu): "leads trabalhados" conta só quem
+  // entrou de verdade no período, sem puxar lead antigo que só teve
+  // reunião marcada/acontecendo hoje — isso já é contado no dia em que a
+  // reunião foi marcada. Semana/mês continuam com o carry-forward normal
+  // (lead que entrou num período mas teve a call depois também conta lá).
+  opcoes: { apenasDeclaradosNoPeriodo?: boolean } = {}
 ): Promise<Metricas> {
+  const apenasDeclarados = opcoes.apenasDeclaradosNoPeriodo ?? false;
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
 
@@ -181,7 +188,7 @@ export async function calcularMetricas(
 
   const idsTrabalhados = new Set<string>([
     ...(leadsDeclarados ?? []).map((l) => l.id),
-    ...(reunioesDoPeriodo ?? []).map((r) => r.lead_id),
+    ...(apenasDeclarados ? [] : (reunioesDoPeriodo ?? []).map((r) => r.lead_id)),
   ]);
 
   const leads = idsTrabalhados.size;
@@ -216,8 +223,10 @@ export async function calcularMetricasOrg(
   supabase: SupabaseServerClient,
   orgId: string,
   inicio: Date,
-  fim: Date
+  fim: Date,
+  opcoes: { apenasDeclaradosNoPeriodo?: boolean } = {}
 ): Promise<Metricas> {
+  const apenasDeclarados = opcoes.apenasDeclaradosNoPeriodo ?? false;
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
 
@@ -326,7 +335,7 @@ export async function calcularMetricasOrg(
 
   const idsTrabalhados = new Set<string>([
     ...(leadsDeclarados ?? []).map((l) => l.id),
-    ...(reunioesDoPeriodo ?? []).map((r) => r.lead_id),
+    ...(apenasDeclarados ? [] : (reunioesDoPeriodo ?? []).map((r) => r.lead_id)),
   ]);
 
   const leads = idsTrabalhados.size;
@@ -614,7 +623,8 @@ export async function calcularMetricasPorUsuario(
   supabase: SupabaseServerClient,
   orgId: string,
   inicio: Date,
-  fim: Date
+  fim: Date,
+  opcoes: { apenasDeclaradosNoPeriodo?: boolean } = {}
 ): Promise<MetricasUsuario[]> {
   const { data: usuarios } = await supabase
     .from("usuarios")
@@ -627,7 +637,7 @@ export async function calcularMetricasPorUsuario(
 
   return Promise.all(
     lista.map(async (usuario) => {
-      const metricas = await calcularMetricas(supabase, usuario.id, inicio, fim);
+      const metricas = await calcularMetricas(supabase, usuario.id, inicio, fim, opcoes);
       return { ...metricas, usuarioId: usuario.id, nome: usuario.nome };
     })
   );

@@ -66,7 +66,9 @@ export default async function DashboardPage() {
     // "Performance do dia por SDR" (com o mesmo botão de copiar).
     souAdmin
       ? Promise.resolve(null)
-      : calcularMetricas(supabase, usuario!.id, inicioHoje, amanha),
+      : calcularMetricas(supabase, usuario!.id, inicioHoje, amanha, {
+          apenasDeclaradosNoPeriodo: true,
+        }),
     // Todo mundo vê a organização inteira aqui — SDR também compete de
     // igual pra igual com o time, não só com a própria produção. A única
     // coisa que fica exclusiva do admin é o botão de copiar o resultado
@@ -75,7 +77,11 @@ export default async function DashboardPage() {
     calcularMetricasOrg(supabase, usuario!.org_id, inicioMes, amanha),
     calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha),
     calcularVendasPorProduto(supabase, usuario!.org_id, inicioMes, amanha),
-    calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
+    // "Performance do dia" é o único relatório de DIA — leads trabalhados
+    // aqui conta só quem entrou hoje mesmo (ver comentário em calcularMetricas).
+    calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha, {
+      apenasDeclaradosNoPeriodo: true,
+    }),
     calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha),
     calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioSemana, amanha),
     calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioMes, amanha),
