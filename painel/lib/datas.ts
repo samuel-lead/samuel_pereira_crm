@@ -48,6 +48,24 @@ export function periodoAnteriorMes(inicioMes: Date, agora: Date) {
   return { inicio, fim: new Date(inicio.getTime() + decorridoMs) };
 }
 
+// Desloca um período pra trás pela mesma duração — usado pra comparar
+// "hoje"/"ontem"/período customizado com o pedaço equivalente anterior.
+// Semana e mês usam as versões de cima (calendário-aware); essa aqui é o
+// caso genérico onde não existe uma unidade de calendário fixa.
+export function periodoAnterior(inicio: Date, fim: Date) {
+  const duracaoMs = fim.getTime() - inicio.getTime();
+  return { inicio: new Date(inicio.getTime() - duracaoMs), fim: inicio };
+}
+
+// "YYYY-MM-DD" de um instante, no fuso do Brasil — mesmo molde de
+// anoMesBrasil, mas por dia. Usado pra agrupar a evolução comercial.
+export function diaBrasil(dataIso: string) {
+  const local = new Date(new Date(dataIso).getTime() - FUSO_BRASIL_MS);
+  const mes = String(local.getUTCMonth() + 1).padStart(2, "0");
+  const dia = String(local.getUTCDate()).padStart(2, "0");
+  return `${local.getUTCFullYear()}-${mes}-${dia}`;
+}
+
 // Dia da semana (0 = domingo ... 6 = sábado) de um instante, no fuso do
 // Brasil — não no fuso do servidor. Ex.: bônus de fim de semana, que dá
 // errado perto da meia-noite se calculado no fuso errado.

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
+import { FiltroPeriodoDashboard } from "@/components/filtro-periodo-dashboard";
+import { GraficoEvolucaoComercial } from "@/components/grafico-evolucao";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
@@ -16,6 +18,7 @@ import {
   calcularVendasPorProduto,
   calcularMetricasPorUsuario,
   calcularLeadsPorOrigem,
+  calcularEvolucaoComercial,
   calcularReceitaOrg,
   calcularNegociacoesAbertas,
   buscarMetaReceitaMes,
@@ -23,8 +26,15 @@ import {
   fimDaSemana,
   inicioDoMes,
 } from "@/lib/metricas";
-import { inicioDoDia, UM_DIA_MS, periodoAnteriorSemana, periodoAnteriorMes } from "@/lib/datas";
-import { call, calls, reunioes } from "@/lib/terminologia";
+import {
+  inicioDoDia,
+  UM_DIA_MS,
+  periodoAnteriorSemana,
+  periodoAnteriorMes,
+  periodoAnterior,
+  parseDataBrasil,
+} from "@/lib/datas";
+import { call, calls, reunioes, Reunioes } from "@/lib/terminologia";
 
 function formatarDataCurta(d: Date) {
   return d.toLocaleDateString("pt-BR", {
@@ -34,66 +44,124 @@ function formatarDataCurta(d: Date) {
   });
 }
 
-export default async function DashboardPage() {
+type ChavePeriodo = "hoje" | "ontem" | "semana" | "mes" | "custom";
+
+// Traduz o filtro (?periodo=hoje|ontem|semana|mes|custom&de=&ate=) no
+// intervalo de datas certo — mesmo padrão de leads/lista/page.tsx (parseData
+// Brasil + UM_DIA_MS pra fechar o "até").
+function resolverPeriodo(
+  periodo: string | undefined,
+  de: string | undefined,
+  ate: string | undefined,
+  agora: Date
+): { chave: ChavePeriodo; titulo: string; subtitulo?: string; inicio: Date; fim: Date } {
+  const inicioHoje = inicioDoDia(agora);
+  const amanha = new Date(inicioHoje.getTime() + UM_DIA_MS);
+
+  if (periodo === "ontem") {
+    const inicio = new Date(inicioHoje.getTime() - UM_DIA_MS);
+    return { chave: "ontem", titulo: "Ontem", subtitulo: formatarDataCurta(inicio), inicio, fim: inicioHoje };
+  }
+  if (periodo === "mes") {
+    return { chave: "mes", titulo: "Este mês", inicio: inicioDoMes(agora), fim: amanha };
+  }
+  if (periodo === "custom" && de && ate) {
+    const inicio = parseDataBrasil(de);
+    const fimSelecionado = parseDataBrasil(ate);
+    const fim = new Date(fimSelecionado.getTime() + UM_DIA_MS);
+    return {
+      chave: "custom",
+      titulo: "Período customizado",
+      subtitulo: `${formatarDataCurta(inicio)} a ${formatarDataCurta(fimSelecionado)}`,
+      inicio,
+      fim,
+    };
+  }
+  if (periodo === "hoje") {
+    return { chave: "hoje", titulo: "Hoje", subtitulo: formatarDataCurta(agora), inicio: inicioHoje, fim: amanha };
+  }
+
+  // Padrão: esta semana.
+  const inicio = inicioDaSemana(agora);
+  const fim = fimDaSemana(inicio);
+  return {
+    chave: "semana",
+    titulo: "Esta semana",
+    subtitulo: `domingo a sábado · ${formatarDataCurta(inicio)} a ${formatarDataCurta(fim)}`,
+    inicio,
+    fim: amanha,
+  };
+}
+
+// Semana e mês comparam com o pedaço de calendário anterior de verdade
+// (periodoAnteriorSemana/Mes, já existentes); hoje/ontem/customizado usam
+// o deslocamento genérico pela mesma duração.
+function resolverPeriodoAnterior(chave: ChavePeriodo, inicio: Date, fim: Date, agora: Date) {
+  if (chave === "semana") return periodoAnteriorSemana(inicio, agora);
+  if (chave === "mes") return periodoAnteriorMes(inicio, agora);
+  return periodoAnterior(inicio, fim);
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periodo?: string; de?: string; ate?: string }>;
+}) {
+  const { periodo, de, ate } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
   const agora = new Date();
   const inicioHoje = inicioDoDia(agora);
   const amanha = new Date(inicioHoje.getTime() + UM_DIA_MS);
+  const inicioMesAtual = inicioDoMes(agora);
 
   const souAdmin = usuario!.papel === "admin";
-  const inicioSemana = inicioDaSemana(agora);
-  const fimSemana = fimDaSemana(inicioSemana);
-  const inicioMes = inicioDoMes(agora);
-  const subtituloSemana = `domingo a sábado · ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`;
-  const semanaAnterior = periodoAnteriorSemana(inicioSemana, agora);
-  const mesAnterior = periodoAnteriorMes(inicioMes, agora);
+
+  const periodoResolvido = resolverPeriodo(periodo, de, ate, agora);
+  const anteriorResolvido = resolverPeriodoAnterior(
+    periodoResolvido.chave,
+    periodoResolvido.inicio,
+    periodoResolvido.fim,
+    agora
+  );
 
   const [
     metricasHoje,
-    metricasSemana,
-    metricasSemanaAnterior,
-    metricasMes,
-    metricasMesAnterior,
+    metricas,
+    metricasAnteriores,
     vendasPorCanal,
     vendasPorProduto,
     performanceDiaSdr,
-    performanceSemanaSdr,
-    leadsPorOrigemSemana,
-    leadsPorOrigemMes,
+    performancePeriodoSdr,
+    leadsPorOrigem,
+    evolucaoComercial,
     receitaOrgMes,
     metaReceita,
     negociacoesAbertas,
     { data: metasData },
   ] = await Promise.all([
     // Só o SDR usa isso — o admin já tem seu próprio dia na tabela
-    // "Performance do dia por SDR" (com o mesmo botão de copiar).
+    // "Performance do dia por SDR" (com o mesmo botão de copiar). Isso é
+    // sempre HOJE, independente do filtro do painel (é um check-in diário).
     souAdmin
       ? Promise.resolve(null)
       : calcularMetricas(supabase, usuario!.id, inicioHoje, amanha, {
           apenasDeclaradosNoPeriodo: true,
         }),
-    // Todo mundo vê a organização inteira aqui — SDR também compete de
-    // igual pra igual com o time, não só com a própria produção. A única
-    // coisa que fica exclusiva do admin é o botão de copiar o resultado
-    // da semana (mais abaixo, na prop `acao`).
-    calcularMetricasOrg(supabase, usuario!.org_id, inicioSemana, amanha),
-    calcularMetricasOrg(supabase, usuario!.org_id, semanaAnterior.inicio, semanaAnterior.fim),
-    calcularMetricasOrg(supabase, usuario!.org_id, inicioMes, amanha),
-    calcularMetricasOrg(supabase, usuario!.org_id, mesAnterior.inicio, mesAnterior.fim),
-    calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha),
-    calcularVendasPorProduto(supabase, usuario!.org_id, inicioMes, amanha),
-    // "Performance do dia" é o único relatório de DIA — leads trabalhados
-    // aqui conta só quem entrou hoje mesmo (ver comentário em calcularMetricas).
+    calcularMetricasOrg(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    calcularMetricasOrg(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
+    calcularVendasPorCanal(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    calcularVendasPorProduto(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha, {
       apenasDeclaradosNoPeriodo: true,
     }),
-    calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioSemana, amanha),
-    calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioSemana, amanha),
-    calcularLeadsPorOrigem(supabase, usuario!.org_id, inicioMes, amanha),
-    calcularReceitaOrg(supabase, usuario!.org_id, inicioMes, amanha),
-    buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMes.getUTCFullYear(), inicioMes.getUTCMonth() + 1),
+    calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    calcularEvolucaoComercial(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    // Meta de receita é sempre do mês civil corrente — não depende do filtro.
+    calcularReceitaOrg(supabase, usuario!.org_id, inicioMesAtual, amanha),
+    buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMesAtual.getUTCFullYear(), inicioMesAtual.getUTCMonth() + 1),
     calcularNegociacoesAbertas(supabase, usuario!.org_id),
     supabase
       .from("metas_config")
@@ -139,34 +207,27 @@ export default async function DashboardPage() {
           podeEditar={souAdmin}
         />
 
+        <FiltroPeriodoDashboard periodoAtual={periodoResolvido.chave} deAtual={de} ateAtual={ate} />
+
         {metas ? (
-          <>
-            <SecaoPeriodo
-              titulo="Esta semana"
-              subtitulo={subtituloSemana}
-              metricas={metricasSemana}
-              metricasAnteriores={metricasSemanaAnterior}
-              metas={metas}
-              publicoOrg={publicoOrg}
-              acao={
-                souAdmin ? (
-                  <CopiarResultadoSemanaButton
-                    periodo={`${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`}
-                    metricas={metricasSemana}
-                    negociacoes={negociacoesAbertas}
-                    publicoOrg={publicoOrg}
-                  />
-                ) : undefined
-              }
-            />
-            <SecaoPeriodo
-              titulo="Este mês"
-              metricas={metricasMes}
-              metricasAnteriores={metricasMesAnterior}
-              metas={metas}
-              publicoOrg={publicoOrg}
-            />
-          </>
+          <SecaoPeriodo
+            titulo={periodoResolvido.titulo}
+            subtitulo={periodoResolvido.subtitulo}
+            metricas={metricas}
+            metricasAnteriores={metricasAnteriores}
+            metas={metas}
+            publicoOrg={publicoOrg}
+            acao={
+              souAdmin ? (
+                <CopiarResultadoSemanaButton
+                  periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
+                  metricas={metricas}
+                  negociacoes={negociacoesAbertas}
+                  publicoOrg={publicoOrg}
+                />
+              ) : undefined
+            }
+          />
         ) : (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             {souAdmin ? (
@@ -183,18 +244,15 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        <GraficoEvolucaoComercial pontos={evolucaoComercial} rotuloReunioes={Reunioes(publicoOrg)} />
+
         <section>
           <h2 className="mb-3 text-lg font-bold text-neutral-900">Visão da equipe</h2>
           <div className="space-y-4">
             <LeadsPorOrigem
-              titulo={`Origem dos leads — semana (${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)})`}
-              dados={leadsPorOrigemSemana}
-              diasUteis={metricasSemana.diasUteis}
-            />
-            <LeadsPorOrigem
-              titulo="Origem dos leads — mês"
-              dados={leadsPorOrigemMes}
-              diasUteis={metricasMes.diasUteis}
+              titulo={`Origem dos leads — ${periodoResolvido.titulo.toLowerCase()}`}
+              dados={leadsPorOrigem}
+              diasUteis={metricas.diasUteis}
             />
             <VendasPorCanal dados={vendasPorCanal} />
             <VendasPorProduto dados={vendasPorProduto} />
@@ -206,9 +264,9 @@ export default async function DashboardPage() {
               publicoOrg={publicoOrg}
             />
             <PerformanceSdr
-              titulo="Performance da semana por SDR"
-              dados={performanceSemanaSdr}
-              periodo={`Semana de ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)} (domingo a sábado).`}
+              titulo={`Performance por SDR — ${periodoResolvido.titulo.toLowerCase()}`}
+              dados={performancePeriodoSdr}
+              periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
               publicoOrg={publicoOrg}
             />
           </div>

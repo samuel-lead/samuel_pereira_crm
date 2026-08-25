@@ -25,7 +25,7 @@ function montarRelatorio(
     metricas.faturamento > 0 ? metricas.receita / metricas.faturamento : null;
 
   return [
-    "📊 Resultado da semana",
+    "📊 Resultado do período",
     `🗓️ Período: ${periodo}`,
     "",
     `➡ Leads trabalhados: ${metricas.leadsTrabalhados}`,
@@ -75,7 +75,7 @@ export function CopiarResultadoSemanaButton({
       onClick={aoClicar}
       className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-500 transition hover:bg-neutral-50"
     >
-      {copiado ? "Copiado ✓" : "Copiar resultado da semana"}
+      {copiado ? "Copiado ✓" : "Copiar resultado do período"}
     </button>
   );
 }

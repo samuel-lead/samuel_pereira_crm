@@ -1,5 +1,5 @@
 import type { createClient } from "@/lib/supabase/server";
-import { UM_DIA_MS, diaDaSemana } from "@/lib/datas";
+import { UM_DIA_MS, diaDaSemana, diaBrasil } from "@/lib/datas";
 
 export { inicioDaSemana, inicioDoMes } from "@/lib/datas";
 
@@ -610,6 +610,87 @@ export async function calcularReceitaOrg(
     .lt("vendido_em", fim.toISOString());
 
   return (data ?? []).reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+}
+
+export type PontoEvolucao = {
+  dia: string; // "YYYY-MM-DD", fuso Brasil
+  faturamento: number;
+  receita: number;
+  vendas: number;
+  leads: number;
+  reunioes: number;
+};
+
+// Série dia a dia pro gráfico de "Evolução comercial" — uma query só por
+// tabela (não uma por dia, ao contrário de calcularResumoAno) e agrupa em
+// memória, igual calcularLeadsPorOrigem/calcularVendasPorCanal fazem.
+export async function calcularEvolucaoComercial(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<PontoEvolucao[]> {
+  const inicioISO = inicio.toISOString();
+  const fimISO = fim.toISOString();
+
+  const [{ data: leadsData }, { data: reunioesData }, { data: vendasData }] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("declarado_em")
+      .eq("org_id", orgId)
+      .is("arquivado_em", null)
+      .gte("declarado_em", inicioISO)
+      .lt("declarado_em", fimISO),
+    supabase
+      .from("reunioes")
+      .select("marcada_em, leads!inner(arquivado_em)")
+      .eq("org_id", orgId)
+      .eq("reagendada", false)
+      .is("leads.arquivado_em", null)
+      .gte("marcada_em", inicioISO)
+      .lt("marcada_em", fimISO),
+    supabase
+      .from("leads")
+      .select("vendido_em, valor_venda, receita_venda")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicioISO)
+      .lt("vendido_em", fimISO),
+  ]);
+
+  const porDia = new Map<string, PontoEvolucao>();
+  function pegar(dia: string): PontoEvolucao {
+    let ponto = porDia.get(dia);
+    if (!ponto) {
+      ponto = { dia, faturamento: 0, receita: 0, vendas: 0, leads: 0, reunioes: 0 };
+      porDia.set(dia, ponto);
+    }
+    return ponto;
+  }
+
+  for (const lead of leadsData ?? []) {
+    pegar(diaBrasil(lead.declarado_em)).leads += 1;
+  }
+  for (const reuniao of reunioesData ?? []) {
+    pegar(diaBrasil(reuniao.marcada_em)).reunioes += 1;
+  }
+  for (const venda of vendasData ?? []) {
+    if (!venda.vendido_em) continue;
+    const ponto = pegar(diaBrasil(venda.vendido_em));
+    ponto.vendas += 1;
+    ponto.faturamento += Number(venda.valor_venda ?? 0);
+    ponto.receita += Number(venda.receita_venda ?? 0);
+  }
+
+  // Preenche todo dia do período, mesmo sem nenhum dado — um dia parado
+  // tem que aparecer como zero na linha, não sumir do gráfico.
+  const dias: PontoEvolucao[] = [];
+  for (let cursor = inicio.getTime(); cursor < fim.getTime(); cursor += UM_DIA_MS) {
+    dias.push(pegar(diaBrasil(new Date(cursor).toISOString())));
+  }
+
+  return dias.sort((a, b) => a.dia.localeCompare(b.dia));
 }
 
 export type NegociacoesAbertas = {
