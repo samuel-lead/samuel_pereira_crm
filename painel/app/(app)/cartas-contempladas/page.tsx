@@ -1,10 +1,17 @@
 import { PageHeader } from "@/components/page-header";
+import { IconeWhatsapp } from "@/components/icons";
 import { buscarCartasContempladas, type CartaContemplada } from "@/lib/cartas-contempladas";
 
 const ROTULO_SEGMENTO: Record<string, { texto: string; classe: string }> = {
   imóvel: { texto: "Imóvel", classe: "bg-blue-100 text-blue-700" },
   veículo: { texto: "Veículo", classe: "bg-amber-100 text-amber-700" },
 };
+
+// TODO: Samuel vai confirmar o número certo do vendedor — por enquanto
+// usando o número visto no print de teste do site do Pedro. A mensagem
+// replica o mesmo modelo que o site dele já manda, só acrescentando quem
+// indicou, pra ele saber que o lead veio do Meu Vendedor.
+const WHATSAPP_PEDRO = "5562999610434";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -23,6 +30,30 @@ function formatarData(data: string | null) {
   const parsed = new Date(`${data}T00:00:00-03:00`);
   if (Number.isNaN(parsed.getTime())) return data;
   return parsed.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+function linkWhatsapp(carta: CartaContemplada) {
+  const segmentoTexto = ROTULO_SEGMENTO[carta.segmento]?.texto ?? carta.segmento;
+  const vencimento = formatarData(carta.vencimento) ?? "não informado";
+  const saldoDevedor = carta.prazo * carta.parcela;
+
+  const mensagem = [
+    `Olá, me interesso pela seguinte Carta contemplada de ${segmentoTexto}:`,
+    "",
+    `Administradora: ${carta.administradora}`,
+    `Código: ${carta.id}`,
+    `Segmento: ${segmentoTexto}`,
+    `Crédito: ${formatarMoeda(carta.credito)}`,
+    `Entrada: ${formatarMoeda(carta.entrada)}`,
+    `Parcelamento: ${carta.prazo} x ${formatarMoeda(carta.parcela)}`,
+    `Transferência: ${formatarMoeda(carta.transferencia)}`,
+    `Saldo devedor: ${formatarMoeda(saldoDevedor)}`,
+    `Próximo vencimento: ${vencimento}`,
+    "",
+    "Encaminhado por Samuel Pereira",
+  ].join("\n");
+
+  return `https://wa.me/${WHATSAPP_PEDRO}?text=${encodeURIComponent(mensagem)}`;
 }
 
 export default async function CartasContempladasPage({
@@ -185,6 +216,16 @@ function CardCarta({ carta }: { carta: CartaContemplada }) {
         </span>
         {vencimento && <span className="text-xs text-neutral-400">Vence {vencimento}</span>}
       </div>
+
+      <a
+        href={linkWhatsapp(carta)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-700"
+      >
+        <IconeWhatsapp className="h-4 w-4" />
+        Falar no WhatsApp
+      </a>
     </div>
   );
 }
