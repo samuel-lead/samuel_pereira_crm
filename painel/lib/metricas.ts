@@ -14,6 +14,7 @@ export type Metricas = {
   reunioesReagendadas: number;
   reunioesRealizadas: number;
   reunioesComProposta: number;
+  propostas: number;
   noShow: number;
   vendas: number;
   receita: number;
@@ -71,6 +72,7 @@ export async function calcularMetricas(
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesComProposta },
+    { count: propostas },
     { count: noShow },
     { data: vendasData },
   ] = await Promise.all([
@@ -150,6 +152,16 @@ export async function calcularMetricas(
       .not("leads.proposta_valor", "is", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
+    // Propostas de verdade enviadas no período (independe de reunião ou
+    // nível — o lead pode até já ter ido pra Base ou Oportunidade futura).
+    supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("responsavel_id", usuarioId)
+      .is("arquivado_em", null)
+      .not("proposta_enviada_em", "is", null)
+      .gte("proposta_enviada_em", inicioISO)
+      .lt("proposta_enviada_em", fimISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
@@ -203,6 +215,7 @@ export async function calcularMetricas(
     reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
     reunioesComProposta: comProposta,
+    propostas: propostas ?? 0,
     noShow: noShow ?? 0,
     vendas,
     receita,
@@ -238,6 +251,7 @@ export async function calcularMetricasOrg(
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesComProposta },
+    { count: propostas },
     { count: noShow },
     { data: vendasData },
   ] = await Promise.all([
@@ -302,6 +316,16 @@ export async function calcularMetricasOrg(
       .not("leads.proposta_valor", "is", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
+    // Propostas de verdade enviadas no período (independe de reunião ou
+    // nível — o lead pode até já ter ido pra Base ou Oportunidade futura).
+    supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .is("arquivado_em", null)
+      .not("proposta_enviada_em", "is", null)
+      .gte("proposta_enviada_em", inicioISO)
+      .lt("proposta_enviada_em", fimISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -350,6 +374,7 @@ export async function calcularMetricasOrg(
     reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
     reunioesComProposta: comProposta,
+    propostas: propostas ?? 0,
     noShow: noShow ?? 0,
     vendas,
     receita,

@@ -23,7 +23,7 @@ import {
   fimDaSemana,
   inicioDoMes,
 } from "@/lib/metricas";
-import { inicioDoDia, UM_DIA_MS } from "@/lib/datas";
+import { inicioDoDia, UM_DIA_MS, periodoAnteriorSemana, periodoAnteriorMes } from "@/lib/datas";
 import { call, calls, reunioes } from "@/lib/terminologia";
 
 function formatarDataCurta(d: Date) {
@@ -47,11 +47,15 @@ export default async function DashboardPage() {
   const fimSemana = fimDaSemana(inicioSemana);
   const inicioMes = inicioDoMes(agora);
   const subtituloSemana = `domingo a sábado · ${formatarDataCurta(inicioSemana)} a ${formatarDataCurta(fimSemana)}`;
+  const semanaAnterior = periodoAnteriorSemana(inicioSemana, agora);
+  const mesAnterior = periodoAnteriorMes(inicioMes, agora);
 
   const [
     metricasHoje,
     metricasSemana,
+    metricasSemanaAnterior,
     metricasMes,
+    metricasMesAnterior,
     vendasPorCanal,
     vendasPorProduto,
     performanceDiaSdr,
@@ -75,7 +79,9 @@ export default async function DashboardPage() {
     // coisa que fica exclusiva do admin é o botão de copiar o resultado
     // da semana (mais abaixo, na prop `acao`).
     calcularMetricasOrg(supabase, usuario!.org_id, inicioSemana, amanha),
+    calcularMetricasOrg(supabase, usuario!.org_id, semanaAnterior.inicio, semanaAnterior.fim),
     calcularMetricasOrg(supabase, usuario!.org_id, inicioMes, amanha),
+    calcularMetricasOrg(supabase, usuario!.org_id, mesAnterior.inicio, mesAnterior.fim),
     calcularVendasPorCanal(supabase, usuario!.org_id, inicioMes, amanha),
     calcularVendasPorProduto(supabase, usuario!.org_id, inicioMes, amanha),
     // "Performance do dia" é o único relatório de DIA — leads trabalhados
@@ -139,6 +145,7 @@ export default async function DashboardPage() {
               titulo="Esta semana"
               subtitulo={subtituloSemana}
               metricas={metricasSemana}
+              metricasAnteriores={metricasSemanaAnterior}
               metas={metas}
               publicoOrg={publicoOrg}
               acao={
@@ -152,7 +159,13 @@ export default async function DashboardPage() {
                 ) : undefined
               }
             />
-            <SecaoPeriodo titulo="Este mês" metricas={metricasMes} metas={metas} publicoOrg={publicoOrg} />
+            <SecaoPeriodo
+              titulo="Este mês"
+              metricas={metricasMes}
+              metricasAnteriores={metricasMesAnterior}
+              metas={metas}
+              publicoOrg={publicoOrg}
+            />
           </>
         ) : (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">

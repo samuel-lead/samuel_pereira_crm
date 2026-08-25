@@ -4,9 +4,11 @@ import {
   IconeCheck,
   IconeAlerta,
   IconeMoeda,
+  IconeCarta,
+  IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Reunioes } from "@/lib/terminologia";
+import { Reunioes, Calls } from "@/lib/terminologia";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -96,6 +98,60 @@ function CardNumero({
   );
 }
 
+// Quanto o valor atual mudou em relação ao mesmo pedaço do período
+// anterior. Sem base pra comparar (era 0 antes), não dá pra calcular %
+// de aumento — nesse caso o card não mostra selo nenhum.
+function variacao(atual: number, anterior: number): number | null {
+  if (anterior === 0) return null;
+  return (atual - anterior) / anterior;
+}
+
+const ESQUEMAS_COMPARATIVO = {
+  azul: "bg-sky-500/20 text-sky-400",
+  verde: "bg-green-500/20 text-green-400",
+  ambar: "bg-amber-500/20 text-amber-400",
+  roxo: "bg-violet-500/20 text-violet-400",
+  esmeralda: "bg-emerald-500/20 text-emerald-400",
+} as const;
+
+function CardComparativo({
+  titulo,
+  valorFormatado,
+  variacaoPct,
+  esquema,
+  Icone,
+}: {
+  titulo: string;
+  valorFormatado: string;
+  variacaoPct: number | null;
+  esquema: keyof typeof ESQUEMAS_COMPARATIVO;
+  Icone: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+}) {
+  const subiu = variacaoPct !== null && variacaoPct > 0;
+  const desceu = variacaoPct !== null && variacaoPct < 0;
+
+  return (
+    <div className="rounded-xl bg-neutral-900 p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between">
+        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]}`}>
+          <Icone className="h-4 w-4" />
+        </span>
+        {variacaoPct !== null && (
+          <span
+            className={`text-xs font-bold ${
+              subiu ? "text-green-400" : desceu ? "text-red-400" : "text-neutral-400"
+            }`}
+          >
+            {subiu ? "▲" : desceu ? "▼" : "—"} {Math.abs(Math.round(variacaoPct * 100))}%
+          </span>
+        )}
+      </div>
+      <p className="text-2xl font-extrabold text-white">{valorFormatado}</p>
+      <p className="mt-0.5 text-xs font-medium text-neutral-400">{titulo}</p>
+    </div>
+  );
+}
+
 function BarraTaxa({
   nome,
   valor,
@@ -133,6 +189,7 @@ export function SecaoPeriodo({
   titulo,
   subtitulo,
   metricas,
+  metricasAnteriores,
   metas,
   acao,
   publicoOrg = "mentoria",
@@ -140,6 +197,7 @@ export function SecaoPeriodo({
   titulo: string;
   subtitulo?: string;
   metricas: Metricas;
+  metricasAnteriores?: Metricas;
   metas: MetasConfig;
   acao?: React.ReactNode;
   publicoOrg?: string;
@@ -206,6 +264,51 @@ export function SecaoPeriodo({
           Icone={IconeAlerta}
         />
       </div>
+
+      {metricasAnteriores && (
+        <div className="mt-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            Comparado com o período anterior
+          </p>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <CardComparativo
+              titulo={`${Calls(publicoOrg)} agendadas`}
+              valorFormatado={String(metricas.reunioesMarcadas)}
+              variacaoPct={variacao(metricas.reunioesMarcadas, metricasAnteriores.reunioesMarcadas)}
+              esquema="azul"
+              Icone={IconeCalendario}
+            />
+            <CardComparativo
+              titulo={`${Calls(publicoOrg)} realizadas`}
+              valorFormatado={String(metricas.reunioesRealizadas)}
+              variacaoPct={variacao(metricas.reunioesRealizadas, metricasAnteriores.reunioesRealizadas)}
+              esquema="verde"
+              Icone={IconeCheck}
+            />
+            <CardComparativo
+              titulo="Propostas"
+              valorFormatado={String(metricas.propostas)}
+              variacaoPct={variacao(metricas.propostas, metricasAnteriores.propostas)}
+              esquema="ambar"
+              Icone={IconeCarta}
+            />
+            <CardComparativo
+              titulo="Vendas"
+              valorFormatado={String(metricas.vendas)}
+              variacaoPct={variacao(metricas.vendas, metricasAnteriores.vendas)}
+              esquema="roxo"
+              Icone={IconeEstrela}
+            />
+            <CardComparativo
+              titulo="Receita"
+              valorFormatado={formatarMoeda(metricas.receita)}
+              variacaoPct={variacao(metricas.receita, metricasAnteriores.receita)}
+              esquema="esmeralda"
+              Icone={IconeMoeda}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">

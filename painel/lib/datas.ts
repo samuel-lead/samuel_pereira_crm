@@ -30,6 +30,24 @@ export function inicioDoMes(agora: Date = new Date()) {
   return meiaNoiteBrasil(local.getUTCFullYear(), local.getUTCMonth(), 1);
 }
 
+// Pra comparar "esta semana" com a semana anterior: mesmo pedaço relativo
+// (do início até o mesmo ponto que já passou), não a semana anterior
+// inteira — senão compararia 3 dias desta semana com 7 dias da passada.
+export function periodoAnteriorSemana(inicioSemana: Date, agora: Date) {
+  const decorridoMs = agora.getTime() - inicioSemana.getTime();
+  const inicio = new Date(inicioSemana.getTime() - 7 * UM_DIA_MS);
+  return { inicio, fim: new Date(inicio.getTime() + decorridoMs) };
+}
+
+// Mesma ideia pro mês — mês não tem tamanho fixo, por isso usa
+// inicioDoMes de novo num dia que já caiu no mês anterior, em vez de
+// simplesmente subtrair 30 dias.
+export function periodoAnteriorMes(inicioMes: Date, agora: Date) {
+  const inicio = inicioDoMes(new Date(inicioMes.getTime() - UM_DIA_MS));
+  const decorridoMs = agora.getTime() - inicioMes.getTime();
+  return { inicio, fim: new Date(inicio.getTime() + decorridoMs) };
+}
+
 // Dia da semana (0 = domingo ... 6 = sábado) de um instante, no fuso do
 // Brasil — não no fuso do servidor. Ex.: bônus de fim de semana, que dá
 // errado perto da meia-noite se calculado no fuso errado.
