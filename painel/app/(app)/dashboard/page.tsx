@@ -3,7 +3,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
 import { FiltroPeriodoDashboard } from "@/components/filtro-periodo-dashboard";
-import { GraficoEvolucaoComercial } from "@/components/grafico-evolucao";
+import { GraficoEvolucaoMensal } from "@/components/grafico-evolucao-mensal";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
@@ -18,7 +18,7 @@ import {
   calcularVendasPorProduto,
   calcularMetricasPorUsuario,
   calcularLeadsPorOrigem,
-  calcularEvolucaoComercial,
+  calcularResumoAno,
   calcularReceitaOrg,
   calcularNegociacoesAbertas,
   buscarMetaReceitaMes,
@@ -105,9 +105,9 @@ function resolverPeriodoAnterior(chave: ChavePeriodo, inicio: Date, fim: Date, a
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string; de?: string; ate?: string }>;
+  searchParams: Promise<{ periodo?: string; de?: string; ate?: string; anoEvolucao?: string }>;
 }) {
-  const { periodo, de, ate } = await searchParams;
+  const { periodo, de, ate, anoEvolucao } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
@@ -115,6 +115,10 @@ export default async function DashboardPage({
   const inicioHoje = inicioDoDia(agora);
   const amanha = new Date(inicioHoje.getTime() + UM_DIA_MS);
   const inicioMesAtual = inicioDoMes(agora);
+  const anoAtualNumero = inicioHoje.getUTCFullYear();
+  const anoEvolucaoNumero = anoEvolucao ? Number(anoEvolucao) : anoAtualNumero;
+  const anoEvolucaoResolvido =
+    Number.isFinite(anoEvolucaoNumero) && anoEvolucaoNumero > 0 ? anoEvolucaoNumero : anoAtualNumero;
 
   const souAdmin = usuario!.papel === "admin";
 
@@ -135,7 +139,7 @@ export default async function DashboardPage({
     performanceDiaSdr,
     performancePeriodoSdr,
     leadsPorOrigem,
-    evolucaoComercial,
+    resumoAnoEvolucao,
     receitaOrgMes,
     metaReceita,
     negociacoesAbertas,
@@ -158,7 +162,7 @@ export default async function DashboardPage({
     }),
     calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
-    calcularEvolucaoComercial(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    calcularResumoAno(supabase, usuario!.org_id, anoEvolucaoResolvido),
     // Meta de receita é sempre do mês civil corrente — não depende do filtro.
     calcularReceitaOrg(supabase, usuario!.org_id, inicioMesAtual, amanha),
     buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMesAtual.getUTCFullYear(), inicioMesAtual.getUTCMonth() + 1),
@@ -244,7 +248,12 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <GraficoEvolucaoComercial pontos={evolucaoComercial} rotuloReunioes={Reunioes(publicoOrg)} />
+        <GraficoEvolucaoMensal
+          dados={resumoAnoEvolucao}
+          ano={anoEvolucaoResolvido}
+          anoAtual={anoAtualNumero}
+          mesAtual={anoEvolucaoResolvido === anoAtualNumero ? inicioHoje.getUTCMonth() + 1 : 0}
+        />
 
         <section>
           <h2 className="mb-3 text-lg font-bold text-neutral-900">Visão da equipe</h2>
@@ -272,16 +281,6 @@ export default async function DashboardPage({
           </div>
         </section>
 
-        {souAdmin && (
-          <div className="flex justify-center pt-2">
-            <Link
-              href="/ano"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700"
-            >
-              Ver o ano inteiro →
-            </Link>
-          </div>
-        )}
       </main>
     </>
   );
