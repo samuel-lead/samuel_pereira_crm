@@ -6,7 +6,7 @@ import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { ORDEM_OPORTUNIDADE_FUTURA } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
-import { reuniao } from "@/lib/terminologia";
+import { reuniao, Reuniao } from "@/lib/terminologia";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -444,6 +444,19 @@ export async function atualizarLead(
     return { erro: "Escolha o motivo pelo qual esse lead está indo pra Base." };
   }
 
+  // No Show só existe se teve reunião marcada antes — sem isso não tem o
+  // que sincronizar em `reunioes` e a taxa de no-show fica sempre zerada,
+  // mesmo com lead "parado" ali na coluna (Samuel pediu essa trava).
+  if (
+    nivelMudou &&
+    novoNivel === NIVEL_NO_SHOW &&
+    leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA
+  ) {
+    return {
+      erro: `Só dá pra marcar No Show a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`,
+    };
+  }
+
   // "Fiz proposta e não comprou" só faz sentido se a proposta e o perfil
   // do lead já estiverem registrados — senão fica um lead na Base sem
   // nenhum contexto de por que não fechou.
@@ -593,6 +606,15 @@ export async function moverLeadNivel(
 
   if (leadAtual.nivel_ordem === nivelReal && leadAtual.oportunidade_futura === querFutura) {
     return;
+  }
+
+  // No Show só existe se teve reunião marcada antes — mesma trava de
+  // atualizarLead, pra não deixar arrastar o card direto de qualquer
+  // coluna e ficar sem reunião pra sincronizar (Samuel pediu essa regra).
+  if (nivelReal === NIVEL_NO_SHOW && leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA) {
+    throw new Error(
+      `Só dá pra marcar No Show a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`
+    );
   }
 
   const erroReuniao = await sincronizarReuniao(supabase, {
