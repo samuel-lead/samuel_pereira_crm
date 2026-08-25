@@ -13,11 +13,10 @@ import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
-import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { numerarNiveis, NIVEIS_VENDAS, type NivelResumo } from "@/lib/niveis";
 import { Reuniao } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
-const NIVEL_FOLLOW_POS_REUNIAO = 6;
 const NIVEL_OPORTUNIDADES = 7;
 
 type Lead = {
@@ -283,9 +282,8 @@ export default async function EditarLeadPage({
             </div>
           ) : (
             podeEditar &&
-            (leadTipado.nivel_ordem === NIVEL_FOLLOW_POS_REUNIAO ||
-              (leadTipado.nivel_ordem === NIVEL_OPORTUNIDADES &&
-                !leadTipado.oportunidade_futura)) && (
+            NIVEIS_VENDAS.includes(leadTipado.nivel_ordem) &&
+            !(leadTipado.nivel_ordem === NIVEL_OPORTUNIDADES && leadTipado.oportunidade_futura) && (
               <>
                 <RegistrarPropostaForm
                   leadId={leadTipado.id}
