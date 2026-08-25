@@ -169,18 +169,48 @@ async function sincronizarReuniao(
       .select("id", { count: "exact", head: true })
       .eq("lead_id", leadId);
 
-    const { error } = await supabase.from("reunioes").insert({
-      org_id: orgId,
-      usuario_id: usuarioId,
-      lead_id: leadId,
-      agendada_para: data.toISOString(),
-      marcada_em: dataMarcada.toISOString(),
-      closer_id: closerId || null,
-      status: "marcada",
-      reagendada: !!reunioesAnteriores && reunioesAnteriores > 0,
-    });
+    const { data: novaReuniao, error } = await supabase
+      .from("reunioes")
+      .insert({
+        org_id: orgId,
+        usuario_id: usuarioId,
+        lead_id: leadId,
+        agendada_para: data.toISOString(),
+        marcada_em: dataMarcada.toISOString(),
+        closer_id: closerId || null,
+        status: "marcada",
+        reagendada: !!reunioesAnteriores && reunioesAnteriores > 0,
+      })
+      .select("id")
+      .single();
 
     if (error) return error.message;
+
+    // Reunião anterior "esquecida" (ainda "marcada", com a data já
+    // passada na hora desse reagendamento) — a pessoa sumiu e ninguém
+    // nunca disse nada, isso é no-show de verdade (Samuel foi explícito
+    // nessa regra). Reagendamento avisado com antecedência usa a caixa
+    // de "Reagendar" (edita a mesma reunião, não passa por aqui), então
+    // só cai nessa limpeza quem realmente não veio e sumiu.
+    const { data: reunioesEsquecidas } = await supabase
+      .from("reunioes")
+      .select("id")
+      .eq("lead_id", leadId)
+      .eq("status", "marcada")
+      .neq("id", novaReuniao.id)
+      .lt("agendada_para", new Date().toISOString());
+
+    if (reunioesEsquecidas && reunioesEsquecidas.length > 0) {
+      const { error: erroNoShow } = await supabase
+        .from("reunioes")
+        .update({ status: "nao_compareceu" })
+        .in(
+          "id",
+          reunioesEsquecidas.map((r) => r.id)
+        );
+      if (erroNoShow) return erroNoShow.message;
+    }
+
     return null;
   }
 

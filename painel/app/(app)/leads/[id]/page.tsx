@@ -65,6 +65,12 @@ type Reuniao = {
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 
+const ROTULO_STATUS_REUNIAO: Record<string, string> = {
+  marcada: "Marcada",
+  realizada: "Realizada",
+  nao_compareceu: "Não compareceu",
+};
+
 function formatarData(iso: string) {
   // Sem timeZone explícito, o servidor formata no fuso dele (UTC na
   // Vercel), não no do Brasil — uma ligação das 15h aparecia como se
@@ -327,7 +333,7 @@ export default async function EditarLeadPage({
                 {reunioes.map((reuniao) => (
                   <li key={`reuniao-${reuniao.id}`} className="border-l-2 border-amber-300 pl-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
-                      {Reuniao(publicoOrg)} · {reuniao.status}
+                      {Reuniao(publicoOrg)} · {ROTULO_STATUS_REUNIAO[reuniao.status] ?? reuniao.status}
                     </p>
                     <p className="text-sm text-neutral-700">
                       Agendada para {formatarData(reuniao.agendada_para)}
