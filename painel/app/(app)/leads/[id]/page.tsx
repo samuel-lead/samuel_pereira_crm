@@ -60,6 +60,7 @@ type Reuniao = {
   resultado: string | null;
   closer_id: string | null;
   usuario_id: string;
+  reagendada: boolean;
 };
 
 const campoClasse =
@@ -69,8 +70,16 @@ const ROTULO_STATUS_REUNIAO: Record<string, string> = {
   marcada: "Marcada",
   realizada: "Realizada",
   nao_compareceu: "Não compareceu",
-  cancelada: "Remarcada (avisou antes)",
+  cancelada: "Cancelada (avisou antes)",
 };
+
+// "marcada" que nasceu de um reagendamento (reagendada=true) tem seu
+// próprio rótulo — mais fácil de entender na linha do tempo do que só
+// "Marcada" igual a uma reunião marcada pela primeira vez.
+function rotuloStatusReuniao(reuniao: { status: string; reagendada: boolean }) {
+  if (reuniao.status === "marcada" && reuniao.reagendada) return "Remarcada";
+  return ROTULO_STATUS_REUNIAO[reuniao.status] ?? reuniao.status;
+}
 
 function formatarData(iso: string) {
   // Sem timeZone explícito, o servidor formata no fuso dele (UTC na
@@ -123,7 +132,7 @@ export default async function EditarLeadPage({
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("reunioes")
-      .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id")
+      .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id, reagendada")
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
     supabase.from("usuarios").select("id, nome, funcao").order("nome"),
@@ -342,7 +351,7 @@ export default async function EditarLeadPage({
                 {reunioes.map((reuniao) => (
                   <li key={`reuniao-${reuniao.id}`} className="border-l-2 border-amber-300 pl-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
-                      {Reuniao(publicoOrg)} · {ROTULO_STATUS_REUNIAO[reuniao.status] ?? reuniao.status}
+                      {Reuniao(publicoOrg)} · {rotuloStatusReuniao(reuniao)}
                     </p>
                     <p className="text-sm text-neutral-700">
                       Agendada para {formatarData(reuniao.agendada_para)}
