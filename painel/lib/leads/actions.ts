@@ -510,7 +510,9 @@ export async function atualizarLead(
       oportunidade_futura: oportunidadeFutura,
       motivo_base: motivoBase,
       ...(transferenciaParaCloser ? {} : { responsavel_id: responsavelId }),
-      ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString() } : {}),
+      // Mover de nível cumpre o lembrete de "próximo contato" — sem isso,
+      // continuava marcado como atrasado mesmo com o lead já andando.
+      ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString(), proximo_follow_em: null } : {}),
     })
     .eq("id", leadId);
 
@@ -612,6 +614,8 @@ export async function moverLeadNivel(
       nivel_ordem: nivelReal,
       oportunidade_futura: querFutura,
       entrou_nivel_em: new Date().toISOString(),
+      // Mesma ideia do atualizarLead: arrastar o card cumpre o lembrete.
+      proximo_follow_em: null,
     })
     .eq("id", leadId);
 
@@ -896,6 +900,10 @@ export async function registrarNota(
     return { erro: error.message };
   }
 
+  // Registrar contato cumpre o lembrete de "próximo contato" — sem isso,
+  // ele continuava marcado como atrasado mesmo depois do contato já feito.
+  await supabase.from("leads").update({ proximo_follow_em: null }).eq("id", leadId);
+
   revalidatePath(`/leads/${leadId}`);
   return { erro: null };
 }
@@ -922,6 +930,9 @@ export async function registrarLigacao(leadId: string, atendida: boolean) {
   if (error) {
     throw new Error(error.message);
   }
+
+  // Mesma ideia da nota: a ligação cumpre o lembrete de "próximo contato".
+  await supabase.from("leads").update({ proximo_follow_em: null }).eq("id", leadId);
 
   revalidatePath(`/leads/${leadId}`);
 }
