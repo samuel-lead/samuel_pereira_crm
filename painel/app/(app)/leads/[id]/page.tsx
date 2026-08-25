@@ -10,11 +10,13 @@ import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
 import { RegistrarPropostaForm } from "@/components/registrar-proposta-form";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
+import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { Reuniao } from "@/lib/terminologia";
 
+const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_FOLLOW_POS_REUNIAO = 6;
 const NIVEL_OPORTUNIDADES = 7;
 
@@ -139,6 +141,7 @@ export default async function EditarLeadPage({
   const souCloserAtivo = reunioes.some(
     (r) => r.status === "marcada" && r.closer_id === user?.id
   );
+  const reuniaoAtiva = reunioes.find((r) => r.status === "marcada") ?? null;
   const podeEditar =
     souAdmin || leadTipado.responsavel_id === user?.id || souCloserAtivo;
   const podeReivindicar = !souAdmin && leadTipado.responsavel_id === null;
@@ -219,6 +222,17 @@ export default async function EditarLeadPage({
         </div>
 
         <div className="flex flex-col gap-4">
+          {podeEditar &&
+            leadTipado.nivel_ordem === NIVEL_REUNIAO_MARCADA &&
+            reuniaoAtiva && (
+              <ReagendarReuniaoForm
+                leadId={leadTipado.id}
+                reuniaoId={reuniaoAtiva.id}
+                agendadaPara={reuniaoAtiva.agendada_para}
+                rotulo={Reuniao(publicoOrg)}
+              />
+            )}
+
           {podeEditar && leadTipado.status !== "vendido" && (
             <ProximoContatoForm
               leadId={leadTipado.id}

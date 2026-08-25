@@ -846,6 +846,48 @@ export async function marcarProximoContato(leadId: string, formData: FormData) {
   revalidatePath(`/leads/${leadId}`);
 }
 
+// Muda só a data/hora de uma reunião/visita que já está marcada — sem
+// isso, uma vez marcada não tinha como corrigir o horário (o campo de
+// data só aparecia no formulário na hora de marcar pela primeira vez).
+// Atualiza a reunião existente, não cria uma nova nem mexe em métrica.
+export async function reagendarReuniao(
+  leadId: string,
+  reuniaoId: string,
+  formData: FormData
+) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
+
+  const dataHora = String(formData.get("agendada_para") ?? "").trim();
+  if (!dataHora) {
+    throw new Error(`Escolha a nova data e hora da ${reuniao(usuario.publico_org)}.`);
+  }
+
+  const data = parseDataHoraLocal(dataHora);
+  if (Number.isNaN(data.getTime())) {
+    throw new Error(`Data da ${reuniao(usuario.publico_org)} inválida.`);
+  }
+
+  const { error } = await supabase
+    .from("reunioes")
+    .update({ agendada_para: data.toISOString() })
+    .eq("id", reuniaoId)
+    .eq("lead_id", leadId)
+    .eq("status", "marcada");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/reunioes");
+  revalidatePath(`/leads/${leadId}`);
+}
+
 export async function cancelarProximoContato(leadId: string) {
   const { supabase, usuario } = await contextoUsuario();
 
