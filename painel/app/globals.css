@@ -309,6 +309,14 @@ body {
   color: #fde68a;
 }
 
+/* Data da reunião/visita reagendada (text-amber-900) tinha ficado de fora
+   — sem essa regra, o texto mais importante da caixa (o próprio horário
+   marcado) ficava com a cor escura do modo claro, quase ilegível em cima
+   do fundo âmbar tingido. */
+.dark .text-amber-900 {
+  color: #fef3c7;
+}
+
 .dark .bg-white\/60 {
   background-color: rgb(23 23 23 / 0.6);
 }
@@ -387,6 +395,12 @@ body {
   color: #86efac;
 }
 
+/* Título "Fechar venda" e os rótulos de valor (text-green-800) também
+   ficavam sem tratamento — mesmo problema do amber-900 acima. */
+.dark .text-green-800 {
+  color: #bbf7d0;
+}
+
 /* bordas das colunas e do card de lead atrasado */
 .dark .border-slate-200 {
   border-color: rgba(71, 85, 105, 0.4);
@@ -426,6 +440,12 @@ body {
 
 .dark .border-green-300 {
   border-color: rgba(22, 163, 74, 0.5);
+}
+
+/* Borda da caixa "Fechar venda" (border-green-200) também tinha ficado
+   de fora — quase invisível no modo escuro. */
+.dark .border-green-200 {
+  border-color: rgba(22, 163, 74, 0.4);
 }
 
 .dark .text-red-600 {
