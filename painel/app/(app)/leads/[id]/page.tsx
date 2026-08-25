@@ -69,6 +69,7 @@ const ROTULO_STATUS_REUNIAO: Record<string, string> = {
   marcada: "Marcada",
   realizada: "Realizada",
   nao_compareceu: "Não compareceu",
+  cancelada: "Remarcada (avisou antes)",
 };
 
 function formatarData(iso: string) {
@@ -147,6 +148,13 @@ export default async function EditarLeadPage({
     (r) => r.status === "marcada" && r.closer_id === user?.id
   );
   const reuniaoAtiva = reunioes.find((r) => r.status === "marcada") ?? null;
+  // Reunião "esquecida": ainda "marcada", data já passada — só existe
+  // quando o lead não está mais em "Reunião marcada" (senão essa seria a
+  // reuniaoAtiva de verdade). Precisa perguntar antes de marcar uma nova
+  // (sumiu = no-show, avisou antes = cancelada — nunca adivinha pela data).
+  const reuniaoAnteriorPendente = reunioes.some(
+    (r) => r.status === "marcada" && new Date(r.agendada_para).getTime() < Date.now()
+  );
   const podeEditar =
     souAdmin || leadTipado.responsavel_id === user?.id || souCloserAtivo;
   const podeReivindicar = !souAdmin && leadTipado.responsavel_id === null;
@@ -222,6 +230,7 @@ export default async function EditarLeadPage({
             podeEditar={podeEditar}
             preSelecionarReuniao={marcarReuniao === "1"}
             preSelecionarNivel={confirmarReuniao}
+            reuniaoAnteriorPendente={reuniaoAnteriorPendente}
             publicoOrg={publicoOrg}
           />
         </div>

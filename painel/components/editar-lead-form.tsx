@@ -64,6 +64,7 @@ export function EditarLeadForm({
   podeEditar = true,
   preSelecionarReuniao = false,
   preSelecionarNivel,
+  reuniaoAnteriorPendente = false,
   publicoOrg = "mentoria",
 }: {
   lead: Lead;
@@ -79,6 +80,9 @@ export function EditarLeadForm({
   // "Follow após reunião"/"Oportunidades"): já chega com o nível de
   // destino escolhido, só falta confirmar se a reunião aconteceu.
   preSelecionarNivel?: string;
+  // Existe uma reunião anterior ainda "marcada" com a data já passada —
+  // precisa perguntar se a pessoa sumiu ou avisou antes de remarcar.
+  reuniaoAnteriorPendente?: boolean;
 }) {
   const acaoComId = atualizarLead.bind(null, lead.id);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
@@ -93,6 +97,7 @@ export function EditarLeadForm({
     preSelecionarNivel === OPCAO_OPORTUNIDADE_FUTURA ? true : lead.oportunidade_futura
   );
   const [reuniaoAconteceu, setReuniaoAconteceu] = useState("");
+  const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
   const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
 
@@ -301,6 +306,42 @@ export function EditarLeadForm({
                   funcaoFiltro="closer"
                 />
               </div>
+
+              {reuniaoAnteriorPendente && (
+                <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-sm font-medium text-amber-800">
+                    Esse lead tem uma {reuniao(publicoOrg)} anterior marcada que já
+                    passou da data. O que aconteceu?
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                      <input
+                        type="radio"
+                        name="reuniao_anterior_sumiu"
+                        value="sim"
+                        checked={reuniaoAnteriorSumiu === "sim"}
+                        onChange={() => setReuniaoAnteriorSumiu("sim")}
+                        required
+                      />
+                      A pessoa sumiu, não avisou nada
+                    </label>
+                    <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                      <input
+                        type="radio"
+                        name="reuniao_anterior_sumiu"
+                        value="nao"
+                        checked={reuniaoAnteriorSumiu === "nao"}
+                        onChange={() => setReuniaoAnteriorSumiu("nao")}
+                      />
+                      Ela avisou antes que precisava remarcar
+                    </label>
+                  </div>
+                  <p className="text-xs text-amber-700">
+                    Só quem sumiu sem avisar conta como no-show na métrica de
+                    comparecimento.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

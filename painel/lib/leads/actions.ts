@@ -126,6 +126,11 @@ async function sincronizarReuniao(
     // false, não conta como "realizada" (mesmo efeito de um No-show na
     // taxa de comparecimento), mesmo o lead seguindo pro nível escolhido.
     reuniaoAconteceu?: boolean;
+    // Só perguntado quando existe uma reunião anterior "esquecida" (ainda
+    // "marcada", data já passada) — true = sumiu sem avisar (conta como
+    // no-show), false = avisou antes que precisava remarcar (não conta).
+    // undefined = ainda não perguntou, então nem tenta marcar a nova.
+    reuniaoAnteriorSumiu?: boolean;
     publicoOrg?: string;
   }
 ): Promise<string | null> {
@@ -139,6 +144,7 @@ async function sincronizarReuniao(
     marcadaEm,
     closerId,
     reuniaoAconteceu,
+    reuniaoAnteriorSumiu,
     publicoOrg = "mentoria",
   } = params;
 
@@ -161,6 +167,35 @@ async function sincronizarReuniao(
       dataMarcada = parsed;
     }
 
+    // Reunião anterior "esquecida" (ainda "marcada", com a data já
+    // passada) precisa ser resolvida antes de marcar a nova — sem isso
+    // ela ficava pra sempre sem status definido, derrubando a taxa de
+    // comparecimento sem nunca aparecer como no-show em lugar nenhum.
+    // NUNCA adivinha pela data — só quem confirma explicitamente que a
+    // pessoa sumiu sem avisar conta como no-show; quem avisou antes que
+    // precisava remarcar não conta (regra explícita do Samuel).
+    const { data: reunioesPendentes } = await supabase
+      .from("reunioes")
+      .select("id")
+      .eq("lead_id", leadId)
+      .eq("status", "marcada")
+      .lt("agendada_para", new Date().toISOString());
+
+    if (reunioesPendentes && reunioesPendentes.length > 0) {
+      if (reuniaoAnteriorSumiu === undefined) {
+        return `Antes de marcar essa nova ${reuniao(publicoOrg)}, confirme: na ${reuniao(publicoOrg)} anterior (que já passou da data), a pessoa sumiu sem avisar ou avisou antes que precisava remarcar?`;
+      }
+
+      const { error: erroAnterior } = await supabase
+        .from("reunioes")
+        .update({ status: reuniaoAnteriorSumiu ? "nao_compareceu" : "cancelada" })
+        .in(
+          "id",
+          reunioesPendentes.map((r) => r.id)
+        );
+      if (erroAnterior) return erroAnterior.message;
+    }
+
     // Se o lead já teve alguma reunião antes, essa aqui é um reagendamento
     // (ex.: veio de um No-show), não uma call nova — não pode contar como
     // "call marcada" nova na métrica do dia.
@@ -169,48 +204,18 @@ async function sincronizarReuniao(
       .select("id", { count: "exact", head: true })
       .eq("lead_id", leadId);
 
-    const { data: novaReuniao, error } = await supabase
-      .from("reunioes")
-      .insert({
-        org_id: orgId,
-        usuario_id: usuarioId,
-        lead_id: leadId,
-        agendada_para: data.toISOString(),
-        marcada_em: dataMarcada.toISOString(),
-        closer_id: closerId || null,
-        status: "marcada",
-        reagendada: !!reunioesAnteriores && reunioesAnteriores > 0,
-      })
-      .select("id")
-      .single();
+    const { error } = await supabase.from("reunioes").insert({
+      org_id: orgId,
+      usuario_id: usuarioId,
+      lead_id: leadId,
+      agendada_para: data.toISOString(),
+      marcada_em: dataMarcada.toISOString(),
+      closer_id: closerId || null,
+      status: "marcada",
+      reagendada: !!reunioesAnteriores && reunioesAnteriores > 0,
+    });
 
     if (error) return error.message;
-
-    // Reunião anterior "esquecida" (ainda "marcada", com a data já
-    // passada na hora desse reagendamento) — a pessoa sumiu e ninguém
-    // nunca disse nada, isso é no-show de verdade (Samuel foi explícito
-    // nessa regra). Reagendamento avisado com antecedência usa a caixa
-    // de "Reagendar" (edita a mesma reunião, não passa por aqui), então
-    // só cai nessa limpeza quem realmente não veio e sumiu.
-    const { data: reunioesEsquecidas } = await supabase
-      .from("reunioes")
-      .select("id")
-      .eq("lead_id", leadId)
-      .eq("status", "marcada")
-      .neq("id", novaReuniao.id)
-      .lt("agendada_para", new Date().toISOString());
-
-    if (reunioesEsquecidas && reunioesEsquecidas.length > 0) {
-      const { error: erroNoShow } = await supabase
-        .from("reunioes")
-        .update({ status: "nao_compareceu" })
-        .in(
-          "id",
-          reunioesEsquecidas.map((r) => r.id)
-        );
-      if (erroNoShow) return erroNoShow.message;
-    }
-
     return null;
   }
 
@@ -409,6 +414,7 @@ export async function atualizarLead(
   const closerId = String(formData.get("closer_id") ?? "").trim() || null;
   const motivoBaseForm = String(formData.get("motivo_base") ?? "").trim() || null;
   const reuniaoAconteceuForm = String(formData.get("reuniao_aconteceu") ?? "").trim();
+  const reuniaoAnteriorSumiuForm = String(formData.get("reuniao_anterior_sumiu") ?? "").trim();
   // Só faz sentido em Oportunidades (nível 6) — fora dele, fica sempre false.
   const oportunidadeFutura =
     novoNivel === NIVEL_REUNIAO_FEITA && formData.get("oportunidade_futura") === "on";
@@ -532,6 +538,12 @@ export async function atualizarLead(
       marcadaEm: reuniaoMarcadaEm,
       closerId,
       reuniaoAconteceu: reuniaoAconteceuForm === "sim",
+      reuniaoAnteriorSumiu:
+        reuniaoAnteriorSumiuForm === "sim"
+          ? true
+          : reuniaoAnteriorSumiuForm === "nao"
+            ? false
+            : undefined,
       publicoOrg: usuario.publico_org,
     });
     if (erroReuniao) {

@@ -147,11 +147,14 @@ export async function calcularMetricas(
     // Reuniões cuja data já passou (não importa o status) — é essa a
     // população certa pra dividir a taxa de comparecimento, não "reuniões
     // marcadas" (que inclui reunião marcada pra daqui a alguns dias).
+    // "cancelada" fica fora: é o lead que avisou antes que precisava
+    // remarcar, não conta nem a favor nem contra o comparecimento.
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
       .eq("leads.responsavel_id", usuarioId)
       .is("leads.arquivado_em", null)
+      .neq("status", "cancelada")
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", limiteDevidasISO),
     // Taxa de venda só pode contar reunião que teve proposta registrada —
@@ -335,6 +338,7 @@ export async function calcularMetricasOrg(
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
       .eq("org_id", orgId)
       .is("leads.arquivado_em", null)
+      .neq("status", "cancelada")
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", limiteDevidasISO),
     supabase
