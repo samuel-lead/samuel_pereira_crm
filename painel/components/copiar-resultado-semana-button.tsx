@@ -19,8 +19,10 @@ function montarRelatorio(
   negociacoes: NegociacoesAbertas,
   publicoOrg: string
 ) {
+  // Mesma regra da taxa de comparecimento: só reunião cuja data já passou
+  // pode entrar na conta, senão reunião futura já marcada infla a base.
   const taxaNoShow =
-    metricas.reunioesMarcadas > 0 ? metricas.noShow / metricas.reunioesMarcadas : null;
+    metricas.reunioesDevidas > 0 ? metricas.noShow / metricas.reunioesDevidas : null;
   const faturamentoVirouCaixa =
     metricas.faturamento > 0 ? metricas.receita / metricas.faturamento : null;
 

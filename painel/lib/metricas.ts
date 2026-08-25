@@ -14,6 +14,7 @@ export type Metricas = {
   reunioesReagendadas: number;
   reunioesRealizadas: number;
   reunioesComProposta: number;
+  reunioesDevidas: number;
   propostas: number;
   noShow: number;
   vendas: number;
@@ -63,6 +64,10 @@ export async function calcularMetricas(
   const apenasDeclarados = opcoes.apenasDeclaradosNoPeriodo ?? false;
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
+  // Taxa de comparecimento só pode julgar reunião cuja data já passou —
+  // reunião marcada pra daqui a 3 dias ainda não teve chance de acontecer,
+  // contar ela como "não compareceu ainda" derrubava a taxa artificialmente.
+  const limiteDevidasISO = (fim < new Date() ? fim : new Date()).toISOString();
 
   const [
     { data: leadsDeclarados },
@@ -71,6 +76,7 @@ export async function calcularMetricas(
     { count: reunioesMarcadasNovas },
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
+    { count: reunioesDevidas },
     { count: reunioesComProposta },
     { count: propostas },
     { count: noShow },
@@ -138,6 +144,16 @@ export async function calcularMetricas(
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
+    // Reuniões cuja data já passou (não importa o status) — é essa a
+    // população certa pra dividir a taxa de comparecimento, não "reuniões
+    // marcadas" (que inclui reunião marcada pra daqui a alguns dias).
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
+      .eq("leads.responsavel_id", usuarioId)
+      .is("leads.arquivado_em", null)
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", limiteDevidasISO),
     // Taxa de venda só pode contar reunião que teve proposta registrada —
     // uma reunião realizada sem proposta não é uma chance de venda de
     // verdade. `proposta_valor` é um campo no lead (não por reunião), então
@@ -206,6 +222,7 @@ export async function calcularMetricas(
   const leads = idsTrabalhados.size;
   const marcadas = reunioesMarcadasNovas ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
+  const devidas = reunioesDevidas ?? 0;
   const comProposta = reunioesComProposta ?? 0;
 
   return {
@@ -215,6 +232,7 @@ export async function calcularMetricas(
     reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
     reunioesComProposta: comProposta,
+    reunioesDevidas: devidas,
     propostas: propostas ?? 0,
     noShow: noShow ?? 0,
     vendas,
@@ -222,7 +240,7 @@ export async function calcularMetricas(
     faturamento,
     ticketMedio: vendas > 0 ? receita / vendas : null,
     taxaAgendamento: leads > 0 ? marcadas / leads : null,
-    taxaComparecimento: marcadas > 0 ? realizadas / marcadas : null,
+    taxaComparecimento: devidas > 0 ? realizadas / devidas : null,
     taxaVenda: comProposta > 0 ? vendasComProposta / comProposta : null,
     diasUteis: diasUteisEntre(inicio, fim < new Date() ? fim : new Date()),
   };
@@ -242,6 +260,7 @@ export async function calcularMetricasOrg(
   const apenasDeclarados = opcoes.apenasDeclaradosNoPeriodo ?? false;
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
+  const limiteDevidasISO = (fim < new Date() ? fim : new Date()).toISOString();
 
   const [
     { data: leadsDeclarados },
@@ -250,6 +269,7 @@ export async function calcularMetricasOrg(
     { count: reunioesMarcadasNovas },
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
+    { count: reunioesDevidas },
     { count: reunioesComProposta },
     { count: propostas },
     { count: noShow },
@@ -307,6 +327,16 @@ export async function calcularMetricasOrg(
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
+    // Reuniões cuja data já passou (não importa o status) — população certa
+    // pra dividir a taxa de comparecimento, ver comentário na versão
+    // individual em calcularMetricas.
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .is("leads.arquivado_em", null)
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", limiteDevidasISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em, proposta_valor)", { count: "exact", head: true })
@@ -365,6 +395,7 @@ export async function calcularMetricasOrg(
   const leads = idsTrabalhados.size;
   const marcadas = reunioesMarcadasNovas ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
+  const devidas = reunioesDevidas ?? 0;
   const comProposta = reunioesComProposta ?? 0;
 
   return {
@@ -374,6 +405,7 @@ export async function calcularMetricasOrg(
     reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
     reunioesComProposta: comProposta,
+    reunioesDevidas: devidas,
     propostas: propostas ?? 0,
     noShow: noShow ?? 0,
     vendas,
@@ -381,7 +413,7 @@ export async function calcularMetricasOrg(
     faturamento,
     ticketMedio: vendas > 0 ? receita / vendas : null,
     taxaAgendamento: leads > 0 ? marcadas / leads : null,
-    taxaComparecimento: marcadas > 0 ? realizadas / marcadas : null,
+    taxaComparecimento: devidas > 0 ? realizadas / devidas : null,
     taxaVenda: comProposta > 0 ? vendasComProposta / comProposta : null,
     diasUteis: diasUteisEntre(inicio, fim < new Date() ? fim : new Date()),
   };
