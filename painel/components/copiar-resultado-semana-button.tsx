@@ -30,7 +30,7 @@ function montarRelatorio(
     "📊 Resultado do período",
     `🗓️ Período: ${periodo}`,
     "",
-    `➡ Leads trabalhados: ${metricas.leadsTrabalhados}`,
+    `➡ Leads novos: ${metricas.leadsTrabalhados}`,
     `➡ ${Reunioes(publicoOrg)} marcadas: ${metricas.reunioesMarcadas}`,
     `➡ ${Reunioes(publicoOrg)} realizadas: ${metricas.reunioesRealizadas}`,
     `➡ Vendas: ${metricas.vendas}`,

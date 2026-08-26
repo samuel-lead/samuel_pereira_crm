@@ -140,7 +140,7 @@ export function GraficoEvolucaoMensal({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4 dark:border-white/5">
         <div>
           <h2 className="text-base font-bold" style={{ color: "var(--texto)" }}>
-            Evolução da meta de receita
+            Evolução comercial
           </h2>
           <p className="text-xs" style={{ color: "var(--texto-mutado)" }}>
             {mesesComMeta.length > 0

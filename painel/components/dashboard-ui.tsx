@@ -237,7 +237,7 @@ export function SecaoPeriodo({
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <CardNumero
-          titulo="Leads trabalhados"
+          titulo="Leads novos"
           valor={metricas.leadsTrabalhados}
           meta={pisoLeads}
           amostraInsuficiente={metricas.leadsTrabalhados < 20}
