@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { atualizarFotoPerfil, type EstadoFoto } from "@/lib/configuracoes/actions";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 
@@ -13,8 +13,25 @@ export function FotoPerfilForm({
   nome: string;
   fotoUrl: string | null;
 }) {
-  const [estado, acaoFormulario] = useActionState(atualizarFotoPerfil, estadoInicial);
+  const [estado, acaoFormulario, pendente] = useActionState(atualizarFotoPerfil, estadoInicial);
   const [preview, setPreview] = useState<string | null>(null);
+  const [salvo, setSalvo] = useState(false);
+  const enviandoRef = useRef(false);
+
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        setSalvo(true);
+        const timeout = setTimeout(() => setSalvo(false), 2000);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [pendente, estado]);
 
   function aoEscolherArquivo(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0];
@@ -45,9 +62,12 @@ export function FotoPerfilForm({
 
       <button
         type="submit"
-        className="shrink-0 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+        disabled={pendente}
+        className={`shrink-0 rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
+          salvo ? "bg-green-600 hover:bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+        }`}
       >
-        Salvar foto
+        {pendente ? "Salvando..." : salvo ? "Salvo ✓" : "Salvar foto"}
       </button>
     </form>
   );

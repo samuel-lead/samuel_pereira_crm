@@ -1,13 +1,30 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { atualizarMeuTelefone } from "@/lib/usuarios/actions";
 import type { EstadoFormulario } from "@/lib/usuarios/actions";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
 export function TrocarTelefoneForm({ telefoneAtual }: { telefoneAtual: string | null }) {
-  const [estado, acaoFormulario] = useActionState(atualizarMeuTelefone, estadoInicial);
+  const [estado, acaoFormulario, pendente] = useActionState(atualizarMeuTelefone, estadoInicial);
+  const [salvo, setSalvo] = useState(false);
+  const enviandoRef = useRef(false);
+
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        setSalvo(true);
+        const timeout = setTimeout(() => setSalvo(false), 2000);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [pendente, estado]);
 
   return (
     <form action={acaoFormulario} className="space-y-3">
@@ -30,9 +47,12 @@ export function TrocarTelefoneForm({ telefoneAtual }: { telefoneAtual: string | 
 
       <button
         type="submit"
-        className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+        disabled={pendente}
+        className={`w-full rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
+          salvo ? "bg-green-600 hover:bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+        }`}
       >
-        Salvar WhatsApp
+        {pendente ? "Salvando..." : salvo ? "Salvo ✓" : "Salvar WhatsApp"}
       </button>
     </form>
   );

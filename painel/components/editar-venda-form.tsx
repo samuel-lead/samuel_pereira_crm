@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, type ChangeEvent } from "react";
+import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { editarVenda, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
 
@@ -63,7 +63,24 @@ export function EditarVendaForm({
 }) {
   const [aberto, setAberto] = useState(false);
   const acaoComId = editarVenda.bind(null, leadId);
-  const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
+  const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
+  const [salvo, setSalvo] = useState(false);
+  const enviandoRef = useRef(false);
+
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        setSalvo(true);
+        const timeout = setTimeout(() => setSalvo(false), 2000);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [pendente, estado]);
 
   if (!aberto) {
     return (
@@ -91,9 +108,12 @@ export function EditarVendaForm({
       <div className="flex gap-2">
         <button
           type="submit"
-          className="flex-1 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-700"
+          disabled={pendente}
+          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
+            salvo ? "bg-green-700 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"
+          }`}
         >
-          Salvar
+          {pendente ? "Salvando..." : salvo ? "Salvo ✓" : "Salvar"}
         </button>
         <button
           type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { criarProduto, renomearProduto, excluirProduto, type EstadoProduto } from "@/lib/configuracoes/actions";
 
@@ -123,7 +123,24 @@ function LinhaProduto({ produto }: { produto: { id: string; nome: string } }) {
 }
 
 export function ProdutosConfig({ produtos }: { produtos: { id: string; nome: string }[] }) {
-  const [estado, acaoFormulario] = useActionState(criarProduto, estadoInicial);
+  const [estado, acaoFormulario, pendente] = useActionState(criarProduto, estadoInicial);
+  const [adicionado, setAdicionado] = useState(false);
+  const enviandoRef = useRef(false);
+
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        setAdicionado(true);
+        const timeout = setTimeout(() => setAdicionado(false), 2000);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [pendente, estado]);
 
   return (
     <div className="space-y-3">
@@ -141,9 +158,12 @@ export function ProdutosConfig({ produtos }: { produtos: { id: string; nome: str
         />
         <button
           type="submit"
-          className="shrink-0 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+          disabled={pendente}
+          className={`shrink-0 rounded-md px-3 py-2 text-sm font-medium text-white transition disabled:opacity-60 ${
+            adicionado ? "bg-green-600 hover:bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
-          Adicionar
+          {pendente ? "Adicionando..." : adicionado ? "Adicionado ✓" : "Adicionar"}
         </button>
       </form>
       {estado.erro && <p className="text-xs text-red-600">{estado.erro}</p>}

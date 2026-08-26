@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { EstadoFormulario } from "@/lib/imoveis/actions";
 
@@ -42,6 +42,23 @@ export function ImovelForm({
 }) {
   const estadoInicial: EstadoFormulario = { erro: null };
   const [estado, acaoFormulario, pendente] = useActionState(acao, estadoInicial);
+  const [salvo, setSalvo] = useState(false);
+  const enviandoRef = useRef(false);
+
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        setSalvo(true);
+        const timeout = setTimeout(() => setSalvo(false), 2000);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [pendente, estado]);
 
   return (
     <form action={acaoFormulario} className="space-y-4">
@@ -297,9 +314,11 @@ export function ImovelForm({
         <button
           type="submit"
           disabled={pendente}
-          className="flex-1 rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+          className={`flex-1 rounded-md px-3 py-2.5 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
+            salvo ? "bg-green-600 hover:bg-green-600" : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
-          {pendente ? "Salvando..." : textoBotao}
+          {pendente ? "Salvando..." : salvo ? "Salvo ✓" : textoBotao}
         </button>
         <Link
           href={cancelarHref}
