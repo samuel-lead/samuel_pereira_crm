@@ -72,11 +72,11 @@ function niveisPadrao(publico: string) {
     },
     {
       ordem: 5,
-      nome: "No Show",
+      nome: `No Show (Marcou ${palavra} e sumiu)`,
       definicao: `A ${palavra} estava marcada e o lead não compareceu`,
       prazo_dias: null,
       destino_ao_estourar: null,
-      etiqueta_wpp: "No Show",
+      etiqueta_wpp: `No Show (Marcou ${palavra} e sumiu)`,
       numerado: true,
       destacado: false,
     },
