@@ -87,7 +87,7 @@ function niveisPadrao(publico: string) {
       prazo_dias: null,
       destino_ao_estourar: null,
       etiqueta_wpp: "Reagendamento",
-      numerado: true,
+      numerado: false,
       destacado: false,
     },
     {
