@@ -64,7 +64,20 @@ export const CORES_NIVEL: Record<
     pilula: "bg-red-600 text-white",
     solido: "bg-gradient-to-br from-red-500 to-red-600",
   },
+  // "Reagendamento" — lead que tinha reunião marcada e avisou antes que
+  // ia precisar remarcar. Âmbar por ser "precisa de atenção, mas não é
+  // tão grave quanto No Show" — mesma linguagem de cor já usada em outras
+  // partes do painel pra esse tipo de estado.
   6: {
+    faixa: "bg-amber-500",
+    texto: "text-amber-700",
+    badge: "bg-amber-200 text-amber-700",
+    header: "bg-amber-50",
+    borda: "border-amber-200",
+    pilula: "bg-amber-600 text-white",
+    solido: "bg-gradient-to-br from-amber-500 to-amber-600",
+  },
+  7: {
     faixa: "bg-slate-500",
     texto: "text-slate-700",
     badge: "bg-slate-200 text-slate-700",
@@ -73,7 +86,7 @@ export const CORES_NIVEL: Record<
     pilula: "bg-slate-600 text-white",
     solido: "bg-gradient-to-br from-slate-500 to-slate-600",
   },
-  7: {
+  8: {
     faixa: "bg-green-600",
     texto: "text-green-700",
     badge: "bg-green-200 text-green-700",
@@ -82,7 +95,7 @@ export const CORES_NIVEL: Record<
     pilula: "bg-green-700 text-white",
     solido: "bg-gradient-to-br from-green-600 to-green-700",
   },
-  8: {
+  9: {
     faixa: "bg-stone-500",
     texto: "text-stone-700",
     badge: "bg-stone-200 text-stone-700",
@@ -110,12 +123,12 @@ export function corDoNivel(ordem: number) {
 }
 
 // O funil virou dois quadros. Pré-vendas: antes da reunião marcada, + quem
-// levou No-show (volta pra ser remarcado). Assim que o lead vira "Reunião
-// marcada" ele sai do Pré-vendas e só aparece em Vendas dali em diante — por
-// isso "Reunião marcada" NÃO entra aqui: essa lista é o que filtra quais
-// leads aparecem no quadro.
-export const NIVEIS_PRE_VENDAS = [0, 1, 2, 3, 5];
-export const NIVEIS_VENDAS = [4, 6, 7];
+// levou No-show ou precisou reagendar (voltam pra ser remarcados). Assim
+// que o lead vira "Reunião marcada" ele sai do Pré-vendas e só aparece em
+// Vendas dali em diante — por isso "Reunião marcada" NÃO entra aqui: essa
+// lista é o que filtra quais leads aparecem no quadro.
+export const NIVEIS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
+export const NIVEIS_VENDAS = [4, 7, 8];
 
 // Diferente de NIVEIS_PRE_VENDAS: essa é a lista de COLUNAS mostradas no
 // quadro de Pré-vendas — inclui "Reunião marcada" (ordem 4) mesmo ela nunca
@@ -123,10 +136,10 @@ export const NIVEIS_VENDAS = [4, 6, 7];
 // só como alvo pro SDR arrastar o card e abrir o formulário de marcar a
 // reunião; a coluna sempre aparece vazia porque o lead sai do Pré-vendas
 // assim que entra nela.
-export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 4, 5];
+export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 4, 5, 6];
 
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
-// do nível 7 (Oportunidades), pro lead que já fez a reunião (ICP
+// do nível 8 (Oportunidades), pro lead que já fez a reunião (ICP
 // qualificado) mas avisou que só fecha depois. Usada só no quadro Vendas —
 // nunca é gravada como nivel_ordem no banco, só serve pra identificar a
 // coluna no Kanban e no drag-and-drop.

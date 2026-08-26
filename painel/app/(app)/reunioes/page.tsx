@@ -24,7 +24,7 @@ import {
   type NivelResumo,
 } from "@/lib/niveis";
 
-const NIVEL_OPORTUNIDADES = 7;
+const NIVEL_OPORTUNIDADES = 8;
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

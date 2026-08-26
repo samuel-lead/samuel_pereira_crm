@@ -8,9 +8,9 @@ import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 import { reuniao } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = "4";
-const NIVEL_FOLLOW_POS_REUNIAO = "6";
-const NIVEL_OPORTUNIDADES = "7";
-const NIVEL_BASE = "8";
+const NIVEL_FOLLOW_POS_REUNIAO = "7";
+const NIVEL_OPORTUNIDADES = "8";
+const NIVEL_BASE = "9";
 const OPCAO_OPORTUNIDADE_FUTURA = "oportunidade_futura";
 
 const MOTIVOS_BASE = [

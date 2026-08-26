@@ -1,5 +1,5 @@
-// Cadastra uma empresa cliente nova: cria a org, o funil padrão (os 9
-// níveis de sempre, 0 a 8), as metas/taxas padrão, e o primeiro usuário
+// Cadastra uma empresa cliente nova: cria a org, o funil padrão (os 10
+// níveis de sempre, 0 a 9), as metas/taxas padrão, e o primeiro usuário
 // admin dela. Só o dono da plataforma (super_admin) pode chamar isso —
 // cada empresa fica isolada na própria org_id, como todo o resto do sistema.
 
@@ -35,7 +35,7 @@ function niveisPadrao(publico: string) {
       definicao:
         'Mandei mensagem; o lead só visualizou, não respondeu, ou respondeu só "boa tarde" sem engatar',
       prazo_dias: 5,
-      destino_ao_estourar: 8,
+      destino_ao_estourar: 9,
       etiqueta_wpp: "Sem conversa iniciada",
       numerado: true,
       destacado: false,
@@ -82,6 +82,16 @@ function niveisPadrao(publico: string) {
     },
     {
       ordem: 6,
+      nome: "Reagendamento",
+      definicao: `A ${palavra} estava marcada e o lead avisou antes que ia precisar remarcar (diferente de No Show, que é sumiço sem aviso)`,
+      prazo_dias: null,
+      destino_ao_estourar: null,
+      etiqueta_wpp: "Reagendamento",
+      numerado: true,
+      destacado: false,
+    },
+    {
+      ordem: 7,
       nome: `Follow após ${palavra}`,
       definicao: `A ${palavra} aconteceu, mas ainda não deu pra saber se vira oportunidade ou não — precisa de retorno`,
       prazo_dias: null,
@@ -91,7 +101,7 @@ function niveisPadrao(publico: string) {
       destacado: true,
     },
     {
-      ordem: 7,
+      ordem: 8,
       nome: "Oportunidades para o fim do mês",
       definicao: `${publico === "imobiliario" ? "Visitou" : "Reuniu"}, proposta na mesa, não comprou ainda`,
       prazo_dias: null,
@@ -101,7 +111,7 @@ function niveisPadrao(publico: string) {
       destacado: false,
     },
     {
-      ordem: 8,
+      ordem: 9,
       nome: "Base",
       definicao:
         "Passou por todo o processo e não virou nada. Também recebe os do nível 1 que estouraram os 5 dias",

@@ -14,9 +14,10 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
-const NIVEL_FOLLOW_POS_REUNIAO = 6;
-const NIVEL_REUNIAO_FEITA = 7;
-const NIVEL_BASE = 8;
+const NIVEL_REAGENDAMENTO = 6;
+const NIVEL_FOLLOW_POS_REUNIAO = 7;
+const NIVEL_REUNIAO_FEITA = 8;
+const NIVEL_BASE = 9;
 
 // <input type="datetime-local"> manda um horário "solto", sem fuso (ex.:
 // "2026-08-25T14:30"). O servidor roda em UTC — sem isso, "new Date(...)"
@@ -222,6 +223,7 @@ async function sincronizarReuniao(
   if (
     deOrdem === NIVEL_REUNIAO_MARCADA &&
     (paraOrdem === NIVEL_NO_SHOW ||
+      paraOrdem === NIVEL_REAGENDAMENTO ||
       paraOrdem === NIVEL_FOLLOW_POS_REUNIAO ||
       paraOrdem === NIVEL_REUNIAO_FEITA)
   ) {
@@ -235,10 +237,17 @@ async function sincronizarReuniao(
       .maybeSingle();
 
     if (reuniao) {
+      // No Show = sumiu sem avisar. Reagendamento = avisou antes que ia
+      // precisar remarcar. Nenhum dos dois é "realizada" — só conta como
+      // realizada quem seguiu pra Follow/Oportunidades com a call feita.
       const novoStatus =
-        paraOrdem === NIVEL_NO_SHOW || reuniaoAconteceu === false
+        paraOrdem === NIVEL_NO_SHOW
           ? "nao_compareceu"
-          : "realizada";
+          : paraOrdem === NIVEL_REAGENDAMENTO
+            ? "cancelada"
+            : reuniaoAconteceu === false
+              ? "nao_compareceu"
+              : "realizada";
       const { error } = await supabase
         .from("reunioes")
         .update({ status: novoStatus })
@@ -493,6 +502,18 @@ export async function atualizarLead(
     };
   }
 
+  // Mesma trava do No Show: Reagendamento só existe se veio de "Reunião
+  // marcada" — é a pessoa avisando antes que ia precisar remarcar.
+  if (
+    nivelMudou &&
+    novoNivel === NIVEL_REAGENDAMENTO &&
+    leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA
+  ) {
+    return {
+      erro: `Só dá pra marcar Reagendamento a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`,
+    };
+  }
+
   // "Fiz proposta e não comprou" só faz sentido se a proposta e o perfil
   // do lead já estiverem registrados — senão fica um lead na Base sem
   // nenhum contexto de por que não fechou.
@@ -641,8 +662,8 @@ export async function moverLeadNivel(
   }
 
   // "Oportunidades futuras" é uma coluna sintética (divisão visual dentro
-  // do nível 6, não um nível de verdade) — arrastar pra ela só liga a
-  // marcação `oportunidade_futura`, o nivel_ordem continua 6.
+  // do nível 8, não um nível de verdade) — arrastar pra ela só liga a
+  // marcação `oportunidade_futura`, o nivel_ordem continua 8.
   const querFutura = novoNivel === ORDEM_OPORTUNIDADE_FUTURA;
   const nivelReal = querFutura ? NIVEL_REUNIAO_FEITA : novoNivel;
 
@@ -650,12 +671,17 @@ export async function moverLeadNivel(
     return;
   }
 
-  // No Show só existe se teve reunião marcada antes — mesma trava de
-  // atualizarLead, pra não deixar arrastar o card direto de qualquer
-  // coluna e ficar sem reunião pra sincronizar (Samuel pediu essa regra).
-  if (nivelReal === NIVEL_NO_SHOW && leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA) {
+  // No Show e Reagendamento só existem se teve reunião marcada antes —
+  // mesma trava de atualizarLead, pra não deixar arrastar o card direto de
+  // qualquer coluna e ficar sem reunião pra sincronizar (Samuel pediu essa
+  // regra pro No Show, e ela vale igualzinho pro Reagendamento).
+  if (
+    (nivelReal === NIVEL_NO_SHOW || nivelReal === NIVEL_REAGENDAMENTO) &&
+    leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA
+  ) {
+    const nomeNivel = nivelReal === NIVEL_NO_SHOW ? "No Show" : "Reagendamento";
     throw new Error(
-      `Só dá pra marcar No Show a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`
+      `Só dá pra marcar ${nomeNivel} a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`
     );
   }
 

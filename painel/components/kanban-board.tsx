@@ -10,8 +10,8 @@ import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario
 import { Reuniao } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
-const NIVEL_FOLLOW_POS_REUNIAO = 6;
-const NIVEL_REUNIAO_FEITA = 7;
+const NIVEL_FOLLOW_POS_REUNIAO = 7;
+const NIVEL_REUNIAO_FEITA = 8;
 
 type LeadResumo = {
   id: string;

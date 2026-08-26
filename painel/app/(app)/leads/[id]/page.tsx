@@ -18,6 +18,7 @@ import { Reuniao } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
+const NIVEL_REAGENDAMENTO = 6;
 
 type Lead = {
   id: string;
@@ -307,7 +308,8 @@ export default async function EditarLeadPage({
           ) : (
             podeEditar &&
             leadTipado.nivel_ordem >= NIVEL_REUNIAO_MARCADA &&
-            leadTipado.nivel_ordem !== NIVEL_NO_SHOW && (
+            leadTipado.nivel_ordem !== NIVEL_NO_SHOW &&
+            leadTipado.nivel_ordem !== NIVEL_REAGENDAMENTO && (
               <>
                 <RegistrarPropostaForm
                   leadId={leadTipado.id}
