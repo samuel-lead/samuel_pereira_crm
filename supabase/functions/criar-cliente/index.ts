@@ -82,11 +82,11 @@ function niveisPadrao(publico: string) {
     },
     {
       ordem: 6,
-      nome: "Reagendamentos",
+      nome: "Precisa reagendar",
       definicao: `A ${palavra} estava marcada e o lead avisou antes que ia precisar remarcar (diferente de No Show, que é sumiço sem aviso)`,
       prazo_dias: null,
       destino_ao_estourar: null,
-      etiqueta_wpp: "Reagendamentos",
+      etiqueta_wpp: "Precisa reagendar",
       numerado: false,
       destacado: false,
     },
