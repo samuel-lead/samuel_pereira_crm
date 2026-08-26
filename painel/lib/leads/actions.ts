@@ -660,7 +660,8 @@ export async function atualizarLead(
 export async function moverLeadNivel(
   leadId: string,
   novoNivel: number,
-  agendadaPara?: string | null
+  agendadaPara?: string | null,
+  reuniaoAconteceu?: boolean
 ) {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -713,6 +714,7 @@ export async function moverLeadNivel(
     deOrdem: leadAtual.nivel_ordem,
     paraOrdem: nivelReal,
     agendadaPara,
+    reuniaoAconteceu,
     publicoOrg: usuario.publico_org,
   });
   if (erroReuniao) {

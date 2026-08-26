@@ -7,7 +7,7 @@ import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasUteisDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
-import { Reuniao } from "@/lib/terminologia";
+import { Reuniao, reuniao } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_FOLLOW_POS_REUNIAO = 7;
@@ -28,6 +28,10 @@ type LeadResumo = {
   proposta_valor?: number | null;
   proximo_follow_em?: string | null;
   reuniao_agendada_para?: string | null;
+  // Existe uma reunião anterior ainda "marcada" com a data já passada —
+  // ao arrastar esse lead pra "Reunião marcada" de novo, precisa perguntar
+  // se a pessoa sumiu ou avisou antes de remarcar (ver sincronizarReuniao).
+  temReuniaoAnteriorPendente?: boolean;
 };
 
 function formatarDataHora(iso: string) {
@@ -114,9 +118,13 @@ export function KanbanBoard({
     });
   }
 
-  function aoComecarArrastar(e: React.DragEvent, leadId: string, nivelOrigem: number) {
-    e.dataTransfer.setData("text/plain", leadId);
-    e.dataTransfer.setData("application/x-nivel-origem", String(nivelOrigem));
+  function aoComecarArrastar(e: React.DragEvent, lead: LeadResumo) {
+    e.dataTransfer.setData("text/plain", lead.id);
+    e.dataTransfer.setData("application/x-nivel-origem", String(lead.nivel_ordem));
+    e.dataTransfer.setData(
+      "application/x-reuniao-pendente",
+      lead.temReuniaoAnteriorPendente ? "1" : "0"
+    );
     e.dataTransfer.effectAllowed = "move";
   }
 
@@ -130,28 +138,46 @@ export function KanbanBoard({
     e.preventDefault();
     const leadId = e.dataTransfer.getData("text/plain");
     const nivelOrigem = Number(e.dataTransfer.getData("application/x-nivel-origem"));
+    const temReuniaoPendente = e.dataTransfer.getData("application/x-reuniao-pendente") === "1";
     setColunaAlvo(null);
     if (!leadId) return;
 
     // "Reunião marcada" precisa da data da reunião — manda pra tela de
     // editar em vez de mover na hora, pra usar o seletor de data de verdade.
+    // Se esse lead tem uma reunião anterior esquecida (ainda "marcada",
+    // data já passada), pergunta na hora — um aviso que trava a tela, igual
+    // "Excluir lead" — em vez de deixar a pergunta escondida dentro do
+    // formulário. A resposta vai junto na URL, pra tela nem perguntar de novo.
     if (ordem === NIVEL_REUNIAO_MARCADA) {
+      if (temReuniaoPendente) {
+        const sumiu = window.confirm(
+          `Esse lead tem uma ${reuniao(publicoOrg)} anterior marcada que já passou da data.\n\nOK = a pessoa sumiu, não avisou nada.\nCancelar = ela avisou antes que precisava remarcar.`
+        );
+        router.push(`/leads/${leadId}?marcarReuniao=1&reuniaoAnteriorSumiu=${sumiu ? "sim" : "nao"}`);
+        return;
+      }
       router.push(`/leads/${leadId}?marcarReuniao=1`);
       return;
     }
 
     // Saindo de "Reunião marcada" pra "Follow após reunião" ou
     // "Oportunidades": precisa confirmar se a reunião realmente aconteceu —
-    // senão conta errado na taxa de comparecimento. Manda pra tela de
-    // editar, igual "Reunião marcada" acima.
+    // senão conta errado na taxa de comparecimento. Pergunta na hora com um
+    // aviso que trava a tela (igual "Excluir lead"), em vez de abrir o card
+    // e a pessoa ter que achar a caixinha lá dentro.
     if (
       nivelOrigem === NIVEL_REUNIAO_MARCADA &&
       (ordem === NIVEL_FOLLOW_POS_REUNIAO ||
         ordem === NIVEL_REUNIAO_FEITA ||
         ordem === ORDEM_OPORTUNIDADE_FUTURA)
     ) {
-      const alvo = ordem === ORDEM_OPORTUNIDADE_FUTURA ? "oportunidade_futura" : String(ordem);
-      router.push(`/leads/${leadId}?confirmarReuniao=${alvo}`);
+      const aconteceu = window.confirm(`Essa ${reuniao(publicoOrg)} realmente aconteceu?`);
+      iniciarTransicao(() => {
+        moverLeadNivel(leadId, ordem, undefined, aconteceu).catch((erro: unknown) => {
+          const mensagem = erro instanceof Error ? erro.message : "Não deu pra mover o lead";
+          alert(mensagem);
+        });
+      });
       return;
     }
 
@@ -249,7 +275,7 @@ export function KanbanBoard({
                           if (e.key === "Enter") router.push(`/leads/${lead.id}`);
                         }}
                         draggable={arrastavel}
-                        onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead.id, lead.nivel_ordem)}
+                        onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead)}
                         title={
                           arrastavel
                             ? atrasado

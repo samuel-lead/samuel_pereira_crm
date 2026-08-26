@@ -101,10 +101,13 @@ export default async function EditarLeadPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ marcarReuniao?: string; confirmarReuniao?: string }>;
+  searchParams: Promise<{
+    marcarReuniao?: string;
+    reuniaoAnteriorSumiu?: string;
+  }>;
 }) {
   const { id } = await params;
-  const { marcarReuniao, confirmarReuniao } = await searchParams;
+  const { marcarReuniao, reuniaoAnteriorSumiu } = await searchParams;
   const supabase = await createClient();
   const { user, usuario: usuarioAtual } = await usuarioAutenticado();
 
@@ -239,8 +242,12 @@ export default async function EditarLeadPage({
             souAdmin={souAdmin}
             podeEditar={podeEditar}
             preSelecionarReuniao={marcarReuniao === "1"}
-            preSelecionarNivel={confirmarReuniao}
             reuniaoAnteriorPendente={reuniaoAnteriorPendente}
+            reuniaoAnteriorSumiuPredefinido={
+              reuniaoAnteriorSumiu === "sim" || reuniaoAnteriorSumiu === "nao"
+                ? reuniaoAnteriorSumiu
+                : undefined
+            }
             publicoOrg={publicoOrg}
           />
         </div>

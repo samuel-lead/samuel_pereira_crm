@@ -63,8 +63,8 @@ export function EditarLeadForm({
   souAdmin = true,
   podeEditar = true,
   preSelecionarReuniao = false,
-  preSelecionarNivel,
   reuniaoAnteriorPendente = false,
+  reuniaoAnteriorSumiuPredefinido,
   publicoOrg = "mentoria",
 }: {
   lead: Lead;
@@ -76,26 +76,19 @@ export function EditarLeadForm({
   podeEditar?: boolean;
   preSelecionarReuniao?: boolean;
   publicoOrg?: string;
-  // Veio do drag-and-drop no Kanban (saindo de "Reunião marcada" pra
-  // "Follow após reunião"/"Oportunidades"): já chega com o nível de
-  // destino escolhido, só falta confirmar se a reunião aconteceu.
-  preSelecionarNivel?: string;
   // Existe uma reunião anterior ainda "marcada" com a data já passada —
   // precisa perguntar se a pessoa sumiu ou avisou antes de remarcar.
   reuniaoAnteriorPendente?: boolean;
+  // Veio do aviso que já apareceu no Kanban na hora de arrastar o card —
+  // a resposta já está definida, não precisa perguntar de novo aqui dentro.
+  reuniaoAnteriorSumiuPredefinido?: "sim" | "nao";
 }) {
   const acaoComId = atualizarLead.bind(null, lead.id);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [nivelSelecionado, setNivelSelecionado] = useState(
-    preSelecionarReuniao
-      ? NIVEL_REUNIAO_MARCADA
-      : preSelecionarNivel === OPCAO_OPORTUNIDADE_FUTURA
-        ? NIVEL_OPORTUNIDADES
-        : preSelecionarNivel ?? String(lead.nivel_ordem)
+    preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
   );
-  const [oportunidadeFutura, setOportunidadeFutura] = useState(
-    preSelecionarNivel === OPCAO_OPORTUNIDADE_FUTURA ? true : lead.oportunidade_futura
-  );
+  const [oportunidadeFutura, setOportunidadeFutura] = useState(lead.oportunidade_futura);
   const [reuniaoAconteceu, setReuniaoAconteceu] = useState("");
   const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
   const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
@@ -307,7 +300,22 @@ export function EditarLeadForm({
                 />
               </div>
 
-              {reuniaoAnteriorPendente && (
+              {reuniaoAnteriorPendente && reuniaoAnteriorSumiuPredefinido && (
+                <>
+                  <input
+                    type="hidden"
+                    name="reuniao_anterior_sumiu"
+                    value={reuniaoAnteriorSumiuPredefinido}
+                  />
+                  <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+                    {reuniaoAnteriorSumiuPredefinido === "sim"
+                      ? "Você já confirmou no aviso: a pessoa sumiu, não avisou nada."
+                      : "Você já confirmou no aviso: ela avisou antes que precisava remarcar."}
+                  </p>
+                </>
+              )}
+
+              {reuniaoAnteriorPendente && !reuniaoAnteriorSumiuPredefinido && (
                 <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
                   <p className="text-sm font-medium text-amber-800">
                     Esse lead tem uma {reuniao(publicoOrg)} anterior marcada que já

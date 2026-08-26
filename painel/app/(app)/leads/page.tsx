@@ -171,6 +171,18 @@ export default async function LeadsPage({
       : consulta.eq("usuario_id", user!.id);
   }
 
+  // Reuniões ainda "marcada" com a data já passada — ao arrastar esse lead
+  // de volta pra "Reunião marcada", o Kanban precisa saber pra perguntar na
+  // hora (aviso) se a pessoa sumiu ou avisou antes de remarcar.
+  const consultaReuniaoAnteriorPendente = orgId
+    ? supabase
+        .from("reunioes")
+        .select("lead_id")
+        .eq("org_id", orgId)
+        .eq("status", "marcada")
+        .lt("agendada_para", agora.toISOString())
+    : null;
+
   const [
     { count: ligacoesHoje },
     { count: callsMarcadasHoje },
@@ -178,7 +190,8 @@ export default async function LeadsPage({
     { count: callsRealizadasHoje },
     { count: noShowHoje },
     [receitaOrgMes, metaReceita],
-    leadsComAtividade,
+    leadsComAtividadeBase,
+    { data: reunioesAnterioresPendentesData },
   ] = await Promise.all([
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
     consultaCallsMarcadasHoje ? filtrarPorEscopo(consultaCallsMarcadasHoje) : { count: null },
@@ -192,7 +205,16 @@ export default async function LeadsPage({
         ])
       : Promise.resolve([null, null] as const),
     anexarUltimaAtividade(supabase, leads),
+    consultaReuniaoAnteriorPendente ?? Promise.resolve({ data: null }),
   ]);
+
+  const leadsComReuniaoPendente = new Set(
+    (reunioesAnterioresPendentesData ?? []).map((r) => r.lead_id)
+  );
+  const leadsComAtividade = leadsComAtividadeBase.map((lead) => ({
+    ...lead,
+    temReuniaoAnteriorPendente: leadsComReuniaoPendente.has(lead.id),
+  }));
 
   // Mesmo critério do selo vermelho "Xd parado" de cada card. Lead com
   // próximo contato marcado (e ainda não vencido) não conta — já tem
