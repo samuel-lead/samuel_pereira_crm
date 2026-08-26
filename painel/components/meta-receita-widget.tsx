@@ -174,36 +174,41 @@ export function MetaReceitaWidget({
           </button>
         )}
       </div>
-      <div className="mb-1 flex items-baseline justify-between text-sm">
-        <span className="text-neutral-600">
-          Recebido{" "}
-          <span className="font-bold text-neutral-900">{formatarMoeda(receitaAtual)}</span>
-        </span>
-        <span className="text-neutral-600">
-          Meta <span className="font-bold text-neutral-900">{formatarMoeda(meta)}</span>
-        </span>
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Recebido
+          </p>
+          <p className="text-4xl font-black tracking-tight text-neutral-900 tabular-nums">
+            {formatarMoeda(receitaAtual)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Meta
+          </p>
+          <p className="text-lg font-bold text-neutral-500 tabular-nums">
+            {formatarMoeda(meta)}
+          </p>
+        </div>
       </div>
-      <div className="relative h-6 w-full">
+      <div className="relative h-3 w-full">
         <div className="h-full w-full overflow-hidden rounded-full bg-neutral-100">
           <div
-            className={`flex h-full items-center justify-end rounded-full pr-2 transition-all ${
-              bateu ? "bg-green-500" : "bg-blue-500"
+            className={`h-full rounded-full transition-all ${
+              bateu
+                ? "bg-gradient-to-r from-green-500 to-green-400"
+                : "bg-gradient-to-r from-blue-600 to-blue-400"
             }`}
-            style={{ width: `${pct}%` }}
-          >
-            {pct >= 12 && (
-              <span className="text-[11px] font-bold text-white">{pct}%</span>
-            )}
-          </div>
+            style={{ width: `${Math.max(pct, 3)}%` }}
+          />
         </div>
-        {pct < 12 && (
-          <span
-            className="absolute top-1/2 -translate-y-1/2 text-[11px] font-bold text-neutral-500"
-            style={{ left: `calc(${pct}% + 6px)` }}
-          >
-            {pct}%
-          </span>
-        )}
+        <span
+          className="absolute -top-5 -translate-x-1/2 text-[11px] font-bold text-neutral-500"
+          style={{ left: `${Math.min(Math.max(pct, 4), 96)}%` }}
+        >
+          {pct}%
+        </span>
       </div>
       <p className="mt-2 text-sm">
         {bateu ? (
