@@ -510,7 +510,7 @@ export async function atualizarLead(
     leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA
   ) {
     return {
-      erro: `Só dá pra marcar Reagendamento a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`,
+      erro: `Só dá pra marcar Reagendamentos a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`,
     };
   }
 
@@ -679,7 +679,7 @@ export async function moverLeadNivel(
     (nivelReal === NIVEL_NO_SHOW || nivelReal === NIVEL_REAGENDAMENTO) &&
     leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA
   ) {
-    const nomeNivel = nivelReal === NIVEL_NO_SHOW ? "No Show" : "Reagendamento";
+    const nomeNivel = nivelReal === NIVEL_NO_SHOW ? "No Show" : "Reagendamentos";
     throw new Error(
       `Só dá pra marcar ${nomeNivel} a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`
     );
