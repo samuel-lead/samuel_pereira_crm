@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { criarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
@@ -19,6 +19,8 @@ export function NovoLeadForm({
   souAdmin?: boolean;
 }) {
   const [estado, acaoFormulario, pendente] = useActionState(criarLead, estadoInicial);
+  const [origemAtual, setOrigemAtual] = useState("");
+  const ehIndicacao = origemAtual.toLowerCase().includes("indica");
 
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
@@ -81,8 +83,26 @@ export function NovoLeadForm({
           <label className="text-sm font-medium text-neutral-700">
             Origem
           </label>
-          <OrigemSelect origens={origens} />
+          <OrigemSelect origens={origens} onChange={setOrigemAtual} />
         </div>
+
+        {ehIndicacao && (
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-neutral-700" htmlFor="quem_indicou">
+              Quem indicou?
+            </label>
+            <textarea
+              id="quem_indicou"
+              name="quem_indicou"
+              rows={3}
+              placeholder="Nome de quem indicou, características, se já é cliente..."
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+            <p className="text-xs text-neutral-400">
+              Isso vai ficar registrado nas notas do lead.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-1">
           <label className="text-sm font-medium text-neutral-700" htmlFor="responsavel_id">

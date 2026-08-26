@@ -281,6 +281,7 @@ export async function criarLead(
   const telefoneDigitado = String(formData.get("telefone") ?? "").trim();
   const telefone = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
+  const quemIndicou = String(formData.get("quem_indicou") ?? "").trim();
   const responsavelId =
     usuario.papel === "admin"
       ? String(formData.get("responsavel_id") ?? "").trim() || null
@@ -290,20 +291,40 @@ export async function criarLead(
     return { erro: "Nome é obrigatório" };
   }
 
-  const { error } = await supabase.from("leads").insert({
-    org_id: usuario.org_id,
-    usuario_id: usuario.id,
-    nome,
-    telefone_e164: telefone,
-    origem,
-    responsavel_id: responsavelId,
-  });
+  const { data: novoLead, error } = await supabase
+    .from("leads")
+    .insert({
+      org_id: usuario.org_id,
+      usuario_id: usuario.id,
+      nome,
+      telefone_e164: telefone,
+      origem,
+      responsavel_id: responsavelId,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     return { erro: mensagemAmigavel(error.code, error.message) };
   }
 
   await garantirOrigem(supabase, usuario.org_id, origem);
+
+  // Origem "Indicação" (qualquer variante) + campo preenchido: grava quem
+  // indicou direto nas notas do lead, pra não perder esse contexto solto
+  // numa conversa por fora — mesma regra que já existe em atualizarLead.
+  if (origem && origem.toLowerCase().includes("indica") && quemIndicou) {
+    await supabase.from("interacoes").insert({
+      org_id: usuario.org_id,
+      usuario_id: usuario.id,
+      lead_id: novoLead.id,
+      tipo: "nota",
+      canal: "manual",
+      conteudo: `Indicação — quem indicou: ${quemIndicou}`,
+      ocorreu_em: new Date().toISOString(),
+      origem: "declarado",
+    });
+  }
 
   revalidatePath("/leads");
   redirect("/leads");
