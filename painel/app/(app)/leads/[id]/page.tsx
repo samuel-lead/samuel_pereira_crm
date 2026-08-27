@@ -64,6 +64,16 @@ type Reuniao = {
   reagendada: boolean;
 };
 
+type NivelHistorico = {
+  id: string;
+  de_ordem: number;
+  para_ordem: number;
+  motivo: string | null;
+  automatico: boolean;
+  usuario_id: string | null;
+  ocorreu_em: string;
+};
+
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 
@@ -116,6 +126,7 @@ export default async function EditarLeadPage({
     { data: niveisData },
     { data: interacoesData },
     { data: reunioesData },
+    { data: nivelHistoricoData },
     { data: usuariosData },
     { data: origensData },
     { data: produtosData },
@@ -139,6 +150,11 @@ export default async function EditarLeadPage({
       .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id, reagendada")
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
+    supabase
+      .from("nivel_historico")
+      .select("id, de_ordem, para_ordem, motivo, automatico, usuario_id, ocorreu_em")
+      .eq("lead_id", id)
+      .order("ocorreu_em", { ascending: false }),
     supabase.from("usuarios").select("id, nome, funcao").order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
@@ -152,6 +168,8 @@ export default async function EditarLeadPage({
   const niveis = (niveisData ?? []) as NivelResumo[];
   const interacoes = (interacoesData ?? []) as Interacao[];
   const reunioes = (reunioesData ?? []) as Reuniao[];
+  const nivelHistorico = (nivelHistoricoData ?? []) as NivelHistorico[];
+  const nomePorOrdem = new Map(niveis.map((n) => [n.ordem, n.nome]));
   const usuarios = usuariosData ?? [];
   const origens = origensData ?? [];
   const produtos = (produtosData ?? []).map((p) => p.nome);
@@ -351,7 +369,7 @@ export default async function EditarLeadPage({
               Linha do tempo
             </h2>
 
-            {interacoes.length === 0 && reunioes.length === 0 ? (
+            {interacoes.length === 0 && reunioes.length === 0 && nivelHistorico.length === 0 ? (
               <p className="rounded-md border border-dashed border-neutral-300 px-3 py-6 text-center text-xs text-neutral-400">
                 Nada registrado ainda
               </p>
@@ -403,6 +421,22 @@ export default async function EditarLeadPage({
                         interacaoId={interacao.id}
                       />
                     )}
+                  </li>
+                ))}
+                {nivelHistorico.map((h) => (
+                  <li key={`nivel-${h.id}`} className="border-l-2 border-blue-300 pl-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+                      Nível · {h.automatico ? "Automático" : "Manual"}
+                    </p>
+                    <p className="text-sm text-neutral-700">
+                      {nomePorOrdem.get(h.de_ordem) ?? h.de_ordem} →{" "}
+                      {nomePorOrdem.get(h.para_ordem) ?? h.para_ordem}
+                    </p>
+                    <p className="text-xs text-neutral-400">
+                      {formatarData(h.ocorreu_em)}
+                      {h.usuario_id &&
+                        ` · ${usuarios.find((u) => u.id === h.usuario_id)?.nome ?? "—"}`}
+                    </p>
                   </li>
                 ))}
               </ul>

@@ -653,6 +653,7 @@ export async function atualizarLead(
         para_ordem: novoNivel,
         motivo: "Editado manualmente no painel",
         automatico: false,
+        usuario_id: usuario.id,
       });
 
     if (erroHistorico) {
@@ -751,6 +752,7 @@ export async function moverLeadNivel(
     para_ordem: nivelReal,
     motivo: "Arrastado no Kanban",
     automatico: false,
+    usuario_id: usuario.id,
   });
 
   if (erroHistorico) {
