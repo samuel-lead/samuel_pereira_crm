@@ -34,6 +34,17 @@ type LeadResumo = {
   temReuniaoAnteriorPendente?: boolean;
 };
 
+// Nomes de nível tipo "No Show (Marcou reunião e sumiu)" não cabem
+// inteiros na coluna do Kanban — separa o "(...)" pra mostrar bem menor
+// embaixo do nome principal, em vez de cortar tudo com "...".
+function separarExplicacao(nome: string): { titulo: string; explicacao: string | null } {
+  const indice = nome.indexOf(" (");
+  if (indice === -1 || !nome.endsWith(")")) {
+    return { titulo: nome, explicacao: null };
+  }
+  return { titulo: nome.slice(0, indice), explicacao: nome.slice(indice + 1) };
+}
+
 function formatarDataHora(iso: string) {
   // Sem timeZone explícito, o servidor formata no fuso dele (UTC na
   // Vercel), não no do Brasil — todo mundo aqui é do Brasil, fixa o fuso.
@@ -225,13 +236,23 @@ export function KanbanBoard({
               >
                 <div className="shrink-0 rounded-t-xl border-b border-neutral-100 bg-white px-4 py-3">
                   <div className={`mb-1.5 h-[3px] w-6 rounded-full ${cor.faixa}`} />
-                  <h2
-                    title={nivel.nome}
-                    className="truncate text-sm font-semibold text-neutral-900"
-                  >
-                    {numeroVisivel ? `N${numeroVisivel} - ` : ""}
-                    {nivel.nome}
-                  </h2>
+                  {(() => {
+                    const { titulo, explicacao } = separarExplicacao(nivel.nome);
+                    return (
+                      <h2
+                        title={nivel.nome}
+                        className="truncate text-sm font-semibold text-neutral-900"
+                      >
+                        {numeroVisivel ? `N${numeroVisivel} - ` : ""}
+                        {titulo}
+                        {explicacao && (
+                          <span className="ml-1 text-[10px] font-normal text-neutral-400">
+                            {explicacao}
+                          </span>
+                        )}
+                      </h2>
+                    );
+                  })()}
                   <p className="mt-0.5 truncate text-xs text-neutral-400">
                     {mostrarValor &&
                       leadsDoNivel.length > 0 &&
