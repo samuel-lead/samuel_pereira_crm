@@ -8,6 +8,7 @@ import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasUteisDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
 import { Reuniao, reuniao } from "@/lib/terminologia";
+import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_FOLLOW_POS_REUNIAO = 7;
@@ -109,6 +110,7 @@ export function KanbanBoard({
   const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
   const [, iniciarTransicao] = useTransition();
   const nomePorUsuario = new Map(usuarios.map((u) => [u.id, u.nome]));
+  const { perguntar, modal: modalConfirmacao } = useConfirmacaoTravaTela();
 
   function podeArrastar(lead: LeadResumo) {
     return souAdmin || lead.responsavel_id === usuarioAtualId;
@@ -145,7 +147,7 @@ export function KanbanBoard({
     if (colunaAlvo !== ordem) setColunaAlvo(ordem);
   }
 
-  function aoSoltarNaColuna(e: React.DragEvent, ordem: number) {
+  async function aoSoltarNaColuna(e: React.DragEvent, ordem: number) {
     e.preventDefault();
     const leadId = e.dataTransfer.getData("text/plain");
     const nivelOrigem = Number(e.dataTransfer.getData("application/x-nivel-origem"));
@@ -161,8 +163,10 @@ export function KanbanBoard({
     // formulário. A resposta vai junto na URL, pra tela nem perguntar de novo.
     if (ordem === NIVEL_REUNIAO_MARCADA) {
       if (temReuniaoPendente) {
-        const sumiu = window.confirm(
-          `Esse lead tem uma ${reuniao(publicoOrg)} anterior marcada que já passou da data.\n\nOK = a pessoa sumiu, não avisou nada.\nCancelar = ela avisou antes que precisava remarcar.`
+        const sumiu = await perguntar(
+          `Esse lead tem uma ${reuniao(publicoOrg)} anterior marcada que já passou da data. O que aconteceu?`,
+          "Sumiu, não avisou nada",
+          "Avisou antes"
         );
         router.push(`/leads/${leadId}?marcarReuniao=1&reuniaoAnteriorSumiu=${sumiu ? "sim" : "nao"}`);
         return;
@@ -182,7 +186,7 @@ export function KanbanBoard({
         ordem === NIVEL_REUNIAO_FEITA ||
         ordem === ORDEM_OPORTUNIDADE_FUTURA)
     ) {
-      const aconteceu = window.confirm(`Essa ${reuniao(publicoOrg)} realmente aconteceu?`);
+      const aconteceu = await perguntar(`Essa ${reuniao(publicoOrg)} realmente aconteceu?`);
       if (!aconteceu) return;
       iniciarTransicao(() => {
         moverLeadNivel(leadId, ordem, undefined, true).catch((erro: unknown) => {
@@ -438,6 +442,7 @@ export function KanbanBoard({
           ›
         </button>
       </div>
+      {modalConfirmacao}
     </div>
   );
 }
