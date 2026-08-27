@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, ORDEM_OPORTUNIDADE_FUTURA, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
@@ -111,6 +111,30 @@ export function KanbanBoard({
   const [, iniciarTransicao] = useTransition();
   const nomePorUsuario = new Map(usuarios.map((u) => [u.id, u.nome]));
   const { perguntar, modal: modalConfirmacao } = useConfirmacaoTravaTela();
+  const idRoladoRef = useRef<string | null>(null);
+
+  // Busca achou um lead só: rola a tela sozinha até a coluna dele, senão a
+  // pessoa acha que sumiu (a coluna pode estar fora da área visível e
+  // precisa arrastar pro lado pra ver). Com mais de um resultado, não
+  // mexe — não tem como saber qual mostrar primeiro.
+  useEffect(() => {
+    const todosLeads = Object.values(leadsPorNivel).flat();
+    if (todosLeads.length !== 1) {
+      idRoladoRef.current = null;
+      return;
+    }
+    const [unico] = todosLeads;
+    if (idRoladoRef.current === unico.id) return;
+    idRoladoRef.current = unico.id;
+
+    const coluna = scrollRef.current?.querySelector(
+      `[data-nivel-ordem="${unico.nivel_ordem}"]`
+    );
+    // "instant" em vez de "smooth" — a animação suave era interrompida no
+    // meio do caminho (provavelmente por outro re-render logo em seguida),
+    // deixando a coluna só parcialmente visível.
+    coluna?.scrollIntoView({ behavior: "instant", inline: "center", block: "nearest" });
+  }, [leadsPorNivel]);
 
   function podeArrastar(lead: LeadResumo) {
     return souAdmin || lead.responsavel_id === usuarioAtualId;
@@ -230,6 +254,7 @@ export function KanbanBoard({
             return (
               <section
                 key={nivel.ordem}
+                data-nivel-ordem={nivel.ordem}
                 onDragOver={(e) => aoPassarSobreColuna(e, nivel.ordem)}
                 onDragLeave={() => setColunaAlvo((atual) => (atual === nivel.ordem ? null : atual))}
                 onDrop={(e) => aoSoltarNaColuna(e, nivel.ordem)}
