@@ -5,7 +5,7 @@ import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
-import { reuniao } from "@/lib/terminologia";
+import { reuniao, Reuniao } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = "4";
 const NIVEL_FOLLOW_POS_REUNIAO = "7";
@@ -382,8 +382,8 @@ export function EditarLeadForm({
                 </label>
               </div>
               <p className="text-xs text-amber-700">
-                Se marcar &quot;Não&quot;, essa {reuniao(publicoOrg)} não conta na taxa de
-                comparecimento — mesmo o lead seguindo pro nível escolhido.
+                Se marcar &quot;Não&quot;, o lead continua em &quot;{Reuniao(publicoOrg)} marcada&quot;
+                — mova pra &quot;No-show&quot; ou &quot;Precisa reagendar&quot; se for o caso.
               </p>
             </div>
           )}

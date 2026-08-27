@@ -555,16 +555,24 @@ export async function atualizarLead(
   }
 
   // Saindo de "Reunião marcada" pra "Follow após reunião" ou
-  // "Oportunidades": confirma se a reunião realmente aconteceu, senão a
-  // taxa de comparecimento conta reunião que nunca rolou.
+  // "Oportunidades": só faz sentido se a reunião realmente aconteceu.
+  // "Não" cancela o movimento inteiro — o lead continua em "Reunião
+  // marcada" (mesma regra do drag-and-drop no Kanban); só "Sim" deixa
+  // seguir. Sem isso a taxa de comparecimento contava reunião que nunca
+  // rolou.
   if (
     nivelMudou &&
     leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA &&
-    (novoNivel === NIVEL_FOLLOW_POS_REUNIAO || novoNivel === NIVEL_REUNIAO_FEITA) &&
-    reuniaoAconteceuForm !== "sim" &&
-    reuniaoAconteceuForm !== "nao"
+    (novoNivel === NIVEL_FOLLOW_POS_REUNIAO || novoNivel === NIVEL_REUNIAO_FEITA)
   ) {
-    return { erro: `Confirme se essa ${reuniao(usuario.publico_org)} realmente aconteceu.` };
+    if (reuniaoAconteceuForm !== "sim" && reuniaoAconteceuForm !== "nao") {
+      return { erro: `Confirme se essa ${reuniao(usuario.publico_org)} realmente aconteceu.` };
+    }
+    if (reuniaoAconteceuForm === "nao") {
+      return {
+        erro: `Como a ${reuniao(usuario.publico_org)} não aconteceu, o lead continua em "${Reuniao(usuario.publico_org)} marcada". Mova pra "No-show" ou "Precisa reagendar" se for o caso.`,
+      };
+    }
   }
 
   const motivoBase = novoNivel === NIVEL_BASE ? motivoBaseForm ?? leadAtual.motivo_base : null;

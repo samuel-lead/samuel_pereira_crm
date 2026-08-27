@@ -172,10 +172,10 @@ export function KanbanBoard({
     }
 
     // Saindo de "Reunião marcada" pra "Follow após reunião" ou
-    // "Oportunidades": precisa confirmar se a reunião realmente aconteceu —
-    // senão conta errado na taxa de comparecimento. Pergunta na hora com um
-    // aviso que trava a tela (igual "Excluir lead"), em vez de abrir o card
-    // e a pessoa ter que achar a caixinha lá dentro.
+    // "Oportunidades": só faz sentido se a reunião realmente aconteceu.
+    // Pergunta na hora com um aviso que trava a tela (igual "Excluir
+    // lead") — "Não" cancela o movimento inteiro (o lead continua em
+    // "Reunião marcada", nada é salvo); só "Sim" deixa o card avançar.
     if (
       nivelOrigem === NIVEL_REUNIAO_MARCADA &&
       (ordem === NIVEL_FOLLOW_POS_REUNIAO ||
@@ -183,8 +183,9 @@ export function KanbanBoard({
         ordem === ORDEM_OPORTUNIDADE_FUTURA)
     ) {
       const aconteceu = window.confirm(`Essa ${reuniao(publicoOrg)} realmente aconteceu?`);
+      if (!aconteceu) return;
       iniciarTransicao(() => {
-        moverLeadNivel(leadId, ordem, undefined, aconteceu).catch((erro: unknown) => {
+        moverLeadNivel(leadId, ordem, undefined, true).catch((erro: unknown) => {
           const mensagem = erro instanceof Error ? erro.message : "Não deu pra mover o lead";
           alert(mensagem);
         });
