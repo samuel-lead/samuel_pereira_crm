@@ -20,7 +20,13 @@ export function SinoNotificacoes() {
   const [aberto, setAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const jaNotificadasRef = useRef<Set<string> | null>(null);
+  // Começa como conjunto vazio (não null) de propósito: se começasse null,
+  // a primeira carga (quando a pessoa abre o CRM) só preenchia essa lista
+  // em silêncio, sem disparar nenhuma notificação — quem já estava
+  // atrasado ANTES da pessoa abrir o CRM nunca gerava aviso, só aparecia
+  // escondido no sininho. Com conjunto vazio, a primeira carga já conta
+  // tudo que existe como "novo" e avisa.
+  const jaNotificadasRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
@@ -39,14 +45,12 @@ export function SinoNotificacoes() {
 
       const chaves = new Set(lista.map((n) => `${n.tipo}-${n.lead_id}`));
 
-      if (jaNotificadasRef.current) {
-        const novas = lista.filter(
-          (n) => !jaNotificadasRef.current!.has(`${n.tipo}-${n.lead_id}`)
-        );
-        if (novas.length > 0 && typeof Notification !== "undefined" && Notification.permission === "granted") {
-          for (const n of novas) {
-            new Notification("Meu Vendedor", { body: n.mensagem });
-          }
+      const novas = lista.filter(
+        (n) => !jaNotificadasRef.current.has(`${n.tipo}-${n.lead_id}`)
+      );
+      if (novas.length > 0 && typeof Notification !== "undefined" && Notification.permission === "granted") {
+        for (const n of novas) {
+          new Notification("Meu Vendedor", { body: n.mensagem });
         }
       }
       jaNotificadasRef.current = chaves;
