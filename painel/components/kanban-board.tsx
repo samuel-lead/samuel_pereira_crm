@@ -246,9 +246,12 @@ export function KanbanBoard({
                         {numeroVisivel ? `N${numeroVisivel} - ` : ""}
                         {titulo}
                         {explicacao && (
-                          <span className="ml-1 text-[10px] font-normal text-neutral-400">
-                            {explicacao}
-                          </span>
+                          <>
+                            {" "}
+                            <span className="text-[10px] font-normal text-neutral-400">
+                              {explicacao}
+                            </span>
+                          </>
                         )}
                       </h2>
                     );

@@ -82,11 +82,11 @@ function niveisPadrao(publico: string) {
     },
     {
       ordem: 6,
-      nome: `Precisa reagendar (Marcou ${palavra} e pediu para trocar horário)`,
+      nome: "Precisa reagendar (Pediu para reagendar)",
       definicao: `A ${palavra} estava marcada e o lead avisou antes que ia precisar remarcar (diferente de No-show, que é sumiço sem aviso)`,
       prazo_dias: null,
       destino_ao_estourar: null,
-      etiqueta_wpp: `Precisa reagendar (Marcou ${palavra} e pediu para trocar horário)`,
+      etiqueta_wpp: "Precisa reagendar (Pediu para reagendar)",
       numerado: false,
       destacado: false,
     },
