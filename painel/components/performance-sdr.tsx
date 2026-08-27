@@ -40,7 +40,7 @@ export function PerformanceSdr({
           <thead>
             <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
               <th className="px-3 py-2 text-left font-medium">SDR</th>
-              <th className="w-28 px-3 py-2 text-center font-medium">Leads</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">Leads Novos</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Ligações</th>
               <th className="w-28 px-3 py-2 text-center font-medium">{Calls(publicoOrg)} marcadas</th>
               <th className="w-28 px-3 py-2 text-center font-medium">{Calls(publicoOrg)} realizadas</th>
