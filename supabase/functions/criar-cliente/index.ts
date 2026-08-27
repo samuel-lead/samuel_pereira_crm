@@ -21,11 +21,11 @@ function niveisPadrao(publico: string) {
   return [
     {
       ordem: 0,
-      nome: "Leads",
+      nome: "Novos Leads",
       definicao: "Lead cadastrado, ainda não abordado (nenhuma mensagem enviada)",
       prazo_dias: null,
       destino_ao_estourar: null,
-      etiqueta_wpp: "Leads",
+      etiqueta_wpp: "Novos Leads",
       numerado: false,
       destacado: true,
     },
