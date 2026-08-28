@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { LinkLead } from "@/components/link-lead";
 import { corDoNivel, numerarNiveis, rotuloNivel, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
 import { parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
 
@@ -181,12 +182,12 @@ export default async function ListaLeadsPage({
                   return (
                     <tr key={lead.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
                       <td className="px-4 py-3">
-                        <Link
-                          href={`/leads/${lead.id}`}
+                        <LinkLead
+                          leadId={lead.id}
                           className="font-medium text-neutral-900 hover:underline"
                         >
                           {lead.nome}
-                        </Link>
+                        </LinkLead>
                       </td>
                       <td className="px-4 py-3 text-neutral-600">
                         {lead.telefone_e164 ?? "—"}

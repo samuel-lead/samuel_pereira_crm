@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { IconeWhatsapp } from "@/components/icons";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
+import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 
 export type LeadBase = {
   id: string;
@@ -66,7 +66,7 @@ export function BaseLeadsBoard({
   leadsPorMotivo: Record<MotivoBase, LeadBase[]>;
   nomePorUsuario: Map<string, string>;
 }) {
-  const router = useRouter();
+  const abrirLead = useAbrirLeadModal();
 
   return (
     <div className="relative h-full min-h-0 flex-1">
@@ -100,9 +100,9 @@ export function BaseLeadsBoard({
                     key={lead.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => router.push(`/leads/${lead.id}`)}
+                    onClick={() => abrirLead(lead.id)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") router.push(`/leads/${lead.id}`);
+                      if (e.key === "Enter") abrirLead(lead.id);
                     }}
                     className="kanban-card group block cursor-pointer rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg"
                   >

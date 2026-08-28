@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { registrarLigacao } from "@/lib/leads/actions";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 export function RegistrarLigacaoButton({ leadId }: { leadId: string }) {
+  const modalAtivo = useLeadModalAtivo();
   const [erro, setErro] = useState<string | null>(null);
   const [registrado, setRegistrado] = useState<"atendida" | "nao_atendida" | null>(null);
   const [aberto, setAberto] = useState(false);
@@ -26,6 +28,7 @@ export function RegistrarLigacaoButton({ leadId }: { leadId: string }) {
     iniciarTransicao(async () => {
       try {
         await registrarLigacao(leadId, atendida);
+        modalAtivo?.recarregar();
         // Fica "travado" mais um instante depois de registrar — sem isso o
         // botão volta ao normal rápido demais e o SDR clica de novo achando
         // que não registrou, criando ligação duplicada.

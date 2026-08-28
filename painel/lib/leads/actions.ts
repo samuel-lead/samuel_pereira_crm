@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
-import { ORDEM_OPORTUNIDADE_FUTURA } from "@/lib/niveis";
+import { ORDEM_OPORTUNIDADE_FUTURA, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
 import { reuniao, Reuniao } from "@/lib/terminologia";
@@ -417,8 +417,14 @@ export async function importarLeads(
   return { erro: null, criados, duplicados, invalidos, total: linhas.length };
 }
 
+// redirecionar=true (página cheia) volta pra /leads como sempre foi.
+// redirecionar=false (dentro do pop-up) não pode fazer isso — a pessoa
+// pode estar em qualquer tela; quem atualiza a tela nesse caso é o
+// próprio formulário no cliente, chamando recarregar() (ver
+// components/editar-lead-form.tsx e components/contexto-lead-modal.tsx).
 export async function atualizarLead(
   leadId: string,
+  redirecionar: boolean,
   _estadoAnterior: EstadoFormulario,
   formData: FormData
 ): Promise<EstadoFormulario> {
@@ -663,6 +669,11 @@ export async function atualizarLead(
 
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);
+
+  if (!redirecionar) {
+    return { erro: null };
+  }
+
   redirect("/leads");
 }
 
@@ -1119,8 +1130,14 @@ export async function excluirInteracao(leadId: string, interacaoId: string) {
   revalidatePath(`/leads/${leadId}`);
 }
 
+// redirecionar=true (página cheia, link direto) manda de volta pra /leads
+// como sempre foi. redirecionar=false (dentro do pop-up) não pode fazer
+// isso — a pessoa pode estar em qualquer tela (Reuniões, Atividades...),
+// não só em /leads; quem fecha o pop-up nesse caso é o próprio botão no
+// cliente (ver components/excluir-lead-button.tsx).
 export async function arquivarLead(
   leadId: string,
+  redirecionar: boolean,
   _estadoAnterior: EstadoFormulario,
   _formData: FormData
 ): Promise<EstadoFormulario> {
@@ -1144,6 +1161,11 @@ export async function arquivarLead(
   revalidatePath("/leads/lista");
   revalidatePath("/leads/base");
   revalidatePath("/leads/vendas");
+
+  if (!redirecionar) {
+    return { erro: null };
+  }
+
   redirect("/leads");
 }
 
@@ -1182,4 +1204,172 @@ export async function reivindicarLead(
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);
   return { erro: null };
+}
+
+export type DetalhesLead = {
+  lead: {
+    id: string;
+    nome: string;
+    telefone_e164: string | null;
+    email: string | null;
+    origem: string | null;
+    produto: string | null;
+    nivel_ordem: number;
+    criterio_problema: string | null;
+    criterio_urgencia: string;
+    criterio_capacidade: string;
+    status: string;
+    valor_venda: number | null;
+    receita_venda: number | null;
+    vendido_em: string | null;
+    declarado_em: string;
+    responsavel_id: string | null;
+    oportunidade_futura: boolean;
+    motivo_base: string | null;
+    proposta_valor: number | null;
+    proposta_enviada_em: string | null;
+    proposta_observacao: string | null;
+    proximo_follow_em: string | null;
+  };
+  niveis: NivelResumo[];
+  interacoes: {
+    id: string;
+    tipo: string | null;
+    canal: string | null;
+    conteudo: string | null;
+    ocorreu_em: string;
+  }[];
+  reunioes: {
+    id: string;
+    agendada_para: string;
+    marcada_em: string;
+    status: string;
+    resultado: string | null;
+    closer_id: string | null;
+    usuario_id: string;
+    reagendada: boolean;
+  }[];
+  nivelHistorico: {
+    id: string;
+    de_ordem: number;
+    para_ordem: number;
+    motivo: string | null;
+    automatico: boolean;
+    usuario_id: string | null;
+    ocorreu_em: string;
+  }[];
+  usuarios: { id: string; nome: string; funcao: string | null }[];
+  origens: { id: string; nome: string }[];
+  produtos: string[];
+  souAdmin: boolean;
+  publicoOrg: string;
+  podeEditar: boolean;
+  podeReivindicar: boolean;
+  nomeResponsavel: string | undefined;
+  nomeSdrOriginal: string | undefined;
+  reuniaoAtiva: { id: string; agendada_para: string } | null;
+  reuniaoAnteriorPendente: boolean;
+  numerosVisiveis: Record<number, number>;
+};
+
+// Igual aos dados que app/(app)/leads/[id]/page.tsx busca pra montar a
+// página cheia — só que devolvidos como dado puro (não JSX), pra dar pra
+// chamar do cliente e montar o pop-up sem precisar de rota nova nenhuma
+// (ver components/modal-lead.tsx). Rota nova foi o que causou o 404 real
+// em produção da vez passada (rota interceptada do Next.js) — esse jeito
+// não mexe em rota nenhuma, só busca dado.
+export async function buscarDetalhesDoLead(
+  leadId: string
+): Promise<{ erro: string | null; dados: DetalhesLead | null }> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const [
+    { data: lead },
+    { data: niveisData },
+    { data: interacoesData },
+    { data: reunioesData },
+    { data: nivelHistoricoData },
+    { data: usuariosData },
+    { data: origensData },
+    { data: produtosData },
+  ] = await Promise.all([
+    supabase
+      .from("leads")
+      .select(
+        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em"
+      )
+      .eq("id", leadId)
+      .single(),
+    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
+    supabase
+      .from("interacoes")
+      .select("id, tipo, canal, conteudo, ocorreu_em")
+      .eq("lead_id", leadId)
+      .is("excluido_em", null)
+      .order("ocorreu_em", { ascending: false }),
+    supabase
+      .from("reunioes")
+      .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id, reagendada")
+      .eq("lead_id", leadId)
+      .order("agendada_para", { ascending: false }),
+    supabase
+      .from("nivel_historico")
+      .select("id, de_ordem, para_ordem, motivo, automatico, usuario_id, ocorreu_em")
+      .eq("lead_id", leadId)
+      .order("ocorreu_em", { ascending: false }),
+    supabase.from("usuarios").select("id, nome, funcao").order("nome"),
+    supabase.from("origens").select("id, nome").order("nome"),
+    supabase.from("produtos").select("nome").order("nome"),
+  ]);
+
+  if (!lead) {
+    return { erro: "Lead não encontrado", dados: null };
+  }
+
+  const niveis = (niveisData ?? []) as NivelResumo[];
+  const interacoes = interacoesData ?? [];
+  const reunioes = reunioesData ?? [];
+  const nivelHistorico = nivelHistoricoData ?? [];
+  const usuarios = usuariosData ?? [];
+  const origens = origensData ?? [];
+  const produtos = (produtosData ?? []).map((p) => p.nome);
+  const souAdmin = usuario.papel === "admin";
+  const souCloser = await souCloserAtivo(supabase, leadId, usuario.id);
+  const reuniaoAtiva = reunioes.find((r) => r.status === "marcada") ?? null;
+  const reuniaoAnteriorPendente = reunioes.some(
+    (r) => r.status === "marcada" && new Date(r.agendada_para).getTime() < Date.now()
+  );
+  const podeEditar = souAdmin || lead.responsavel_id === usuario.id || souCloser;
+  const podeReivindicar = !souAdmin && lead.responsavel_id === null;
+  const nomeResponsavel = usuarios.find((u) => u.id === lead.responsavel_id)?.nome;
+  const sdrOriginalId = reunioes.length
+    ? [...reunioes].sort(
+        (a, b) => new Date(a.marcada_em).getTime() - new Date(b.marcada_em).getTime()
+      )[0].usuario_id
+    : null;
+  const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
+  const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
+
+  return {
+    erro: null,
+    dados: {
+      lead,
+      niveis,
+      interacoes,
+      reunioes,
+      nivelHistorico,
+      usuarios,
+      origens,
+      produtos,
+      souAdmin,
+      publicoOrg: usuario.publico_org,
+      podeEditar,
+      podeReivindicar,
+      nomeResponsavel,
+      nomeSdrOriginal,
+      reuniaoAtiva,
+      reuniaoAnteriorPendente,
+      numerosVisiveis,
+    },
+  };
 }

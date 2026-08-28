@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkLead } from "@/components/link-lead";
 
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
@@ -21,8 +21,8 @@ export function LeadCard({
   rodape?: React.ReactNode;
 }) {
   return (
-    <Link
-      href={`/leads/${id}`}
+    <LinkLead
+      leadId={id}
       className="group block rounded-md border border-neutral-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="flex items-start gap-2">
@@ -41,6 +41,6 @@ export function LeadCard({
           {rodape}
         </div>
       </div>
-    </Link>
+    </LinkLead>
   );
 }

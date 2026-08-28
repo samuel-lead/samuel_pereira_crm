@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, ORDEM_OPORTUNIDADE_FUTURA, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
@@ -9,6 +8,7 @@ import { diasUteisDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
 import { Reuniao, reuniao } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
+import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_FOLLOW_POS_REUNIAO = 7;
@@ -105,7 +105,7 @@ export function KanbanBoard({
   numerosVisiveis?: Map<number, number>;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const abrirLead = useAbrirLeadModal();
   const numerosVisiveis = numerosVisiveisExternos ?? numerarNiveis(niveis);
   const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
   const [, iniciarTransicao] = useTransition();
@@ -192,10 +192,10 @@ export function KanbanBoard({
           "Sumiu, não avisou nada",
           "Avisou antes"
         );
-        router.push(`/leads/${leadId}?marcarReuniao=1&reuniaoAnteriorSumiu=${sumiu ? "sim" : "nao"}`);
+        abrirLead({ leadId, marcarReuniao: true, reuniaoAnteriorSumiu: sumiu ? "sim" : "nao" });
         return;
       }
-      router.push(`/leads/${leadId}?marcarReuniao=1`);
+      abrirLead({ leadId, marcarReuniao: true });
       return;
     }
 
@@ -324,9 +324,9 @@ export function KanbanBoard({
                         key={lead.id}
                         role="link"
                         tabIndex={0}
-                        onClick={() => router.push(`/leads/${lead.id}`)}
+                        onClick={() => abrirLead(lead.id)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") router.push(`/leads/${lead.id}`);
+                          if (e.key === "Enter") abrirLead(lead.id);
                         }}
                         draggable={arrastavel}
                         onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead)}

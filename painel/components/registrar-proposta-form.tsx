@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { registrarProposta, type EstadoFormulario } from "@/lib/leads/actions";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -33,6 +34,7 @@ export function RegistrarPropostaForm({
     observacao: string | null;
   };
 }) {
+  const modalAtivo = useLeadModalAtivo();
   const acaoComId = registrarProposta.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [centavos, setCentavos] = useState(0);
@@ -48,10 +50,12 @@ export function RegistrarPropostaForm({
       enviandoRef.current = false;
       if (estado.erro === null) {
         setSalvo(true);
+        modalAtivo?.recarregar();
         const timeout = setTimeout(() => setSalvo(false), 2000);
         return () => clearTimeout(timeout);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendente, estado]);
 
   function aoDigitarValor(evento: ChangeEvent<HTMLInputElement>) {

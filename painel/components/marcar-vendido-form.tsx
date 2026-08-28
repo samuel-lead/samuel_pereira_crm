@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState, type ChangeEvent } from "react";
+import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { marcarVendido, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -56,8 +57,24 @@ export function MarcarVendidoForm({
   temProposta?: boolean;
   produtos: string[];
 }) {
+  const modalAtivo = useLeadModalAtivo();
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
+  const enviandoRef = useRef(false);
+
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        modalAtivo?.recarregar();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendente, estado]);
 
   return (
     <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">

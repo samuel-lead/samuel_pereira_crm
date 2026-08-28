@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { IconeWhatsapp, IconeTelefone, IconeTag } from "@/components/icons";
+import { LinkLead } from "@/components/link-lead";
 
 type LeadContato = {
   id: string;
@@ -48,8 +48,8 @@ function Linha({
   }
 
   return (
-    <Link
-      href={`/leads/${lead.id}`}
+    <LinkLead
+      leadId={lead.id}
       className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="flex min-w-0 items-center gap-3">
@@ -98,7 +98,7 @@ function Linha({
           </a>
         )}
       </div>
-    </Link>
+    </LinkLead>
   );
 }
 

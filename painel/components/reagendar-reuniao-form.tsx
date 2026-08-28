@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { reagendarReuniao } from "@/lib/leads/actions";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -25,6 +26,7 @@ export function ReagendarReuniaoForm({
   agendadaPara: string;
   rotulo: string;
 }) {
+  const modalAtivo = useLeadModalAtivo();
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciarTransicao] = useTransition();
 
@@ -35,6 +37,7 @@ export function ReagendarReuniaoForm({
     iniciarTransicao(async () => {
       try {
         await reagendarReuniao(leadId, reuniaoId, formData);
+        modalAtivo?.recarregar();
       } catch (e) {
         setErro(e instanceof Error ? e.message : "Não deu pra reagendar");
       }

@@ -2,12 +2,14 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { registrarNota, type EstadoFormulario } from "@/lib/leads/actions";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 const estadoInicial: EstadoFormulario = { erro: null };
 
 export function RegistrarNotaForm({ leadId }: { leadId: string }) {
+  const modalAtivo = useLeadModalAtivo();
   const acaoComId = registrarNota.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [adicionado, setAdicionado] = useState(false);
@@ -24,10 +26,12 @@ export function RegistrarNotaForm({ leadId }: { leadId: string }) {
       if (estado.erro === null) {
         formRef.current?.reset();
         setAdicionado(true);
+        modalAtivo?.recarregar();
         const timeout = setTimeout(() => setAdicionado(false), 2000);
         return () => clearTimeout(timeout);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendente, estado]);
 
   return (

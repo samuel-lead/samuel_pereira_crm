@@ -5,6 +5,7 @@ import {
   marcarProximoContato,
   cancelarProximoContato,
 } from "@/lib/leads/actions";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -23,6 +24,7 @@ export function ProximoContatoForm({
   leadId: string;
   proximoContatoEm: string | null;
 }) {
+  const modalAtivo = useLeadModalAtivo();
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciarTransicao] = useTransition();
 
@@ -33,6 +35,7 @@ export function ProximoContatoForm({
     iniciarTransicao(async () => {
       try {
         await marcarProximoContato(leadId, formData);
+        modalAtivo?.recarregar();
       } catch (e) {
         setErro(e instanceof Error ? e.message : "Não deu pra marcar");
       }
@@ -44,6 +47,7 @@ export function ProximoContatoForm({
     iniciarTransicao(async () => {
       try {
         await cancelarProximoContato(leadId);
+        modalAtivo?.recarregar();
       } catch (e) {
         setErro(e instanceof Error ? e.message : "Não deu pra cancelar");
       }

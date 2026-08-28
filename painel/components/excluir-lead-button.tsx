@@ -1,13 +1,31 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { arquivarLead, type EstadoFormulario } from "@/lib/leads/actions";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
 export function ExcluirLeadButton({ leadId, nome }: { leadId: string; nome: string }) {
-  const acaoComId = arquivarLead.bind(null, leadId);
+  const modalAtivo = useLeadModalAtivo();
+  const acaoComId = arquivarLead.bind(null, leadId, !modalAtivo);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
+  const enviandoRef = useRef(false);
+
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        // Lead sumiu — não faz sentido "recarregar" o pop-up dele, fecha.
+        modalAtivo?.fechar();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendente, estado]);
 
   return (
     <form

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { editarVenda, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -62,6 +63,7 @@ export function EditarVendaForm({
   produtos: string[];
 }) {
   const [aberto, setAberto] = useState(false);
+  const modalAtivo = useLeadModalAtivo();
   const acaoComId = editarVenda.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [salvo, setSalvo] = useState(false);
@@ -76,10 +78,12 @@ export function EditarVendaForm({
       enviandoRef.current = false;
       if (estado.erro === null) {
         setSalvo(true);
+        modalAtivo?.recarregar();
         const timeout = setTimeout(() => setSalvo(false), 2000);
         return () => clearTimeout(timeout);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendente, estado]);
 
   if (!aberto) {

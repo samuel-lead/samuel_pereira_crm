@@ -1,11 +1,12 @@
 "use client";
 
-import { Fragment, useActionState, useState } from "react";
+import { Fragment, useActionState, useEffect, useRef, useState } from "react";
 import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 import { reuniao, Reuniao } from "@/lib/terminologia";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const NIVEL_REUNIAO_MARCADA = "4";
 const NIVEL_FOLLOW_POS_REUNIAO = "7";
@@ -83,8 +84,28 @@ export function EditarLeadForm({
   // a resposta já está definida, não precisa perguntar de novo aqui dentro.
   reuniaoAnteriorSumiuPredefinido?: "sim" | "nao";
 }) {
-  const acaoComId = atualizarLead.bind(null, lead.id);
+  const modalAtivo = useLeadModalAtivo();
+  const acaoComId = atualizarLead.bind(null, lead.id, !modalAtivo);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
+  const enviandoRef = useRef(false);
+
+  // Só roda dentro do pop-up (fora dele, quem sinaliza sucesso é o
+  // redirect — ver atualizarLead). Sem isso a tela nunca saberia que
+  // salvou, já que aqui não navega pra lugar nenhum.
+  useEffect(() => {
+    if (pendente) {
+      enviandoRef.current = true;
+      return;
+    }
+    if (enviandoRef.current) {
+      enviandoRef.current = false;
+      if (estado.erro === null) {
+        modalAtivo?.recarregar();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendente, estado]);
+
   const [nivelSelecionado, setNivelSelecionado] = useState(
     preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
   );

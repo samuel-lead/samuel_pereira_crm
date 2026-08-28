@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { excluirInteracao } from "@/lib/leads/actions";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 export function ExcluirInteracaoButton({
   leadId,
@@ -10,12 +11,14 @@ export function ExcluirInteracaoButton({
   leadId: string;
   interacaoId: string;
 }) {
+  const modalAtivo = useLeadModalAtivo();
   const [pendente, iniciarTransicao] = useTransition();
 
   function aoClicar() {
     iniciarTransicao(async () => {
       try {
         await excluirInteracao(leadId, interacaoId);
+        modalAtivo?.recarregar();
       } catch (e) {
         alert(e instanceof Error ? e.message : "Não deu pra excluir");
       }

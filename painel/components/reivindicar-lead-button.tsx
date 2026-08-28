@@ -2,10 +2,12 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { reivindicarLead, type EstadoFormulario } from "@/lib/leads/actions";
+import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
 export function ReivindicarLeadButton({ leadId }: { leadId: string }) {
+  const modalAtivo = useLeadModalAtivo();
   const acaoComId = reivindicarLead.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [pego, setPego] = useState(false);
@@ -20,8 +22,10 @@ export function ReivindicarLeadButton({ leadId }: { leadId: string }) {
       enviandoRef.current = false;
       if (estado.erro === null) {
         setPego(true);
+        modalAtivo?.recarregar();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendente, estado]);
 
   return (

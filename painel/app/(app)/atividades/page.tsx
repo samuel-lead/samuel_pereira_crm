@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { LinkLead } from "@/components/link-lead";
 import { Reuniao, reunioes as palavraReunioes } from "@/lib/terminologia";
 
 type InteracaoComLead = {
@@ -109,12 +109,12 @@ export default async function AtividadesPage() {
                 className={`rounded-lg border-l-4 bg-white p-4 shadow-sm ${item.cor}`}
               >
                 <div className="flex items-center justify-between">
-                  <Link
-                    href={`/leads/${item.leadId}`}
+                  <LinkLead
+                    leadId={item.leadId}
                     className="text-sm font-semibold text-neutral-900 hover:underline"
                   >
                     {item.leadNome}
-                  </Link>
+                  </LinkLead>
                   <span className="text-xs text-neutral-400">
                     {formatarData(item.data)}
                   </span>
