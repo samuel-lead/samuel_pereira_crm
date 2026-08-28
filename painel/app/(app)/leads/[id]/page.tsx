@@ -267,6 +267,8 @@ export default async function EditarLeadPage({
                 : undefined
             }
             publicoOrg={publicoOrg}
+            jaTeveReuniao={reunioes.length > 0}
+            reuniaoAtivaAgendadaPara={reuniaoAtiva?.agendada_para ?? null}
           />
         </div>
 

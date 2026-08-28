@@ -9,6 +9,8 @@ import { reuniao, Reuniao } from "@/lib/terminologia";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const NIVEL_REUNIAO_MARCADA = "4";
+const NIVEL_NO_SHOW = "5";
+const NIVEL_REAGENDAMENTO = "6";
 const NIVEL_FOLLOW_POS_REUNIAO = "7";
 const NIVEL_OPORTUNIDADES = "8";
 const NIVEL_BASE = "9";
@@ -67,6 +69,8 @@ export function EditarLeadForm({
   reuniaoAnteriorPendente = false,
   reuniaoAnteriorSumiuPredefinido,
   publicoOrg = "mentoria",
+  jaTeveReuniao = true,
+  reuniaoAtivaAgendadaPara = null,
 }: {
   lead: Lead;
   niveis: NivelResumo[];
@@ -83,6 +87,14 @@ export function EditarLeadForm({
   // Veio do aviso que já apareceu no Kanban na hora de arrastar o card —
   // a resposta já está definida, não precisa perguntar de novo aqui dentro.
   reuniaoAnteriorSumiuPredefinido?: "sim" | "nao";
+  // Esse lead já teve alguma reunião registrada alguma vez (não importa o
+  // status) — usado só pra desabilitar no menu os níveis que a trava do
+  // servidor ia recusar de qualquer jeito (ver sincronizarReuniao).
+  jaTeveReuniao?: boolean;
+  // Data da reunião que está "marcada" agora, se houver — usado só pra
+  // desabilitar a opção "Sim" na pergunta "essa reunião aconteceu?" quando
+  // a data ainda não chegou (mesma trava do servidor, mas visual).
+  reuniaoAtivaAgendadaPara?: string | null;
 }) {
   const modalAtivo = useLeadModalAtivo();
   const acaoComId = atualizarLead.bind(null, lead.id, !modalAtivo);
@@ -156,6 +168,41 @@ export function EditarLeadForm({
   const vendido = lead.status === "vendido";
   const nomeResponsavelAtual =
     usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
+
+  // Mesmas travas de painel/lib/leads/actions.ts (sincronizarReuniao), só
+  // que aplicadas aqui pra desabilitar a opção no menu em vez de deixar
+  // escolher e mostrar erro só depois de clicar em "Salvar alterações".
+  // Ficar no nível que já está sempre é permitido (não muda nada).
+  function nivelPermitido(ordemDestino: string): boolean {
+    const nivelAtual = String(lead.nivel_ordem);
+    if (ordemDestino === nivelAtual) return true;
+
+    if (
+      nivelAtual === NIVEL_REUNIAO_MARCADA &&
+      ordemDestino !== NIVEL_NO_SHOW &&
+      ordemDestino !== NIVEL_REAGENDAMENTO &&
+      ordemDestino !== NIVEL_FOLLOW_POS_REUNIAO &&
+      ordemDestino !== NIVEL_OPORTUNIDADES
+    ) {
+      return false;
+    }
+
+    if (Number(ordemDestino) >= Number(NIVEL_FOLLOW_POS_REUNIAO) && !jaTeveReuniao) {
+      return false;
+    }
+
+    return true;
+  }
+
+  const saindoDeReuniaoMarcada = String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA;
+  const temNivelBloqueadoPorReuniaoMarcada =
+    saindoDeReuniaoMarcada && niveis.some((n) => !nivelPermitido(String(n.ordem)));
+  const temNivelBloqueadoPorFaltaReuniao =
+    !jaTeveReuniao && niveis.some((n) => Number(n.ordem) >= Number(NIVEL_FOLLOW_POS_REUNIAO));
+
+  const reuniaoAtivaEhFutura = Boolean(
+    reuniaoAtivaAgendadaPara && new Date(reuniaoAtivaAgendadaPara) > new Date()
+  );
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
@@ -261,18 +308,37 @@ export function EditarLeadForm({
           >
             {niveis.map((nivel) => (
               <Fragment key={nivel.ordem}>
-                <option value={nivel.ordem}>
+                <option value={nivel.ordem} disabled={!nivelPermitido(String(nivel.ordem))}>
                   {rotuloNivel(nivel, numerosVisiveis[nivel.ordem])}
+                  {!nivelPermitido(String(nivel.ordem)) ? " (bloqueado)" : ""}
                 </option>
                 {String(nivel.ordem) === NIVEL_OPORTUNIDADES && (
-                  <option value={OPCAO_OPORTUNIDADE_FUTURA}>
+                  <option
+                    value={OPCAO_OPORTUNIDADE_FUTURA}
+                    disabled={!nivelPermitido(NIVEL_OPORTUNIDADES)}
+                  >
                     ↳ Oportunidades futuras
+                    {!nivelPermitido(NIVEL_OPORTUNIDADES) ? " (bloqueado)" : ""}
                   </option>
                 )}
               </Fragment>
             ))}
           </select>
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
+
+          {temNivelBloqueadoPorReuniaoMarcada && (
+            <p className="text-xs text-neutral-400">
+              Alguns níveis estão bloqueados: saindo de &quot;{Reuniao(publicoOrg)} marcada&quot; só
+              dá pra ir pra &quot;No-show&quot;, &quot;Precisa reagendar&quot;, &quot;Follow após reunião&quot; ou
+              &quot;Oportunidades&quot;.
+            </p>
+          )}
+          {temNivelBloqueadoPorFaltaReuniao && (
+            <p className="text-xs text-neutral-400">
+              Follow, Oportunidades e Base estão bloqueados: esse lead nunca teve uma{" "}
+              {reuniao(publicoOrg)} registrada.
+            </p>
+          )}
 
           {vaiEntrarEmReuniaoMarcada && (
             <div className="mt-2 space-y-3 rounded-md border border-green-200 bg-green-50 p-3">
@@ -380,13 +446,16 @@ export function EditarLeadForm({
                 Essa {reuniao(publicoOrg)} realmente aconteceu?
               </p>
               <div className="flex gap-4">
-                <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                <label
+                  className={`flex items-center gap-1.5 text-sm text-amber-800 ${reuniaoAtivaEhFutura ? "opacity-40" : ""}`}
+                >
                   <input
                     type="radio"
                     name="reuniao_aconteceu"
                     value="sim"
                     checked={reuniaoAconteceu === "sim"}
                     onChange={() => setReuniaoAconteceu("sim")}
+                    disabled={reuniaoAtivaEhFutura}
                     required
                   />
                   Sim
@@ -402,10 +471,21 @@ export function EditarLeadForm({
                   Não
                 </label>
               </div>
-              <p className="text-xs text-amber-700">
-                Se marcar &quot;Não&quot;, o lead continua em &quot;{Reuniao(publicoOrg)} marcada&quot;
-                — mova pra &quot;No-show&quot; ou &quot;Precisa reagendar&quot; se for o caso.
-              </p>
+              {reuniaoAtivaEhFutura ? (
+                <p className="text-xs text-amber-700">
+                  &quot;Sim&quot; está bloqueado porque essa {reuniao(publicoOrg)} está marcada pra
+                  uma data que ainda não chegou (
+                  {new Date(reuniaoAtivaAgendadaPara!).toLocaleString("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                  })}
+                  ) — confira se a data está certa.
+                </p>
+              ) : (
+                <p className="text-xs text-amber-700">
+                  Se marcar &quot;Não&quot;, o lead continua em &quot;{Reuniao(publicoOrg)} marcada&quot;
+                  — mova pra &quot;No-show&quot; ou &quot;Precisa reagendar&quot; se for o caso.
+                </p>
+              )}
             </div>
           )}
 
