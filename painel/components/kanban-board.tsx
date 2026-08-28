@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { corDoNivel, numerarNiveis, ORDEM_OPORTUNIDADE_FUTURA, type NivelResumo } from "@/lib/niveis";
 import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
-import { diasUteisDesde } from "@/lib/datas";
+import { diasUteisDesde, diasDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
 import { Reuniao, reuniao } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
@@ -23,6 +23,7 @@ type LeadResumo = {
   nivel_ordem: number;
   responsavel_id: string | null;
   declarado_em?: string;
+  entrou_nivel_em: string;
   ultima_atividade_em?: string;
   valor_venda?: number | null;
   receita_venda?: number | null;
@@ -108,6 +109,7 @@ export function KanbanBoard({
   const scrollRef = useRef<HTMLDivElement>(null);
   const abrirLead = useAbrirLeadModal();
   const numerosVisiveis = numerosVisiveisExternos ?? numerarNiveis(niveis);
+  const prazoPorNivel = new Map(niveis.map((n) => [n.ordem, n.prazo_dias ?? null]));
   const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
   const [, iniciarTransicao] = useTransition();
   const nomePorUsuario = new Map(usuarios.map((u) => [u.id, u.nome]));
@@ -320,6 +322,11 @@ export function KanbanBoard({
                       // depois que a data passar sem ninguém ter mexido nele.
                       const proximoContatoPendente = temProximoContato && !contatoAtrasado;
                       const atrasado = mostrarParado && diasParado >= 1 && !proximoContatoPendente;
+                      const prazoDoNivel = prazoPorNivel.get(lead.nivel_ordem) ?? null;
+                      const diaAtualDoPrazo =
+                        prazoDoNivel != null ? diasDesde(lead.entrou_nivel_em) + 1 : null;
+                      const prazoVencido =
+                        prazoDoNivel != null && diaAtualDoPrazo != null && diaAtualDoPrazo > prazoDoNivel;
                       return (
                       <div
                         key={lead.id}
@@ -386,6 +393,21 @@ export function KanbanBoard({
                               <span className="font-medium text-neutral-600">
                                 {nomePorUsuario.get(lead.responsavel_id)}
                               </span>
+                            </p>
+                          )}
+                          {prazoDoNivel != null && (
+                            <p
+                              className={`text-[11px] font-semibold ${
+                                prazoVencido
+                                  ? "text-red-600"
+                                  : diaAtualDoPrazo === prazoDoNivel
+                                    ? "text-amber-600"
+                                    : "text-neutral-500"
+                              }`}
+                            >
+                              {prazoVencido
+                                ? `Prazo do nível vencido (dia ${diaAtualDoPrazo}/${prazoDoNivel})`
+                                : `Dia ${diaAtualDoPrazo} de ${prazoDoNivel} do nível`}
                             </p>
                           )}
                           {lead.reuniao_agendada_para && (

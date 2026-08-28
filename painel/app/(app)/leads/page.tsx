@@ -79,7 +79,7 @@ export default async function LeadsPage({
     { data: usuariosData },
     { data: origensData },
   ] = await Promise.all([
-    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
+    supabase.from("niveis").select("ordem, nome, numerado, destacado, prazo_dias").order("ordem"),
     consulta,
     supabase.from("usuarios").select("id, nome").order("nome"),
     supabase

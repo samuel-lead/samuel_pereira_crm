@@ -43,6 +43,7 @@ type Lead = {
   proposta_enviada_em: string | null;
   proposta_observacao: string | null;
   proximo_follow_em: string | null;
+  entrou_nivel_em: string;
 };
 
 type Interacao = {
@@ -134,11 +135,11 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em"
+        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, entrou_nivel_em"
       )
       .eq("id", id)
       .single(),
-    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
+    supabase.from("niveis").select("ordem, nome, numerado, destacado, prazo_dias").order("ordem"),
     supabase
       .from("interacoes")
       .select("id, tipo, canal, conteudo, ocorreu_em")
