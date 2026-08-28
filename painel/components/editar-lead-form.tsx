@@ -1,8 +1,7 @@
 "use client";
 
-import { Fragment, useActionState, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { atualizarLead, revalidarListasLeads, type EstadoFormulario } from "@/lib/leads/actions";
+import { Fragment, useActionState, useState } from "react";
+import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
@@ -67,7 +66,6 @@ export function EditarLeadForm({
   reuniaoAnteriorPendente = false,
   reuniaoAnteriorSumiuPredefinido,
   publicoOrg = "mentoria",
-  variante = "pagina",
 }: {
   lead: Lead;
   niveis: NivelResumo[];
@@ -84,31 +82,9 @@ export function EditarLeadForm({
   // Veio do aviso que já apareceu no Kanban na hora de arrastar o card —
   // a resposta já está definida, não precisa perguntar de novo aqui dentro.
   reuniaoAnteriorSumiuPredefinido?: "sim" | "nao";
-  variante?: "pagina" | "modal";
 }) {
-  const router = useRouter();
   const acaoComId = atualizarLead.bind(null, lead.id);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
-  const [salvo, setSalvo] = useState(false);
-
-  // Salvou com sucesso: no pop-up, fecha sozinho (Samuel pediu — clicar em
-  // "Salvar alterações" não devia precisar de um segundo passo pra sair da
-  // tela). Na página cheia não tem o que fechar, só mostra "Salvo ✓" no
-  // botão por 2s.
-  useEffect(() => {
-    if (!estado.salvoEm) return;
-    if (variante === "modal") {
-      (async () => {
-        await revalidarListasLeads();
-        router.back();
-      })();
-      return;
-    }
-    setSalvo(true);
-    const tempo = setTimeout(() => setSalvo(false), 2000);
-    return () => clearTimeout(tempo);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estado.salvoEm]);
   const [nivelSelecionado, setNivelSelecionado] = useState(
     preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
   );
@@ -544,11 +520,9 @@ export function EditarLeadForm({
             <button
               type="submit"
               disabled={pendente}
-              className={`w-full rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
-                salvo ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"
-              }`}
+              className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
             >
-              {pendente ? "Salvando..." : salvo ? "Salvo ✓" : "Salvar alterações"}
+              {pendente ? "Salvando..." : "Salvar alterações"}
             </button>
           )}
         </div>

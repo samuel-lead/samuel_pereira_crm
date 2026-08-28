@@ -1,36 +1,13 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { arquivarLead, revalidarListasLeads, type EstadoFormulario } from "@/lib/leads/actions";
+import { useActionState } from "react";
+import { arquivarLead, type EstadoFormulario } from "@/lib/leads/actions";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
-export function ExcluirLeadButton({
-  leadId,
-  nome,
-  variante,
-}: {
-  leadId: string;
-  nome: string;
-  variante: "pagina" | "modal";
-}) {
-  const router = useRouter();
-  // Na página cheia, quem manda de volta pra /leads é a própria ação
-  // (redirect). No pop-up isso quebraria ele (ver comentário em
-  // arquivarLead) — então quem fecha é esse componente, ao ver "salvoEm"
-  // aparecer no estado.
-  const acaoComId = arquivarLead.bind(null, leadId, variante === "pagina");
+export function ExcluirLeadButton({ leadId, nome }: { leadId: string; nome: string }) {
+  const acaoComId = arquivarLead.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
-
-  useEffect(() => {
-    if (variante !== "modal" || !estado.salvoEm) return;
-    (async () => {
-      await revalidarListasLeads();
-      router.back();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estado.salvoEm]);
 
   return (
     <form
