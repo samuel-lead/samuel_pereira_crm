@@ -1,7 +1,8 @@
 "use client";
 
 import { Fragment, useActionState, useEffect, useState } from "react";
-import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
+import { useRouter } from "next/navigation";
+import { atualizarLead, revalidarListasLeads, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
@@ -66,6 +67,7 @@ export function EditarLeadForm({
   reuniaoAnteriorPendente = false,
   reuniaoAnteriorSumiuPredefinido,
   publicoOrg = "mentoria",
+  variante = "pagina",
 }: {
   lead: Lead;
   niveis: NivelResumo[];
@@ -82,19 +84,30 @@ export function EditarLeadForm({
   // Veio do aviso que já apareceu no Kanban na hora de arrastar o card —
   // a resposta já está definida, não precisa perguntar de novo aqui dentro.
   reuniaoAnteriorSumiuPredefinido?: "sim" | "nao";
+  variante?: "pagina" | "modal";
 }) {
+  const router = useRouter();
   const acaoComId = atualizarLead.bind(null, lead.id);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [salvo, setSalvo] = useState(false);
 
-  // Sem redirect depois de salvar (o formulário fica na tela — pode ser um
-  // pop-up por cima do Kanban), precisa de outro jeito de mostrar "deu
-  // certo": pisca "Salvo ✓" no botão por 2s toda vez que salvoEm muda.
+  // Salvou com sucesso: no pop-up, fecha sozinho (Samuel pediu — clicar em
+  // "Salvar alterações" não devia precisar de um segundo passo pra sair da
+  // tela). Na página cheia não tem o que fechar, só mostra "Salvo ✓" no
+  // botão por 2s.
   useEffect(() => {
     if (!estado.salvoEm) return;
+    if (variante === "modal") {
+      (async () => {
+        await revalidarListasLeads();
+        router.back();
+      })();
+      return;
+    }
     setSalvo(true);
     const tempo = setTimeout(() => setSalvo(false), 2000);
     return () => clearTimeout(tempo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estado.salvoEm]);
   const [nivelSelecionado, setNivelSelecionado] = useState(
     preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)

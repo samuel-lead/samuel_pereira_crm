@@ -263,6 +263,7 @@ export async function LeadDetalhe({
               : undefined
           }
           publicoOrg={publicoOrg}
+          variante={variante}
         />
       </div>
 
