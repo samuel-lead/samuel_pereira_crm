@@ -822,12 +822,10 @@ export async function marcarVendido(
     return { erro: "Informe o valor da venda" };
   }
 
+  // Receita é opcional: tem venda que fecha (contrato assinado, valor
+  // combinado) mas o dinheiro só entra depois — fica em branco até lá.
   const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
   const receita = receitaRaw ? Number(receitaRaw) : null;
-
-  if (!receita || receita <= 0) {
-    return { erro: "Informe a receita recebida" };
-  }
 
   const produto = String(formData.get("produto") ?? "").trim() || null;
 
@@ -883,12 +881,10 @@ export async function editarVenda(
     return { erro: "Informe o valor da venda" };
   }
 
+  // Receita é opcional: tem venda que fecha (contrato assinado, valor
+  // combinado) mas o dinheiro só entra depois — fica em branco até lá.
   const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
   const receita = receitaRaw ? Number(receitaRaw) : null;
-
-  if (!receita || receita <= 0) {
-    return { erro: "Informe a receita recebida" };
-  }
 
   const produto = String(formData.get("produto") ?? "").trim() || null;
 

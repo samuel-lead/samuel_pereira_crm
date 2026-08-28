@@ -97,7 +97,7 @@ export function EditarVendaForm({
   return (
     <form action={acaoFormulario} className="space-y-2 border-t border-green-200 pt-3">
       <CampoMoeda name="valor_venda" label="Valor da venda (R$)" valorInicial={valorVenda} />
-      <CampoMoeda name="receita_venda" label="Receita recebida (R$)" valorInicial={receitaVenda} />
+      <CampoMoeda name="receita_venda" label="Receita recebida (R$) — opcional" valorInicial={receitaVenda} />
       <div>
         <label className="mb-1 block text-xs font-medium text-green-800">
           Produto
