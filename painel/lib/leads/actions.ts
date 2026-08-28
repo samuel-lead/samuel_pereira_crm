@@ -8,7 +8,11 @@ import { garantirOrigem } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
 import { reuniao, Reuniao } from "@/lib/terminologia";
 
-export type EstadoFormulario = { erro: string | null };
+// salvoEm: só usado por atualizarLead — marca o instante do sucesso pra
+// forma o formulário mostrar "Salvo" por alguns segundos. Sem redirect
+// depois de salvar (o form abre num pop-up por cima do Kanban agora), não
+// tinha mais nenhum sinal de "deu certo" pra pessoa.
+export type EstadoFormulario = { erro: string | null; salvoEm?: number };
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -661,9 +665,24 @@ export async function atualizarLead(
     }
   }
 
+  // Sem redirect nem revalidatePath aqui: essa tela abre num pop-up por
+  // cima do Kanban (Pré-vendas, Vendas ou Base). Descobrimos na prática que
+  // chamar revalidatePath enquanto o pop-up tá aberto faz o Next.js
+  // "esquecer" que é um pop-up e trocar pra página cheia sozinho — fica
+  // parada aqui, sem mexer na página por baixo. Quem revalida as listas do
+  // Kanban é revalidarListasLeads(), chamada só na hora de FECHAR o pop-up
+  // (ver components/modal-lead.tsx) — nesse momento já não tem mais pop-up
+  // pra "escapar".
+  return { erro: null, salvoEm: Date.now() };
+}
+
+// Chamada só quando o pop-up de um lead fecha (ver components/modal-lead.tsx)
+// — revalida as três telas do Kanban pra mostrar o que mudou. Não pode ser
+// feita durante o save em si (ver comentário acima em atualizarLead).
+export async function revalidarListasLeads() {
   revalidatePath("/leads");
-  revalidatePath(`/leads/${leadId}`);
-  redirect("/leads");
+  revalidatePath("/leads/base");
+  revalidatePath("/leads/vendas");
 }
 
 export async function moverLeadNivel(

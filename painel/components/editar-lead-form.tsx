@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useActionState, useState } from "react";
+import { Fragment, useActionState, useEffect, useState } from "react";
 import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
@@ -85,6 +85,17 @@ export function EditarLeadForm({
 }) {
   const acaoComId = atualizarLead.bind(null, lead.id);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
+  const [salvo, setSalvo] = useState(false);
+
+  // Sem redirect depois de salvar (o formulário fica na tela — pode ser um
+  // pop-up por cima do Kanban), precisa de outro jeito de mostrar "deu
+  // certo": pisca "Salvo ✓" no botão por 2s toda vez que salvoEm muda.
+  useEffect(() => {
+    if (!estado.salvoEm) return;
+    setSalvo(true);
+    const tempo = setTimeout(() => setSalvo(false), 2000);
+    return () => clearTimeout(tempo);
+  }, [estado.salvoEm]);
   const [nivelSelecionado, setNivelSelecionado] = useState(
     preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
   );
@@ -520,9 +531,11 @@ export function EditarLeadForm({
             <button
               type="submit"
               disabled={pendente}
-              className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+              className={`w-full rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
+                salvo ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              {pendente ? "Salvando..." : "Salvar alterações"}
+              {pendente ? "Salvando..." : salvo ? "Salvo ✓" : "Salvar alterações"}
             </button>
           )}
         </div>

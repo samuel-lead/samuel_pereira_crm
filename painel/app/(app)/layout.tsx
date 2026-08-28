@@ -1,7 +1,16 @@
 import { Sidebar } from "@/components/sidebar";
 import { usuarioAutenticado } from "@/lib/supabase/server";
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({
+  children,
+  modal,
+}: {
+  children: React.ReactNode;
+  // Slot paralelo "@modal" — o pop-up de um lead, que pode abrir por cima
+  // de QUALQUER página do sistema (Kanban, Atividades, Reuniões, etc.), não
+  // só dentro de /leads/*. Ver app/(app)/@modal/(.)leads/[id]/page.tsx.
+  modal: React.ReactNode;
+}) {
   const { usuario } = await usuarioAutenticado();
 
   let isAdmin = true;
@@ -40,6 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         publicoOrg={publicoOrg}
       />
       <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
+      {modal}
     </div>
   );
 }
