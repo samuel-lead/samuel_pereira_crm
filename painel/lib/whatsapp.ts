@@ -28,14 +28,45 @@ function linkWhatsAppApp(telefone: string) {
   return `whatsapp://send?phone=55${digitosWhatsApp(telefone)}`;
 }
 
-// Dispara o app E o Web ao mesmo tempo, sem tentar adivinhar antes se o
-// app está instalado — não dá pra saber isso de forma confiável (o
-// navegador não avisa a tempo, então uma tentativa anterior de "tenta o
-// app, e só abre o Web se não abriu" acabava abrindo os dois de qualquer
-// jeito, só que atrasado e confuso). Disparando junto: se o app existir,
-// abre os dois (a aba Web fica sobrando, mas não atrapalha); se não
-// existir, só a aba Web abre.
+export type PreferenciaWhatsapp = "ambos" | "app" | "web";
+const CHAVE_PREFERENCIA_WHATSAPP = "preferenciaAbrirWhatsapp";
+
+// Preferência é por dispositivo, não por conta — por isso fica no
+// localStorage do navegador, não no banco. Cada computador sabe se tem
+// o app instalado ou não; a conta de usuário não sabe disso.
+export function lerPreferenciaWhatsapp(): PreferenciaWhatsapp {
+  if (typeof window === "undefined") return "ambos";
+  const salva = window.localStorage.getItem(CHAVE_PREFERENCIA_WHATSAPP);
+  return salva === "app" || salva === "web" ? salva : "ambos";
+}
+
+export function salvarPreferenciaWhatsapp(preferencia: PreferenciaWhatsapp) {
+  window.localStorage.setItem(CHAVE_PREFERENCIA_WHATSAPP, preferencia);
+}
+
+// Sem preferência definida, dispara o app E o Web ao mesmo tempo, sem
+// tentar adivinhar antes se o app está instalado — não dá pra saber isso
+// de forma confiável (o navegador não avisa a tempo, então uma tentativa
+// anterior de "tenta o app, e só abre o Web se não abriu" acabava abrindo
+// os dois de qualquer jeito, só que atrasado e confuso). Com preferência
+// definida (ver components/preferencia-whatsapp-form.tsx), abre só aquele.
 export function abrirWhatsApp(telefone: string) {
+  const preferencia = lerPreferenciaWhatsapp();
+
+  if (preferencia === "app") {
+    window.location.href = linkWhatsAppApp(telefone);
+    return;
+  }
+
+  if (preferencia === "web") {
+    window.open(
+      linkWhatsApp(telefone),
+      "whatsapp",
+      "width=420,height=680,noopener,noreferrer"
+    );
+    return;
+  }
+
   window.open(
     linkWhatsApp(telefone),
     "whatsapp",

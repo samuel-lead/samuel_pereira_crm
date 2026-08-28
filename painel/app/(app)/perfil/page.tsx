@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { FotoPerfilForm } from "@/components/foto-perfil-form";
 import { TrocarSenhaForm } from "@/components/trocar-senha-form";
 import { TrocarTelefoneForm } from "@/components/trocar-telefone-form";
+import { PreferenciaWhatsappForm } from "@/components/preferencia-whatsapp-form";
 
 export default async function PerfilPage() {
   const { user, usuario } = await usuarioAutenticado();
@@ -59,6 +60,18 @@ export default async function PerfilPage() {
           </p>
 
           <TrocarTelefoneForm telefoneAtual={dadosTelefone?.wpp_comercial_e164 ?? null} />
+        </div>
+
+        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+            Abrir WhatsApp
+          </h2>
+          <p className="mb-4 text-xs text-neutral-500">
+            Quando você clica pra chamar um lead no WhatsApp, escolha o que
+            abre. Só vale pra este computador/navegador.
+          </p>
+
+          <PreferenciaWhatsappForm />
         </div>
 
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
