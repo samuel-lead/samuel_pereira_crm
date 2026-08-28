@@ -9,6 +9,7 @@ import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario
 import { Reuniao, reuniao } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
+import { prefetchLead } from "@/lib/leads/cache-lead";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_FOLLOW_POS_REUNIAO = 7;
@@ -328,6 +329,7 @@ export function KanbanBoard({
                         onKeyDown={(e) => {
                           if (e.key === "Enter") abrirLead(lead.id);
                         }}
+                        onMouseEnter={() => prefetchLead(lead.id)}
                         draggable={arrastavel}
                         onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead)}
                         title={

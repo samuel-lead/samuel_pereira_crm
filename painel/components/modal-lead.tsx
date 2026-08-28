@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { buscarDetalhesDoLead, type DetalhesLead } from "@/lib/leads/actions";
 import { ContextoLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { LeadModalConteudo } from "@/components/lead-modal-conteudo";
+import { lerLeadDoCache, salvarLeadNoCache } from "@/lib/leads/cache-lead";
 
 // Pop-up que abre por cima da tela atual ao clicar num lead, sem trocar
 // de rota — não usa nenhuma técnica de rota do Next.js (foi exatamente
@@ -21,15 +22,20 @@ export function ModalLead({
   reuniaoAnteriorSumiu?: "sim" | "nao";
   aoFechar: () => void;
 }) {
-  const [dados, setDados] = useState<DetalhesLead | null>(null);
+  // Se a pessoa passou o mouse no card antes de clicar, os dados já
+  // podem estar prontos aqui (ver lib/leads/cache-lead.ts) — o pop-up
+  // abre com o conteúdo na hora, sem "Carregando...". Mesmo assim busca
+  // de novo por baixo dos panos pra garantir que está atualizado.
+  const [dados, setDados] = useState<DetalhesLead | null>(() => lerLeadDoCache(leadId) ?? null);
   const [erro, setErro] = useState<string | null>(null);
-  const [carregando, setCarregando] = useState(true);
+  const [carregando, setCarregando] = useState(() => !lerLeadDoCache(leadId));
 
   const carregar = useCallback(async () => {
     const resultado = await buscarDetalhesDoLead(leadId);
     setDados(resultado.dados);
     setErro(resultado.erro);
     setCarregando(false);
+    if (resultado.dados) salvarLeadNoCache(leadId, resultado.dados);
   }, [leadId]);
 
   useEffect(() => {

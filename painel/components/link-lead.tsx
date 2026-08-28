@@ -1,6 +1,7 @@
 "use client";
 
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
+import { prefetchLead } from "@/lib/leads/cache-lead";
 
 // Link que abre o pop-up do lead ao clicar normal, mas continua sendo um
 // <a> de verdade com href pra /leads/[id] — clique com Ctrl/Cmd (abrir em
@@ -26,7 +27,13 @@ export function LinkLead({
   }
 
   return (
-    <a href={`/leads/${leadId}`} onClick={aoClicar} className={className} title={title}>
+    <a
+      href={`/leads/${leadId}`}
+      onClick={aoClicar}
+      onMouseEnter={() => prefetchLead(leadId)}
+      className={className}
+      title={title}
+    >
       {children}
     </a>
   );

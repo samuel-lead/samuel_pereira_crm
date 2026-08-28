@@ -4,6 +4,7 @@ import { IconeWhatsapp } from "@/components/icons";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
+import { prefetchLead } from "@/lib/leads/cache-lead";
 
 export type LeadBase = {
   id: string;
@@ -104,6 +105,7 @@ export function BaseLeadsBoard({
                     onKeyDown={(e) => {
                       if (e.key === "Enter") abrirLead(lead.id);
                     }}
+                    onMouseEnter={() => prefetchLead(lead.id)}
                     className="kanban-card group block cursor-pointer rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg"
                   >
                     <div className="flex items-start gap-2.5">
