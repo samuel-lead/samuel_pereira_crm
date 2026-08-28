@@ -149,6 +149,36 @@ async function sincronizarReuniao(
     publicoOrg = "mentoria",
   } = params;
 
+  // Trava 1: sair de "Reunião marcada" só pode ir pra No-show, Precisa
+  // reagendar, Follow ou Oportunidades — são os únicos caminhos que fecham
+  // a reunião certinho (ver bloco abaixo). Voltar direto pra um nível
+  // anterior (ou pular pra Base) deixava a reunião "marcada" pra sempre,
+  // esquecida, sem ninguém saber que ela existe (foi o que aconteceu com a
+  // Camila Flora).
+  if (
+    deOrdem === NIVEL_REUNIAO_MARCADA &&
+    paraOrdem !== NIVEL_NO_SHOW &&
+    paraOrdem !== NIVEL_REAGENDAMENTO &&
+    paraOrdem !== NIVEL_FOLLOW_POS_REUNIAO &&
+    paraOrdem !== NIVEL_REUNIAO_FEITA
+  ) {
+    return `Não dá pra sair de "${Reuniao(publicoOrg)} marcada" direto pra esse nível — a ${reuniao(publicoOrg)} ficaria perdida no sistema. Se ela não aconteceu, mova pra "No-show" ou "Precisa reagendar"; se aconteceu, mova pra "Follow após reunião" ou "Oportunidades".`;
+  }
+
+  // Trava 2: não dá pra pular direto pra Follow/Oportunidades/Base sem o
+  // lead nunca ter tido nenhuma reunião registrada — foi o que aconteceu
+  // com o Igor Basílio (foi parar em "Oportunidades" sem reunião nenhuma).
+  if (paraOrdem >= NIVEL_FOLLOW_POS_REUNIAO) {
+    const { count: totalReunioes } = await supabase
+      .from("reunioes")
+      .select("id", { count: "exact", head: true })
+      .eq("lead_id", leadId);
+
+    if (!totalReunioes) {
+      return `Esse lead nunca teve uma ${reuniao(publicoOrg)} registrada — não dá pra pular direto pra esse nível. Marque a ${reuniao(publicoOrg)} primeiro.`;
+    }
+  }
+
   if (paraOrdem === NIVEL_REUNIAO_MARCADA && deOrdem !== NIVEL_REUNIAO_MARCADA) {
     if (!agendadaPara) {
       return `Informe a data e hora da ${reuniao(publicoOrg)}.`;
@@ -227,16 +257,16 @@ async function sincronizarReuniao(
       paraOrdem === NIVEL_FOLLOW_POS_REUNIAO ||
       paraOrdem === NIVEL_REUNIAO_FEITA)
   ) {
-    const { data: reuniao } = await supabase
+    const { data: reuniaoAtiva } = await supabase
       .from("reunioes")
-      .select("id, closer_id")
+      .select("id, closer_id, agendada_para")
       .eq("lead_id", leadId)
       .eq("status", "marcada")
       .order("marcada_em", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (reuniao) {
+    if (reuniaoAtiva) {
       // No Show = sumiu sem avisar. Reagendamento = avisou antes que ia
       // precisar remarcar. Nenhum dos dois é "realizada" — só conta como
       // realizada quem seguiu pra Follow/Oportunidades com a call feita.
@@ -248,19 +278,29 @@ async function sincronizarReuniao(
             : reuniaoAconteceu === false
               ? "nao_compareceu"
               : "realizada";
+
+      // Trava 3: não dá pra marcar como realizada uma reunião cuja data
+      // ainda não chegou — foi o que aconteceu com o Jardel Alves (data
+      // errada, 31/08, marcada como realizada antes mesmo de chegar lá).
+      if (novoStatus === "realizada" && new Date(reuniaoAtiva.agendada_para) > new Date()) {
+        return `Essa ${reuniao(publicoOrg)} está marcada pra uma data que ainda não chegou (${new Date(
+          reuniaoAtiva.agendada_para
+        ).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}) — confira se a data está certa antes de marcar como realizada.`;
+      }
+
       const { error } = await supabase
         .from("reunioes")
         .update({ status: novoStatus })
-        .eq("id", reuniao.id);
+        .eq("id", reuniaoAtiva.id);
       if (error) return error.message;
 
       // Reunião realizada de verdade (foi pra Follow ou já virou
       // Oportunidade E a reunião de fato aconteceu): o lead passa a ser
       // 100% do Closer que fez a call.
-      if (novoStatus === "realizada" && reuniao.closer_id) {
+      if (novoStatus === "realizada" && reuniaoAtiva.closer_id) {
         const { error: erroTransferencia } = await supabase.rpc(
           "transferir_lead_para_closer",
-          { p_lead_id: leadId, p_closer_id: reuniao.closer_id }
+          { p_lead_id: leadId, p_closer_id: reuniaoAtiva.closer_id }
         );
         if (erroTransferencia) return erroTransferencia.message;
       }
@@ -813,6 +853,25 @@ export async function marcarVendido(
 
   const produto = String(formData.get("produto") ?? "").trim() || null;
 
+  // Busca a reunião ANTES de gravar a venda — se a data dela ainda não
+  // chegou, é sinal de data errada (bloqueia antes de mexer em qualquer
+  // coisa, pra não deixar o lead marcado como vendido com um erro no meio).
+  const { data: reuniaoAtiva } = await supabase
+    .from("reunioes")
+    .select("id, agendada_para")
+    .eq("lead_id", leadId)
+    .order("marcada_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (reuniaoAtiva && new Date(reuniaoAtiva.agendada_para) > new Date()) {
+    return {
+      erro: `A ${reuniao(usuario.publico_org)} desse lead está marcada pra uma data que ainda não chegou (${new Date(
+        reuniaoAtiva.agendada_para
+      ).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}) — confira se a data está certa antes de marcar como vendido.`,
+    };
+  }
+
   const { error } = await supabase
     .from("leads")
     .update({
@@ -828,15 +887,7 @@ export async function marcarVendido(
     return { erro: error.message };
   }
 
-  const { data: reuniao } = await supabase
-    .from("reunioes")
-    .select("id")
-    .eq("lead_id", leadId)
-    .order("marcada_em", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (reuniao) {
+  if (reuniaoAtiva) {
     // Vendeu = a reunião aconteceu de verdade. Sem isso, a reunião ficava
     // "marcada" pra sempre mesmo depois de virar venda — some das contas
     // de "reuniões realizadas" (foi assim que a Thaiana Mourao sumiu da
@@ -844,7 +895,7 @@ export async function marcarVendido(
     await supabase
       .from("reunioes")
       .update({ status: "realizada", resultado: "vendeu", valor })
-      .eq("id", reuniao.id);
+      .eq("id", reuniaoAtiva.id);
   }
 
   revalidatePath("/leads");
