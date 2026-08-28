@@ -837,9 +837,13 @@ export async function marcarVendido(
     .maybeSingle();
 
   if (reuniao) {
+    // Vendeu = a reunião aconteceu de verdade. Sem isso, a reunião ficava
+    // "marcada" pra sempre mesmo depois de virar venda — some das contas
+    // de "reuniões realizadas" (foi assim que a Thaiana Mourao sumiu da
+    // métrica da Elizabeth mesmo já sendo cliente).
     await supabase
       .from("reunioes")
-      .update({ resultado: "vendeu", valor })
+      .update({ status: "realizada", resultado: "vendeu", valor })
       .eq("id", reuniao.id);
   }
 
