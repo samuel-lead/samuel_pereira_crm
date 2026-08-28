@@ -676,13 +676,21 @@ export async function atualizarLead(
   return { erro: null, salvoEm: Date.now() };
 }
 
-// Chamada só quando o pop-up de um lead fecha (ver components/modal-lead.tsx)
-// — revalida as três telas do Kanban pra mostrar o que mudou. Não pode ser
-// feita durante o save em si (ver comentário acima em atualizarLead).
+// Chamada só quando o pop-up de um lead fecha (ver components/modal-lead.tsx
+// e components/excluir-lead-button.tsx) — revalida todas as telas que
+// mostram dados de lead, pra refletir o que mudou. TODA ação chamada de
+// dentro do pop-up (registrar nota, marcar vendido, próximo contato,
+// reagendar, etc.) tirou o próprio revalidatePath por causa disso — chamar
+// revalidatePath enquanto o pop-up ainda tá aberto faz o Next.js "esquecer"
+// que é um pop-up e trocar pra página cheia sozinho (ver comentário em
+// atualizarLead). Então essas telas só ficam 100% atualizadas de novo
+// quando o pop-up fecha — é a troca que faz o pop-up existir de verdade.
 export async function revalidarListasLeads() {
   revalidatePath("/leads");
   revalidatePath("/leads/base");
   revalidatePath("/leads/vendas");
+  revalidatePath("/leads/lista");
+  revalidatePath("/reunioes");
 }
 
 export async function moverLeadNivel(
@@ -853,10 +861,7 @@ export async function marcarVendido(
       .eq("id", reuniao.id);
   }
 
-  revalidatePath("/leads");
-  revalidatePath("/leads/lista");
-  revalidatePath(`/leads/${leadId}`);
-  return { erro: null };
+  return { erro: null, salvoEm: Date.now() };
 }
 
 export async function editarVenda(
@@ -897,9 +902,7 @@ export async function editarVenda(
     return { erro: error.message };
   }
 
-  revalidatePath("/leads/vendas");
-  revalidatePath(`/leads/${leadId}`);
-  return { erro: null };
+  return { erro: null, salvoEm: Date.now() };
 }
 
 export async function registrarProposta(
@@ -952,9 +955,7 @@ export async function registrarProposta(
     origem: "declarado",
   });
 
-  revalidatePath("/leads");
-  revalidatePath(`/leads/${leadId}`);
-  return { erro: null };
+  return { erro: null, salvoEm: Date.now() };
 }
 
 export async function marcarProximoContato(leadId: string, formData: FormData) {
@@ -984,8 +985,6 @@ export async function marcarProximoContato(leadId: string, formData: FormData) {
     throw new Error(error.message);
   }
 
-  revalidatePath("/leads");
-  revalidatePath(`/leads/${leadId}`);
 }
 
 // Muda só a data/hora de uma reunião/visita que já está marcada — sem
@@ -1025,9 +1024,6 @@ export async function reagendarReuniao(
     throw new Error(error.message);
   }
 
-  revalidatePath("/leads");
-  revalidatePath("/reunioes");
-  revalidatePath(`/leads/${leadId}`);
 }
 
 export async function cancelarProximoContato(leadId: string) {
@@ -1047,8 +1043,6 @@ export async function cancelarProximoContato(leadId: string) {
     throw new Error(error.message);
   }
 
-  revalidatePath("/leads");
-  revalidatePath(`/leads/${leadId}`);
 }
 
 export async function registrarNota(
@@ -1088,8 +1082,7 @@ export async function registrarNota(
   // ele continuava marcado como atrasado mesmo depois do contato já feito.
   await supabase.from("leads").update({ proximo_follow_em: null }).eq("id", leadId);
 
-  revalidatePath(`/leads/${leadId}`);
-  return { erro: null };
+  return { erro: null, salvoEm: Date.now() };
 }
 
 export async function registrarLigacao(leadId: string, atendida: boolean) {
@@ -1118,7 +1111,6 @@ export async function registrarLigacao(leadId: string, atendida: boolean) {
   // Mesma ideia da nota: a ligação cumpre o lembrete de "próximo contato".
   await supabase.from("leads").update({ proximo_follow_em: null }).eq("id", leadId);
 
-  revalidatePath(`/leads/${leadId}`);
 }
 
 export async function excluirInteracao(leadId: string, interacaoId: string) {
@@ -1138,12 +1130,16 @@ export async function excluirInteracao(leadId: string, interacaoId: string) {
   if (error) {
     throw new Error(error.message);
   }
-
-  revalidatePath(`/leads/${leadId}`);
 }
 
+// redirecionar=true (página cheia, link direto) manda de volta pra /leads
+// como sempre foi. redirecionar=false (pop-up) NÃO pode fazer isso — mesmo
+// problema de sempre, revalidatePath/redirect durante o save escapa do
+// pop-up (ver comentário em atualizarLead) — quem fecha o pop-up nesse caso
+// é o próprio ExcluirLeadButton no cliente, depois de ver salvoEm mudar.
 export async function arquivarLead(
   leadId: string,
+  redirecionar: boolean,
   _estadoAnterior: EstadoFormulario,
   _formData: FormData
 ): Promise<EstadoFormulario> {
@@ -1161,6 +1157,10 @@ export async function arquivarLead(
 
   if (error) {
     return { erro: error.message };
+  }
+
+  if (!redirecionar) {
+    return { erro: null, salvoEm: Date.now() };
   }
 
   revalidatePath("/leads");
@@ -1202,7 +1202,5 @@ export async function reivindicarLead(
     return { erro: mensagemAmigavel(error.code, error.message) };
   }
 
-  revalidatePath("/leads");
-  revalidatePath(`/leads/${leadId}`);
-  return { erro: null };
+  return { erro: null, salvoEm: Date.now() };
 }

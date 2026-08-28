@@ -440,7 +440,11 @@ export async function LeadDetalhe({
         </div>
 
         {podeEditar && (
-          <ExcluirLeadButton leadId={leadTipado.id} nome={leadTipado.nome} />
+          <ExcluirLeadButton
+            leadId={leadTipado.id}
+            nome={leadTipado.nome}
+            variante={variante}
+          />
         )}
       </div>
     </main>
