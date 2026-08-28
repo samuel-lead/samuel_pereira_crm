@@ -90,8 +90,8 @@ export function EditarLeadForm({
   const enviandoRef = useRef(false);
 
   // Só roda dentro do pop-up (fora dele, quem sinaliza sucesso é o
-  // redirect — ver atualizarLead). Sem isso a tela nunca saberia que
-  // salvou, já que aqui não navega pra lugar nenhum.
+  // redirect — ver atualizarLead). Samuel pediu explicitamente que
+  // "Salvar alterações" feche o pop-up sozinho, sem precisar clicar fora.
   useEffect(() => {
     if (pendente) {
       enviandoRef.current = true;
@@ -100,7 +100,7 @@ export function EditarLeadForm({
     if (enviandoRef.current) {
       enviandoRef.current = false;
       if (estado.erro === null) {
-        modalAtivo?.recarregar();
+        modalAtivo?.fechar();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
