@@ -6,7 +6,6 @@ import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 import { reuniao, Reuniao } from "@/lib/terminologia";
-import { diasDesde } from "@/lib/datas";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const NIVEL_REUNIAO_MARCADA = "4";
@@ -51,7 +50,6 @@ type Lead = {
   oportunidade_futura: boolean;
   motivo_base: string | null;
   status: string;
-  entrou_nivel_em: string;
 };
 
 const campoClasse =
@@ -206,16 +204,6 @@ export function EditarLeadForm({
     reuniaoAtivaAgendadaPara && new Date(reuniaoAtivaAgendadaPara) > new Date()
   );
 
-  // Nível com prazo (ex.: "Sem conversa iniciada" estoura em 5 dias) — deixa
-  // a SDR ver/corrigir em que dia desse prazo o lead já está, em vez de só
-  // confiar cegamente em quando o registro foi salvo no banco.
-  const nivelAlvo = niveis.find((n) => n.ordem === Number(nivelSelecionado));
-  const prazoDoNivelAlvo = nivelAlvo?.prazo_dias ?? null;
-  const diaDoNivelPadrao =
-    nivelSelecionado === String(lead.nivel_ordem)
-      ? Math.min(prazoDoNivelAlvo ?? 999, diasDesde(lead.entrou_nivel_em) + 1)
-      : 1;
-
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
       <form action={acaoFormulario} className="space-y-4">
@@ -350,32 +338,6 @@ export function EditarLeadForm({
               Follow, Oportunidades e Base estão bloqueados: esse lead nunca teve uma{" "}
               {reuniao(publicoOrg)} registrada.
             </p>
-          )}
-
-          {prazoDoNivelAlvo != null && (
-            <div className="mt-2 space-y-1 rounded-md border border-blue-200 bg-blue-50 p-3">
-              <label className="text-sm font-medium text-blue-800" htmlFor="dia_no_nivel">
-                Em que dia do prazo esse lead está?
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  key={nivelSelecionado}
-                  id="dia_no_nivel"
-                  name="dia_no_nivel"
-                  type="number"
-                  min={1}
-                  max={prazoDoNivelAlvo}
-                  defaultValue={diaDoNivelPadrao}
-                  className={`${campoClasse} w-20 bg-white`}
-                />
-                <span className="text-sm text-blue-700">de {prazoDoNivelAlvo} dias</span>
-              </div>
-              <p className="text-xs text-blue-700">
-                Esse nível estoura em {prazoDoNivelAlvo} dias. Se o lead já vinha de antes
-                (importado, ou só corrigindo a data errada), ajusta aqui em que dia ele já
-                está — o prazo passa a contar a partir disso.
-              </p>
-            </div>
           )}
 
           {vaiEntrarEmReuniaoMarcada && (

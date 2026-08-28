@@ -150,9 +150,6 @@ export type NivelResumo = {
   nome: string;
   numerado: boolean;
   destacado: boolean;
-  // Quantos dias o lead pode ficar nesse nível antes de estourar o prazo
-  // (ex.: "Sem conversa iniciada" estoura em 5 dias). null = sem prazo.
-  prazo_dias?: number | null;
 };
 
 export const NIVEL_OPORTUNIDADE_FUTURA: NivelResumo = {
@@ -160,7 +157,6 @@ export const NIVEL_OPORTUNIDADE_FUTURA: NivelResumo = {
   nome: "Oportunidades futuras",
   numerado: false,
   destacado: true,
-  prazo_dias: null,
 };
 
 export function numerarNiveis(niveis: NivelResumo[]) {

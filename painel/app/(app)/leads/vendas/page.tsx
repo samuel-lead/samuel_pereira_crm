@@ -32,7 +32,6 @@ type LeadResumo = {
   receita_venda: number | null;
   nivel_ordem: number;
   responsavel_id: string | null;
-  entrou_nivel_em: string;
   ultima_atividade_em?: string;
 };
 
@@ -102,7 +101,6 @@ export default async function VendasPage({
     receita_venda: lead.receita_venda,
     nivel_ordem: 4,
     responsavel_id: lead.responsavel_id,
-    entrou_nivel_em: lead.vendido_em ?? new Date().toISOString(),
     ultima_atividade_em: lead.vendido_em ?? undefined,
   }));
 

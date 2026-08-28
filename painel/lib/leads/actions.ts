@@ -491,15 +491,6 @@ export async function atualizarLead(
   const motivoBaseForm = String(formData.get("motivo_base") ?? "").trim() || null;
   const reuniaoAconteceuForm = String(formData.get("reuniao_aconteceu") ?? "").trim();
   const reuniaoAnteriorSumiuForm = String(formData.get("reuniao_anterior_sumiu") ?? "").trim();
-  // SDR corrigindo/declarando em que dia do prazo o lead já está (ex.: nível
-  // "Sem conversa iniciada", que estoura em 5 dias) — só aparece no
-  // formulário quando o nível escolhido tem prazo_dias definido. Dia 1 =
-  // entrou_nivel_em é agora; dia N = entrou_nivel_em foi há (N-1) dias.
-  const diaNoNivelForm = Number(formData.get("dia_no_nivel") ?? "");
-  const entrouNivelEmAjustado =
-    Number.isFinite(diaNoNivelForm) && diaNoNivelForm > 0
-      ? new Date(Date.now() - (diaNoNivelForm - 1) * 24 * 60 * 60 * 1000).toISOString()
-      : null;
   // Só faz sentido em Oportunidades (nível 6) — fora dele, fica sempre false.
   const oportunidadeFutura =
     novoNivel === NIVEL_REUNIAO_FEITA && formData.get("oportunidade_futura") === "on";
@@ -670,17 +661,9 @@ export async function atualizarLead(
       oportunidade_futura: oportunidadeFutura,
       motivo_base: motivoBase,
       ...(transferenciaParaCloser ? {} : { responsavel_id: responsavelId }),
-      // entrou_nivel_em: se a SDR ajustou manualmente o "dia do nível", usa
-      // esse valor; senão, só reseta pra agora quando o nível mudou de
-      // verdade (senão o prazo ficava contando de antes da última mudança).
-      ...(entrouNivelEmAjustado
-        ? { entrou_nivel_em: entrouNivelEmAjustado }
-        : nivelMudou
-          ? { entrou_nivel_em: new Date().toISOString() }
-          : {}),
       // Mover de nível cumpre o lembrete de "próximo contato" — sem isso,
       // continuava marcado como atrasado mesmo com o lead já andando.
-      ...(nivelMudou ? { proximo_follow_em: null } : {}),
+      ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString(), proximo_follow_em: null } : {}),
     })
     .eq("id", leadId);
 
@@ -1302,7 +1285,6 @@ export type DetalhesLead = {
     proposta_enviada_em: string | null;
     proposta_observacao: string | null;
     proximo_follow_em: string | null;
-    entrou_nivel_em: string;
   };
   niveis: NivelResumo[];
   interacoes: {
@@ -1369,11 +1351,11 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, entrou_nivel_em"
+        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em"
       )
       .eq("id", leadId)
       .single(),
-    supabase.from("niveis").select("ordem, nome, numerado, destacado, prazo_dias").order("ordem"),
+    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     supabase
       .from("interacoes")
       .select("id, tipo, canal, conteudo, ocorreu_em")
