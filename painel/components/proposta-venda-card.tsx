@@ -1,6 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import { RegistrarPropostaForm } from "@/components/registrar-proposta-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
 
+// Proposta e venda não são passos obrigatórios em sequência — às vezes a
+// reunião já fecha na hora, sem proposta nenhuma registrada antes (Samuel
+// pediu explicitamente pra tirar essa cara de "1 depois 2"). Vira uma
+// escolha: a pessoa decide qual dos dois aconteceu e só esse formulário
+// aparece. Os dois ficam montados o tempo todo (só escondidos com CSS),
+// pra não perder o que já foi digitado ao trocar de aba.
 export function PropostaVendaCard({
   leadId,
   propostaAtual,
@@ -14,30 +23,43 @@ export function PropostaVendaCard({
   };
   produtos: string[];
 }) {
+  const [aba, setAba] = useState<"proposta" | "venda">("proposta");
+  const temProposta = propostaAtual.valor != null;
+
   return (
     <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-      <div className="p-4">
-        <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-700">
-          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-600 text-[10px] text-white">
-            1
-          </span>
+      <div className="flex border-b border-neutral-100">
+        <button
+          type="button"
+          onClick={() => setAba("proposta")}
+          className={`flex-1 px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition ${
+            aba === "proposta"
+              ? "border-b-2 border-amber-600 text-amber-700"
+              : "border-b-2 border-transparent text-neutral-400 hover:text-neutral-600"
+          }`}
+        >
           Proposta
-        </p>
-        <RegistrarPropostaForm leadId={leadId} propostaAtual={propostaAtual} />
+        </button>
+        <button
+          type="button"
+          onClick={() => setAba("venda")}
+          className={`flex-1 px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition ${
+            aba === "venda"
+              ? "border-b-2 border-green-600 text-green-700"
+              : "border-b-2 border-transparent text-neutral-400 hover:text-neutral-600"
+          }`}
+        >
+          Venda
+        </button>
       </div>
 
-      <div className="border-t border-neutral-100 p-4">
-        <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-green-700">
-          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-green-600 text-[10px] text-white">
-            2
-          </span>
-          Fechar venda
-        </p>
-        <MarcarVendidoForm
-          leadId={leadId}
-          temProposta={propostaAtual.valor != null}
-          produtos={produtos}
-        />
+      <div className="p-4">
+        <div className={aba === "proposta" ? "" : "hidden"}>
+          <RegistrarPropostaForm leadId={leadId} propostaAtual={propostaAtual} />
+        </div>
+        <div className={aba === "venda" ? "" : "hidden"}>
+          <MarcarVendidoForm leadId={leadId} temProposta={temProposta} produtos={produtos} />
+        </div>
       </div>
     </div>
   );
