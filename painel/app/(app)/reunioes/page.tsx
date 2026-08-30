@@ -43,6 +43,36 @@ function formatarTempoDecorrido(dataISO: string) {
   return "agora mesmo";
 }
 
+// Célula "N vendas" com faturamento do lado do número e receita numa
+// linha embaixo — reaproveitada em "Vendas hoje" e "Vendas no mês", os
+// dois só mudam o rótulo e a fonte dos números.
+function CartaoVendas({
+  label,
+  vendas,
+  faturamento,
+  receita,
+}: {
+  label: string;
+  vendas: number;
+  faturamento: number;
+  receita: number;
+}) {
+  return (
+    <div className="min-w-[150px] flex-1 px-3 py-2">
+      <p className="text-[10px] leading-tight text-neutral-500">{label}</p>
+      <div className="mt-0.5 flex items-baseline gap-2">
+        <span className="text-base font-bold leading-tight text-neutral-900">{vendas}</span>
+        <span className="truncate text-[10px] leading-tight text-neutral-400">
+          {formatarMoeda(faturamento)} faturamento
+        </span>
+      </div>
+      <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
+        {formatarMoeda(receita)} receita
+      </p>
+    </div>
+  );
+}
+
 type LeadResumo = {
   id: string;
   nome: string;
@@ -291,22 +321,21 @@ export default async function VendasPage({
                 }
               />
               {vendasHoje !== null && vendasHoje.vendas > 0 && (
-                <div className="min-w-[150px] flex-1 px-3 py-2">
-                  <p className="text-[10px] leading-tight text-neutral-500">Vendas hoje</p>
-                  <div className="mt-0.5 flex items-baseline gap-2">
-                    <span className="text-base font-bold leading-tight text-neutral-900">
-                      {vendasHoje.vendas}
-                    </span>
-                    <span className="truncate text-[10px] leading-tight text-neutral-400">
-                      {formatarMoeda(vendasHoje.faturamento)} faturamento
-                    </span>
-                  </div>
-                  <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
-                    {formatarMoeda(vendasHoje.receita)} receita
-                  </p>
-                </div>
+                <CartaoVendas
+                  label="Vendas hoje"
+                  vendas={vendasHoje.vendas}
+                  faturamento={vendasHoje.faturamento}
+                  receita={vendasHoje.receita}
+                />
               )}
-              {vendasMes !== null && <StatCell label="Vendas no mês" value={vendasMes.vendas} />}
+              {vendasMes !== null && (
+                <CartaoVendas
+                  label="Vendas no mês"
+                  vendas={vendasMes.vendas}
+                  faturamento={vendasMes.faturamento}
+                  receita={vendasMes.receita}
+                />
+              )}
               <StatCell
                 label="Propostas em aberto"
                 value={leadsComProposta.length}
