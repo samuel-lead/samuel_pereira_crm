@@ -332,7 +332,7 @@ export function EditarLeadForm({
                     value={OPCAO_OPORTUNIDADE_FUTURA}
                     disabled={!nivelPermitido(NIVEL_OPORTUNIDADES)}
                   >
-                    ↳ Oportunidades futuras
+                    ↳ Repescagem futura de ICP
                     {!nivelPermitido(NIVEL_OPORTUNIDADES) ? " (bloqueado)" : ""}
                   </option>
                 )}
@@ -515,8 +515,8 @@ export function EditarLeadForm({
                   className="mt-0.5"
                 />
                 <span>
-                  Oportunidade futura — fez a {reuniao(publicoOrg)}, é o perfil de cliente
-                  ideal, mas não está podendo investir nesse mês.
+                  Repescagem futura de ICP — fez a {reuniao(publicoOrg)}, é ICP qualificado
+                  (perfil de cliente ideal), mas não está podendo investir nesse mês.
                 </span>
               </label>
             </div>

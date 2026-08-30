@@ -154,7 +154,7 @@ export type NivelResumo = {
 
 export const NIVEL_OPORTUNIDADE_FUTURA: NivelResumo = {
   ordem: ORDEM_OPORTUNIDADE_FUTURA,
-  nome: "Oportunidades futuras",
+  nome: "Repescagem futura de ICP",
   numerado: false,
   destacado: true,
 };
