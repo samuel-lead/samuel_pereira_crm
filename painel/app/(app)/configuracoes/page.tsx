@@ -52,7 +52,7 @@ export default async function ConfiguracoesPage() {
     <>
       <PageHeader titulo="Configurações" />
 
-      <main className="max-w-2xl px-6 py-6">
+      <main className="max-w-5xl px-6 py-6">
         {souSuperAdmin && (
           <div className="mb-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
             <h2 className="mb-1 text-sm font-semibold text-neutral-800">
@@ -72,7 +72,7 @@ export default async function ConfiguracoesPage() {
         )}
 
         {metas && (
-          <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
             <h2 className="mb-1 text-sm font-semibold text-neutral-800">
               Metas e taxas do sistema
             </h2>
@@ -85,33 +85,35 @@ export default async function ConfiguracoesPage() {
           </div>
         )}
 
-        {souAdmin && (
-          <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-1 text-sm font-semibold text-neutral-800">
-              Origens dos leads
-            </h2>
-            <p className="mb-4 text-xs text-neutral-500">
-              Lista que aparece no cadastro do lead. Quem cadastra também
-              pode digitar uma origem nova ali — ela entra aqui
-              automaticamente. Renomear uma origem atualiza todos os leads
-              que já usam ela.
-            </p>
-            <OrigensConfig origens={origens} />
-          </div>
-        )}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {souAdmin && (
+            <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+                Origens dos leads
+              </h2>
+              <p className="mb-4 text-xs text-neutral-500">
+                Lista que aparece no cadastro do lead. Quem cadastra também
+                pode digitar uma origem nova ali — ela entra aqui
+                automaticamente. Renomear uma origem atualiza todos os leads
+                que já usam ela.
+              </p>
+              <OrigensConfig origens={origens} />
+            </div>
+          )}
 
-        {souAdmin && (
-          <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-1 text-sm font-semibold text-neutral-800">
-              Produtos
-            </h2>
-            <p className="mb-4 text-xs text-neutral-500">
-              Lista que aparece ao marcar uma venda. Renomear um produto
-              atualiza todos os leads que já usam ele.
-            </p>
-            <ProdutosConfig produtos={produtos} />
-          </div>
-        )}
+          {souAdmin && (
+            <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+                Produtos
+              </h2>
+              <p className="mb-4 text-xs text-neutral-500">
+                Lista que aparece ao marcar uma venda. Renomear um produto
+                atualiza todos os leads que já usam ele.
+              </p>
+              <ProdutosConfig produtos={produtos} />
+            </div>
+          )}
+        </div>
 
         {bonusSdrConfig && (
           <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">

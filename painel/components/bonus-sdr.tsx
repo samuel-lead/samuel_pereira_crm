@@ -105,7 +105,7 @@ export function BonusSdrTabela({
           {formatarMoeda(totalEquipe)}
         </p>
         <p className="relative mt-2 text-sm font-medium text-green-100">
-          {`${Calls(publicoOrg)} realizadas (≥${config.calls_tier1_qtd}/${config.calls_tier2_qtd}/${config.calls_tier3_qtd} → ${moedaCurta(config.calls_tier1_valor)}/${moedaCurta(config.calls_tier2_valor)}/${moedaCurta(config.calls_tier3_valor)}) + ${moedaCurta(config.valor_call_fim_semana)} por ${call(publicoOrg)} marcada no fim de semana e realizada + faturamento do mês (≥${moedaCurta(config.faturamento_tier1_valor)}/${moedaCurta(config.faturamento_tier2_valor)}/${moedaCurta(config.faturamento_tier3_valor)} → ${moedaCurta(config.faturamento_tier1_bonus)}/${moedaCurta(config.faturamento_tier2_bonus)}/${moedaCurta(config.faturamento_tier3_bonus)}).`}
+          {`${Calls(publicoOrg)} realizadas (≥${config.calls_tier1_qtd}/${config.calls_tier2_qtd}/${config.calls_tier3_qtd} → ${moedaCurta(config.calls_tier1_valor)}/${moedaCurta(config.calls_tier2_valor)}/${moedaCurta(config.calls_tier3_valor)}) + ${moedaCurta(config.valor_call_fim_semana)} por ${call(publicoOrg)} realizada que foi marcada no fim de semana + faturamento do mês (≥${moedaCurta(config.faturamento_tier1_valor)}/${moedaCurta(config.faturamento_tier2_valor)}/${moedaCurta(config.faturamento_tier3_valor)} → ${moedaCurta(config.faturamento_tier1_bonus)}/${moedaCurta(config.faturamento_tier2_bonus)}/${moedaCurta(config.faturamento_tier3_bonus)}).`}
           {periodo && <> Mês de {periodo}.</>}
         </p>
       </div>
@@ -152,7 +152,10 @@ export function BonusSdrTabela({
 
             <div className="mt-3 divide-y divide-neutral-100 rounded-lg border border-neutral-100 bg-neutral-50/60">
               <LinhaBonus label={`Bônus por ${calls(publicoOrg)} realizadas`} valor={linha.bonusPorCallRealizada} />
-              <LinhaBonus label={`Bônus por ${call(publicoOrg)} no fim de semana`} valor={linha.bonusFimDeSemana} />
+              <LinhaBonus
+                label={`Bônus por ${call(publicoOrg)} realizada que foi marcada no fim de semana`}
+                valor={linha.bonusFimDeSemana}
+              />
               <LinhaBonus label="Bônus por faturamento" valor={linha.bonusPorFaturamento} />
             </div>
           </div>

@@ -99,7 +99,7 @@ export function BonusSdrConfigForm({
 
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600">
-          Bônus por {call(publicoOrg)} marcada no fim de semana
+          Bônus por {call(publicoOrg)} realizada que foi marcada no fim de semana
         </p>
         <div className="max-w-[160px]">
           <Campo

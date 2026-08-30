@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { IconeWhatsapp } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
@@ -69,15 +70,38 @@ export function BaseLeadsBoard({
   nomePorUsuario: Map<string, string>;
 }) {
   const abrirLead = useAbrirLeadModal();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const idRoladoRef = useRef<string | null>(null);
+
+  // Busca achou um lead só: rola a tela sozinha até a coluna dele, mesmo
+  // jeito do Kanban de Pré-vendas — senão a pessoa acha que sumiu quando a
+  // coluna está fora da área visível.
+  useEffect(() => {
+    const todosLeads = Object.values(leadsPorMotivo).flat();
+    if (todosLeads.length !== 1) {
+      idRoladoRef.current = null;
+      return;
+    }
+    const [unico] = todosLeads;
+    if (idRoladoRef.current === unico.id) return;
+    idRoladoRef.current = unico.id;
+
+    const motivoDoUnico = (Object.keys(leadsPorMotivo) as MotivoBase[]).find((motivo) =>
+      leadsPorMotivo[motivo]?.some((l) => l.id === unico.id)
+    );
+    const coluna = scrollRef.current?.querySelector(`[data-motivo="${motivoDoUnico}"]`);
+    coluna?.scrollIntoView({ behavior: "instant", inline: "center", block: "nearest" });
+  }, [leadsPorMotivo]);
 
   return (
     <div className="relative h-full min-h-0 flex-1">
-      <div className="scrollbar-kanban flex h-full gap-5 overflow-x-auto pb-2 pl-1 pr-1">
+      <div ref={scrollRef} className="scrollbar-kanban flex h-full gap-5 overflow-x-auto pb-2 pl-1 pr-1">
       {COLUNAS.map((coluna) => {
         const leads = leadsPorMotivo[coluna.chave] ?? [];
         return (
           <section
             key={coluna.chave}
+            data-motivo={coluna.chave}
             className={`kanban-column flex h-full w-72 shrink-0 flex-col rounded-xl border bg-neutral-50 shadow-sm ${coluna.cor.borda}`}
           >
             <div className={`shrink-0 rounded-t-[10px] border-b-2 ${coluna.cor.borda} ${coluna.cor.header} px-4 py-3.5`}>
