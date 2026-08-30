@@ -15,8 +15,8 @@ const GRUPOS = [
     itens: [
       { href: "/leads", label: "Pré-vendas", Icone: IconeFunil, pagina: "funil" },
       { href: "/reunioes", label: "Vendas", Icone: IconeMoeda, pagina: "reunioes" },
-      { href: "/leads/base", label: "Base de leads", Icone: IconeAlvo, pagina: "funil" },
       { href: "/leads/vendas", label: "Clientes", Icone: IconeClientePagante, pagina: "funil" },
+      { href: "/leads/base", label: "Base de leads", Icone: IconeAlvo, pagina: "funil" },
       { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
       { href: "/cartas-contempladas", label: "Cartas contempladas", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
     ],
