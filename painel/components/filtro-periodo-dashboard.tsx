@@ -36,54 +36,68 @@ export function FiltroPeriodoDashboard({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {OPCOES.map((opcao) => (
+    <div className="inline-flex flex-wrap items-stretch divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-center gap-1 px-2 py-2">
+        {OPCOES.map((opcao) => (
+          <button
+            key={opcao.valor}
+            type="button"
+            onClick={() => irPara(opcao.valor)}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+              periodoAtual === opcao.valor
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-neutral-600 hover:bg-neutral-100"
+            }`}
+          >
+            {opcao.label}
+          </button>
+        ))}
+
         <button
-          key={opcao.valor}
           type="button"
-          onClick={() => irPara(opcao.valor)}
-          className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-            periodoAtual === opcao.valor
+          onClick={() => setMostrarCustom((v) => !v)}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+            periodoAtual === "custom"
               ? "bg-blue-600 text-white shadow-sm"
-              : "bg-white text-neutral-600 hover:bg-neutral-100"
+              : "text-neutral-600 hover:bg-neutral-100"
           }`}
         >
-          {opcao.label}
+          Período personalizado
         </button>
-      ))}
-
-      <button
-        type="button"
-        onClick={() => setMostrarCustom((v) => !v)}
-        className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-          periodoAtual === "custom"
-            ? "bg-blue-600 text-white shadow-sm"
-            : "bg-white text-neutral-600 hover:bg-neutral-100"
-        }`}
-      >
-        Período customizado
-      </button>
+      </div>
 
       {mostrarCustom && (
-        <form onSubmit={aplicarCustom} className="flex items-center gap-2">
-          <input
-            type="date"
-            value={de}
-            onChange={(e) => setDe(e.target.value)}
-            required
-            className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          />
-          <span className="text-sm text-neutral-400">até</span>
-          <input
-            type="date"
-            value={ate}
-            onChange={(e) => setAte(e.target.value)}
-            required
-            className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          />
+        <form onSubmit={aplicarCustom} className="flex items-center gap-1.5 px-4 py-2">
+          <div className="flex flex-col justify-center gap-0.5">
+            <label className="text-[10px] font-medium text-neutral-500" htmlFor="periodo-de">
+              De
+            </label>
+            <input
+              id="periodo-de"
+              type="date"
+              value={de}
+              onChange={(e) => setDe(e.target.value)}
+              required
+              className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
+            />
+          </div>
+          <span className="mt-3.5 text-neutral-300">–</span>
+          <div className="flex flex-col justify-center gap-0.5">
+            <label className="text-[10px] font-medium text-neutral-500" htmlFor="periodo-ate">
+              Até
+            </label>
+            <input
+              id="periodo-ate"
+              type="date"
+              value={ate}
+              onChange={(e) => setAte(e.target.value)}
+              required
+              className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
+            />
+          </div>
           <button
             type="submit"
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+            className="ml-1.5 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             Aplicar
           </button>
