@@ -1244,6 +1244,21 @@ export async function arquivarLead(
     return { erro: erroPermissao };
   }
 
+  const { data: leadAtual } = await supabase
+    .from("leads")
+    .select("status")
+    .eq("id", leadId)
+    .single();
+
+  // Cliente que já comprou não pode sumir do sistema — excluir ele fazia o
+  // faturamento de um mês já fechado encolher sozinho, sem ninguém entender
+  // por quê (a conta de métricas sempre ignora lead excluído).
+  if (leadAtual?.status === "vendido") {
+    return {
+      erro: "Esse lead já é cliente (venda registrada) — não dá pra excluir. Se cadastrou errado, corrija os dados em vez de excluir.",
+    };
+  }
+
   const { error } = await supabase
     .from("leads")
     .update({ arquivado_em: new Date().toISOString() })
