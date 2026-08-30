@@ -7,6 +7,7 @@ import { ProximosContatosLista } from "@/components/proximos-contatos-lista";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
+import { StatCell } from "@/components/stat-cell";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 import {
@@ -15,7 +16,7 @@ import {
   inicioDoMes,
 } from "@/lib/metricas";
 import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
-import { call, calls } from "@/lib/terminologia";
+import { Calls } from "@/lib/terminologia";
 
 type LeadResumo = {
   id: string;
@@ -296,89 +297,87 @@ export default async function LeadsPage({
           }
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-6 py-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-sm text-neutral-500">
-              {mostrarSoParados
-                ? `${leadsExibidos.length} lead${leadsExibidos.length === 1 ? "" : "s"} parado${leadsExibidos.length === 1 ? "" : "s"} sendo mostrados`
-                : `${leads.length} lead${leads.length === 1 ? "" : "s"} ao todo`}
-            </p>
-            {mostrarSoParados ? (
-              <Link
-                href={hrefTirarParado}
-                className="rounded-full border border-red-600 bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-700"
-              >
-                Ver todos ✕
-              </Link>
-            ) : (
-              leadsParados > 0 && (
-                <Link
-                  href={hrefLigarParado}
-                  title="Clique pra ver só os leads parados"
-                  className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-100"
-                >
-                  {leadsParados} lead{leadsParados === 1 ? "" : "s"} parado{leadsParados === 1 ? "" : "s"}
+        <div className="space-y-2.5 border-b border-neutral-200 px-6 py-4">
+          <div className="flex flex-wrap items-stretch gap-3">
+            <div className="flex flex-1 flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+              <StatCell
+                label={mostrarSoParados ? "Leads parados" : "Leads ao todo"}
+                value={mostrarSoParados ? leadsExibidos.length : leads.length}
+                sub={
+                  mostrarSoParados ? (
+                    <Link href={hrefTirarParado} className="font-medium text-red-600 hover:underline">
+                      Ver todos ✕
+                    </Link>
+                  ) : (
+                    leadsParados > 0 && (
+                      <Link
+                        href={hrefLigarParado}
+                        title="Clique pra ver só os leads parados"
+                        className="inline-flex items-center gap-1.5 font-medium text-red-600 hover:underline"
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        {leadsParados} parado{leadsParados === 1 ? "" : "s"}
+                      </Link>
+                    )
+                  )
+                }
+              />
+              {ligacoesHoje !== null && (
+                <StatCell
+                  label="Ligações hoje"
+                  value={ligacoesHoje}
+                  sub={souAdmin ? "Time todo" : undefined}
+                />
+              )}
+              {callsMarcadasHoje !== null && (
+                <StatCell
+                  label={`${Calls(publicoOrg)} marcadas hoje`}
+                  value={callsMarcadasHoje}
+                  sub={souAdmin ? "Time todo" : undefined}
+                />
+              )}
+              {callsRealizadasHoje !== null && (
+                <StatCell
+                  label={`${Calls(publicoOrg)} realizadas hoje`}
+                  value={callsRealizadasHoje}
+                  sub={souAdmin ? "Time todo" : undefined}
+                />
+              )}
+              {reagendamentosHoje !== null && reagendamentosHoje > 0 && (
+                <StatCell label="Reagendamentos hoje" value={reagendamentosHoje} />
+              )}
+              {noShowHoje !== null && noShowHoje > 0 && (
+                <StatCell label="No-show hoje" value={noShowHoje} />
+              )}
+            </div>
+
+            {receitaOrgMes !== null && (
+              <MetaReceitaWidget
+                compacta
+                metaReceita={metaReceita}
+                receitaAtual={receitaOrgMes}
+                podeEditar={souAdmin}
+              />
+            )}
+          </div>
+
+          {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
+            <div className="flex flex-wrap items-center gap-4 px-1 text-xs">
+              {mostrarSoContato ? (
+                <Link href={hrefTirarContato} className="font-medium text-teal-600 hover:underline">
+                  Ver todos ✕
                 </Link>
-              )
-            )}
-            {ligacoesHoje !== null && (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                {ligacoesHoje} ligaç{ligacoesHoje === 1 ? "ão" : "ões"} hoje
-                {souAdmin ? " (equipe)" : ""}
-              </span>
-            )}
-            {callsMarcadasHoje !== null && (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                {callsMarcadasHoje} {callsMarcadasHoje === 1 ? call(publicoOrg) : calls(publicoOrg)} marcada
-                {callsMarcadasHoje === 1 ? "" : "s"} hoje
-                {souAdmin ? " (equipe)" : ""}
-              </span>
-            )}
-            {reagendamentosHoje !== null && reagendamentosHoje > 0 && (
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                {reagendamentosHoje} reagendamento{reagendamentosHoje === 1 ? "" : "s"} hoje
-                {souAdmin ? " (equipe)" : ""}
-              </span>
-            )}
-            {callsRealizadasHoje !== null && (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                {callsRealizadasHoje} {callsRealizadasHoje === 1 ? call(publicoOrg) : calls(publicoOrg)} realizada
-                {callsRealizadasHoje === 1 ? "" : "s"} hoje
-                {souAdmin ? " (equipe)" : ""}
-              </span>
-            )}
-            {noShowHoje !== null && noShowHoje > 0 && (
-              <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-                {noShowHoje} no-show{noShowHoje === 1 ? "" : "s"} hoje
-                {souAdmin ? " (equipe)" : ""}
-              </span>
-            )}
-            {mostrarSoContato ? (
-              <Link
-                href={hrefTirarContato}
-                className="rounded-full border border-teal-600 bg-teal-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-teal-700"
-              >
-                Ver todos ✕
-              </Link>
-            ) : (
-              leadsComProximoContato.length > 0 && (
+              ) : (
                 <Link
                   href={hrefLigarContato}
                   title="Clique pra ver só os leads com próximo contato marcado"
-                  className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 transition hover:border-teal-300 hover:bg-teal-100"
+                  className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
                 >
+                  <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
                   {leadsComProximoContato.length} com próximo contato
                 </Link>
-              )
-            )}
-          </div>
-          {receitaOrgMes !== null && (
-            <MetaReceitaWidget
-              compacta
-              metaReceita={metaReceita}
-              receitaAtual={receitaOrgMes}
-              podeEditar={souAdmin}
-            />
+              )}
+            </div>
           )}
         </div>
       </BarraFixaKanban>

@@ -6,6 +6,7 @@ import { ProximosContatosLista } from "@/components/proximos-contatos-lista";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
+import { StatCell } from "@/components/stat-cell";
 import Link from "next/link";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
@@ -148,16 +149,21 @@ export default async function VendasPage({
 
   const leadIds = leads.map((lead) => lead.id);
 
-  const [[receitaOrgMes, metaReceita, vendasHoje, ultimaVenda], { data: reunioesMarcadasData }] =
-    await Promise.all([
+  const [
+    [receitaOrgMes, metaReceita, vendasHoje, ultimaVenda, vendasMes],
+    { data: reunioesMarcadasData },
+  ] = await Promise.all([
       orgId
         ? Promise.all([
             calcularReceitaOrg(supabase, orgId, inicioMes, amanha),
             buscarMetaReceitaMes(supabase, orgId, inicioMes.getUTCFullYear(), inicioMes.getUTCMonth() + 1),
             calcularVendasHoje(supabase, orgId, inicioHoje, amanha),
             buscarUltimaVenda(supabase, orgId),
+            // Mesma função de "vendas hoje", só que passando o início do mês
+            // em vez de hoje — ela já é genérica por período.
+            calcularVendasHoje(supabase, orgId, inicioMes, amanha),
           ])
-        : Promise.resolve([null, null, null, null] as const),
+        : Promise.resolve([null, null, null, null, null] as const),
       leadIds.length
         ? supabase
             .from("reunioes")
@@ -259,81 +265,51 @@ export default async function VendasPage({
           }
         />
 
-        <div className="space-y-3 border-b border-neutral-200 px-6 py-4">
-          {leadsComProposta.length > 0 && (
-            <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
-              <span>💰</span>
-              <span>
-                {leadsComProposta.length} proposta{leadsComProposta.length === 1 ? "" : "s"} em
-                aberto — {formatarMoeda(totalPropostas)}
-              </span>
-            </div>
-          )}
-
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm text-neutral-500">
-                {mostrarSoParados
-                  ? `${leadsExibidos.length} lead${leadsExibidos.length === 1 ? "" : "s"} parado${leadsExibidos.length === 1 ? "" : "s"} sendo mostrados`
-                  : `${leads.length} lead${leads.length === 1 ? "" : "s"} em vendas`}
-              </p>
-              {mostrarSoParados ? (
-                <Link
-                  href={hrefTirarParado}
-                  className="rounded-full border border-red-600 bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-700"
-                >
-                  Ver todos ✕
-                </Link>
-              ) : (
-                leadsParados > 0 && (
-                  <Link
-                    href={hrefLigarParado}
-                    title="Clique pra ver só os leads parados"
-                    className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-100"
-                  >
-                    {leadsParados} lead{leadsParados === 1 ? "" : "s"} parado{leadsParados === 1 ? "" : "s"}
-                  </Link>
-                )
+        <div className="space-y-2.5 border-b border-neutral-200 px-6 py-4">
+          <div className="flex flex-wrap items-stretch gap-3">
+            <div className="flex flex-1 flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+              <StatCell
+                label={mostrarSoParados ? "Leads parados" : "Leads em vendas"}
+                value={mostrarSoParados ? leadsExibidos.length : leads.length}
+                sub={
+                  mostrarSoParados ? (
+                    <Link href={hrefTirarParado} className="font-medium text-red-600 hover:underline">
+                      Ver todos ✕
+                    </Link>
+                  ) : (
+                    leadsParados > 0 && (
+                      <Link
+                        href={hrefLigarParado}
+                        title="Clique pra ver só os leads parados"
+                        className="inline-flex items-center gap-1.5 font-medium text-red-600 hover:underline"
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        {leadsParados} parado{leadsParados === 1 ? "" : "s"}
+                      </Link>
+                    )
+                  )
+                }
+              />
+              {vendasHoje !== null && vendasHoje.vendas > 0 && (
+                <StatCell
+                  label="Vendas hoje"
+                  value={vendasHoje.vendas}
+                  sub={`${formatarMoeda(vendasHoje.faturamento)} fat. · ${formatarMoeda(vendasHoje.receita)} receita`}
+                />
               )}
-              {vendasHoje !== null && (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                  {vendasHoje.vendas} venda{vendasHoje.vendas === 1 ? "" : "s"} hoje
-                </span>
-              )}
-              {vendasHoje !== null && (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                  {formatarMoeda(vendasHoje.faturamento)} faturamento hoje
-                </span>
-              )}
-              {vendasHoje !== null && (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                  {formatarMoeda(vendasHoje.receita)} receita hoje
-                </span>
+              {vendasMes !== null && <StatCell label="Vendas no mês" value={vendasMes.vendas} />}
+              {leadsComProposta.length > 0 && (
+                <StatCell
+                  label="Propostas em aberto"
+                  value={leadsComProposta.length}
+                  sub={formatarMoeda(totalPropostas)}
+                />
               )}
               {ultimaVenda !== null && (
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                  Última venda {formatarTempoDecorrido(ultimaVenda)}
-                </span>
-              )}
-              {mostrarSoContato ? (
-                <Link
-                  href={hrefTirarContato}
-                  className="rounded-full border border-teal-600 bg-teal-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-teal-700"
-                >
-                  Ver todos ✕
-                </Link>
-              ) : (
-                leadsComProximoContato.length > 0 && (
-                  <Link
-                    href={hrefLigarContato}
-                    title="Clique pra ver só os leads com próximo contato marcado"
-                    className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 transition hover:border-teal-300 hover:bg-teal-100"
-                  >
-                    {leadsComProximoContato.length} com próximo contato
-                  </Link>
-                )
+                <StatCell label="Última venda" value={formatarTempoDecorrido(ultimaVenda)} />
               )}
             </div>
+
             {receitaOrgMes !== null && (
               <MetaReceitaWidget
                 compacta
@@ -343,6 +319,25 @@ export default async function VendasPage({
               />
             )}
           </div>
+
+          {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
+            <div className="flex flex-wrap items-center gap-4 px-1 text-xs">
+              {mostrarSoContato ? (
+                <Link href={hrefTirarContato} className="font-medium text-teal-600 hover:underline">
+                  Ver todos ✕
+                </Link>
+              ) : (
+                <Link
+                  href={hrefLigarContato}
+                  title="Clique pra ver só os leads com próximo contato marcado"
+                  className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                  {leadsComProximoContato.length} com próximo contato
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </BarraFixaKanban>
 

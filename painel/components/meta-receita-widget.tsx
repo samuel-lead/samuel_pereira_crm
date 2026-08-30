@@ -129,22 +129,22 @@ export function MetaReceitaWidget({
 
   if (compacta) {
     const conteudo = (
-      <>
-        <span className="font-medium text-neutral-700">
-          Meta do mês: {formatarMoeda(meta)}
-        </span>
-        <span className="text-neutral-300">·</span>
-        <span className={`font-semibold ${bateu ? "text-green-600" : "text-amber-600"}`}>
+      <div className="min-w-[150px] px-4 py-2.5 text-left">
+        <p className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+          <span>🎯</span> Meta de receita do mês
+        </p>
+        <p className="mt-0.5 text-lg font-bold text-neutral-900">{formatarMoeda(meta)}</p>
+        <p className={`mt-0.5 text-[11px] font-medium ${bateu ? "text-green-600" : "text-green-700"}`}>
           {bateu ? "Meta batida! 🎉" : `Falta ${formatarMoeda(falta)}`}
-        </span>
-      </>
+        </p>
+      </div>
     );
 
     if (!podeEditar) {
       return (
-        <span className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs shadow-sm">
+        <div className="shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
           {conteudo}
-        </span>
+        </div>
       );
     }
 
@@ -153,7 +153,7 @@ export function MetaReceitaWidget({
         type="button"
         onClick={() => setEditando(true)}
         title="Clique pra editar a meta do mês"
-        className="flex shrink-0 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs shadow-sm transition hover:bg-neutral-50"
+        className="shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
       >
         {conteudo}
       </button>
