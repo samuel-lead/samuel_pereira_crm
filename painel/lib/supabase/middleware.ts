@@ -136,6 +136,15 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    // Bônus SDR é o oposto: não existe no imobiliário, essa mecânica é só
+    // de mentoria/serviço.
+    const ehPaginaDeBonusSdr = pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/");
+    if (ehPaginaDeBonusSdr && publicoOrg === "imobiliario") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/leads";
+      return NextResponse.redirect(url);
+    }
+
     const pagina = paginaDaRota(pathname);
 
     if (pagina) {

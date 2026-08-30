@@ -121,6 +121,72 @@ export async function atualizarMetasConfig(
   return { erro: null };
 }
 
+export type EstadoBonusSdrConfig = { erro: string | null };
+
+export async function atualizarBonusSdrConfig(
+  _estadoAnterior: EstadoBonusSdrConfig,
+  formData: FormData
+): Promise<EstadoBonusSdrConfig> {
+  const supabase = await createClient();
+  const user = await usuarioDoToken(supabase);
+
+  if (!user) {
+    return { erro: "Não autenticado" };
+  }
+
+  const { data: usuario, error: erroUsuario } = await supabase
+    .from("usuarios")
+    .select("org_id, papel")
+    .eq("id", user.id)
+    .single();
+
+  if (erroUsuario || !usuario) {
+    return { erro: "Usuário não encontrado" };
+  }
+
+  if (usuario.papel !== "admin") {
+    return { erro: "Só admin pode editar os valores do bônus SDR" };
+  }
+
+  const campos = [
+    "calls_tier1_qtd",
+    "calls_tier1_valor",
+    "calls_tier2_qtd",
+    "calls_tier2_valor",
+    "calls_tier3_qtd",
+    "calls_tier3_valor",
+    "valor_call_fim_semana",
+    "faturamento_tier1_valor",
+    "faturamento_tier1_bonus",
+    "faturamento_tier2_valor",
+    "faturamento_tier2_bonus",
+    "faturamento_tier3_valor",
+    "faturamento_tier3_bonus",
+  ] as const;
+
+  const valores: Record<string, number> = {};
+  for (const campo of campos) {
+    const valor = Number(formData.get(campo));
+    if (!Number.isFinite(valor) || valor < 0) {
+      return { erro: "Valores inválidos — todos precisam ser números maiores ou iguais a zero" };
+    }
+    valores[campo] = valor;
+  }
+
+  const { error } = await supabase
+    .from("bonus_sdr_config")
+    .update(valores)
+    .eq("org_id", usuario.org_id);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/bonus-sdr");
+  return { erro: null };
+}
+
 export type EstadoOrigem = { erro: string | null };
 
 async function usuarioAdminOuErro() {

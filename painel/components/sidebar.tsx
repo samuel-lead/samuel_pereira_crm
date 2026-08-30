@@ -66,6 +66,8 @@ export function Sidebar({
       // Imóveis é exclusivo do público imobiliário — vale pra admin
       // também, diferente do resto (que admin sempre vê tudo).
       if (item.somenteImobiliario && publicoOrg !== "imobiliario") return false;
+      // Bônus SDR não existe no imobiliário — vale pra admin também.
+      if (item.href === "/bonus-sdr" && publicoOrg === "imobiliario") return false;
       if (isAdmin) return true;
       // Bônus SDR é automático pra quem tem função SDR, não depende das
       // páginas liberadas manualmente — Closer não vê essa página.

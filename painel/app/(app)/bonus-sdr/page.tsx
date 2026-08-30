@@ -1,7 +1,7 @@
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { BonusSdrTabela } from "@/components/bonus-sdr";
-import { calcularBonusPorSdr, inicioDoMes } from "@/lib/metricas";
+import { calcularBonusPorSdr, inicioDoMes, type BonusSdrConfig } from "@/lib/metricas";
 import { inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 
 const MESES = [
@@ -27,7 +27,11 @@ export default async function BonusSdrPage() {
   const amanha = new Date(inicioDoDia(agora).getTime() + UM_DIA_MS);
   const inicioMes = inicioDoMes(agora);
 
-  const bonus = await calcularBonusPorSdr(supabase, usuario!.org_id, inicioMes, amanha);
+  const [bonus, { data: configData }] = await Promise.all([
+    calcularBonusPorSdr(supabase, usuario!.org_id, inicioMes, amanha),
+    supabase.from("bonus_sdr_config").select("*").eq("org_id", usuario!.org_id).maybeSingle(),
+  ]);
+  const config = (configData as BonusSdrConfig | null) ?? undefined;
 
   return (
     <>
@@ -38,6 +42,7 @@ export default async function BonusSdrPage() {
           dados={bonus}
           periodo={MESES[inicioMes.getUTCMonth()]}
           publicoOrg={usuario!.publico_org}
+          config={config}
         />
       </main>
     </>

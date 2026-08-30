@@ -712,20 +712,58 @@ export type BonusSdr = MetricasUsuario & {
   totalBonus: number;
 };
 
-// Bônus da equipe de pré-vendas — mesma régua da aba "BÔNUS SDRs" da
-// planilha do Samuel, três blocos que se somam:
-// 1. Volume de calls realizadas no mês: ≥60 → R$300, ≥80 → R$500, ≥100 → R$1.000
-// 2. R$20 por call realizada que tinha sido MARCADA num fim de semana
-//    (sábado ou domingo — olha a data do agendamento, não da call em si)
-// 3. Faturamento das vendas fechadas no mês: ≥R$50mil → R$1.000,
-//    ≥R$80mil → R$2.000, ≥R$100mil → R$3.000
+export type BonusSdrConfig = {
+  calls_tier1_qtd: number;
+  calls_tier1_valor: number;
+  calls_tier2_qtd: number;
+  calls_tier2_valor: number;
+  calls_tier3_qtd: number;
+  calls_tier3_valor: number;
+  valor_call_fim_semana: number;
+  faturamento_tier1_valor: number;
+  faturamento_tier1_bonus: number;
+  faturamento_tier2_valor: number;
+  faturamento_tier2_bonus: number;
+  faturamento_tier3_valor: number;
+  faturamento_tier3_bonus: number;
+};
+
+// Régua padrão da aba "BÔNUS SDRs" da planilha do Samuel — usada se a
+// org ainda não tem uma linha em bonus_sdr_config (ex.: org imobiliário,
+// que não usa essa mecânica e nunca ganha essa linha).
+export const BONUS_SDR_CONFIG_PADRAO: BonusSdrConfig = {
+  calls_tier1_qtd: 60,
+  calls_tier1_valor: 300,
+  calls_tier2_qtd: 80,
+  calls_tier2_valor: 500,
+  calls_tier3_qtd: 100,
+  calls_tier3_valor: 1000,
+  valor_call_fim_semana: 20,
+  faturamento_tier1_valor: 50000,
+  faturamento_tier1_bonus: 1000,
+  faturamento_tier2_valor: 80000,
+  faturamento_tier2_bonus: 2000,
+  faturamento_tier3_valor: 100000,
+  faturamento_tier3_bonus: 3000,
+};
+
+// Bônus da equipe de pré-vendas — três blocos que se somam, com os
+// valores e metas vindos de bonus_sdr_config (editável em Configurações):
+// 1. Volume de calls realizadas no mês, em 3 faixas
+// 2. Valor fixo por call realizada que tinha sido MARCADA num fim de
+//    semana (sábado ou domingo — olha a data do agendamento, não da call em si)
+// 3. Faturamento das vendas fechadas no mês, em 3 faixas
 export async function calcularBonusPorSdr(
   supabase: SupabaseServerClient,
   orgId: string,
   inicio: Date,
   fim: Date
 ): Promise<BonusSdr[]> {
-  const metricasPorUsuario = await calcularMetricasPorUsuario(supabase, orgId, inicio, fim);
+  const [metricasPorUsuario, { data: configData }] = await Promise.all([
+    calcularMetricasPorUsuario(supabase, orgId, inicio, fim),
+    supabase.from("bonus_sdr_config").select("*").eq("org_id", orgId).maybeSingle(),
+  ]);
+  const config = (configData as BonusSdrConfig | null) ?? BONUS_SDR_CONFIG_PADRAO;
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
 
@@ -746,18 +784,24 @@ export async function calcularBonusPorSdr(
       }).length;
 
       const bonusPorCallRealizada =
-        m.reunioesRealizadas >= 100
-          ? 1000
-          : m.reunioesRealizadas >= 80
-            ? 500
-            : m.reunioesRealizadas >= 60
-              ? 300
+        m.reunioesRealizadas >= config.calls_tier3_qtd
+          ? config.calls_tier3_valor
+          : m.reunioesRealizadas >= config.calls_tier2_qtd
+            ? config.calls_tier2_valor
+            : m.reunioesRealizadas >= config.calls_tier1_qtd
+              ? config.calls_tier1_valor
               : 0;
 
-      const bonusFimDeSemana = callsMarcadasNoFimDeSemana * 20;
+      const bonusFimDeSemana = callsMarcadasNoFimDeSemana * config.valor_call_fim_semana;
 
       const bonusPorFaturamento =
-        m.faturamento >= 100000 ? 3000 : m.faturamento >= 80000 ? 2000 : m.faturamento >= 50000 ? 1000 : 0;
+        m.faturamento >= config.faturamento_tier3_valor
+          ? config.faturamento_tier3_bonus
+          : m.faturamento >= config.faturamento_tier2_valor
+            ? config.faturamento_tier2_bonus
+            : m.faturamento >= config.faturamento_tier1_valor
+              ? config.faturamento_tier1_bonus
+              : 0;
 
       return {
         ...m,

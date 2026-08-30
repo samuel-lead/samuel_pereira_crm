@@ -1,9 +1,14 @@
-import type { BonusSdr } from "@/lib/metricas";
+import type { BonusSdr, BonusSdrConfig } from "@/lib/metricas";
+import { BONUS_SDR_CONFIG_PADRAO } from "@/lib/metricas";
 import { IconeEstrela, IconeCalendario, IconeCheck, IconeAlerta, IconeMoeda } from "@/components/icons";
 import { Calls, calls, call } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function moedaCurta(valor: number) {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
 function formatarPercentual(valor: number | null) {
@@ -77,10 +82,12 @@ export function BonusSdrTabela({
   dados,
   periodo,
   publicoOrg = "mentoria",
+  config = BONUS_SDR_CONFIG_PADRAO,
 }: {
   dados: BonusSdr[];
   periodo?: string;
   publicoOrg?: string;
+  config?: BonusSdrConfig;
 }) {
   const totalEquipe = dados.reduce((soma, d) => soma + d.totalBonus, 0);
 
@@ -98,7 +105,7 @@ export function BonusSdrTabela({
           {formatarMoeda(totalEquipe)}
         </p>
         <p className="relative mt-2 text-sm font-medium text-green-100">
-          {`${Calls(publicoOrg)} realizadas (≥60/80/100 → R$300/R$500/R$1.000) + R$20 por ${call(publicoOrg)} marcada no fim de semana e realizada + faturamento do mês (≥R$50mil/80mil/100mil → R$1.000/R$2.000/R$3.000).`}
+          {`${Calls(publicoOrg)} realizadas (≥${config.calls_tier1_qtd}/${config.calls_tier2_qtd}/${config.calls_tier3_qtd} → ${moedaCurta(config.calls_tier1_valor)}/${moedaCurta(config.calls_tier2_valor)}/${moedaCurta(config.calls_tier3_valor)}) + ${moedaCurta(config.valor_call_fim_semana)} por ${call(publicoOrg)} marcada no fim de semana e realizada + faturamento do mês (≥${moedaCurta(config.faturamento_tier1_valor)}/${moedaCurta(config.faturamento_tier2_valor)}/${moedaCurta(config.faturamento_tier3_valor)} → ${moedaCurta(config.faturamento_tier1_bonus)}/${moedaCurta(config.faturamento_tier2_bonus)}/${moedaCurta(config.faturamento_tier3_bonus)}).`}
           {periodo && <> Mês de {periodo}.</>}
         </p>
       </div>

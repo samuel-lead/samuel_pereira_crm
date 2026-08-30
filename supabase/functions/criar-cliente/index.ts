@@ -231,11 +231,20 @@ Deno.serve(async (req: Request) => {
     taxa_venda_min: 0.4,
   });
 
-  if (erroNiveis || erroMetas) {
+  // Bônus SDR não existe no imobiliário — só cria a linha pra mentoria.
+  const { error: erroBonusSdr } =
+    publico === "imobiliario"
+      ? { error: null }
+      : await admin.from("bonus_sdr_config").insert({
+          org_id: novaOrg.id,
+          usuario_id: novoAuth.user.id,
+        });
+
+  if (erroNiveis || erroMetas || erroBonusSdr) {
     return json(207, {
       aviso:
         "A empresa e o admin foram criados, mas faltou terminar de configurar o funil ou as metas padrão — fale com o suporte.",
-      detalhe: erroNiveis?.message ?? erroMetas?.message,
+      detalhe: erroNiveis?.message ?? erroMetas?.message ?? erroBonusSdr?.message,
     });
   }
 
