@@ -833,9 +833,17 @@ export async function marcarVendido(
 
   const { data: leadAtual } = await supabase
     .from("leads")
-    .select("criterio_problema")
+    .select("criterio_problema, responsavel_id")
     .eq("id", leadId)
     .single();
+
+  // Sem responsável, a venda não entra na conta de ninguém (some do Bônus
+  // SDR, mesmo contando no total geral) — trava aqui pra não deixar passar.
+  if (!leadAtual?.responsavel_id) {
+    return {
+      erro: "Esse lead está sem responsável definido — atribua alguém antes de marcar como vendido.",
+    };
+  }
 
   if (!leadAtual?.criterio_problema) {
     return {
