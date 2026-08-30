@@ -86,18 +86,18 @@ export function BonusSdrTabela({
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-600 via-amber-500 to-blue-400 p-7 text-white shadow-2xl shadow-amber-950/30 ring-1 ring-white/10">
-        <IconeEstrela className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.12]" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
+        <IconeEstrela className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
 
-        <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-amber-100">
+        <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
           <IconeEstrela className="h-3.5 w-3.5" />
           Bônus total da equipe
         </p>
         <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
           {formatarMoeda(totalEquipe)}
         </p>
-        <p className="relative mt-2 text-sm font-medium text-amber-50">
+        <p className="relative mt-2 text-sm font-medium text-green-100">
           {`${Calls(publicoOrg)} realizadas (≥60/80/100 → R$300/R$500/R$1.000) + R$20 por ${call(publicoOrg)} marcada no fim de semana e realizada + faturamento do mês (≥R$50mil/80mil/100mil → R$1.000/R$2.000/R$3.000).`}
           {periodo && <> Mês de {periodo}.</>}
         </p>
