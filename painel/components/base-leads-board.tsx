@@ -1,6 +1,7 @@
 "use client";
 
 import { IconeWhatsapp } from "@/components/icons";
+import { AvatarLead } from "@/components/avatar-lead";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
@@ -10,6 +11,7 @@ export type LeadBase = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  foto_url: string | null;
   origem: string | null;
   responsavel_id: string | null;
   entrou_nivel_em: string;
@@ -50,13 +52,6 @@ const COLUNAS: { chave: MotivoBase; nome: string; cor: { header: string; borda: 
     cor: { header: "bg-red-50", borda: "border-red-200", badge: "bg-red-200 text-red-700" },
   },
 ];
-
-function iniciais(nome: string) {
-  const partes = nome.trim().split(/\s+/);
-  const primeira = partes[0]?.[0] ?? "";
-  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : "";
-  return (primeira + ultima).toUpperCase();
-}
 
 function diasNaBase(entrouNivelEm: string) {
   return diasDesde(entrouNivelEm);
@@ -115,11 +110,12 @@ export function BaseLeadsBoard({
                     className="kanban-card group block cursor-pointer rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg"
                   >
                     <div className="flex items-start gap-2.5">
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${coluna.cor.badge}`}
-                      >
-                        {iniciais(lead.nome)}
-                      </span>
+                      <AvatarLead
+                        nome={lead.nome}
+                        fotoUrl={lead.foto_url}
+                        tamanho="h-9 w-9 text-xs"
+                        classeBadge={coluna.cor.badge}
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-neutral-900 group-hover:underline">
                           {lead.nome}

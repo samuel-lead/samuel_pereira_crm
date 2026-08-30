@@ -3,6 +3,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { LinkLead } from "@/components/link-lead";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
+import { AvatarLead } from "@/components/avatar-lead";
 import { IconeMoeda } from "@/components/icons";
 import { anoMesBrasil, parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
 
@@ -15,6 +16,7 @@ type LeadVendido = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  foto_url: string | null;
   origem: string | null;
   produto: string | null;
   valor_venda: number | null;
@@ -30,13 +32,6 @@ function formatarMoeda(valor: number) {
 function formatarData(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-}
-
-function iniciais(nome: string) {
-  const partes = nome.trim().split(/\s+/);
-  const primeira = partes[0]?.[0] ?? "";
-  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : "";
-  return (primeira + ultima).toUpperCase();
 }
 
 export default async function VendasPage({
@@ -55,7 +50,7 @@ export default async function VendasPage({
 
   let consulta = supabase
     .from("leads")
-    .select("id, nome, telefone_e164, origem, produto, valor_venda, receita_venda, vendido_em, responsavel_id")
+    .select("id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, vendido_em, responsavel_id")
     .eq("status", "vendido")
     .is("arquivado_em", null)
     .order("vendido_em", { ascending: false });
@@ -239,9 +234,12 @@ export default async function VendasPage({
                   <tr key={lead.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
                     <td className="px-4 py-3">
                       <LinkLead leadId={lead.id} className="flex items-center gap-2.5 hover:underline">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
-                          {iniciais(lead.nome)}
-                        </span>
+                        <AvatarLead
+                          nome={lead.nome}
+                          fotoUrl={lead.foto_url}
+                          tamanho="h-8 w-8 text-xs"
+                          classeBadge="bg-green-100 text-green-700"
+                        />
                         <span className="font-medium text-neutral-900">{lead.nome}</span>
                       </LinkLead>
                     </td>

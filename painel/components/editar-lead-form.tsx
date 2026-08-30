@@ -42,6 +42,7 @@ type Lead = {
   nome: string;
   telefone_e164: string | null;
   email: string | null;
+  instagram: string | null;
   origem: string | null;
   nivel_ordem: number;
   criterio_problema: string | null;
@@ -243,6 +244,19 @@ export function EditarLeadForm({
             name="email"
             type="email"
             defaultValue={lead.email ?? ""}
+            className={campoClasse}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className={labelClasse} htmlFor="instagram">
+            Instagram
+          </label>
+          <input
+            id="instagram"
+            name="instagram"
+            placeholder="@usuario ou link do perfil"
+            defaultValue={lead.instagram ?? ""}
             className={campoClasse}
           />
         </div>

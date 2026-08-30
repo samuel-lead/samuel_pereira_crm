@@ -80,6 +80,21 @@ export function NovoLeadForm({
         </div>
 
         <div className="space-y-1">
+          <label
+            className="text-sm font-medium text-neutral-700"
+            htmlFor="instagram"
+          >
+            Instagram
+          </label>
+          <input
+            id="instagram"
+            name="instagram"
+            placeholder="@usuario ou link do perfil"
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="space-y-1">
           <label className="text-sm font-medium text-neutral-700">
             Origem
           </label>

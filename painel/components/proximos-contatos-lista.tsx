@@ -3,11 +3,13 @@
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { IconeWhatsapp, IconeTelefone, IconeTag } from "@/components/icons";
 import { LinkLead } from "@/components/link-lead";
+import { AvatarLead } from "@/components/avatar-lead";
 
 type LeadContato = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  foto_url?: string | null;
   origem: string | null;
   responsavel_id: string | null;
   proximo_follow_em: string | null;
@@ -23,13 +25,6 @@ function formatarDataHora(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function iniciais(nome: string) {
-  const partes = nome.trim().split(/\s+/);
-  const primeira = partes[0]?.[0] ?? "";
-  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : "";
-  return (primeira + ultima).toUpperCase();
 }
 
 function Linha({
@@ -53,9 +48,12 @@ function Linha({
       className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-bold text-neutral-700">
-          {iniciais(lead.nome)}
-        </span>
+        <AvatarLead
+          nome={lead.nome}
+          fotoUrl={lead.foto_url}
+          tamanho="h-9 w-9 text-xs"
+          classeBadge="bg-neutral-200 text-neutral-700"
+        />
         <div className="min-w-0">
           <p className="truncate text-sm font-bold text-neutral-900">{lead.nome}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">

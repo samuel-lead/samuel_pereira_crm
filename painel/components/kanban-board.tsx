@@ -6,6 +6,7 @@ import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasUteisDesde } from "@/lib/datas";
 import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
+import { AvatarLead } from "@/components/avatar-lead";
 import { Reuniao, reuniao } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
@@ -19,6 +20,7 @@ type LeadResumo = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  foto_url?: string | null;
   origem: string | null;
   nivel_ordem: number;
   responsavel_id: string | null;
@@ -66,13 +68,6 @@ function diasSemAtividade(ultimaAtividadeEm?: string) {
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function iniciais(nome: string) {
-  const partes = nome.trim().split(/\s+/);
-  const primeira = partes[0]?.[0] ?? "";
-  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : "";
-  return (primeira + ultima).toUpperCase();
 }
 
 export function KanbanBoard({
@@ -347,9 +342,12 @@ export function KanbanBoard({
                       >
                         <div className="mb-2 flex items-start justify-between gap-2">
                           <div className="flex min-w-0 items-center gap-2.5">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-bold text-neutral-700">
-                              {iniciais(lead.nome)}
-                            </span>
+                            <AvatarLead
+                              nome={lead.nome}
+                              fotoUrl={lead.foto_url}
+                              tamanho="h-9 w-9 text-xs"
+                              classeBadge="bg-neutral-200 text-neutral-700"
+                            />
                             <p className="truncate text-[15px] font-bold text-neutral-900 group-hover:underline">
                               {lead.nome}
                             </p>
