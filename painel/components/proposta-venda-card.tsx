@@ -57,7 +57,11 @@ export function PropostaVendaCard({
           <RegistrarPropostaForm leadId={leadId} propostaAtual={propostaAtual} />
         </div>
         <div className={aba === "venda" ? "" : "hidden"}>
-          <MarcarVendidoForm leadId={leadId} produtos={produtos} />
+          <MarcarVendidoForm
+            leadId={leadId}
+            propostaValor={propostaAtual.valor}
+            produtos={produtos}
+          />
         </div>
       </div>
     </div>

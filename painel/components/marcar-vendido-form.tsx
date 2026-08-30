@@ -18,12 +18,16 @@ function CampoMoeda({
   name,
   label,
   placeholder,
+  valorInicial,
 }: {
   name: string;
   label: string;
   placeholder: string;
+  valorInicial?: number | null;
 }) {
-  const [centavos, setCentavos] = useState(0);
+  const [centavos, setCentavos] = useState(
+    valorInicial ? Math.round(valorInicial * 100) : 0
+  );
 
   function aoDigitar(evento: ChangeEvent<HTMLInputElement>) {
     const somenteDigitos = evento.target.value.replace(/\D/g, "");
@@ -50,9 +54,11 @@ function CampoMoeda({
 
 export function MarcarVendidoForm({
   leadId,
+  propostaValor,
   produtos,
 }: {
   leadId: string;
+  propostaValor?: number | null;
   produtos: string[];
 }) {
   const modalAtivo = useLeadModalAtivo();
@@ -81,9 +87,11 @@ export function MarcarVendidoForm({
       </p>
       <form action={acaoFormulario} className="space-y-2">
         <CampoMoeda
+          key={propostaValor ?? "sem-proposta"}
           name="valor_venda"
           label="Valor da venda (R$)"
           placeholder="Preço combinado com o lead"
+          valorInicial={propostaValor}
         />
         <CampoMoeda
           name="receita_venda"
