@@ -515,8 +515,8 @@ export function EditarLeadForm({
                   className="mt-0.5"
                 />
                 <span>
-                  Oportunidade futura — fez a {reuniao(publicoOrg)}, é ICP qualificado, mas
-                  avisou que só fecha depois (não é pra fechar esse mês).
+                  Oportunidade futura — fez a {reuniao(publicoOrg)}, é o perfil de cliente
+                  ideal, mas não está podendo investir nesse mês.
                 </span>
               </label>
             </div>
