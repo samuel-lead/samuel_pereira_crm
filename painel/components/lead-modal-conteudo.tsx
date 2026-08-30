@@ -11,6 +11,7 @@ import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
+import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { Reuniao } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
@@ -212,6 +213,8 @@ export function LeadModalConteudo({
             <RegistrarNotaForm leadId={lead.id} />
           </div>
         )}
+
+        {podeEditar && <DiaFollowSelector leadId={lead.id} diaFollow={lead.dia_follow} />}
 
         <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-neutral-800">Linha do tempo</h2>

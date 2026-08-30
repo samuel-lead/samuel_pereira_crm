@@ -1031,6 +1031,35 @@ export async function marcarProximoContato(leadId: string, formData: FormData) {
   revalidatePath(`/leads/${leadId}`);
 }
 
+// Marcador manual de "em que dia do follow-up esse lead está" (1 a 5) —
+// não tem regra automática nenhuma atrás, é só a SDR anotando em que
+// ponto da sequência de follow ela parou. Clicar de novo no mesmo dia já
+// selecionado limpa a marcação (dia = null).
+export async function definirDiaFollow(leadId: string, dia: number | null) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
+
+  if (dia !== null && (!Number.isInteger(dia) || dia < 1 || dia > 5)) {
+    throw new Error("Dia do follow inválido");
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ dia_follow: dia })
+    .eq("id", leadId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
+}
+
 // Muda só a data/hora de uma reunião/visita que já está marcada — sem
 // isso, uma vez marcada não tinha como corrigir o horário (o campo de
 // data só aparecia no formulário na hora de marcar pela primeira vez).
@@ -1285,6 +1314,7 @@ export type DetalhesLead = {
     proposta_enviada_em: string | null;
     proposta_observacao: string | null;
     proximo_follow_em: string | null;
+    dia_follow: number | null;
   };
   niveis: NivelResumo[];
   interacoes: {
@@ -1351,7 +1381,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em"
+        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow"
       )
       .eq("id", leadId)
       .single(),

@@ -13,6 +13,7 @@ import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
+import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { Reuniao } from "@/lib/terminologia";
 
@@ -43,6 +44,7 @@ type Lead = {
   proposta_enviada_em: string | null;
   proposta_observacao: string | null;
   proximo_follow_em: string | null;
+  dia_follow: number | null;
 };
 
 type Interacao = {
@@ -134,7 +136,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em"
+        "id, nome, telefone_e164, email, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow"
       )
       .eq("id", id)
       .single(),
@@ -364,6 +366,10 @@ export default async function EditarLeadPage({
               </h2>
               <RegistrarNotaForm leadId={leadTipado.id} />
             </div>
+          )}
+
+          {podeEditar && (
+            <DiaFollowSelector leadId={leadTipado.id} diaFollow={leadTipado.dia_follow} />
           )}
 
           <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
