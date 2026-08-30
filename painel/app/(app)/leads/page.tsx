@@ -8,11 +8,13 @@ import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { StatCell } from "@/components/stat-cell";
+import { CartaoVendas } from "@/components/cartao-vendas";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 import {
   buscarMetaReceitaMes,
   calcularReceitaOrg,
+  calcularVendasHoje,
   inicioDoMes,
 } from "@/lib/metricas";
 import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
@@ -193,6 +195,7 @@ export default async function LeadsPage({
     [receitaOrgMes, metaReceita],
     leadsComAtividadeBase,
     { data: reunioesAnterioresPendentesData },
+    vendasHoje,
   ] = await Promise.all([
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
     consultaCallsMarcadasHoje ? filtrarPorEscopo(consultaCallsMarcadasHoje) : { count: null },
@@ -207,6 +210,7 @@ export default async function LeadsPage({
       : Promise.resolve([null, null] as const),
     anexarUltimaAtividade(supabase, leads),
     consultaReuniaoAnteriorPendente ?? Promise.resolve({ data: null }),
+    orgId ? calcularVendasHoje(supabase, orgId, inicioHoje, amanha) : Promise.resolve(null),
   ]);
 
   const leadsComReuniaoPendente = new Set(
@@ -341,6 +345,14 @@ export default async function LeadsPage({
                   label={`${Calls(publicoOrg)} realizadas hoje`}
                   value={callsRealizadasHoje}
                   sub={souAdmin ? "Time todo" : undefined}
+                />
+              )}
+              {vendasHoje !== null && vendasHoje.vendas > 0 && (
+                <CartaoVendas
+                  label="Vendas hoje"
+                  vendas={vendasHoje.vendas}
+                  faturamento={vendasHoje.faturamento}
+                  receita={vendasHoje.receita}
                 />
               )}
               {reagendamentosHoje !== null && reagendamentosHoje > 0 && (

@@ -7,6 +7,7 @@ import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { StatCell } from "@/components/stat-cell";
+import { CartaoVendas } from "@/components/cartao-vendas";
 import Link from "next/link";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
@@ -43,35 +44,6 @@ function formatarTempoDecorrido(dataISO: string) {
   return "agora mesmo";
 }
 
-// Célula "N vendas" com faturamento do lado do número e receita numa
-// linha embaixo — reaproveitada em "Vendas hoje" e "Vendas no mês", os
-// dois só mudam o rótulo e a fonte dos números.
-function CartaoVendas({
-  label,
-  vendas,
-  faturamento,
-  receita,
-}: {
-  label: string;
-  vendas: number;
-  faturamento: number;
-  receita: number;
-}) {
-  return (
-    <div className="min-w-[150px] flex-1 px-3 py-2">
-      <p className="text-[10px] leading-tight text-neutral-500">{label}</p>
-      <div className="mt-0.5 flex items-baseline gap-2">
-        <span className="text-base font-bold leading-tight text-neutral-900">{vendas}</span>
-        <span className="truncate text-[10px] leading-tight text-neutral-400">
-          {formatarMoeda(faturamento)} faturamento
-        </span>
-      </div>
-      <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
-        {formatarMoeda(receita)} receita
-      </p>
-    </div>
-  );
-}
 
 type LeadResumo = {
   id: string;
