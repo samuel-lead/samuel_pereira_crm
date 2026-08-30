@@ -488,3 +488,40 @@ body {
 .dark .busca-lead-input:focus {
   border-color: rgba(255, 255, 255, 0.9);
 }
+
+/* Brilho sutil no cartão de "Meta de receita do mês" (Pré-vendas/Vendas) —
+   uma faixa de luz que passa de vez em quando, só pra chamar atenção sem
+   mudar cor nem layout nenhum. Sobe rápido (0% a 22%) e some pro resto do
+   ciclo, repetindo a cada 4s. */
+@keyframes meta-brilho-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  22% {
+    transform: translateX(220%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+
+.meta-brilho {
+  position: relative;
+  overflow: hidden;
+}
+
+.meta-brilho::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: meta-brilho-sweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.dark .meta-brilho::after {
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+}

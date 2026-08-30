@@ -142,7 +142,7 @@ export function MetaReceitaWidget({
 
     if (!podeEditar) {
       return (
-        <div className="shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+        <div className="meta-brilho shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
           {conteudo}
         </div>
       );
@@ -153,7 +153,7 @@ export function MetaReceitaWidget({
         type="button"
         onClick={() => setEditando(true)}
         title="Clique pra editar a meta do mês"
-        className="shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
+        className="meta-brilho shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
       >
         {conteudo}
       </button>
