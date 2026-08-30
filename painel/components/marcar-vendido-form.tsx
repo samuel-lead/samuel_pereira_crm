@@ -45,7 +45,7 @@ function CampoMoeda({
         value={centavos ? formatarCentavos(centavos) : ""}
         onChange={aoDigitar}
         placeholder={placeholder}
-        className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+        className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-xs focus:border-green-500 focus:ring-1 focus:ring-green-500"
       />
       <input type="hidden" name={name} value={centavos ? (centavos / 100).toFixed(2) : ""} />
     </div>
