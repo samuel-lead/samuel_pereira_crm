@@ -13,7 +13,7 @@ export type Metricas = {
   reunioesMarcadas: number;
   reunioesReagendadas: number;
   reunioesRealizadas: number;
-  reunioesComProposta: number;
+  reunioesComPitch: number;
   reunioesDevidas: number;
   propostas: number;
   noShow: number;
@@ -77,7 +77,7 @@ export async function calcularMetricas(
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesDevidas },
-    { count: reunioesComProposta },
+    { count: reunioesComPitch },
     { count: propostas },
     { count: noShow },
     { data: vendasData },
@@ -157,18 +157,18 @@ export async function calcularMetricas(
       .neq("status", "cancelada")
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", limiteDevidasISO),
-    // Taxa de venda só pode contar reunião que teve proposta registrada —
-    // uma reunião realizada sem proposta não é uma chance de venda de
-    // verdade. `proposta_valor` é um campo no lead (não por reunião), então
-    // isso conta "o lead dessa reunião tem proposta registrada hoje", não
-    // necessariamente feita naquela reunião específica.
+    // Taxa de venda só pode contar reunião que realmente teve pitch — o que
+    // prova isso é ter proposta registrada OU ter virado venda (venda
+    // direta, sem passar por "Registrar proposta", também prova que teve
+    // pitch). Reunião realizada sem nenhum dos dois não é uma chance de
+    // venda de verdade, não entra nem no numerador nem no denominador.
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, responsavel_id, proposta_valor)", { count: "exact", head: true })
+      .select("id, leads!inner(arquivado_em, responsavel_id, proposta_valor, status)", { count: "exact", head: true })
       .eq("leads.responsavel_id", usuarioId)
       .eq("status", "realizada")
       .is("leads.arquivado_em", null)
-      .not("leads.proposta_valor", "is", null)
+      .or("proposta_valor.not.is.null,status.eq.vendido", { foreignTable: "leads" })
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
     // Propostas de verdade enviadas no período (independe de reunião ou
@@ -199,15 +199,10 @@ export async function calcularMetricas(
       .lt("vendido_em", fimISO),
   ]);
 
-  // Receita/faturamento contam TODA venda (é dinheiro real, não pode sumir
-  // do relatório por falta de burocracia). A taxa de conversão é outra
-  // coisa — mede processo, não caixa — por isso só credita venda cujo lead
-  // tem proposta registrada, senão passaria de 100% quando alguém vende
-  // sem passar pelo "Registrar proposta".
+  // Receita/faturamento contam TODA venda, não pode sumir do relatório por
+  // falta de burocracia. Taxa de venda é diferente — mede quantas reuniões
+  // com pitch de verdade viraram venda (ver reunioesComPitch abaixo).
   const vendas = vendasData?.length ?? 0;
-  const vendasComProposta = (vendasData ?? []).filter(
-    (l) => l.proposta_valor != null
-  ).length;
   const receita = (vendasData ?? []).reduce(
     (soma, l) => soma + Number(l.receita_venda ?? 0),
     0
@@ -226,7 +221,7 @@ export async function calcularMetricas(
   const marcadas = reunioesMarcadasNovas ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
   const devidas = reunioesDevidas ?? 0;
-  const comProposta = reunioesComProposta ?? 0;
+  const comPitch = reunioesComPitch ?? 0;
 
   return {
     leadsTrabalhados: leads,
@@ -234,7 +229,7 @@ export async function calcularMetricas(
     reunioesMarcadas: marcadas,
     reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
-    reunioesComProposta: comProposta,
+    reunioesComPitch: comPitch,
     reunioesDevidas: devidas,
     propostas: propostas ?? 0,
     noShow: noShow ?? 0,
@@ -244,7 +239,7 @@ export async function calcularMetricas(
     ticketMedio: vendas > 0 ? faturamento / vendas : null,
     taxaAgendamento: leads > 0 ? marcadas / leads : null,
     taxaComparecimento: devidas > 0 ? realizadas / devidas : null,
-    taxaVenda: comProposta > 0 ? vendasComProposta / comProposta : null,
+    taxaVenda: comPitch > 0 ? vendas / comPitch : null,
     diasUteis: diasUteisEntre(inicio, fim < new Date() ? fim : new Date()),
   };
 }
@@ -273,7 +268,7 @@ export async function calcularMetricasOrg(
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesDevidas },
-    { count: reunioesComProposta },
+    { count: reunioesComPitch },
     { count: propostas },
     { count: noShow },
     { data: vendasData },
@@ -341,13 +336,15 @@ export async function calcularMetricasOrg(
       .neq("status", "cancelada")
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", limiteDevidasISO),
+    // Mesma regra da versão individual: só entra quem teve pitch de
+    // verdade (proposta registrada OU virou venda).
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, proposta_valor)", { count: "exact", head: true })
+      .select("id, leads!inner(arquivado_em, proposta_valor, status)", { count: "exact", head: true })
       .eq("org_id", orgId)
       .eq("status", "realizada")
       .is("leads.arquivado_em", null)
-      .not("leads.proposta_valor", "is", null)
+      .or("proposta_valor.not.is.null,status.eq.vendido", { foreignTable: "leads" })
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
     // Propostas de verdade enviadas no período (independe de reunião ou
@@ -379,9 +376,6 @@ export async function calcularMetricasOrg(
   ]);
 
   const vendas = vendasData?.length ?? 0;
-  const vendasComProposta = (vendasData ?? []).filter(
-    (l) => l.proposta_valor != null
-  ).length;
   const receita = (vendasData ?? []).reduce(
     (soma, l) => soma + Number(l.receita_venda ?? 0),
     0
@@ -400,7 +394,7 @@ export async function calcularMetricasOrg(
   const marcadas = reunioesMarcadasNovas ?? 0;
   const realizadas = reunioesRealizadas ?? 0;
   const devidas = reunioesDevidas ?? 0;
-  const comProposta = reunioesComProposta ?? 0;
+  const comPitch = reunioesComPitch ?? 0;
 
   return {
     leadsTrabalhados: leads,
@@ -408,7 +402,7 @@ export async function calcularMetricasOrg(
     reunioesMarcadas: marcadas,
     reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
-    reunioesComProposta: comProposta,
+    reunioesComPitch: comPitch,
     reunioesDevidas: devidas,
     propostas: propostas ?? 0,
     noShow: noShow ?? 0,
@@ -418,7 +412,7 @@ export async function calcularMetricasOrg(
     ticketMedio: vendas > 0 ? faturamento / vendas : null,
     taxaAgendamento: leads > 0 ? marcadas / leads : null,
     taxaComparecimento: devidas > 0 ? realizadas / devidas : null,
-    taxaVenda: comProposta > 0 ? vendasComProposta / comProposta : null,
+    taxaVenda: comPitch > 0 ? vendas / comPitch : null,
     diasUteis: diasUteisEntre(inicio, fim < new Date() ? fim : new Date()),
   };
 }

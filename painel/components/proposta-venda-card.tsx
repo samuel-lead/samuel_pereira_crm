@@ -24,7 +24,6 @@ export function PropostaVendaCard({
   produtos: string[];
 }) {
   const [aba, setAba] = useState<"proposta" | "venda">("proposta");
-  const temProposta = propostaAtual.valor != null;
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
@@ -58,7 +57,7 @@ export function PropostaVendaCard({
           <RegistrarPropostaForm leadId={leadId} propostaAtual={propostaAtual} />
         </div>
         <div className={aba === "venda" ? "" : "hidden"}>
-          <MarcarVendidoForm leadId={leadId} temProposta={temProposta} produtos={produtos} />
+          <MarcarVendidoForm leadId={leadId} produtos={produtos} />
         </div>
       </div>
     </div>
