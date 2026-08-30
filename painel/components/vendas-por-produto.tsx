@@ -37,7 +37,7 @@ export function VendasPorProduto({ dados }: { dados: VendaPorProduto[] }) {
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
                   <div
-                    className="h-full rounded-full bg-blue-500"
+                    className="h-full rounded-full bg-sky-500"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
