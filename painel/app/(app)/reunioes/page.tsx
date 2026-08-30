@@ -297,7 +297,7 @@ export default async function VendasPage({
                     <span className="text-base font-bold leading-tight text-neutral-900">
                       {vendasHoje.vendas}
                     </span>
-                    <span className="truncate text-xs font-medium text-neutral-600">
+                    <span className="truncate text-[10px] leading-tight text-neutral-400">
                       {formatarMoeda(vendasHoje.faturamento)} faturamento
                     </span>
                   </div>
