@@ -48,7 +48,7 @@ export default async function BasePage({
     .select(
       "id, nome, telefone_e164, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor, motivo_base"
     )
-    .eq("nivel_ordem", 8)
+    .eq("nivel_ordem", 9)
     .neq("status", "vendido")
     .is("arquivado_em", null)
     .order("entrou_nivel_em", { ascending: false });
@@ -88,6 +88,7 @@ export default async function BasePage({
     proposta_nao_comprou: [],
     nao_iniciou_conversa: [],
     qualificou_sumiu: [],
+    iniciou_sem_interesse: [],
   };
 
   for (const lead of leads) {

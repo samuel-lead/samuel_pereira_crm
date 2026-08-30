@@ -19,6 +19,7 @@ const OPCAO_OPORTUNIDADE_FUTURA = "oportunidade_futura";
 const MOTIVOS_BASE = [
   { valor: "nao_iniciou_conversa", nome: "Não consegui iniciar conversa" },
   { valor: "qualificou_sumiu", nome: "Iniciei conversa, qualifiquei e sumiu" },
+  { valor: "iniciou_sem_interesse", nome: "Iniciei conversa e não teve interesse" },
   { valor: "nao_reagendados", nome: "Não reagendados" },
   { valor: "proposta_nao_comprou", nome: "Fiz proposta e não comprou" },
 ] as const;
