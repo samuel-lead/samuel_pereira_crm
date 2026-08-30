@@ -6,9 +6,8 @@ import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
-import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
-import { RegistrarPropostaForm } from "@/components/registrar-proposta-form";
+import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
@@ -341,21 +340,15 @@ export default async function EditarLeadPage({
             leadTipado.nivel_ordem >= NIVEL_REUNIAO_MARCADA &&
             leadTipado.nivel_ordem !== NIVEL_NO_SHOW &&
             leadTipado.nivel_ordem !== NIVEL_REAGENDAMENTO && (
-              <>
-                <RegistrarPropostaForm
-                  leadId={leadTipado.id}
-                  propostaAtual={{
-                    valor: leadTipado.proposta_valor,
-                    enviadaEm: leadTipado.proposta_enviada_em,
-                    observacao: leadTipado.proposta_observacao,
-                  }}
-                />
-                <MarcarVendidoForm
-                  leadId={leadTipado.id}
-                  temProposta={leadTipado.proposta_valor != null}
-                  produtos={produtos}
-                />
-              </>
+              <PropostaVendaCard
+                leadId={leadTipado.id}
+                propostaAtual={{
+                  valor: leadTipado.proposta_valor,
+                  enviadaEm: leadTipado.proposta_enviada_em,
+                  observacao: leadTipado.proposta_observacao,
+                }}
+                produtos={produtos}
+              />
             )
           )}
 

@@ -40,6 +40,8 @@ export function RegistrarPropostaForm({
   const [centavos, setCentavos] = useState(0);
   const [salvo, setSalvo] = useState(false);
   const enviandoRef = useRef(false);
+  const temProposta = propostaAtual?.valor != null;
+  const [editando, setEditando] = useState(!temProposta);
 
   useEffect(() => {
     if (pendente) {
@@ -50,6 +52,7 @@ export function RegistrarPropostaForm({
       enviandoRef.current = false;
       if (estado.erro === null) {
         setSalvo(true);
+        setEditando(false);
         modalAtivo?.recarregar();
         const timeout = setTimeout(() => setSalvo(false), 2000);
         return () => clearTimeout(timeout);
@@ -63,29 +66,43 @@ export function RegistrarPropostaForm({
     setCentavos(somenteDigitos ? Number(somenteDigitos) : 0);
   }
 
-  const temProposta = propostaAtual?.valor != null;
+  // Já tem proposta registrada e não está editando: mostra só o resumo, em
+  // vez do formulário inteiro sempre visível — some da tela a repetição de
+  // "dois campos de valor" com o de Fechar venda logo abaixo.
+  if (temProposta && !editando) {
+    return (
+      <div className="rounded-md border border-amber-200 bg-white/60 p-2.5 text-xs text-amber-800">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-semibold">
+              {propostaAtual!.valor!.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
+            </p>
+            {propostaAtual!.enviadaEm && (
+              <p className="text-amber-600">
+                Enviada em {formatarData(propostaAtual!.enviadaEm)}
+              </p>
+            )}
+            {propostaAtual!.observacao && <p className="mt-1">{propostaAtual!.observacao}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={() => setEditando(true)}
+            className="shrink-0 text-[11px] font-medium text-amber-700 underline hover:text-amber-900"
+          >
+            Editar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm">
-      <h2 className="mb-1 text-sm font-semibold text-amber-800">Proposta</h2>
-
-      {temProposta ? (
-        <div className="mb-3 rounded-md border border-amber-200 bg-white/60 p-2 text-xs text-amber-800">
-          <p className="font-semibold">
-            {propostaAtual!.valor!.toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            })}
-          </p>
-          {propostaAtual!.enviadaEm && (
-            <p className="text-amber-600">
-              Enviada em {formatarData(propostaAtual!.enviadaEm)}
-            </p>
-          )}
-          {propostaAtual!.observacao && <p className="mt-1">{propostaAtual!.observacao}</p>}
-        </div>
-      ) : (
-        <p className="mb-3 text-xs text-amber-700">
+    <div className="space-y-2">
+      {!temProposta && (
+        <p className="text-xs text-amber-700">
           Registre aqui quando mandar uma proposta pro lead, antes de fechar a venda.
         </p>
       )}
@@ -124,21 +141,32 @@ export function RegistrarPropostaForm({
 
         {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}
 
-        <button
-          type="submit"
-          disabled={pendente}
-          className={`w-full rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
-            salvo ? "bg-green-600 hover:bg-green-600" : "bg-amber-600 hover:bg-amber-700"
-          }`}
-        >
-          {pendente
-            ? "Salvando..."
-            : salvo
-              ? "Salvo ✓"
-              : temProposta
-                ? "Atualizar proposta"
-                : "Registrar proposta"}
-        </button>
+        <div className="flex gap-2">
+          {temProposta && (
+            <button
+              type="button"
+              onClick={() => setEditando(false)}
+              className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-50"
+            >
+              Cancelar
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={pendente}
+            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition disabled:opacity-60 ${
+              salvo ? "bg-green-600 hover:bg-green-600" : "bg-amber-600 hover:bg-amber-700"
+            }`}
+          >
+            {pendente
+              ? "Salvando..."
+              : salvo
+                ? "Salvo ✓"
+                : temProposta
+                  ? "Atualizar proposta"
+                  : "Registrar proposta"}
+          </button>
+        </div>
       </form>
     </div>
   );

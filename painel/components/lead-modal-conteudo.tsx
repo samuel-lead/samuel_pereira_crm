@@ -4,9 +4,8 @@ import { RegistrarNotaForm } from "@/components/registrar-nota-form";
 import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { EditarLeadForm } from "@/components/editar-lead-form";
-import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
-import { RegistrarPropostaForm } from "@/components/registrar-proposta-form";
+import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
@@ -187,21 +186,15 @@ export function LeadModalConteudo({
           lead.nivel_ordem >= NIVEL_REUNIAO_MARCADA &&
           lead.nivel_ordem !== NIVEL_NO_SHOW &&
           lead.nivel_ordem !== NIVEL_REAGENDAMENTO && (
-            <>
-              <RegistrarPropostaForm
-                leadId={lead.id}
-                propostaAtual={{
-                  valor: lead.proposta_valor,
-                  enviadaEm: lead.proposta_enviada_em,
-                  observacao: lead.proposta_observacao,
-                }}
-              />
-              <MarcarVendidoForm
-                leadId={lead.id}
-                temProposta={lead.proposta_valor != null}
-                produtos={produtos}
-              />
-            </>
+            <PropostaVendaCard
+              leadId={lead.id}
+              propostaAtual={{
+                valor: lead.proposta_valor,
+                enviadaEm: lead.proposta_enviada_em,
+                observacao: lead.proposta_observacao,
+              }}
+              produtos={produtos}
+            />
           )
         )}
 

@@ -77,15 +77,12 @@ export function MarcarVendidoForm({
   }, [pendente, estado]);
 
   return (
-    <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
-      <h2 className="mb-1 text-sm font-semibold text-green-800">
-        Fechar venda
-      </h2>
-      <p className="mb-3 text-xs text-green-700">
+    <div className="space-y-2">
+      <p className="text-xs text-neutral-500">
         Ao marcar como vendido, o lead sai do Funil e vai para Clientes.
       </p>
       {!temProposta && (
-        <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
           Esse lead ainda não tem proposta registrada. Sem isso, essa venda
           não vai contar na sua taxa de conversão — registre a proposta
           acima antes de marcar como vendido, se quiser que ela conte.
