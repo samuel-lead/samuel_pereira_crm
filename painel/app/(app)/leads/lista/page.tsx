@@ -76,85 +76,86 @@ export default async function ListaLeadsPage({
       />
 
       <main className="px-6 py-6">
-        <form className="mb-4 flex flex-wrap items-end gap-3">
-          <div className="space-y-1">
-            <label className="block text-xs font-medium text-neutral-500" htmlFor="busca">
-              Buscar por nome
-            </label>
-            <input
-              id="busca"
-              name="busca"
-              defaultValue={busca ?? ""}
-              placeholder="Ex.: Marcos"
-              className="w-48 rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+        <div className="mb-6 flex flex-wrap items-stretch gap-3">
+          <form className="flex flex-1 flex-wrap items-stretch divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+            <div className="flex min-w-[160px] flex-col justify-center gap-0.5 px-4 py-2">
+              <label className="text-[10px] font-medium text-neutral-500" htmlFor="busca">
+                Buscar por nome
+              </label>
+              <input
+                id="busca"
+                name="busca"
+                defaultValue={busca ?? ""}
+                placeholder="Ex.: Marcos"
+                className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:ring-0"
+              />
+            </div>
 
-          <div className="space-y-1">
-            <label className="block text-xs font-medium text-neutral-500" htmlFor="nivel">
-              Nível
-            </label>
-            <select
-              id="nivel"
-              name="nivel"
-              defaultValue={nivel ?? ""}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">Todos</option>
-              {niveis.map((n) => (
-                <option key={n.ordem} value={n.ordem}>
-                  {rotuloNivel(n, numerosVisiveis.get(n.ordem))}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="flex min-w-[150px] flex-col justify-center gap-0.5 px-4 py-2">
+              <label className="text-[10px] font-medium text-neutral-500" htmlFor="nivel">
+                Nível
+              </label>
+              <select
+                id="nivel"
+                name="nivel"
+                defaultValue={nivel ?? ""}
+                className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
+              >
+                <option value="">Todos</option>
+                {niveis.map((n) => (
+                  <option key={n.ordem} value={n.ordem}>
+                    {rotuloNivel(n, numerosVisiveis.get(n.ordem))}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="space-y-1">
-            <label className="block text-xs font-medium text-neutral-500" htmlFor="de">
-              Entrou de
-            </label>
-            <input
-              id="de"
-              name="de"
-              type="date"
-              defaultValue={de ?? ""}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+            <div className="flex min-w-[220px] flex-col justify-center gap-0.5 px-4 py-2">
+              <label className="text-[10px] font-medium text-neutral-500" htmlFor="de">
+                Entrou entre
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  id="de"
+                  name="de"
+                  type="date"
+                  defaultValue={de ?? ""}
+                  className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
+                />
+                <span className="text-neutral-300">–</span>
+                <input
+                  id="ate"
+                  name="ate"
+                  type="date"
+                  defaultValue={ate ?? ""}
+                  aria-label="até"
+                  className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
+                />
+              </div>
+            </div>
 
-          <div className="space-y-1">
-            <label className="block text-xs font-medium text-neutral-500" htmlFor="ate">
-              até
-            </label>
-            <input
-              id="ate"
-              name="ate"
-              type="date"
-              defaultValue={ate ?? ""}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+            <div className="flex items-center gap-3 px-4 py-2">
+              <button
+                type="submit"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                Filtrar
+              </button>
+              {filtroAtivo && (
+                <Link
+                  href="/leads/lista"
+                  className="text-sm font-medium text-neutral-500 hover:text-neutral-700"
+                >
+                  Limpar
+                </Link>
+              )}
+            </div>
+          </form>
 
-          <button
-            type="submit"
-            className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
-          >
-            Filtrar
-          </button>
-
-          {filtroAtivo && (
-            <Link
-              href="/leads/lista"
-              className="text-sm text-neutral-500 hover:text-neutral-700"
-            >
-              Limpar filtro
-            </Link>
-          )}
-
-          <span className="ml-auto text-sm text-neutral-500">
+          <div className="flex shrink-0 items-center rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-500 shadow-sm">
             {leads.length} lead{leads.length === 1 ? "" : "s"}
-          </span>
-        </form>
+          </div>
+        </div>
 
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
           <table className="w-full min-w-[720px] text-left text-sm">
