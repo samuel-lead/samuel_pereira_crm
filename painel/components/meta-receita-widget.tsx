@@ -129,12 +129,12 @@ export function MetaReceitaWidget({
 
   if (compacta) {
     const conteudo = (
-      <div className="min-w-[150px] px-4 py-2.5 text-left">
-        <p className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+      <div className="min-w-[128px] px-3 py-2 text-left">
+        <p className="flex items-center gap-1 text-[10px] leading-tight text-neutral-500">
           <span>🎯</span> Meta de receita do mês
         </p>
-        <p className="mt-0.5 text-lg font-bold text-neutral-900">{formatarMoeda(meta)}</p>
-        <p className={`mt-0.5 text-[11px] font-medium ${bateu ? "text-green-600" : "text-green-700"}`}>
+        <p className="mt-0.5 text-base font-bold leading-tight text-neutral-900">{formatarMoeda(meta)}</p>
+        <p className={`mt-0.5 text-[10px] font-medium leading-tight ${bateu ? "text-green-600" : "text-green-700"}`}>
           {bateu ? "Meta batida! 🎉" : `Falta ${formatarMoeda(falta)}`}
         </p>
       </div>
