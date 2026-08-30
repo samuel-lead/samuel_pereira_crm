@@ -298,13 +298,11 @@ export default async function VendasPage({
                 />
               )}
               {vendasMes !== null && <StatCell label="Vendas no mês" value={vendasMes.vendas} />}
-              {leadsComProposta.length > 0 && (
-                <StatCell
-                  label="Propostas em aberto"
-                  value={leadsComProposta.length}
-                  sub={formatarMoeda(totalPropostas)}
-                />
-              )}
+              <StatCell
+                label="Propostas em aberto"
+                value={leadsComProposta.length}
+                sub={leadsComProposta.length > 0 ? formatarMoeda(totalPropostas) : undefined}
+              />
               {ultimaVenda !== null && (
                 <StatCell label="Última venda" value={formatarTempoDecorrido(ultimaVenda)} />
               )}
