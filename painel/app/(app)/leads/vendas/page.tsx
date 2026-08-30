@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { LinkLead } from "@/components/link-lead";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { IconeMoeda } from "@/components/icons";
-import { anoMesBrasil, parseDataBrasil } from "@/lib/datas";
+import { anoMesBrasil, parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
 
 const NOMES_MES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -42,9 +42,14 @@ function iniciais(nome: string) {
 export default async function VendasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string; busca?: string }>;
+  searchParams: Promise<{ periodo?: string; busca?: string; de?: string; ate?: string }>;
 }) {
-  const { periodo: periodoFiltro, busca: buscaFiltro } = await searchParams;
+  const {
+    periodo: periodoFiltro,
+    busca: buscaFiltro,
+    de: deFiltro,
+    ate: ateFiltro,
+  } = await searchParams;
   const supabase = await createClient();
   await usuarioAutenticado();
 
@@ -55,7 +60,17 @@ export default async function VendasPage({
     .is("arquivado_em", null)
     .order("vendido_em", { ascending: false });
 
-  if (periodoFiltro && /^\d{4}-\d{2}$/.test(periodoFiltro)) {
+  // Período personalizado (De/Até) manda mais que o atalho de mês — se a
+  // pessoa preencheu uma data customizada, é isso que ela quer ver.
+  if (deFiltro || ateFiltro) {
+    if (deFiltro) {
+      consulta = consulta.gte("vendido_em", parseDataBrasil(deFiltro).toISOString());
+    }
+    if (ateFiltro) {
+      const fim = new Date(parseDataBrasil(ateFiltro).getTime() + UM_DIA_MS);
+      consulta = consulta.lt("vendido_em", fim.toISOString());
+    }
+  } else if (periodoFiltro && /^\d{4}-\d{2}$/.test(periodoFiltro)) {
     const [ano, mes] = periodoFiltro.split("-").map(Number);
     const inicio = parseDataBrasil(`${ano}-${String(mes).padStart(2, "0")}-01`);
     const proximoMes = mes === 12 ? 1 : mes + 1;
@@ -91,30 +106,13 @@ export default async function VendasPage({
   const leads = (leadsData ?? []) as LeadVendido[];
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
   const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
-  const filtroAtivo = Boolean(periodoFiltro || buscaFiltro);
+  const filtroAtivo = Boolean(periodoFiltro || buscaFiltro || deFiltro || ateFiltro);
 
   return (
     <>
       <PageHeader titulo="Clientes" />
 
       <main className="px-6 py-6">
-        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
-          <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
-
-          <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
-            <IconeMoeda className="h-3.5 w-3.5" />
-            Receita total em vendas
-          </p>
-          <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
-            {formatarMoeda(totalReceita)}
-          </p>
-          <p className="relative mt-2 text-sm font-medium text-green-100">
-            {leads.length} venda{leads.length === 1 ? "" : "s"} fechada
-            {leads.length === 1 ? "" : "s"}
-          </p>
-        </div>
-
         <form className="mb-4 flex flex-wrap items-end gap-3">
           <div className="space-y-1">
             <label className="block text-xs font-medium text-neutral-500" htmlFor="busca">
@@ -132,7 +130,7 @@ export default async function VendasPage({
           {periodos.length > 0 && (
             <div className="space-y-1">
               <label className="block text-xs font-medium text-neutral-500" htmlFor="periodo">
-                Período
+                Mês (atalho)
               </label>
               <select
                 id="periodo"
@@ -149,6 +147,32 @@ export default async function VendasPage({
               </select>
             </div>
           )}
+
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-neutral-500" htmlFor="de">
+              Período personalizado — de
+            </label>
+            <input
+              id="de"
+              name="de"
+              type="date"
+              defaultValue={deFiltro ?? ""}
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-neutral-500" htmlFor="ate">
+              até
+            </label>
+            <input
+              id="ate"
+              name="ate"
+              type="date"
+              defaultValue={ateFiltro ?? ""}
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
 
           <button
             type="submit"
@@ -170,6 +194,23 @@ export default async function VendasPage({
             {leads.length} cliente{leads.length === 1 ? "" : "s"}
           </span>
         </form>
+
+        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
+          <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
+
+          <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
+            <IconeMoeda className="h-3.5 w-3.5" />
+            Receita total em vendas
+          </p>
+          <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
+            {formatarMoeda(totalReceita)}
+          </p>
+          <p className="relative mt-2 text-sm font-medium text-green-100">
+            {leads.length} venda{leads.length === 1 ? "" : "s"} fechada
+            {leads.length === 1 ? "" : "s"}
+          </p>
+        </div>
 
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
           <table className="w-full min-w-[900px] text-left text-sm">
