@@ -495,13 +495,13 @@ body {
    ciclo, repetindo a cada 4s. */
 @keyframes meta-brilho-sweep {
   0% {
-    transform: translateX(-120%) skewX(-20deg);
+    transform: translateX(-150%) skewX(-20deg);
   }
-  22% {
-    transform: translateX(220%) skewX(-20deg);
+  20% {
+    transform: translateX(400%) skewX(-20deg);
   }
   100% {
-    transform: translateX(220%) skewX(-20deg);
+    transform: translateX(400%) skewX(-20deg);
   }
 }
 
