@@ -6,7 +6,11 @@ import { definirMetaReceita, type EstadoMeta } from "@/lib/metas/actions";
 const estadoInicial: EstadoMeta = { erro: null };
 
 function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
 }
 
 function nomeDoMesAtual() {

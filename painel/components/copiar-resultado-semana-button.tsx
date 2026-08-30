@@ -5,7 +5,11 @@ import type { Metricas, NegociacoesAbertas } from "@/lib/metricas";
 import { Reunioes } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
 }
 
 function formatarPercentual(valor: number | null) {

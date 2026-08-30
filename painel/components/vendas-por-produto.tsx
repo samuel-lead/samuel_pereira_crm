@@ -1,7 +1,11 @@
 import type { VendaPorProduto } from "@/lib/metricas";
 
 function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
 }
 
 export function VendasPorProduto({ dados }: { dados: VendaPorProduto[] }) {

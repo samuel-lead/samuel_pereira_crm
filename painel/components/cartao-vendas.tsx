@@ -1,5 +1,11 @@
+// Sem centavos aqui — é um resumo rápido, não a tela de editar o valor da
+// venda. "R$ 27.000,03" só polui a leitura sem fazer diferença nenhuma.
 function formatarMoeda(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
 }
 
 // Célula "N vendas" com faturamento do lado do número e receita numa

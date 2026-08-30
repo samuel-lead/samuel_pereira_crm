@@ -96,7 +96,7 @@ export function MarcarVendidoForm({
         />
         <CampoMoeda
           name="receita_venda"
-          label="Receita recebida (R$) — opcional"
+          label="Receita recebida (R$)"
           placeholder="Deixe em branco se o pagamento ainda não caiu"
         />
         {estado.erro && (
