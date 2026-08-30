@@ -27,72 +27,58 @@ function formatarPercentual(valor: number | null) {
   return `${Math.round(valor * 100)}%`;
 }
 
-const ESQUEMAS = {
-  violeta: {
-    fundo: "bg-violet-50",
-    borda: "border-violet-200",
-    icone: "bg-violet-600 text-white",
-    texto: "text-violet-700",
-  },
-  ceu: {
-    fundo: "bg-sky-50",
-    borda: "border-sky-200",
-    icone: "bg-sky-600 text-white",
-    texto: "text-sky-700",
-  },
-  esmeralda: {
-    fundo: "bg-green-50",
-    borda: "border-green-200",
-    icone: "bg-green-600 text-white",
-    texto: "text-green-700",
-  },
-  rosa: {
-    fundo: "bg-rose-50",
-    borda: "border-rose-200",
-    icone: "bg-rose-600 text-white",
-    texto: "text-rose-700",
-  },
+// Uma paleta só, reaproveitada nos dois tipos de cartão — cada métrica
+// sempre usa a mesma cor onde quer que apareça (nunca uma cor nova por
+// cartão). Ícone colorido é o único acento de cor; o resto do cartão é
+// neutro (fundo branco, texto preto/cinza) — é isso que faz os dois
+// grupos de cartões (números do período / comparação) lerem como um
+// sistema só, em vez de dois estilos brigando.
+const CORES_ICONE = {
+  azul: "bg-blue-600 text-white",
+  violeta: "bg-violet-600 text-white",
+  verde: "bg-green-600 text-white",
+  vermelho: "bg-red-600 text-white",
+  ambar: "bg-amber-500 text-white",
 } as const;
+
+type CorIcone = keyof typeof CORES_ICONE;
 
 function CardNumero({
   titulo,
   valor,
   meta,
   amostraInsuficiente,
-  esquema,
+  cor,
   Icone,
 }: {
   titulo: string;
   valor: number;
   meta?: number;
   amostraInsuficiente?: boolean;
-  esquema: keyof typeof ESQUEMAS;
+  cor: CorIcone;
   Icone: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }) {
-  const cor = ESQUEMAS[esquema];
   const bateuMeta = meta !== undefined ? valor >= meta : null;
   return (
-    <div className={`rounded-xl border ${cor.borda} ${cor.fundo} p-4 shadow-sm`}>
-      <div className="mb-2 flex items-center justify-between">
-        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${cor.icone}`}>
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${CORES_ICONE[cor]}`}>
           <Icone className="h-4.5 w-4.5" />
         </span>
         {meta !== undefined && (
           <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-              bateuMeta ? "bg-green-600 text-white" : "bg-amber-500 text-white"
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              bateuMeta ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
             }`}
           >
-            {bateuMeta ? "✓ piso" : `piso ${meta}`}
+            {bateuMeta ? "✓ piso batido" : `piso ${meta}`}
           </span>
         )}
       </div>
-      <p className={`text-xs font-semibold uppercase tracking-wide ${cor.texto}`}>
-        {titulo}
-      </p>
-      <p className="mt-0.5 text-3xl font-extrabold text-neutral-900">{valor}</p>
+      <p className="text-xs font-medium text-neutral-500">{titulo}</p>
+      <p className="mt-0.5 text-2xl font-bold text-neutral-900">{valor}</p>
       {amostraInsuficiente && (
-        <p className="mt-1 text-[11px] text-neutral-400">amostra pequena</p>
+        <p className="mt-1 text-[10px] text-neutral-400">amostra pequena</p>
       )}
     </div>
   );
@@ -106,48 +92,40 @@ function variacao(atual: number, anterior: number): number | null {
   return (atual - anterior) / anterior;
 }
 
-const ESQUEMAS_COMPARATIVO = {
-  azul: "bg-sky-500/20 text-sky-400",
-  verde: "bg-green-500/20 text-green-400",
-  ambar: "bg-amber-500/20 text-amber-400",
-  roxo: "bg-violet-500/20 text-violet-400",
-  esmeralda: "bg-emerald-500/20 text-emerald-400",
-} as const;
-
 function CardComparativo({
   titulo,
   valorFormatado,
   variacaoPct,
-  esquema,
+  cor,
   Icone,
 }: {
   titulo: string;
   valorFormatado: string;
   variacaoPct: number | null;
-  esquema: keyof typeof ESQUEMAS_COMPARATIVO;
+  cor: CorIcone;
   Icone: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }) {
   const subiu = variacaoPct !== null && variacaoPct > 0;
   const desceu = variacaoPct !== null && variacaoPct < 0;
 
   return (
-    <div className="rounded-xl bg-neutral-900 p-4 shadow-sm">
-      <div className="mb-2 flex items-center justify-between">
-        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]}`}>
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${CORES_ICONE[cor]}`}>
           <Icone className="h-4 w-4" />
         </span>
         {variacaoPct !== null && (
           <span
-            className={`text-xs font-bold ${
-              subiu ? "text-green-400" : desceu ? "text-red-400" : "text-neutral-400"
+            className={`flex items-center gap-0.5 text-xs font-bold ${
+              subiu ? "text-green-600" : desceu ? "text-red-600" : "text-neutral-400"
             }`}
           >
-            {subiu ? "▲" : desceu ? "▼" : "—"} {Math.abs(Math.round(variacaoPct * 100))}%
+            {subiu ? "↑" : desceu ? "↓" : "—"} {Math.abs(Math.round(variacaoPct * 100))}%
           </span>
         )}
       </div>
-      <p className="text-2xl font-extrabold text-white">{valorFormatado}</p>
-      <p className="mt-0.5 text-xs font-medium text-neutral-400">{titulo}</p>
+      <p className="text-xl font-bold text-neutral-900">{valorFormatado}</p>
+      <p className="mt-0.5 text-xs font-medium text-neutral-500">{titulo}</p>
     </div>
   );
 }
@@ -241,26 +219,26 @@ export function SecaoPeriodo({
           valor={metricas.leadsTrabalhados}
           meta={pisoLeads}
           amostraInsuficiente={metricas.leadsTrabalhados < 20}
-          esquema="violeta"
+          cor="violeta"
           Icone={IconeAlvo}
         />
         <CardNumero
           titulo={`${Reunioes(publicoOrg)} marcadas`}
           valor={metricas.reunioesMarcadas}
           meta={pisoReunioes}
-          esquema="ceu"
+          cor="azul"
           Icone={IconeCalendario}
         />
         <CardNumero
           titulo={`${Reunioes(publicoOrg)} realizadas`}
           valor={metricas.reunioesRealizadas}
-          esquema="esmeralda"
+          cor="verde"
           Icone={IconeCheck}
         />
         <CardNumero
           titulo="No-show"
           valor={metricas.noShow}
-          esquema="rosa"
+          cor="vermelho"
           Icone={IconeAlerta}
         />
       </div>
@@ -275,35 +253,35 @@ export function SecaoPeriodo({
               titulo={`${Calls(publicoOrg)} agendadas`}
               valorFormatado={String(metricas.reunioesMarcadas)}
               variacaoPct={variacao(metricas.reunioesMarcadas, metricasAnteriores.reunioesMarcadas)}
-              esquema="azul"
+              cor="azul"
               Icone={IconeCalendario}
             />
             <CardComparativo
               titulo={`${Calls(publicoOrg)} realizadas`}
               valorFormatado={String(metricas.reunioesRealizadas)}
               variacaoPct={variacao(metricas.reunioesRealizadas, metricasAnteriores.reunioesRealizadas)}
-              esquema="verde"
+              cor="verde"
               Icone={IconeCheck}
             />
             <CardComparativo
               titulo="Propostas"
               valorFormatado={String(metricas.propostas)}
               variacaoPct={variacao(metricas.propostas, metricasAnteriores.propostas)}
-              esquema="ambar"
+              cor="ambar"
               Icone={IconeCarta}
             />
             <CardComparativo
               titulo="Vendas"
               valorFormatado={String(metricas.vendas)}
               variacaoPct={variacao(metricas.vendas, metricasAnteriores.vendas)}
-              esquema="roxo"
+              cor="violeta"
               Icone={IconeEstrela}
             />
             <CardComparativo
               titulo="Receita"
               valorFormatado={formatarMoeda(metricas.receita)}
               variacaoPct={variacao(metricas.receita, metricasAnteriores.receita)}
-              esquema="esmeralda"
+              cor="verde"
               Icone={IconeMoeda}
             />
           </div>
