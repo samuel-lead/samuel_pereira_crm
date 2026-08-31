@@ -78,13 +78,13 @@ export function Sidebar({
 
   return (
     <aside
-      className={`flex h-screen shrink-0 flex-col border-r border-slate-800 bg-slate-900 transition-all duration-200 ${
+      className={`flex h-full shrink-0 flex-col rounded-2xl bg-slate-900 shadow-lg shadow-slate-900/10 transition-all duration-200 ${
         colapsado ? "w-16" : "w-60"
       }`}
     >
       <div className="flex items-center justify-between px-3 py-5">
         <Link href="/leads" className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#2563eb] text-sm font-bold text-white shadow-sm">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2563eb] text-sm font-bold text-white shadow-sm">
             MV
           </span>
           {!colapsado && (
@@ -133,7 +133,7 @@ export function Sidebar({
                   key={href}
                   href={href}
                   title={colapsado ? label : undefined}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition ${
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
                     colapsado ? "justify-center" : ""
                   } ${
                     ativo
@@ -154,7 +154,7 @@ export function Sidebar({
         <Link
           href="/perfil"
           title={colapsado ? nomeUsuario : undefined}
-          className={`mb-3 flex items-center gap-2 rounded-md px-1 py-1 transition hover:bg-slate-800 ${
+          className={`mb-3 flex items-center gap-2 rounded-xl px-1 py-1 transition hover:bg-slate-800 ${
             colapsado ? "justify-center" : ""
           }`}
         >
@@ -175,7 +175,7 @@ export function Sidebar({
         {!colapsado && (
           <Link
             href="/perfil"
-            className="mb-2 flex w-full items-center justify-center rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-700"
+            className="mb-2 flex w-full items-center justify-center rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-slate-700"
           >
             Meu perfil
           </Link>

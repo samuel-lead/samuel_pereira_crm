@@ -31,7 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <ProvedorLeadModal>
-      <div className="flex h-screen overflow-hidden bg-[#f4f5f7]">
+      <div className="flex h-screen gap-3 overflow-hidden bg-[#f4f5f7] p-3">
         <Sidebar
           isAdmin={isAdmin}
           paginasPermitidas={paginasPermitidas}
