@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { IconeWhatsapp } from "@/components/icons";
 import { buscarCartasContempladas, type CartaContemplada } from "@/lib/cartas-contempladas";
+import { MenuSelect } from "@/components/menu-select";
 
 const ROTULO_SEGMENTO: Record<string, { texto: string; classe: string }> = {
   imóvel: { texto: "Imóvel", classe: "bg-blue-100 text-blue-700" },
@@ -92,33 +93,30 @@ export default async function CartasContempladasPage({
                 <label className="mb-1 block text-xs font-medium text-neutral-500">
                   Segmento
                 </label>
-                <select
+                <MenuSelect
                   name="segmento"
                   defaultValue={segmento ?? ""}
-                  className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
-                >
-                  <option value="">Todos</option>
-                  <option value="imóvel">Imóvel</option>
-                  <option value="veículo">Veículo</option>
-                </select>
+                  buscar={false}
+                  options={[
+                    { value: "", label: "Todos" },
+                    { value: "imóvel", label: "Imóvel" },
+                    { value: "veículo", label: "Veículo" },
+                  ]}
+                />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-500">
                   Administradora
                 </label>
-                <select
+                <MenuSelect
                   name="administradora"
                   defaultValue={administradora ?? ""}
-                  className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
-                >
-                  <option value="">Todas</option>
-                  {administradoras.map((nome) => (
-                    <option key={nome} value={nome}>
-                      {nome}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: "", label: "Todas" },
+                    ...administradoras.map((nome) => ({ value: nome, label: nome })),
+                  ]}
+                />
               </div>
 
               <button

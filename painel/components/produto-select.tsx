@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MenuSelect } from "@/components/menu-select";
 
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
@@ -20,20 +21,15 @@ export function ProdutoSelect({
 
   return (
     <div className="space-y-2">
-      <select
-        aria-label="Produto"
+      <MenuSelect
+        placeholder="Selecione o produto..."
         value={selecionado}
-        onChange={(e) => setSelecionado(e.target.value)}
-        className={campoClasse}
-      >
-        <option value="">Selecione o produto...</option>
-        {produtos.map((produto) => (
-          <option key={produto} value={produto}>
-            {produto}
-          </option>
-        ))}
-        <option value="Outro">Outro...</option>
-      </select>
+        onChange={setSelecionado}
+        options={[
+          ...produtos.map((produto) => ({ value: produto, label: produto })),
+          { value: "Outro", label: "Outro..." },
+        ]}
+      />
 
       {selecionado === "Outro" && (
         <input

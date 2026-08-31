@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { LinkLead } from "@/components/link-lead";
 import { corDoNivel, numerarNiveis, rotuloNivel, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
 import { parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
+import { MenuSelect } from "@/components/menu-select";
 
 type LeadLinha = {
   id: string;
@@ -95,19 +96,19 @@ export default async function ListaLeadsPage({
               <label className="text-[10px] font-medium text-neutral-500" htmlFor="nivel">
                 Nível
               </label>
-              <select
+              <MenuSelect
                 id="nivel"
                 name="nivel"
                 defaultValue={nivel ?? ""}
-                className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
-              >
-                <option value="">Todos</option>
-                {niveis.map((n) => (
-                  <option key={n.ordem} value={n.ordem}>
-                    {rotuloNivel(n, numerosVisiveis.get(n.ordem))}
-                  </option>
-                ))}
-              </select>
+                variante="sem-borda"
+                options={[
+                  { value: "", label: "Todos" },
+                  ...niveis.map((n) => ({
+                    value: String(n.ordem),
+                    label: rotuloNivel(n, numerosVisiveis.get(n.ordem)),
+                  })),
+                ]}
+              />
             </div>
 
             <div className="flex min-w-[220px] flex-col justify-center gap-0.5 px-4 py-2">

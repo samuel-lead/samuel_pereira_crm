@@ -6,6 +6,7 @@ import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { AvatarLead } from "@/components/avatar-lead";
 import { IconeMoeda } from "@/components/icons";
 import { anoMesBrasil, parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
+import { MenuSelect } from "@/components/menu-select";
 
 const NOMES_MES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -128,19 +129,19 @@ export default async function VendasPage({
                 <label className="text-[10px] font-medium text-neutral-500" htmlFor="periodo">
                   Mês (atalho)
                 </label>
-                <select
+                <MenuSelect
                   id="periodo"
                   name="periodo"
                   defaultValue={periodoFiltro ?? ""}
-                  className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
-                >
-                  <option value="">Todos os períodos</option>
-                  {periodos.map((periodo) => (
-                    <option key={periodo.valor} value={periodo.valor}>
-                      {periodo.nome}
-                    </option>
-                  ))}
-                </select>
+                  variante="sem-borda"
+                  options={[
+                    { value: "", label: "Todos os períodos" },
+                    ...periodos.map((periodo) => ({
+                      value: periodo.valor,
+                      label: periodo.nome,
+                    })),
+                  ]}
+                />
               </div>
             )}
 

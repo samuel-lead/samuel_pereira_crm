@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { criarUsuario, type EstadoFormulario } from "@/lib/usuarios/actions";
 import { PAGINAS_CONFIGURAVEIS } from "@/lib/paginas-permitidas";
+import { MenuSelect } from "@/components/menu-select";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 const campoClasse =
@@ -56,11 +57,16 @@ export function NovoUsuarioForm() {
         <label className={labelClasse} htmlFor="funcao">
           Função
         </label>
-        <select id="funcao" name="funcao" defaultValue="" className={campoClasse}>
-          <option value="">— Não definida —</option>
-          <option value="sdr">SDR</option>
-          <option value="closer">Closer</option>
-        </select>
+        <MenuSelect
+          id="funcao"
+          name="funcao"
+          defaultValue=""
+          options={[
+            { value: "", label: "— Não definida —" },
+            { value: "sdr", label: "SDR" },
+            { value: "closer", label: "Closer" },
+          ]}
+        />
       </div>
 
       <div className="space-y-1">

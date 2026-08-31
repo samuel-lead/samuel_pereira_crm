@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { excluirUsuario, type EstadoExclusao } from "@/lib/usuarios/actions";
+import { MenuSelect } from "@/components/menu-select";
 
 const estadoInicial: EstadoExclusao = { erro: null };
 
@@ -34,18 +35,11 @@ export function ExcluirUsuarioButton({
           <label className="block text-xs font-medium text-amber-800">
             Transferir leads e atividades de {nome} pra:
           </label>
-          <select
+          <MenuSelect
             name="transferir_para"
-            required
-            className="w-full rounded-md border border-amber-300 bg-white px-2 py-1.5 text-xs text-neutral-900"
-          >
-            <option value="">Selecione...</option>
-            {outrosUsuarios.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.nome}
-              </option>
-            ))}
-          </select>
+            placeholder="Selecione..."
+            options={outrosUsuarios.map((u) => ({ value: u.id, label: u.nome }))}
+          />
         </div>
       )}
 

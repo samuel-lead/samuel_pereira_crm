@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { atualizarFuncaoDoUsuario } from "@/lib/usuarios/actions";
+import { MenuSelect } from "@/components/menu-select";
 
 export function FuncaoUsuarioSelect({
   usuarioId,
@@ -15,29 +16,32 @@ export function FuncaoUsuarioSelect({
   funcaoAtual: string | null;
 }) {
   const [pendente, iniciarTransicao] = useTransition();
+  const [valor, setValor] = useState(funcaoAtual ?? "");
 
-  function aoMudar(e: React.ChangeEvent<HTMLSelectElement>) {
+  function aoMudar(novoValor: string) {
+    setValor(novoValor);
     const formData = new FormData();
     formData.set("usuario_id", usuarioId);
     formData.set("papel_atual", papelAtual);
     paginasAtuais.forEach((pagina) => formData.append("paginas_atuais", pagina));
-    formData.set("funcao", e.target.value);
+    formData.set("funcao", novoValor);
     iniciarTransicao(async () => {
       await atualizarFuncaoDoUsuario(formData);
     });
   }
 
   return (
-    <select
-      defaultValue={funcaoAtual ?? ""}
-      onChange={aoMudar}
+    <MenuSelect
+      variante="pilula"
+      titulo="Função no processo comercial"
       disabled={pendente}
-      title="Função no processo comercial"
-      className="shrink-0 rounded-full border-none bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700 outline-none disabled:opacity-50"
-    >
-      <option value="">— Sem função —</option>
-      <option value="sdr">SDR</option>
-      <option value="closer">Closer</option>
-    </select>
+      value={valor}
+      onChange={aoMudar}
+      options={[
+        { value: "", label: "— Sem função —" },
+        { value: "sdr", label: "SDR" },
+        { value: "closer", label: "Closer" },
+      ]}
+    />
   );
 }

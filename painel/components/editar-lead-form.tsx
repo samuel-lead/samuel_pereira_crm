@@ -1,9 +1,10 @@
 "use client";
 
-import { Fragment, useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
+import { MenuSelect } from "@/components/menu-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 import { reuniao, Reuniao } from "@/lib/terminologia";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
@@ -315,30 +316,29 @@ export function EditarLeadForm({
           <label className={labelClasse} htmlFor="nivel_ordem">
             Nível
           </label>
-          <select
+          <MenuSelect
             id="nivel_ordem"
             value={valorMenuNivel}
-            onChange={(e) => aoMudarNivel(e.target.value)}
-            className={campoClasse}
-          >
-            {niveis.map((nivel) => (
-              <Fragment key={nivel.ordem}>
-                <option value={nivel.ordem} disabled={!nivelPermitido(String(nivel.ordem))}>
-                  {rotuloNivel(nivel, numerosVisiveis[nivel.ordem])}
-                  {!nivelPermitido(String(nivel.ordem)) ? " (bloqueado)" : ""}
-                </option>
-                {String(nivel.ordem) === NIVEL_OPORTUNIDADES && (
-                  <option
-                    value={OPCAO_OPORTUNIDADE_FUTURA}
-                    disabled={!nivelPermitido(NIVEL_OPORTUNIDADES)}
-                  >
-                    ↳ Repescagem futura de ICP
-                    {!nivelPermitido(NIVEL_OPORTUNIDADES) ? " (bloqueado)" : ""}
-                  </option>
-                )}
-              </Fragment>
-            ))}
-          </select>
+            onChange={aoMudarNivel}
+            buscar={false}
+            options={niveis.flatMap((nivel) => {
+              const opcao = {
+                value: String(nivel.ordem),
+                label: rotuloNivel(nivel, numerosVisiveis[nivel.ordem]),
+                disabled: !nivelPermitido(String(nivel.ordem)),
+              };
+              if (String(nivel.ordem) !== NIVEL_OPORTUNIDADES) return [opcao];
+              return [
+                opcao,
+                {
+                  value: OPCAO_OPORTUNIDADE_FUTURA,
+                  label: "Repescagem futura de ICP",
+                  disabled: !nivelPermitido(NIVEL_OPORTUNIDADES),
+                  indentado: true,
+                },
+              ];
+            })}
+          />
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
 
           {temNivelBloqueadoPorReuniaoMarcada && (
@@ -527,22 +527,16 @@ export function EditarLeadForm({
               <label className="text-sm font-medium text-neutral-700" htmlFor="motivo_base">
                 Por que esse lead está indo pra Base?
               </label>
-              <select
+              <MenuSelect
                 id="motivo_base"
                 name="motivo_base"
-                required
                 defaultValue={lead.motivo_base ?? ""}
-                className={`${campoClasse} bg-white`}
-              >
-                <option value="" disabled>
-                  Selecione o motivo...
-                </option>
-                {MOTIVOS_BASE.map((motivo) => (
-                  <option key={motivo.valor} value={motivo.valor}>
-                    {motivo.nome}
-                  </option>
-                ))}
-              </select>
+                placeholder="Selecione o motivo..."
+                options={MOTIVOS_BASE.map((motivo) => ({
+                  value: motivo.valor,
+                  label: motivo.nome,
+                }))}
+              />
             </div>
           )}
         </div>
@@ -586,34 +580,36 @@ export function EditarLeadForm({
               <label className={labelClasse} htmlFor="criterio_urgencia">
                 Tem urgência em resolver
               </label>
-              <select
+              <MenuSelect
                 id="criterio_urgencia"
                 name="criterio_urgencia"
                 defaultValue={lead.criterio_urgencia}
-                className={`${campoClasse} bg-white`}
-              >
-                <option value="desconhecida">Ainda não sei</option>
-                <option value="alta">Alta</option>
-                <option value="media">Média</option>
-                <option value="baixa">Baixa</option>
-              </select>
+                buscar={false}
+                options={[
+                  { value: "desconhecida", label: "Ainda não sei" },
+                  { value: "alta", label: "Alta" },
+                  { value: "media", label: "Média" },
+                  { value: "baixa", label: "Baixa" },
+                ]}
+              />
             </div>
 
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_capacidade">
                 Consegue pagar a solução
               </label>
-              <select
+              <MenuSelect
                 id="criterio_capacidade"
                 name="criterio_capacidade"
                 defaultValue={lead.criterio_capacidade}
-                className={`${campoClasse} bg-white`}
-              >
-                <option value="desconhecida">Ainda não sei</option>
-                <option value="sim">Sim</option>
-                <option value="parcial">Parcial</option>
-                <option value="nao">Não</option>
-              </select>
+                buscar={false}
+                options={[
+                  { value: "desconhecida", label: "Ainda não sei" },
+                  { value: "sim", label: "Sim" },
+                  { value: "parcial", label: "Parcial" },
+                  { value: "nao", label: "Não" },
+                ]}
+              />
             </div>
           </fieldset>
         ) : (

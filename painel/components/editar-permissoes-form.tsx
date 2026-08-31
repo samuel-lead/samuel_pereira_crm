@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { atualizarPermissoes, type EstadoFormulario } from "@/lib/usuarios/actions";
 import { PAGINAS_CONFIGURAVEIS } from "@/lib/paginas-permitidas";
+import { MenuSelect } from "@/components/menu-select";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -29,16 +30,16 @@ export function EditarPermissoesForm({
         <label className="text-sm font-medium text-neutral-700" htmlFor="funcao">
           Função
         </label>
-        <select
+        <MenuSelect
           id="funcao"
           name="funcao"
           defaultValue={funcaoAtual ?? ""}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        >
-          <option value="">— Não definida —</option>
-          <option value="sdr">SDR</option>
-          <option value="closer">Closer</option>
-        </select>
+          options={[
+            { value: "", label: "— Não definida —" },
+            { value: "sdr", label: "SDR" },
+            { value: "closer", label: "Closer" },
+          ]}
+        />
       </div>
 
       <fieldset className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-3">

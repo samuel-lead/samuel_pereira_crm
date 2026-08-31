@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { EstadoFormulario } from "@/lib/imoveis/actions";
+import { MenuSelect } from "@/components/menu-select";
 
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
@@ -81,29 +82,34 @@ export function ImovelForm({
           <label className={labelClasse} htmlFor="tipo">
             Tipo
           </label>
-          <select id="tipo" name="tipo" defaultValue={imovel?.tipo ?? "apartamento"} className={campoClasse}>
-            <option value="apartamento">Apartamento</option>
-            <option value="casa">Casa</option>
-            <option value="terreno">Terreno</option>
-            <option value="sala_comercial">Sala comercial</option>
-            <option value="galpao">Galpão</option>
-            <option value="outro">Outro</option>
-          </select>
+          <MenuSelect
+            id="tipo"
+            name="tipo"
+            defaultValue={imovel?.tipo ?? "apartamento"}
+            options={[
+              { value: "apartamento", label: "Apartamento" },
+              { value: "casa", label: "Casa" },
+              { value: "terreno", label: "Terreno" },
+              { value: "sala_comercial", label: "Sala comercial" },
+              { value: "galpao", label: "Galpão" },
+              { value: "outro", label: "Outro" },
+            ]}
+          />
         </div>
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="finalidade">
             Finalidade
           </label>
-          <select
+          <MenuSelect
             id="finalidade"
             name="finalidade"
             defaultValue={imovel?.finalidade ?? "venda"}
-            className={campoClasse}
-          >
-            <option value="venda">Venda</option>
-            <option value="aluguel">Aluguel</option>
-            <option value="venda_aluguel">Venda e aluguel</option>
-          </select>
+            options={[
+              { value: "venda", label: "Venda" },
+              { value: "aluguel", label: "Aluguel" },
+              { value: "venda_aluguel", label: "Venda e aluguel" },
+            ]}
+          />
         </div>
       </div>
 
@@ -253,13 +259,18 @@ export function ImovelForm({
         <label className={labelClasse} htmlFor="status">
           Status
         </label>
-        <select id="status" name="status" defaultValue={imovel?.status ?? "disponivel"} className={campoClasse}>
-          <option value="disponivel">Disponível</option>
-          <option value="reservado">Reservado</option>
-          <option value="vendido">Vendido</option>
-          <option value="alugado">Alugado</option>
-          <option value="inativo">Inativo</option>
-        </select>
+        <MenuSelect
+          id="status"
+          name="status"
+          defaultValue={imovel?.status ?? "disponivel"}
+          options={[
+            { value: "disponivel", label: "Disponível" },
+            { value: "reservado", label: "Reservado" },
+            { value: "vendido", label: "Vendido" },
+            { value: "alugado", label: "Alugado" },
+            { value: "inativo", label: "Inativo" },
+          ]}
+        />
       </div>
 
       <div className="space-y-1">

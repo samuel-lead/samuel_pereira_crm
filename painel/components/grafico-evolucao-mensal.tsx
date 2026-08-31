@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ResumoMes } from "@/lib/metricas";
+import { MenuSelect } from "@/components/menu-select";
 
 const NOMES_MESES = [
   "Jan",
@@ -153,22 +154,14 @@ export function GraficoEvolucaoMensal({
           </p>
         </div>
 
-        <select
-          value={ano}
-          onChange={(e) => aoTrocarAno(Number(e.target.value))}
-          className="rounded-md border px-3 py-1.5 text-sm font-medium outline-none"
-          style={{
-            borderColor: "var(--eixo)",
-            background: "var(--superficie-alt)",
-            color: "var(--texto)",
-          }}
-        >
-          {anos.map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-        </select>
+        <div className="w-24">
+          <MenuSelect
+            value={String(ano)}
+            onChange={(valor) => aoTrocarAno(Number(valor))}
+            buscar={false}
+            options={anos.map((a) => ({ value: String(a), label: String(a) }))}
+          />
+        </div>
       </div>
 
       <div className="px-5 py-4">

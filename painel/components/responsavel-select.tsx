@@ -1,5 +1,6 @@
-const campoClasse =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
+"use client";
+
+import { MenuSelect } from "@/components/menu-select";
 
 export function ResponsavelSelect({
   usuarios,
@@ -22,18 +23,12 @@ export function ResponsavelSelect({
     : usuarios;
 
   return (
-    <select
+    <MenuSelect
       id={name}
       name={name}
       defaultValue={valorInicial ?? ""}
-      className={campoClasse}
-    >
-      <option value="">{placeholder}</option>
-      {opcoes.map((usuario) => (
-        <option key={usuario.id} value={usuario.id}>
-          {usuario.nome}
-        </option>
-      ))}
-    </select>
+      placeholder={placeholder}
+      options={opcoes.map((usuario) => ({ value: usuario.id, label: usuario.nome }))}
+    />
   );
 }

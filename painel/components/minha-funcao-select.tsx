@@ -1,30 +1,34 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { atualizarPropriaFuncao } from "@/lib/usuarios/actions";
+import { MenuSelect } from "@/components/menu-select";
 
 export function MinhaFuncaoSelect({ funcaoAtual }: { funcaoAtual: string | null }) {
   const [pendente, iniciarTransicao] = useTransition();
+  const [valor, setValor] = useState(funcaoAtual ?? "");
 
-  function aoMudar(e: React.ChangeEvent<HTMLSelectElement>) {
+  function aoMudar(novoValor: string) {
+    setValor(novoValor);
     const formData = new FormData();
-    formData.set("funcao", e.target.value);
+    formData.set("funcao", novoValor);
     iniciarTransicao(async () => {
       await atualizarPropriaFuncao(formData);
     });
   }
 
   return (
-    <select
-      defaultValue={funcaoAtual ?? ""}
-      onChange={aoMudar}
+    <MenuSelect
+      variante="pilula"
+      titulo="Sua função no processo comercial — você continua administrador"
       disabled={pendente}
-      title="Sua função no processo comercial — você continua administrador"
-      className="shrink-0 rounded-full border-none bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700 outline-none disabled:opacity-50"
-    >
-      <option value="">Todas as funções</option>
-      <option value="sdr">SDR</option>
-      <option value="closer">Closer</option>
-    </select>
+      value={valor}
+      onChange={aoMudar}
+      options={[
+        { value: "", label: "Todas as funções" },
+        { value: "sdr", label: "SDR" },
+        { value: "closer", label: "Closer" },
+      ]}
+    />
   );
 }
