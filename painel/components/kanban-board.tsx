@@ -209,18 +209,16 @@ export function KanbanBoard({
       const aconteceu = await perguntar(`Essa ${reuniao(publicoOrg)} realmente aconteceu?`);
       if (!aconteceu) return;
       iniciarTransicao(() => {
-        moverLeadNivel(leadId, ordem, undefined, true).catch((erro: unknown) => {
-          const mensagem = erro instanceof Error ? erro.message : "Não deu pra mover o lead";
-          alert(mensagem);
+        moverLeadNivel(leadId, ordem, undefined, true).then((erro) => {
+          if (erro) alert(erro);
         });
       });
       return;
     }
 
     iniciarTransicao(() => {
-      moverLeadNivel(leadId, ordem).catch((erro: unknown) => {
-        const mensagem = erro instanceof Error ? erro.message : "Não deu pra mover o lead";
-        alert(mensagem);
+      moverLeadNivel(leadId, ordem).then((erro) => {
+        if (erro) alert(erro);
       });
     });
   }

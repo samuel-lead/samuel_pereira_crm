@@ -721,12 +721,18 @@ export async function atualizarLead(
   redirect("/leads");
 }
 
+// Retorna a mensagem de erro (string) em vez de lançar exceção — uma
+// exceção lançada direto de uma Server Action chamada assim (fora de
+// useActionState) é escondida pelo Next.js em produção, virando um
+// "Minified React error #441" genérico e inútil pra quem está usando o
+// sistema. Devolvendo a mensagem como valor normal, o Next não mexe nela e
+// o alerta em kanban-board.tsx mostra o motivo certinho pra pessoa.
 export async function moverLeadNivel(
   leadId: string,
   novoNivel: number,
   agendadaPara?: string | null,
   reuniaoAconteceu?: boolean
-) {
+): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
   const { data: leadAtual, error: erroAtual } = await supabase
@@ -736,7 +742,7 @@ export async function moverLeadNivel(
     .single();
 
   if (erroAtual || !leadAtual) {
-    throw new Error("Lead não encontrado");
+    return "Lead não encontrado";
   }
 
   if (
@@ -744,7 +750,7 @@ export async function moverLeadNivel(
     leadAtual.responsavel_id !== usuario.id &&
     !(await souCloserAtivo(supabase, leadId, usuario.id))
   ) {
-    throw new Error(ERRO_SEM_PERMISSAO);
+    return ERRO_SEM_PERMISSAO;
   }
 
   // "Oportunidades futuras" é uma coluna sintética (divisão visual dentro
@@ -754,7 +760,7 @@ export async function moverLeadNivel(
   const nivelReal = querFutura ? NIVEL_REUNIAO_FEITA : novoNivel;
 
   if (leadAtual.nivel_ordem === nivelReal && leadAtual.oportunidade_futura === querFutura) {
-    return;
+    return null;
   }
 
   // No Show e Reagendamento só existem se teve reunião marcada antes —
@@ -766,9 +772,7 @@ export async function moverLeadNivel(
     leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA
   ) {
     const nomeNivel = nivelReal === NIVEL_NO_SHOW ? "No-show" : "Precisa reagendar";
-    throw new Error(
-      `Só dá pra marcar "${nomeNivel}" a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`
-    );
+    return `Só dá pra marcar "${nomeNivel}" a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`;
   }
 
   const erroReuniao = await sincronizarReuniao(supabase, {
@@ -782,7 +786,7 @@ export async function moverLeadNivel(
     publicoOrg: usuario.publico_org,
   });
   if (erroReuniao) {
-    throw new Error(erroReuniao);
+    return erroReuniao;
   }
 
   const { error } = await supabase
@@ -797,7 +801,7 @@ export async function moverLeadNivel(
     .eq("id", leadId);
 
   if (error) {
-    throw new Error(mensagemAmigavel(error.code, error.message));
+    return mensagemAmigavel(error.code, error.message);
   }
 
   const { error: erroHistorico } = await supabase.from("nivel_historico").insert({
@@ -811,12 +815,13 @@ export async function moverLeadNivel(
   });
 
   if (erroHistorico) {
-    throw new Error(erroHistorico.message);
+    return erroHistorico.message;
   }
 
   revalidatePath("/leads");
   revalidatePath("/leads/lista");
   revalidatePath(`/leads/${leadId}`);
+  return null;
 }
 
 export async function marcarVendido(
