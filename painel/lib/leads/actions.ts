@@ -133,6 +133,10 @@ async function sincronizarReuniao(
     // undefined = ainda não perguntou, então nem tenta marcar a nova.
     reuniaoAnteriorSumiu?: boolean;
     publicoOrg?: string;
+    // "Oportunidades futuras" (repescagem de ICP) é a mesma coluna
+    // 8 por baixo, mas não exige reunião registrada — só a "Oportunidades"
+    // normal exige (Samuel pediu essa distinção explicitamente).
+    querFutura?: boolean;
   }
 ): Promise<string | null> {
   const {
@@ -147,6 +151,7 @@ async function sincronizarReuniao(
     reuniaoAconteceu,
     reuniaoAnteriorSumiu,
     publicoOrg = "mentoria",
+    querFutura = false,
   } = params;
 
   // Trava 1: sair de "Reunião marcada" só pode ir pra No-show, Precisa
@@ -172,7 +177,12 @@ async function sincronizarReuniao(
   // virou nada", e a maioria dos motivos de ir pra lá (sumiu, não
   // qualificou, não teve interesse) nem chega perto de uma reunião — travar
   // isso deixava lead de pré-venda preso sem conseguir arquivar.
-  if (paraOrdem === NIVEL_FOLLOW_POS_REUNIAO || paraOrdem === NIVEL_REUNIAO_FEITA) {
+  // "Oportunidades futuras" (repescagem de ICP) também fica fora — Samuel
+  // foi explícito que ela não precisa ser só pra quem já teve reunião.
+  if (
+    paraOrdem === NIVEL_FOLLOW_POS_REUNIAO ||
+    (paraOrdem === NIVEL_REUNIAO_FEITA && !querFutura)
+  ) {
     const { count: totalReunioes } = await supabase
       .from("reunioes")
       .select("id", { count: "exact", head: true })
@@ -648,6 +658,7 @@ export async function atualizarLead(
             ? false
             : undefined,
       publicoOrg: usuario.publico_org,
+      querFutura: oportunidadeFutura,
     });
     if (erroReuniao) {
       return { erro: erroReuniao };
@@ -788,6 +799,7 @@ export async function moverLeadNivel(
     agendadaPara,
     reuniaoAconteceu,
     publicoOrg: usuario.publico_org,
+    querFutura,
   });
   if (erroReuniao) {
     return erroReuniao;

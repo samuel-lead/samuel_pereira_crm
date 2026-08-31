@@ -176,7 +176,10 @@ export function EditarLeadForm({
   // que aplicadas aqui pra desabilitar a opção no menu em vez de deixar
   // escolher e mostrar erro só depois de clicar em "Salvar alterações".
   // Ficar no nível que já está sempre é permitido (não muda nada).
-  function nivelPermitido(ordemDestino: string): boolean {
+  // ehFutura = true só quando quem está checando é a opção "Repescagem
+  // futura de ICP" — ela usa o mesmo nível 8 por baixo, mas não exige
+  // reunião registrada (só a "Oportunidades" normal exige).
+  function nivelPermitido(ordemDestino: string, ehFutura = false): boolean {
     const nivelAtual = String(lead.nivel_ordem);
     if (ordemDestino === nivelAtual) return true;
 
@@ -190,12 +193,12 @@ export function EditarLeadForm({
       return false;
     }
 
-    // Base fica de fora dessa trava (Samuel pediu explicitamente): é o
-    // balde de "não virou nada", e a maioria dos motivos de ir pra lá
-    // (sumiu, não qualificou, não teve interesse) nem chega perto de uma
-    // reunião — só Follow e Oportunidades exigem reunião registrada.
+    // Base e "Oportunidades futuras" ficam de fora dessa trava (Samuel
+    // pediu explicitamente os dois) — só Follow e a "Oportunidades" normal
+    // exigem reunião registrada.
     if (
-      (ordemDestino === NIVEL_FOLLOW_POS_REUNIAO || ordemDestino === NIVEL_OPORTUNIDADES) &&
+      (ordemDestino === NIVEL_FOLLOW_POS_REUNIAO ||
+        (ordemDestino === NIVEL_OPORTUNIDADES && !ehFutura)) &&
       !jaTeveReuniao
     ) {
       return false;
@@ -343,7 +346,7 @@ export function EditarLeadForm({
                 {
                   value: OPCAO_OPORTUNIDADE_FUTURA,
                   label: "Repescagem futura de ICP",
-                  disabled: !nivelPermitido(NIVEL_OPORTUNIDADES),
+                  disabled: !nivelPermitido(NIVEL_OPORTUNIDADES, true),
                   indentado: true,
                 },
               ];
