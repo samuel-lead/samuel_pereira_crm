@@ -111,7 +111,7 @@ export function MetaReceitaWidget({
     }
 
     return (
-      <div className="rounded-xl border border-amber-400 bg-amber-50 p-4 shadow-sm">
+      <div className="meta-vitrine meta-vitrine-alerta meta-brilho rounded-xl border border-amber-400 bg-amber-50 p-4 shadow-sm">
         <div className="mb-2 flex items-center gap-2">
           <span className="text-lg">🔔</span>
           <h2 className="text-sm font-bold text-amber-900">
@@ -144,28 +144,45 @@ export function MetaReceitaWidget({
       </div>
     );
 
+    // Precisa de dois níveis: o de fora sem overflow escondido, pra luz de
+    // fundo (meta-vitrine) poder vazar pra além do cartão — o de dentro com
+    // overflow escondido, só pra faixa de brilho (meta-brilho) ficar presa
+    // dentro do cartão em vez de "vazar" reta pela tela. O cartão em si
+    // fica com a cor normal de cada modo (branco no claro, escuro no
+    // escuro) — só o brilho de fundo troca: preto no modo claro, branco no
+    // modo escuro.
+    const classeVitrine = "meta-vitrine meta-vitrine-mini shrink-0";
+
     if (!podeEditar) {
       return (
-        <div className="meta-brilho shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-          {conteudo}
+        <div className={classeVitrine}>
+          <div className="meta-brilho overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+            {conteudo}
+          </div>
         </div>
       );
     }
 
     return (
-      <button
-        type="button"
-        onClick={() => setEditando(true)}
-        title="Clique pra editar a meta do mês"
-        className="meta-brilho shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
-      >
-        {conteudo}
-      </button>
+      <div className={classeVitrine}>
+        <button
+          type="button"
+          onClick={() => setEditando(true)}
+          title="Clique pra editar a meta do mês"
+          className="meta-brilho w-full overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
+        >
+          {conteudo}
+        </button>
+      </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div
+      className={`meta-vitrine meta-brilho rounded-xl border border-neutral-200 bg-white p-4 shadow-sm ${
+        bateu ? "meta-vitrine-bateu" : ""
+      }`}
+    >
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-neutral-800">Meta de receita do mês</h2>
         {podeEditar && (

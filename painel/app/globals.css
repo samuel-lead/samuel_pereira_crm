@@ -525,3 +525,76 @@ body {
 .dark .meta-brilho::after {
   background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.25), transparent);
 }
+
+/* Versão "vitrine" pro cartão grande de Meta de receita (painel de
+   Métricas) — mesma faixa de luz do .meta-brilho + uma luz de fundo que
+   respira (pulsa) atrás do cartão. Azul enquanto a meta não bateu, verde
+   quando bate — troca sozinho junto com o resto do cartão. Cor do brilho
+   é mais forte no escuro (senão some contra o fundo escuro). */
+@keyframes meta-pulso {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+}
+
+.meta-vitrine {
+  position: relative;
+  isolation: isolate;
+}
+
+.meta-vitrine::before {
+  content: "";
+  position: absolute;
+  inset: -22px;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(65% 120% at 20% 10%, rgba(37, 99, 235, 0.55), transparent 72%);
+  filter: blur(26px);
+  animation: meta-pulso 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.meta-vitrine.meta-vitrine-bateu::before {
+  background: radial-gradient(65% 120% at 20% 10%, rgba(22, 163, 74, 0.6), transparent 72%);
+}
+
+.meta-vitrine.meta-vitrine-alerta::before {
+  background: radial-gradient(65% 120% at 20% 10%, rgba(217, 119, 6, 0.6), transparent 72%);
+}
+
+.dark .meta-vitrine::before {
+  background: radial-gradient(65% 120% at 20% 10%, rgba(59, 130, 246, 0.8), transparent 72%);
+  filter: blur(30px);
+}
+
+.dark .meta-vitrine.meta-vitrine-bateu::before {
+  background: radial-gradient(65% 120% at 20% 10%, rgba(34, 197, 94, 0.8), transparent 72%);
+}
+
+.dark .meta-vitrine.meta-vitrine-alerta::before {
+  background: radial-gradient(65% 120% at 20% 10%, rgba(245, 158, 11, 0.8), transparent 72%);
+}
+
+/* Escala reduzida pro cartão compacto (topo de Pré-vendas/Vendas) — o
+   mesmo brilho, só que proporcional a um cartãozinho pequeno em vez do
+   cartão grande de Métricas. */
+/* O cartãozinho em si mantém a cor normal de cada modo (branco no claro,
+   escuro no escuro, igual todo o resto do painel) — só o brilho de fundo
+   troca de cor: preto no modo claro, branco no modo escuro (Samuel pediu
+   isso especificamente, sem mexer no cartão). */
+.meta-vitrine-mini::before {
+  inset: -10px;
+  filter: blur(14px);
+  background: radial-gradient(65% 120% at 20% 10%, rgba(0, 0, 0, 0.4), transparent 72%);
+}
+
+.dark .meta-vitrine-mini::before {
+  filter: blur(16px);
+  background: radial-gradient(65% 120% at 20% 10%, rgba(255, 255, 255, 0.55), transparent 72%);
+}
