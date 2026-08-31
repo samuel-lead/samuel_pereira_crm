@@ -190,7 +190,14 @@ export function EditarLeadForm({
       return false;
     }
 
-    if (Number(ordemDestino) >= Number(NIVEL_FOLLOW_POS_REUNIAO) && !jaTeveReuniao) {
+    // Base fica de fora dessa trava (Samuel pediu explicitamente): é o
+    // balde de "não virou nada", e a maioria dos motivos de ir pra lá
+    // (sumiu, não qualificou, não teve interesse) nem chega perto de uma
+    // reunião — só Follow e Oportunidades exigem reunião registrada.
+    if (
+      (ordemDestino === NIVEL_FOLLOW_POS_REUNIAO || ordemDestino === NIVEL_OPORTUNIDADES) &&
+      !jaTeveReuniao
+    ) {
       return false;
     }
 
@@ -201,7 +208,10 @@ export function EditarLeadForm({
   const temNivelBloqueadoPorReuniaoMarcada =
     saindoDeReuniaoMarcada && niveis.some((n) => !nivelPermitido(String(n.ordem)));
   const temNivelBloqueadoPorFaltaReuniao =
-    !jaTeveReuniao && niveis.some((n) => Number(n.ordem) >= Number(NIVEL_FOLLOW_POS_REUNIAO));
+    !jaTeveReuniao &&
+    niveis.some(
+      (n) => String(n.ordem) === NIVEL_FOLLOW_POS_REUNIAO || String(n.ordem) === NIVEL_OPORTUNIDADES
+    );
 
   const reuniaoAtivaEhFutura = Boolean(
     reuniaoAtivaAgendadaPara && new Date(reuniaoAtivaAgendadaPara) > new Date()
@@ -350,7 +360,7 @@ export function EditarLeadForm({
           )}
           {temNivelBloqueadoPorFaltaReuniao && (
             <p className="text-xs text-neutral-400">
-              Follow, Oportunidades e Base estão bloqueados: esse lead nunca teve uma{" "}
+              Follow e Oportunidades estão bloqueados: esse lead nunca teve uma{" "}
               {reuniao(publicoOrg)} registrada.
             </p>
           )}

@@ -165,10 +165,14 @@ async function sincronizarReuniao(
     return `Não dá pra sair de "${Reuniao(publicoOrg)} marcada" direto pra esse nível — a ${reuniao(publicoOrg)} ficaria perdida no sistema. Se ela não aconteceu, mova pra "No-show" ou "Precisa reagendar"; se aconteceu, mova pra "Follow após reunião" ou "Oportunidades".`;
   }
 
-  // Trava 2: não dá pra pular direto pra Follow/Oportunidades/Base sem o
-  // lead nunca ter tido nenhuma reunião registrada — foi o que aconteceu
-  // com o Igor Basílio (foi parar em "Oportunidades" sem reunião nenhuma).
-  if (paraOrdem >= NIVEL_FOLLOW_POS_REUNIAO) {
+  // Trava 2: não dá pra pular direto pra Follow/Oportunidades sem o lead
+  // nunca ter tido nenhuma reunião registrada — foi o que aconteceu com o
+  // Igor Basílio (foi parar em "Oportunidades" sem reunião nenhuma).
+  // Base NÃO entra aqui (Samuel pediu explicitamente): é o balde de "não
+  // virou nada", e a maioria dos motivos de ir pra lá (sumiu, não
+  // qualificou, não teve interesse) nem chega perto de uma reunião — travar
+  // isso deixava lead de pré-venda preso sem conseguir arquivar.
+  if (paraOrdem === NIVEL_FOLLOW_POS_REUNIAO || paraOrdem === NIVEL_REUNIAO_FEITA) {
     const { count: totalReunioes } = await supabase
       .from("reunioes")
       .select("id", { count: "exact", head: true })
