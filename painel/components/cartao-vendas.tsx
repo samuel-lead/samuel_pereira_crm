@@ -22,6 +22,8 @@ export function CartaoVendas({
   faturamento: number;
   receita: number;
 }) {
+  const ticketMedio = vendas > 0 ? faturamento / vendas : 0;
+
   return (
     <div className="min-w-[150px] flex-1 px-3 py-2">
       <p className="text-[10px] leading-tight text-neutral-500">{label}</p>
@@ -34,6 +36,11 @@ export function CartaoVendas({
       <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
         {formatarMoeda(receita)} receita
       </p>
+      {vendas > 0 && (
+        <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
+          {formatarMoeda(ticketMedio)} ticket médio
+        </p>
+      )}
     </div>
   );
 }
