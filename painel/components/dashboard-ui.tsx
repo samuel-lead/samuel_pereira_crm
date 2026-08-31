@@ -31,31 +31,14 @@ function formatarPercentual(valor: number | null) {
   return `${Math.round(valor * 100)}%`;
 }
 
+// Cor só entra como acento pontual (ícone pequeno, texto do rótulo) — o
+// cartão em si é sempre branco/neutro, nunca um fundo pastel espalhado
+// (padrão "premium" pedido pelo Samuel, ver stat-cell.tsx).
 const ESQUEMAS = {
-  violeta: {
-    fundo: "bg-violet-50",
-    borda: "border-violet-200",
-    icone: "bg-violet-600 text-white",
-    texto: "text-violet-700",
-  },
-  ceu: {
-    fundo: "bg-sky-50",
-    borda: "border-sky-200",
-    icone: "bg-sky-600 text-white",
-    texto: "text-sky-700",
-  },
-  esmeralda: {
-    fundo: "bg-green-50",
-    borda: "border-green-200",
-    icone: "bg-green-600 text-white",
-    texto: "text-green-700",
-  },
-  rosa: {
-    fundo: "bg-rose-50",
-    borda: "border-rose-200",
-    icone: "bg-rose-600 text-white",
-    texto: "text-rose-700",
-  },
+  violeta: { icone: "bg-violet-600 text-white", texto: "text-violet-700" },
+  ceu: { icone: "bg-sky-600 text-white", texto: "text-sky-700" },
+  esmeralda: { icone: "bg-green-600 text-white", texto: "text-green-700" },
+  rosa: { icone: "bg-rose-600 text-white", texto: "text-rose-700" },
 } as const;
 
 function CardNumero({
@@ -76,27 +59,23 @@ function CardNumero({
   const cor = ESQUEMAS[esquema];
   const bateuMeta = meta !== undefined ? valor >= meta : null;
   return (
-    <div className={`rounded-xl border ${cor.borda} ${cor.fundo} p-4 shadow-sm`}>
-      <div className="mb-2 flex items-center justify-between">
-        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${cor.icone}`}>
-          <Icone className="h-4.5 w-4.5" />
+    <div className="min-w-[140px] flex-1 px-4 py-3">
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${cor.icone}`}>
+          <Icone className="h-3.5 w-3.5" />
         </span>
         {meta !== undefined && (
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-              bateuMeta ? "bg-green-600 text-white" : "bg-amber-500 text-white"
-            }`}
-          >
+          <span className={`text-[10px] font-bold ${bateuMeta ? "text-green-600" : "text-amber-600"}`}>
             {bateuMeta ? "✓ piso" : `piso ${meta}`}
           </span>
         )}
       </div>
-      <p className={`text-xs font-semibold uppercase tracking-wide ${cor.texto}`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-wide ${cor.texto}`}>
         {titulo}
       </p>
-      <p className="mt-0.5 text-3xl font-extrabold text-neutral-900">{valor}</p>
+      <p className="mt-0.5 text-2xl font-extrabold text-neutral-900">{valor}</p>
       {amostraInsuficiente && (
-        <p className="mt-1 text-[11px] text-neutral-400">amostra pequena</p>
+        <p className="mt-0.5 text-[10px] text-neutral-400">amostra pequena</p>
       )}
     </div>
   );
@@ -135,23 +114,23 @@ function CardComparativo({
   const desceu = variacaoPct !== null && variacaoPct < 0;
 
   return (
-    <div className="rounded-xl bg-neutral-900 p-4 shadow-sm">
-      <div className="mb-2 flex items-center justify-between">
-        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]}`}>
-          <Icone className="h-4 w-4" />
+    <div className="min-w-[120px] flex-1 px-4 py-3">
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]}`}>
+          <Icone className="h-3 w-3" />
         </span>
         {variacaoPct !== null && (
           <span
-            className={`text-xs font-bold ${
-              subiu ? "text-green-400" : desceu ? "text-red-400" : "text-neutral-400"
+            className={`text-[10px] font-bold ${
+              subiu ? "text-green-400" : desceu ? "text-red-400" : "text-neutral-500"
             }`}
           >
             {subiu ? "▲" : desceu ? "▼" : "—"} {Math.abs(Math.round(variacaoPct * 100))}%
           </span>
         )}
       </div>
-      <p className="text-2xl font-extrabold text-white">{valorFormatado}</p>
-      <p className="mt-0.5 text-xs font-medium text-neutral-400">{titulo}</p>
+      <p className="text-xl font-extrabold text-white">{valorFormatado}</p>
+      <p className="mt-0.5 text-[11px] font-medium text-neutral-400">{titulo}</p>
     </div>
   );
 }
@@ -239,7 +218,7 @@ export function SecaoPeriodo({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="flex flex-wrap divide-x divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
         <CardNumero
           titulo="Leads novos"
           valor={metricas.leadsTrabalhados}
@@ -274,7 +253,7 @@ export function SecaoPeriodo({
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
             Comparado com o período anterior
           </p>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <div className="flex flex-wrap divide-x divide-y divide-neutral-800 overflow-hidden rounded-xl bg-neutral-900 shadow-sm">
             <CardComparativo
               titulo={`${Calls(publicoOrg)} agendadas`}
               valorFormatado={String(metricas.reunioesMarcadas)}

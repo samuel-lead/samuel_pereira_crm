@@ -266,8 +266,10 @@ export default async function DashboardPage({
               dados={leadsPorOrigem}
               diasUteis={metricas.diasUteis}
             />
-            <VendasPorCanal dados={vendasPorCanal} />
-            <VendasPorProduto dados={vendasPorProduto} />
+            <div className="grid gap-4 lg:grid-cols-2">
+              <VendasPorCanal dados={vendasPorCanal} />
+              <VendasPorProduto dados={vendasPorProduto} />
+            </div>
             <PerformanceSdr
               titulo="Performance do dia por SDR"
               dados={performanceDiaSdr}
