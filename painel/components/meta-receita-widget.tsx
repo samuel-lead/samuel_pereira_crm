@@ -144,36 +144,23 @@ export function MetaReceitaWidget({
       </div>
     );
 
-    // Precisa de dois níveis: o de fora sem overflow escondido, pra luz de
-    // fundo (meta-vitrine) poder vazar pra além do cartão — o de dentro com
-    // overflow escondido, só pra faixa de brilho (meta-brilho) ficar presa
-    // dentro do cartão em vez de "vazar" reta pela tela. O cartão em si
-    // fica com a cor normal de cada modo (branco no claro, escuro no
-    // escuro) — só o brilho de fundo troca: preto no modo claro, branco no
-    // modo escuro.
-    const classeVitrine = "meta-vitrine meta-vitrine-mini shrink-0";
-
     if (!podeEditar) {
       return (
-        <div className={classeVitrine}>
-          <div className="meta-brilho overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-            {conteudo}
-          </div>
+        <div className="shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          {conteudo}
         </div>
       );
     }
 
     return (
-      <div className={classeVitrine}>
-        <button
-          type="button"
-          onClick={() => setEditando(true)}
-          title="Clique pra editar a meta do mês"
-          className="meta-brilho w-full overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
-        >
-          {conteudo}
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => setEditando(true)}
+        title="Clique pra editar a meta do mês"
+        className="shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
+      >
+        {conteudo}
+      </button>
     );
   }
 
