@@ -27,20 +27,22 @@ export function CartaoVendas({
   return (
     <div className="min-w-[150px] flex-1 px-3 py-2">
       <p className="text-[10px] leading-tight text-neutral-500">{label}</p>
-      <div className="mt-0.5 flex items-baseline gap-2">
+      <div className="mt-0.5 flex items-start gap-2">
         <span className="text-base font-bold leading-tight text-neutral-900">{vendas}</span>
-        <span className="truncate text-[10px] leading-tight text-neutral-400">
-          {formatarMoeda(faturamento)} faturamento
-        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[10px] leading-tight text-neutral-400">
+            {formatarMoeda(faturamento)} faturamento
+          </p>
+          <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
+            {formatarMoeda(receita)} receita
+          </p>
+          {vendas > 0 && (
+            <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
+              {formatarMoeda(ticketMedio)} ticket médio
+            </p>
+          )}
+        </div>
       </div>
-      <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
-        {formatarMoeda(receita)} receita
-      </p>
-      {vendas > 0 && (
-        <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
-          {formatarMoeda(ticketMedio)} ticket médio
-        </p>
-      )}
     </div>
   );
 }
