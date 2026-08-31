@@ -589,9 +589,9 @@ body {
    troca de cor: preto no modo claro, branco no modo escuro (Samuel pediu
    isso especificamente, sem mexer no cartão). */
 .meta-vitrine-mini::before {
-  inset: -10px;
-  filter: blur(14px);
-  background: radial-gradient(65% 120% at 80% 10%, rgba(0, 0, 0, 0.4), transparent 72%);
+  inset: -13px;
+  filter: blur(13px);
+  background: radial-gradient(65% 120% at 80% 10%, rgba(0, 0, 0, 0.7), transparent 72%);
 }
 
 .dark .meta-vitrine-mini::before {
