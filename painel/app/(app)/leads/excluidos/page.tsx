@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { BuscaLeads } from "@/components/busca-leads";
 import { LinkLead } from "@/components/link-lead";
 import { corDoNivel, numerarNiveis, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
+import { removerAcento } from "@/lib/texto";
 
 type LeadExcluido = {
   id: string;
@@ -40,7 +41,7 @@ export default async function LeadsExcluidosPage({
     .order("arquivado_em", { ascending: false });
 
   if (buscaFiltro) {
-    consulta = consulta.ilike("nome", `%${buscaFiltro}%`);
+    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
 
   const [{ data: niveisData }, { data: leadsData }] = await Promise.all([

@@ -7,6 +7,7 @@ import { AvatarLead } from "@/components/avatar-lead";
 import { IconeMoeda } from "@/components/icons";
 import { anoMesBrasil, parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
 import { MenuSelect } from "@/components/menu-select";
+import { removerAcento } from "@/lib/texto";
 
 const NOMES_MES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -75,7 +76,7 @@ export default async function VendasPage({
     consulta = consulta.gte("vendido_em", inicio.toISOString()).lt("vendido_em", fim.toISOString());
   }
   if (buscaFiltro) {
-    consulta = consulta.ilike("nome", `%${buscaFiltro}%`);
+    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
 
   const [{ data: leadsData }, { data: todasVendasData }, { data: usuariosData }] = await Promise.all([

@@ -19,6 +19,7 @@ import {
 } from "@/lib/metricas";
 import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { Calls } from "@/lib/terminologia";
+import { removerAcento } from "@/lib/texto";
 
 type LeadResumo = {
   id: string;
@@ -73,7 +74,7 @@ export default async function LeadsPage({
     consulta = consulta.eq("origem", origemFiltro);
   }
   if (buscaFiltro) {
-    consulta = consulta.ilike("nome", `%${buscaFiltro}%`);
+    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
 
   const [

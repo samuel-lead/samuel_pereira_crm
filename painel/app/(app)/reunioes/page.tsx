@@ -10,6 +10,7 @@ import { StatCell } from "@/components/stat-cell";
 import { CartaoVendas } from "@/components/cartao-vendas";
 import Link from "next/link";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
+import { removerAcento } from "@/lib/texto";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 import {
   buscarMetaReceitaMes,
@@ -100,7 +101,7 @@ export default async function VendasPage({
     consulta = consulta.eq("origem", origemFiltro);
   }
   if (buscaFiltro) {
-    consulta = consulta.ilike("nome", `%${buscaFiltro}%`);
+    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
 
   const [

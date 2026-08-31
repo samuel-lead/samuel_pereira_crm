@@ -5,6 +5,7 @@ import { LinkLead } from "@/components/link-lead";
 import { corDoNivel, numerarNiveis, rotuloNivel, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
 import { parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
 import { MenuSelect } from "@/components/menu-select";
+import { removerAcento } from "@/lib/texto";
 
 type LeadLinha = {
   id: string;
@@ -42,7 +43,7 @@ export default async function ListaLeadsPage({
     consulta = consulta.eq("nivel_ordem", Number(nivel));
   }
   if (busca) {
-    consulta = consulta.ilike("nome", `%${busca}%`);
+    consulta = consulta.ilike("nome_busca", `%${removerAcento(busca)}%`);
   }
   if (de) {
     consulta = consulta.gte("declarado_em", parseDataBrasil(de).toISOString());

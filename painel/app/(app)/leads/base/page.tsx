@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { BuscaLeads } from "@/components/busca-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
+import { removerAcento } from "@/lib/texto";
 
 type LeadComHistorico = LeadBase & {
   criterio_problema: string | null;
@@ -54,7 +55,7 @@ export default async function BasePage({
     .order("entrou_nivel_em", { ascending: false });
 
   if (buscaFiltro) {
-    consulta = consulta.ilike("nome", `%${buscaFiltro}%`);
+    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
 
   const [{ data: leadsData }, { data: usuariosData }] = await Promise.all([
