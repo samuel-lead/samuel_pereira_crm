@@ -36,7 +36,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex h-screen gap-3 overflow-hidden bg-[#f4f5f7] p-3">
         <Sidebar
           isAdmin={isAdmin}
-          isSuperAdmin={isSuperAdmin}
           paginasPermitidas={paginasPermitidas}
           nomeUsuario={nomeUsuario}
           fotoUsuario={fotoUsuario}
