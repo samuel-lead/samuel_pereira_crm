@@ -486,7 +486,7 @@ export default async function EditarLeadPage({
             )}
           </div>
 
-          {podeEditar && (
+          {podeEditar && leadTipado.status !== "vendido" && (
             <ExcluirLeadButton leadId={leadTipado.id} nome={leadTipado.nome} />
           )}
         </div>

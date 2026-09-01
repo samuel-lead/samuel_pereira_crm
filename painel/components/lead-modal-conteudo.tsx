@@ -312,7 +312,9 @@ export function LeadModalConteudo({
           )}
         </div>
 
-        {podeEditar && <ExcluirLeadButton leadId={lead.id} nome={lead.nome} />}
+        {podeEditar && lead.status !== "vendido" && (
+          <ExcluirLeadButton leadId={lead.id} nome={lead.nome} />
+        )}
       </div>
     </div>
   );
