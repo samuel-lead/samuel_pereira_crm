@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { LinkLead } from "@/components/link-lead";
 import { corDoNivel, numerarNiveis, rotuloNivel, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
-import { parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
 import { MenuSelect } from "@/components/menu-select";
+import { FiltroPeriodo } from "@/components/filtro-periodo";
+import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
 
 type LeadLinha = {
@@ -25,10 +26,19 @@ function formatarData(iso: string | null) {
 export default async function ListaLeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ nivel?: string; busca?: string; de?: string; ate?: string }>;
+  searchParams: Promise<{
+    nivel?: string;
+    busca?: string;
+    periodo?: string;
+    mesAno?: string;
+    de?: string;
+    ate?: string;
+  }>;
 }) {
-  const { nivel, busca, de, ate } = await searchParams;
+  const { nivel, busca, periodo, mesAno, de, ate } = await searchParams;
   const supabase = await createClient();
+
+  const periodoResolvido = resolverPeriodo({ periodo, mesAno, de, ate }, new Date());
 
   let consulta = supabase
     .from("leads")
@@ -45,12 +55,10 @@ export default async function ListaLeadsPage({
   if (busca) {
     consulta = consulta.ilike("nome_busca", `%${removerAcento(busca)}%`);
   }
-  if (de) {
-    consulta = consulta.gte("declarado_em", parseDataBrasil(de).toISOString());
-  }
-  if (ate) {
-    const fim = new Date(parseDataBrasil(ate).getTime() + UM_DIA_MS);
-    consulta = consulta.lt("declarado_em", fim.toISOString());
+  if (periodoResolvido) {
+    consulta = consulta
+      .gte("declarado_em", periodoResolvido.inicio.toISOString())
+      .lt("declarado_em", periodoResolvido.fim.toISOString());
   }
 
   const [{ data: niveisData }, { data: leadsData }] = await Promise.all([
@@ -61,7 +69,7 @@ export default async function ListaLeadsPage({
   const numerosVisiveis = numerarNiveis(niveis);
   const leads = (leadsData ?? []) as LeadLinha[];
 
-  const filtroAtivo = Boolean(nivel || busca || de || ate);
+  const filtroAtivo = Boolean(nivel || busca || periodoResolvido);
 
   return (
     <>
@@ -79,7 +87,20 @@ export default async function ListaLeadsPage({
 
       <main className="px-6 py-6">
         <div className="mb-6 flex flex-wrap items-stretch gap-3">
+          <FiltroPeriodo
+            baseHref="/leads/lista"
+            periodoAtual={periodoResolvido?.chave ?? null}
+            mesAnoAtual={mesAno}
+            deAtual={de}
+            ateAtual={ate}
+            outrosParams={{ nivel, busca }}
+          />
+
           <form className="flex flex-1 flex-wrap items-stretch divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+            {periodo && <input type="hidden" name="periodo" value={periodo} />}
+            {mesAno && <input type="hidden" name="mesAno" value={mesAno} />}
+            {de && <input type="hidden" name="de" value={de} />}
+            {ate && <input type="hidden" name="ate" value={ate} />}
             <div className="flex min-w-[160px] flex-col justify-center gap-0.5 px-4 py-2">
               <label className="text-[10px] font-medium text-neutral-500" htmlFor="busca">
                 Buscar por nome
@@ -110,30 +131,6 @@ export default async function ListaLeadsPage({
                   })),
                 ]}
               />
-            </div>
-
-            <div className="flex min-w-[220px] flex-col justify-center gap-0.5 px-4 py-2">
-              <label className="text-[10px] font-medium text-neutral-500" htmlFor="de">
-                Entrou entre
-              </label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  id="de"
-                  name="de"
-                  type="date"
-                  defaultValue={de ?? ""}
-                  className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
-                />
-                <span className="text-neutral-300">–</span>
-                <input
-                  id="ate"
-                  name="ate"
-                  type="date"
-                  defaultValue={ate ?? ""}
-                  aria-label="até"
-                  className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
-                />
-              </div>
             </div>
 
             <div className="flex items-center gap-3 px-4 py-2">
