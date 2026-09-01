@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { definirMetaReceita, type EstadoMeta } from "@/lib/metas/actions";
+import { IconeLapis } from "@/components/icons";
 
 const estadoInicial: EstadoMeta = { erro: null };
 
@@ -60,12 +61,11 @@ export function MetaReceitaWidget({
     const formulario = (
       <form action={acaoFormulario} className="flex flex-wrap items-center gap-2">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           name="meta_receita"
-          step="0.01"
-          min="0"
           required
-          placeholder="Meta de receita do mês (R$)"
+          placeholder="Ex: 60000 ou 60.000,00"
           defaultValue={metaReceita ?? ""}
           className={`rounded-md border px-3 py-2 text-sm text-neutral-900 outline-none focus:ring-1 ${
             ehMesNovo
@@ -157,8 +157,9 @@ export function MetaReceitaWidget({
         type="button"
         onClick={() => setEditando(true)}
         title="Clique pra editar a meta do mês"
-        className="shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
+        className="relative shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
       >
+        <IconeLapis className="absolute right-2 top-2 h-3.5 w-3.5 text-neutral-400" />
         {conteudo}
       </button>
     );

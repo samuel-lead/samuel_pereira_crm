@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { diasUteisEntre, inicioDoMes } from "@/lib/metricas";
 import { UM_DIA_MS } from "@/lib/datas";
+import { paraNumeroBR } from "@/lib/dinheiro";
 
 export type EstadoMeta = { erro: string | null };
 
@@ -36,9 +37,9 @@ export async function definirMetaReceita(
   }
 
   const valorRaw = String(formData.get("meta_receita") ?? "").trim();
-  const valor = valorRaw ? Number(valorRaw) : null;
+  const valor = valorRaw ? paraNumeroBR(valorRaw) : null;
 
-  if (!valor || valor <= 0) {
+  if (!valor || Number.isNaN(valor) || valor <= 0) {
     return { erro: "Informe um valor de meta válido" };
   }
 
