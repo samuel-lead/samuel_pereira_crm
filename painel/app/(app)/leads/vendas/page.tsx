@@ -46,10 +46,12 @@ export default async function VendasPage({
   const supabase = await createClient();
   await usuarioAutenticado();
 
-  const periodoResolvido = resolverPeriodo(
-    { periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro },
-    new Date()
-  );
+  const agora = new Date();
+  // Sem nenhum filtro escolhido, cai no mês atual — não faz sentido abrir
+  // a tela de Clientes e ver a lista inteira desde o começo dos tempos.
+  const periodoResolvido =
+    resolverPeriodo({ periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro }, agora) ??
+    resolverPeriodo({ periodo: "mes" }, agora)!;
 
   let consulta = supabase
     .from("leads")
@@ -76,7 +78,7 @@ export default async function VendasPage({
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
   const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
   const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
-  const filtroAtivo = Boolean(periodoResolvido || buscaFiltro);
+  const filtroAtivo = Boolean(periodoFiltro || mesAnoFiltro || deFiltro || ateFiltro || buscaFiltro);
 
   return (
     <>
