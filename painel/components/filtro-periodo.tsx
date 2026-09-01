@@ -39,7 +39,9 @@ export function FiltroPeriodo({
   const [de, setDe] = useState(deAtual ?? "");
   const [ate, setAte] = useState(ateAtual ?? "");
   const [ano, setAno] = useState(mesAnoAtual ? Number(mesAnoAtual.split("-")[0]) : anoAtual);
-  const [mes, setMes] = useState(mesAnoAtual ? mesAnoAtual.split("-")[1] : "");
+  const [mes, setMes] = useState(
+    mesAnoAtual ? (mesAnoAtual.includes("-") ? mesAnoAtual.split("-")[1] : "ano") : ""
+  );
 
   function comOutrosParams(params: URLSearchParams) {
     for (const [chave, valor] of Object.entries(outrosParams ?? {})) {
@@ -59,7 +61,7 @@ export function FiltroPeriodo({
   function irParaMesEspecifico(anoEscolhido: number, mesEscolhido: string) {
     if (!mesEscolhido) return;
     const params = comOutrosParams(new URLSearchParams());
-    params.set("mesAno", `${anoEscolhido}-${mesEscolhido}`);
+    params.set("mesAno", mesEscolhido === "ano" ? String(anoEscolhido) : `${anoEscolhido}-${mesEscolhido}`);
     router.push(`${baseHref}?${params.toString()}`);
   }
 
@@ -117,10 +119,13 @@ export function FiltroPeriodo({
               setMes(valor);
               irParaMesEspecifico(ano, valor);
             }}
-            options={NOMES_MES.map((nome, i) => ({
-              value: String(i + 1).padStart(2, "0"),
-              label: nome,
-            }))}
+            options={[
+              { value: "ano", label: "Ano todo" },
+              ...NOMES_MES.map((nome, i) => ({
+                value: String(i + 1).padStart(2, "0"),
+                label: nome,
+              })),
+            ]}
           />
         </div>
       </div>

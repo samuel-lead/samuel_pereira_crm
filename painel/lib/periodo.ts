@@ -13,6 +13,7 @@ export type ChavePeriodo =
   | "mes_passado"
   | "ultimos_3_meses"
   | "mes_especifico"
+  | "ano_especifico"
   | "custom";
 
 export type PeriodoResolvido = {
@@ -62,6 +63,18 @@ export function resolverPeriodo(
       chave: "custom",
       titulo: "Período personalizado",
       subtitulo: `${formatarDataCurta(inicio)} a ${formatarDataCurta(fimSelecionado)}`,
+      inicio,
+      fim,
+    };
+  }
+
+  if (mesAno && /^\d{4}$/.test(mesAno)) {
+    const ano = Number(mesAno);
+    const inicio = parseDataBrasil(`${ano}-01-01`);
+    const fim = parseDataBrasil(`${ano + 1}-01-01`);
+    return {
+      chave: "ano_especifico",
+      titulo: `Ano de ${ano}`,
       inicio,
       fim,
     };
