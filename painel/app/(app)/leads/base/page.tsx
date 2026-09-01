@@ -110,10 +110,7 @@ export default async function BasePage({
         </div>
       </BarraFixaKanban>
 
-      <main
-        className="flex flex-col overflow-hidden px-6 py-6"
-        style={{ height: "calc(100vh - var(--kanban-barra-altura, 0px))" }}
-      >
+      <main className="flex flex-col px-4 py-4 md:h-[calc(100vh-var(--kanban-barra-altura,0px))] md:overflow-hidden md:px-6 md:py-6">
         <BaseLeadsBoard leadsPorMotivo={leadsPorMotivo} nomePorUsuario={nomePorUsuario} />
       </main>
     </>

@@ -26,7 +26,7 @@ export function BarraFixaKanban({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div ref={ref} className="sticky top-0 z-20 bg-[#f4f5f7]">
+    <div ref={ref} className="bg-[#f4f5f7] md:sticky md:top-0 md:z-20">
       {children}
     </div>
   );

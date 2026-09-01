@@ -250,7 +250,7 @@ export function KanbanBoard({
           type="button"
           onClick={() => rolar("esquerda")}
           aria-label="Ver níveis anteriores"
-          className="absolute -left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-lg transition hover:scale-105 hover:bg-neutral-50"
+          className="absolute -left-3 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-lg transition hover:scale-105 hover:bg-neutral-50 md:flex"
         >
           ‹
         </button>
@@ -517,13 +517,13 @@ export function KanbanBoard({
           })}
         </div>
 
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-[#f4f5f7] to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-0 hidden h-full w-16 bg-gradient-to-l from-[#f4f5f7] to-transparent md:block" />
 
         <button
           type="button"
           onClick={() => rolar("direita")}
           aria-label="Ver próximos níveis"
-          className="absolute -right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-lg transition hover:scale-105 hover:bg-neutral-50"
+          className="absolute -right-3 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-lg transition hover:scale-105 hover:bg-neutral-50 md:flex"
         >
           ›
         </button>

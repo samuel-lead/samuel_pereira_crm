@@ -6,7 +6,7 @@ export function PageHeader({
   acao?: React.ReactNode;
 }) {
   return (
-    <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/90 px-4 py-4 shadow-sm backdrop-blur sm:px-6 sm:py-6">
+    <header className="border-b border-neutral-200 bg-white/90 px-4 py-4 shadow-sm backdrop-blur md:sticky md:top-0 md:z-10 sm:px-6 sm:py-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <span className="h-8 w-1.5 shrink-0 rounded-full bg-[#2563eb]" />
