@@ -316,15 +316,15 @@ export function IscaCapturaForm({
         />
       </div>
 
-      <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center px-6 py-16">
-        <div className="mb-6 min-w-0">
-          <h1 className="mb-1 break-words text-lg font-bold text-[#eef1f6]">{nomeIsca}</h1>
-          <p className="text-sm text-[#8b93a1]">
+      <div className="mx-auto flex w-full min-w-0 max-w-md flex-col px-6 pb-10 pt-10">
+        <div className="mb-5 min-w-0">
+          <h1 className="mb-1 break-words text-sm font-semibold text-[#8b93a1]">{nomeIsca}</h1>
+          <p className="text-xs text-[#5b6472]">
             Preenche seus dados pra liberar o acesso · leva menos de 2 minutos
           </p>
         </div>
 
-        <p className="mb-5 text-xl font-semibold leading-snug text-[#eef1f6]">{passo.pergunta}</p>
+        <p className="mb-5 text-lg font-semibold leading-snug text-[#eef1f6]">{passo.pergunta}</p>
 
         {passo.tipo === "escolha" && (
           <div className="space-y-2">
