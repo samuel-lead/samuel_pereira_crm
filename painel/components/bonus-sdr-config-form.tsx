@@ -10,7 +10,10 @@ import { calls, call } from "@/lib/terminologia";
 
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
-const labelClasse = "text-xs font-medium text-neutral-500";
+const campoDestaqueClasse =
+  "w-full rounded-md border border-green-300 bg-green-50/60 px-3 py-2 text-sm font-bold text-green-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500";
+const labelClasse = "text-xs font-semibold text-neutral-700";
+const tituloSecaoClasse = "mb-2 text-sm font-bold uppercase tracking-wide text-neutral-800";
 const estadoInicial: EstadoBonusSdrConfig = { erro: null };
 
 function Campo({
@@ -18,11 +21,13 @@ function Campo({
   label,
   defaultValue,
   prefixo,
+  destaque,
 }: {
   name: string;
   label: string;
   defaultValue: number;
   prefixo?: string;
+  destaque?: boolean;
 }) {
   return (
     <div className="space-y-1">
@@ -30,7 +35,11 @@ function Campo({
         {label}
       </label>
       <div className="flex items-center gap-1">
-        {prefixo && <span className="text-sm text-neutral-400">{prefixo}</span>}
+        {prefixo && (
+          <span className={destaque ? "text-sm font-bold text-green-700" : "text-sm text-neutral-400"}>
+            {prefixo}
+          </span>
+        )}
         <input
           id={name}
           name={name}
@@ -39,7 +48,7 @@ function Campo({
           step="any"
           required
           defaultValue={defaultValue}
-          className={campoClasse}
+          className={destaque ? campoDestaqueClasse : campoClasse}
         />
       </div>
     </div>
@@ -78,41 +87,42 @@ export function BonusSdrConfigForm({
   return (
     <form action={acaoFormulario} className="space-y-5">
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+        <p className={tituloSecaoClasse}>
           Bônus por volume de {calls(publicoOrg)} realizadas no mês
         </p>
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
             <Campo name="calls_tier1_qtd" label="A partir de" defaultValue={config.calls_tier1_qtd} />
-            <Campo name="calls_tier1_valor" label="Bônus" defaultValue={config.calls_tier1_valor} prefixo="R$" />
+            <Campo name="calls_tier1_valor" label="Bônus" defaultValue={config.calls_tier1_valor} prefixo="R$" destaque />
           </div>
           <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
             <Campo name="calls_tier2_qtd" label="A partir de" defaultValue={config.calls_tier2_qtd} />
-            <Campo name="calls_tier2_valor" label="Bônus" defaultValue={config.calls_tier2_valor} prefixo="R$" />
+            <Campo name="calls_tier2_valor" label="Bônus" defaultValue={config.calls_tier2_valor} prefixo="R$" destaque />
           </div>
           <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
             <Campo name="calls_tier3_qtd" label="A partir de" defaultValue={config.calls_tier3_qtd} />
-            <Campo name="calls_tier3_valor" label="Bônus" defaultValue={config.calls_tier3_valor} prefixo="R$" />
+            <Campo name="calls_tier3_valor" label="Bônus" defaultValue={config.calls_tier3_valor} prefixo="R$" destaque />
           </div>
         </div>
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+        <p className={tituloSecaoClasse}>
           Bônus por {call(publicoOrg)} realizada que foi marcada no fim de semana
         </p>
-        <div className="max-w-[160px]">
+        <div className="max-w-[200px] space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
           <Campo
             name="valor_call_fim_semana"
             label="Valor por call"
             defaultValue={config.valor_call_fim_semana}
             prefixo="R$"
+            destaque
           />
         </div>
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+        <p className={tituloSecaoClasse}>
           Bônus por faturamento do mês
         </p>
         <div className="grid grid-cols-3 gap-3">
@@ -128,6 +138,7 @@ export function BonusSdrConfigForm({
               label="Bônus"
               defaultValue={config.faturamento_tier1_bonus}
               prefixo="R$"
+              destaque
             />
           </div>
           <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
@@ -142,6 +153,7 @@ export function BonusSdrConfigForm({
               label="Bônus"
               defaultValue={config.faturamento_tier2_bonus}
               prefixo="R$"
+              destaque
             />
           </div>
           <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
@@ -156,6 +168,7 @@ export function BonusSdrConfigForm({
               label="Bônus"
               defaultValue={config.faturamento_tier3_bonus}
               prefixo="R$"
+              destaque
             />
           </div>
         </div>
