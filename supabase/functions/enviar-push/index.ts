@@ -4,9 +4,12 @@
 // 1. Com o JWT de quem está logado + { teste: true } — manda um aviso de
 //    teste só pra quem chamou (usado no botão "Mandar notificação de
 //    teste" em /perfil).
-// 2. Com a service role key + { usuario_id, titulo, corpo, url } — usado
-//    pelos gatilhos internos do CRM (lead novo, contato atrasado, etc.)
-//    pra avisar um usuário específico.
+// 2. Com o segredo interno (PUSH_INTERNAL_SECRET) + { usuario_id, titulo,
+//    corpo, url } — usado pelos gatilhos internos do CRM (lead novo,
+//    contato vencido, lead parado), chamados de dentro do Postgres via
+//    pg_cron/pg_net. Não usa a service role key aqui de propósito — o
+//    segredo interno fica só no Vault do Postgres, nunca precisa expor a
+//    service role key fora das Edge Functions.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3";
@@ -63,9 +66,12 @@ Deno.serve(async (req: Request) => {
     mensagem = "Notificação de teste — se você viu isso, tá funcionando! 🎉";
     url = "/perfil";
   } else {
-    // Chamada interna (gatilhos do CRM) — exige a service role key, não
-    // o token de um usuário comum.
-    if (tokenChamador !== serviceRoleKey) return json(401, { erro: "Não autorizado" });
+    // Chamada interna (gatilhos do CRM) — exige o segredo interno, não o
+    // token de um usuário comum.
+    const segredoInterno = Deno.env.get("PUSH_INTERNAL_SECRET");
+    if (!segredoInterno || tokenChamador !== segredoInterno) {
+      return json(401, { erro: "Não autorizado" });
+    }
 
     usuarioId = String(corpo.usuario_id ?? "");
     titulo = String(corpo.titulo ?? "Meu Vendedor");
