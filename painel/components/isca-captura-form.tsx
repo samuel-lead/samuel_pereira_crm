@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import Script from "next/script";
 import { registrarLeadIsca, type RespostasIsca } from "@/lib/iscas/actions";
+import { normalizarTelefone } from "@/lib/telefone";
+
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void;
+    gtag?: (...args: unknown[]) => void;
+  }
+}
 
 type Passo =
   | {
@@ -27,6 +36,12 @@ const PASSOS: Passo[] = [
     opcoes: ["Comecei agora", "6 meses", "Mais de 1 ano", "Mais de 2 anos"],
   },
   {
+    tipo: "escolha",
+    chave: "atuacao",
+    pergunta: "Hoje você é...",
+    opcoes: ["Corretor", "Gerente", "Dono de imobiliária"],
+  },
+  {
     tipo: "texto",
     chave: "maiorDesafio",
     pergunta: "Qual tem sido o seu maior desafio?",
@@ -42,12 +57,6 @@ const PASSOS: Passo[] = [
     chave: "disponibilidadeFinanceira",
     pergunta: "Hoje você tem disponibilidade financeira pra estar investindo na solução desse desafio?",
     opcoes: ["Sim, posso investir", "Não, não consigo investir nada", "Depende do valor do investimento"],
-  },
-  {
-    tipo: "escolha",
-    chave: "atuacao",
-    pergunta: "Hoje você é...",
-    opcoes: ["Corretor", "Gerente", "Dono de imobiliária"],
   },
   {
     tipo: "texto",
@@ -81,7 +90,17 @@ const RESPOSTAS_INICIAIS: RespostasIsca = {
   atuacao: "",
 };
 
-export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: string }) {
+export function IscaCapturaForm({
+  slug,
+  nomeIsca,
+  metaPixelId,
+  googleTagId,
+}: {
+  slug: string;
+  nomeIsca: string;
+  metaPixelId?: string | null;
+  googleTagId?: string | null;
+}) {
   const [passoAtual, setPassoAtual] = useState(0);
   const [respostas, setRespostas] = useState<RespostasIsca>(RESPOSTAS_INICIAIS);
   const [textoAtual, setTextoAtual] = useState("");
@@ -92,15 +111,94 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
     whatsappContatoE164: string | null;
     whatsappMensagem: string | null;
   } | null>(null);
+  const [statusWhats, setStatusWhats] = useState<
+    "idle" | "checando" | "existe" | "nao_existe" | "indefinido"
+  >("idle");
 
   const passo = PASSOS[passoAtual];
   const ultimoPasso = passoAtual === PASSOS.length - 1;
   const progresso = Math.round(((passoAtual + (resultado ? 1 : 0)) / PASSOS.length) * 100);
 
+  // Enquanto a pessoa digita o WhatsApp, confere com o Z-API se o número
+  // existe de verdade — avisa na hora, sem travar o preenchimento (se o
+  // Z-API não responder ou não estiver configurado, some o aviso e segue
+  // o jogo normal).
+  useEffect(() => {
+    if (passo.tipo !== "texto" || passo.chave !== "telefone") return;
+
+    const numero = normalizarTelefone(textoAtual);
+    if (numero.length < 12) {
+      setStatusWhats("idle");
+      return;
+    }
+
+    setStatusWhats("checando");
+    const controlador = new AbortController();
+    const espera = setTimeout(() => {
+      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/checar-whatsapp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telefone: numero }),
+        signal: controlador.signal,
+      })
+        .then((r) => r.json())
+        .then((dados: { existe: boolean | null }) => {
+          setStatusWhats(dados.existe === true ? "existe" : dados.existe === false ? "nao_existe" : "indefinido");
+        })
+        .catch(() => setStatusWhats("indefinido"));
+    }, 700);
+
+    return () => {
+      clearTimeout(espera);
+      controlador.abort();
+    };
+  }, [textoAtual, passo]);
+
   const valorEscolhido =
     passo.tipo === "escolha" || passo.tipo === "simNao" ? (respostas as Record<string, unknown>)[passo.chave] : undefined;
   const podeAvancarEscolha =
     passo.tipo === "escolha" ? Boolean(valorEscolhido) : passo.tipo === "simNao" ? valorEscolhido !== null : false;
+
+  // Carrega o Pixel do Meta e a tag do Google só se a empresa tiver
+  // configurado (Configurações → Pixels de rastreamento). Só inicializa
+  // aqui — o disparo do evento "Lead" acontece só quando o cadastro é
+  // concluído com sucesso, nunca ao abrir a página.
+  const scripts = (
+    <>
+      {metaPixelId && (
+        <Script id="meta-pixel-base" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '${metaPixelId}');
+          `}
+        </Script>
+      )}
+      {googleTagId && (
+        <>
+          <Script
+            id="google-tag-src"
+            strategy="afterInteractive"
+            src={`https://www.googletagmanager.com/gtag/js?id=${googleTagId}`}
+          />
+          <Script id="google-tag-init" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${googleTagId}', { send_page_view: false });
+            `}
+          </Script>
+        </>
+      )}
+    </>
+  );
 
   function selecionar(valorParcial: Partial<RespostasIsca>) {
     setRespostas((atual) => ({ ...atual, ...valorParcial }));
@@ -124,6 +222,8 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
         setErro(resposta.erro);
         return;
       }
+      window.fbq?.("track", "Lead");
+      window.gtag?.("event", "generate_lead");
       setResultado({
         materialUrl: resposta.materialUrl,
         whatsappContatoE164: resposta.whatsappContatoE164,
@@ -153,6 +253,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
 
       return (
         <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
+          {scripts}
           <p className="text-lg font-semibold text-[#eef1f6]">Seu material já está liberado.</p>
           <a
             href={resultado.materialUrl}
@@ -182,6 +283,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
 
     return (
       <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
+        {scripts}
         <p className="text-lg font-semibold text-[#eef1f6]">
           {linkFalarComEquipe
             ? "Obrigado por preencher seus dados. Clique no botão abaixo para falar agora mesmo com nossa equipe no WhatsApp."
@@ -206,6 +308,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
 
   return (
     <div className="min-h-screen overflow-x-hidden">
+      {scripts}
       <div className="fixed left-0 right-0 top-0 z-20 h-1 bg-[#1a2029]">
         <div
           className="h-full bg-[#4ade80] transition-all duration-300"
@@ -311,6 +414,16 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
                 placeholder={passo.placeholder}
                 className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-3 py-2 text-sm text-[#eef1f6] placeholder:text-[#5b6472] outline-none focus:border-[#4ade80] focus:ring-1 focus:ring-[#4ade80]"
               />
+            )}
+
+            {passo.chave === "telefone" && statusWhats === "checando" && (
+              <p className="text-xs text-[#8b93a1]">Conferindo o número...</p>
+            )}
+            {passo.chave === "telefone" && statusWhats === "existe" && (
+              <p className="text-xs text-[#4ade80]">✅ Esse número tem WhatsApp</p>
+            )}
+            {passo.chave === "telefone" && statusWhats === "nao_existe" && (
+              <p className="text-xs text-[#f87171]">❌ Esse número não tem WhatsApp — confere de novo</p>
             )}
 
             {erro && <p className="text-sm text-[#f87171]">{erro}</p>}
