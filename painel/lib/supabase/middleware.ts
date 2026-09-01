@@ -174,7 +174,7 @@ export async function updateSession(request: NextRequest) {
       const ehBonusSdr = pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/");
       const podeVerBonusSdr = ehBonusSdr && usuario?.funcao === "sdr";
 
-      if (!ehAdmin && !podeVerBonusSdr) {
+      if (!ehAdmin && !ehSuperAdmin && !podeVerBonusSdr) {
         const paginasPermitidas: string[] = usuario?.paginas_permitidas ?? [];
         const permitido = pagina !== "admin" && paginasPermitidas.includes(pagina);
 

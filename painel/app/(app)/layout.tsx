@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let publicoOrg = "mentoria";
 
   if (usuario) {
-    isAdmin = usuario.papel === "admin";
+    isAdmin = usuario.papel === "admin" || usuario.super_admin === true;
     paginasPermitidas = usuario.paginas_permitidas ?? [];
     nomeUsuario = usuario.nome ?? "";
     fotoUsuario = usuario.foto_url ?? null;
