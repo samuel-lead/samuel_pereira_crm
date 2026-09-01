@@ -20,6 +20,7 @@ function paginaDaRota(pathname: string): string | null {
   if (pathname === "/reunioes" || pathname.startsWith("/reunioes/")) return "reunioes";
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return "metricas";
   if (pathname === "/usuarios" || pathname.startsWith("/usuarios/")) return "admin";
+  if (pathname === "/iscas" || pathname.startsWith("/iscas/")) return "admin";
   if (pathname === "/configuracoes" || pathname.startsWith("/configuracoes/")) return "admin";
   if (pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/")) return "admin";
   if (pathname === "/integracoes" || pathname.startsWith("/integracoes/")) return "admin";
@@ -72,6 +73,25 @@ export async function updateSession(request: NextRequest) {
   const isLoginPage = pathname === "/login";
 
   if (!user && !isLoginPage) {
+    // Pode ser o link público de uma isca (dominio.com/<slug>, sem
+    // prefixo) — confere antes de mandar pro login. Só tenta pra caminhos
+    // de um nível só (sem barra no meio), pra não gastar consulta à toa
+    // em rotas de verdade tipo /leads/vendas quando a pessoa está
+    // deslogada.
+    const slugCandidato = pathname.replace(/^\//, "");
+    if (slugCandidato && !slugCandidato.includes("/")) {
+      const { data: isca } = await supabase
+        .from("iscas")
+        .select("id")
+        .eq("slug", slugCandidato)
+        .eq("ativo", true)
+        .is("arquivado_em", null)
+        .maybeSingle();
+      if (isca) {
+        return supabaseResponse;
+      }
+    }
+
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

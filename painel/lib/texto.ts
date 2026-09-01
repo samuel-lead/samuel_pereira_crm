@@ -13,3 +13,11 @@ export function removerAcento(texto: string) {
     .join("")
     .toLowerCase();
 }
+
+// Vira um pedaço de URL: sem acento, minúsculo, espaço e símbolo viram
+// hífen. Usado pra sugerir o link público de uma isca a partir do nome.
+export function slugificar(texto: string): string {
+  return removerAcento(texto)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}

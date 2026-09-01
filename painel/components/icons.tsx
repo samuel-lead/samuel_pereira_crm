@@ -261,6 +261,19 @@ export function IconeLixeira(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconeIma(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M6 4h4v8a2 2 0 1 0 4 0V4h4v8a6 6 0 1 1-12 0V4Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M6 8h4M14 8h4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconeConfig(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
