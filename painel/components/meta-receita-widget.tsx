@@ -111,7 +111,7 @@ export function MetaReceitaWidget({
     }
 
     return (
-      <div className="meta-vitrine meta-vitrine-alerta meta-brilho rounded-xl border border-amber-400 bg-amber-50 p-4 shadow-sm">
+      <div className="rounded-xl border border-amber-400 bg-amber-50 p-4 shadow-sm">
         <div className="mb-2 flex items-center gap-2">
           <span className="text-lg">🔔</span>
           <h2 className="text-sm font-bold text-amber-900">
@@ -165,11 +165,7 @@ export function MetaReceitaWidget({
   }
 
   return (
-    <div
-      className={`meta-vitrine meta-brilho rounded-xl border border-neutral-200 bg-white p-4 shadow-sm ${
-        bateu ? "meta-vitrine-bateu" : ""
-      }`}
-    >
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-neutral-800">Meta de receita do mês</h2>
         {podeEditar && (
