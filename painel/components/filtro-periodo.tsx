@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { NOMES_MES, type ChavePeriodo } from "@/lib/periodo";
+import { MenuSelect } from "@/components/menu-select";
 
 const OPCOES = [
   { valor: "hoje", label: "Hoje" },
@@ -91,38 +92,37 @@ export function FiltroPeriodo({
       </div>
 
       <div className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
-        <select
-          value={ano}
-          onChange={(e) => {
-            const novoAno = Number(e.target.value);
-            setAno(novoAno);
-            if (mes) irParaMesEspecifico(novoAno, mes);
-          }}
-          className="rounded-md border-0 bg-transparent py-1 text-sm text-neutral-700 outline-none focus:ring-0"
-        >
-          {[anoAtual, anoAtual + 1, anoAtual + 2, anoAtual + 3, anoAtual + 4].map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-        </select>
-        <select
-          value={mes}
-          onChange={(e) => {
-            setMes(e.target.value);
-            irParaMesEspecifico(ano, e.target.value);
-          }}
-          className={`rounded-md px-2 py-1.5 text-sm font-medium outline-none focus:ring-0 ${
-            periodoAtual === "mes_especifico" ? "bg-blue-600 text-white" : "bg-transparent text-neutral-600"
-          }`}
-        >
-          <option value="">Escolher mês</option>
-          {NOMES_MES.map((nome, i) => (
-            <option key={nome} value={String(i + 1).padStart(2, "0")}>
-              {nome}
-            </option>
-          ))}
-        </select>
+        <div className="w-[90px]">
+          <MenuSelect
+            variante="sem-borda"
+            value={String(ano)}
+            onChange={(valor) => {
+              const novoAno = Number(valor);
+              setAno(novoAno);
+              if (mes) irParaMesEspecifico(novoAno, mes);
+            }}
+            options={[anoAtual, anoAtual + 1, anoAtual + 2, anoAtual + 3, anoAtual + 4].map((a) => ({
+              value: String(a),
+              label: String(a),
+            }))}
+          />
+        </div>
+        <span className="text-neutral-200">|</span>
+        <div className="w-[140px]">
+          <MenuSelect
+            variante="sem-borda"
+            placeholder="Escolher mês"
+            value={mes}
+            onChange={(valor) => {
+              setMes(valor);
+              irParaMesEspecifico(ano, valor);
+            }}
+            options={NOMES_MES.map((nome, i) => ({
+              value: String(i + 1).padStart(2, "0"),
+              label: nome,
+            }))}
+          />
+        </div>
       </div>
 
       <button
