@@ -475,7 +475,7 @@ export function KanbanBoard({
                         </div>
 
                         {arrastavel && (
-                          <div className="mt-2 border-t border-neutral-100 pt-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="mt-2 border-t border-neutral-100 pt-2 md:hidden" onClick={(e) => e.stopPropagation()}>
                             <select
                               value=""
                               onChange={(e) => {
