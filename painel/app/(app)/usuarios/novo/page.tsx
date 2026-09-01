@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { NovoUsuarioForm } from "@/components/novo-usuario-form";
+import { usuarioAutenticado } from "@/lib/supabase/server";
 
-export default function NovoUsuarioPage() {
+export default async function NovoUsuarioPage() {
+  const { usuario } = await usuarioAutenticado();
+
   return (
     <>
       <PageHeader
@@ -19,7 +22,7 @@ export default function NovoUsuarioPage() {
 
       <main className="mx-auto max-w-lg px-6 py-10">
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <NovoUsuarioForm />
+          <NovoUsuarioForm publicoOrg={usuario?.publico_org ?? "mentoria"} />
         </div>
       </main>
     </>

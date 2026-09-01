@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { atualizarPermissoes, type EstadoFormulario } from "@/lib/usuarios/actions";
-import { PAGINAS_CONFIGURAVEIS } from "@/lib/paginas-permitidas";
+import { paginasParaPublico } from "@/lib/paginas-permitidas";
 import { MenuSelect } from "@/components/menu-select";
 
 const estadoInicial: EstadoFormulario = { erro: null };
@@ -12,12 +12,15 @@ export function EditarPermissoesForm({
   papelAtual,
   funcaoAtual,
   paginasAtuais,
+  publicoOrg = "mentoria",
 }: {
   usuarioId: string;
   papelAtual: string;
   funcaoAtual: string | null;
   paginasAtuais: string[];
+  publicoOrg?: string;
 }) {
+  const paginasConfiguraveis = paginasParaPublico(publicoOrg);
   const acaoComId = atualizarPermissoes.bind(null, usuarioId);
   const [estado, acaoFormulario] = useActionState(acaoComId, estadoInicial);
   const [papel, setPapel] = useState<"admin" | "membro">(
@@ -75,7 +78,7 @@ export function EditarPermissoesForm({
             Páginas permitidas
           </legend>
 
-          {PAGINAS_CONFIGURAVEIS.map((pagina) => (
+          {paginasConfiguraveis.map((pagina) => (
             <label
               key={pagina.chave}
               className="flex items-center gap-2 text-sm text-neutral-700"

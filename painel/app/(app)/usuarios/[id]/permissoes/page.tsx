@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { BotaoVoltar } from "@/components/botao-voltar";
 import { EditarPermissoesForm } from "@/components/editar-permissoes-form";
@@ -19,6 +19,7 @@ export default async function PermissoesUsuarioPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { usuario: usuarioLogado } = await usuarioAutenticado();
 
   const { data } = await supabase.rpc("listar_usuarios_da_org");
   const usuarios = (data ?? []) as UsuarioLinha[];
@@ -47,6 +48,7 @@ export default async function PermissoesUsuarioPage({
             papelAtual={usuario.papel}
             funcaoAtual={usuario.funcao}
             paginasAtuais={usuario.paginas_permitidas ?? []}
+            publicoOrg={usuarioLogado?.publico_org ?? "mentoria"}
           />
         </div>
       </main>

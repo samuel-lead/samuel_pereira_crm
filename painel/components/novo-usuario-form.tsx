@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { criarUsuario, type EstadoFormulario } from "@/lib/usuarios/actions";
-import { PAGINAS_CONFIGURAVEIS } from "@/lib/paginas-permitidas";
+import { paginasParaPublico } from "@/lib/paginas-permitidas";
 import { MenuSelect } from "@/components/menu-select";
 
 const estadoInicial: EstadoFormulario = { erro: null };
@@ -10,7 +10,8 @@ const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 const labelClasse = "text-sm font-medium text-neutral-700";
 
-export function NovoUsuarioForm() {
+export function NovoUsuarioForm({ publicoOrg = "mentoria" }: { publicoOrg?: string }) {
+  const paginasConfiguraveis = paginasParaPublico(publicoOrg);
   const [estado, acaoFormulario] = useActionState(criarUsuario, estadoInicial);
   const [papel, setPapel] = useState<"admin" | "membro">("membro");
 
@@ -120,7 +121,7 @@ export function NovoUsuarioForm() {
             Páginas permitidas
           </legend>
 
-          {PAGINAS_CONFIGURAVEIS.map((pagina) => (
+          {paginasConfiguraveis.map((pagina) => (
             <label
               key={pagina.chave}
               className="flex items-center gap-2 text-sm text-neutral-700"
