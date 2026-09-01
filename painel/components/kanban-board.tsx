@@ -176,14 +176,15 @@ export function KanbanBoard({
     if (colunaAlvo !== ordem) setColunaAlvo(ordem);
   }
 
-  async function aoSoltarNaColuna(e: React.DragEvent, ordem: number) {
-    e.preventDefault();
-    const leadId = e.dataTransfer.getData("text/plain");
-    const nivelOrigem = Number(e.dataTransfer.getData("application/x-nivel-origem"));
-    const temReuniaoPendente = e.dataTransfer.getData("application/x-reuniao-pendente") === "1";
-    setColunaAlvo(null);
-    if (!leadId) return;
-
+  // Mesma lógica de mover um lead de nível, usada tanto ao soltar o card
+  // arrastado (mouse) quanto ao escolher no menu "Mover para" (touch/celular,
+  // onde não dá pra arrastar) — as travas e confirmações valem pros dois.
+  async function moverPara(
+    leadId: string,
+    nivelOrigem: number,
+    ordem: number,
+    temReuniaoPendente: boolean
+  ) {
     // "Reunião marcada" precisa da data da reunião — manda pra tela de
     // editar em vez de mover na hora, pra usar o seletor de data de verdade.
     // Se esse lead tem uma reunião anterior esquecida (ainda "marcada",
@@ -230,6 +231,16 @@ export function KanbanBoard({
         if (erro) alert(erro);
       });
     });
+  }
+
+  async function aoSoltarNaColuna(e: React.DragEvent, ordem: number) {
+    e.preventDefault();
+    const leadId = e.dataTransfer.getData("text/plain");
+    const nivelOrigem = Number(e.dataTransfer.getData("application/x-nivel-origem"));
+    const temReuniaoPendente = e.dataTransfer.getData("application/x-reuniao-pendente") === "1";
+    setColunaAlvo(null);
+    if (!leadId) return;
+    await moverPara(leadId, nivelOrigem, ordem, temReuniaoPendente);
   }
 
   return (
@@ -462,6 +473,40 @@ export function KanbanBoard({
                             </a>
                           )}
                         </div>
+
+                        {arrastavel && (
+                          <div className="mt-2 border-t border-neutral-100 pt-2" onClick={(e) => e.stopPropagation()}>
+                            <select
+                              value=""
+                              onChange={(e) => {
+                                const novaOrdem = Number(e.target.value);
+                                if (!Number.isNaN(novaOrdem)) {
+                                  moverPara(
+                                    lead.id,
+                                    lead.nivel_ordem,
+                                    novaOrdem,
+                                    lead.temReuniaoAnteriorPendente ?? false
+                                  );
+                                }
+                                e.target.value = "";
+                              }}
+                              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-600 outline-none focus:border-blue-400"
+                            >
+                              <option value="">Mover para...</option>
+                              {niveis
+                                .filter((n) => n.ordem !== lead.nivel_ordem)
+                                .map((n) => {
+                                  const numero = numerosVisiveis.get(n.ordem);
+                                  return (
+                                    <option key={n.ordem} value={n.ordem}>
+                                      {numero ? `N${numero} - ` : ""}
+                                      {separarExplicacao(n.nome).titulo}
+                                    </option>
+                                  );
+                                })}
+                            </select>
+                          </div>
+                        )}
                       </div>
                       );
                     })
