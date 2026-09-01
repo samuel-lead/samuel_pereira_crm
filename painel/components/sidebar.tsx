@@ -7,7 +7,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeX } from "@/components/icons";
+import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeX } from "@/components/icons";
 
 type ItemMenu = {
   href: string;
@@ -33,7 +33,6 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
     titulo: "Gestão",
     itens: [
       { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
-      { href: "/leads/lista", label: "Lista de leads", Icone: IconeLista, pagina: "lista" },
       { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
       { href: "/bonus-sdr", label: "Bônus SDR", Icone: IconeEstrela, pagina: "admin" },
     ],

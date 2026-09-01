@@ -177,7 +177,7 @@ export function SinoNotificacoes() {
                   }`}
                 >
                   <Link
-                    href={`/leads/lista?busca=${encodeURIComponent(n.lead_nome)}`}
+                    href={`/leads/${n.lead_id}`}
                     onClick={() => setAberto(false)}
                     className="min-w-0 flex-1"
                   >

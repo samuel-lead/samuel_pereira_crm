@@ -835,7 +835,6 @@ export async function moverLeadNivel(
   }
 
   revalidatePath("/leads");
-  revalidatePath("/leads/lista");
   revalidatePath(`/leads/${leadId}`);
   return null;
 }
@@ -932,7 +931,6 @@ export async function marcarVendido(
   }
 
   revalidatePath("/leads");
-  revalidatePath("/leads/lista");
   revalidatePath(`/leads/${leadId}`);
   return { erro: null };
 }
@@ -1290,7 +1288,6 @@ export async function arquivarLead(
   }
 
   revalidatePath("/leads");
-  revalidatePath("/leads/lista");
   revalidatePath("/leads/base");
   revalidatePath("/leads/vendas");
 

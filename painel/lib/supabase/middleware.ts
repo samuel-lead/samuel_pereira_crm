@@ -4,7 +4,6 @@ import type { User } from "@supabase/supabase-js";
 
 const ROTA_DA_PAGINA: Record<string, string> = {
   funil: "/leads",
-  lista: "/leads/lista",
   atividades: "/atividades",
   reunioes: "/reunioes",
   metricas: "/dashboard",
@@ -13,7 +12,6 @@ const ROTA_DA_PAGINA: Record<string, string> = {
 };
 
 function paginaDaRota(pathname: string): string | null {
-  if (pathname === "/leads/lista" || pathname.startsWith("/leads/lista/")) return "lista";
   if (pathname === "/leads/excluidos" || pathname.startsWith("/leads/excluidos/")) return "admin";
   if (pathname === "/leads" || pathname.startsWith("/leads/")) return "funil";
   if (pathname === "/atividades" || pathname.startsWith("/atividades/")) return "atividades";
