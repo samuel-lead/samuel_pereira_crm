@@ -7,7 +7,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma } from "@/components/icons";
+import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeX } from "@/components/icons";
 
 type ItemMenu = {
   href: string;
@@ -57,6 +57,8 @@ export function Sidebar({
   cargo = "Membro",
   funcao = null,
   publicoOrg = "mentoria",
+  abertoMobile = false,
+  onFecharMobile,
 }: {
   isAdmin?: boolean;
   paginasPermitidas?: string[];
@@ -65,6 +67,8 @@ export function Sidebar({
   cargo?: string;
   funcao?: string | null;
   publicoOrg?: string;
+  abertoMobile?: boolean;
+  onFecharMobile?: () => void;
 }) {
   const pathname = usePathname();
   const [colapsado, setColapsado] = useState(false);
@@ -86,12 +90,12 @@ export function Sidebar({
 
   return (
     <aside
-      className={`flex h-full shrink-0 flex-col rounded-2xl bg-slate-900 shadow-lg shadow-slate-900/10 transition-all duration-200 ${
-        colapsado ? "w-16" : "w-60"
-      }`}
+      className={`fixed inset-y-0 left-0 z-40 flex h-full shrink-0 flex-col rounded-r-2xl bg-slate-900 shadow-lg shadow-slate-900/10 transition-all duration-200 md:static md:rounded-2xl md:transition-none ${
+        abertoMobile ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      } ${colapsado ? "w-16" : "w-60"}`}
     >
       <div className="flex items-center justify-between px-3 py-5">
-        <Link href="/leads" className="flex min-w-0 items-center gap-2">
+        <Link href="/leads" className="flex min-w-0 items-center gap-2" onClick={onFecharMobile}>
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2563eb] text-sm font-bold text-white shadow-sm">
             MV
           </span>
@@ -101,12 +105,20 @@ export function Sidebar({
             </span>
           )}
         </Link>
+        <button
+          type="button"
+          onClick={onFecharMobile}
+          title="Fechar menu"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-800 hover:text-white md:hidden"
+        >
+          <IconeX className="h-5 w-5" />
+        </button>
         {!colapsado && (
           <button
             type="button"
             onClick={() => setColapsado(true)}
             title="Recolher menu"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-800 hover:text-white md:flex"
           >
             «
           </button>
@@ -114,7 +126,7 @@ export function Sidebar({
       </div>
 
       {colapsado && (
-        <div className="px-3 pb-2">
+        <div className="hidden px-3 pb-2 md:block">
           <button
             type="button"
             onClick={() => setColapsado(false)}
@@ -140,6 +152,7 @@ export function Sidebar({
                 <Link
                   key={href}
                   href={href}
+                  onClick={onFecharMobile}
                   title={colapsado ? label : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
                     colapsado ? "justify-center" : ""

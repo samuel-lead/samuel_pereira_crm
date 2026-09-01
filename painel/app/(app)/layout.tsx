@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/sidebar";
+import { AppShell } from "@/components/app-shell";
 import { usuarioAutenticado } from "@/lib/supabase/server";
 import { ProvedorLeadModal } from "@/components/provedor-lead-modal";
 
@@ -33,18 +33,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <ProvedorLeadModal>
-      <div className="flex h-screen gap-3 overflow-hidden bg-[#f4f5f7] p-3">
-        <Sidebar
-          isAdmin={isAdmin}
-          paginasPermitidas={paginasPermitidas}
-          nomeUsuario={nomeUsuario}
-          fotoUsuario={fotoUsuario}
-          cargo={cargo}
-          funcao={funcao}
-          publicoOrg={publicoOrg}
-        />
-        <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
-      </div>
+      <AppShell
+        isAdmin={isAdmin}
+        paginasPermitidas={paginasPermitidas}
+        nomeUsuario={nomeUsuario}
+        fotoUsuario={fotoUsuario}
+        cargo={cargo}
+        funcao={funcao}
+        publicoOrg={publicoOrg}
+      >
+        {children}
+      </AppShell>
     </ProvedorLeadModal>
   );
 }

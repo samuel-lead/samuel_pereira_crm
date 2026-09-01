@@ -257,7 +257,7 @@ export default async function VendasPage({
         <PageHeader
           titulo="Gestão de vendas"
           acao={
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <BuscaLeads />
               <FiltrosLeads
                 usuarios={usuarios}
