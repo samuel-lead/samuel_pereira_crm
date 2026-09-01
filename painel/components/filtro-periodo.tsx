@@ -100,7 +100,7 @@ export function FiltroPeriodo({
           }}
           className="rounded-md border-0 bg-transparent py-1 text-sm text-neutral-700 outline-none focus:ring-0"
         >
-          {[anoAtual, anoAtual - 1, anoAtual - 2].map((a) => (
+          {[anoAtual, anoAtual + 1, anoAtual + 2, anoAtual + 3, anoAtual + 4].map((a) => (
             <option key={a} value={a}>
               {a}
             </option>
