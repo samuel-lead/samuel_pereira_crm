@@ -25,6 +25,8 @@ export function FiltroPeriodo({
   deAtual,
   ateAtual,
   outrosParams,
+  atalhos,
+  mostrarMesEspecifico = true,
 }: {
   baseHref: string;
   periodoAtual: ChavePeriodo | null;
@@ -32,7 +34,12 @@ export function FiltroPeriodo({
   deAtual?: string;
   ateAtual?: string;
   outrosParams?: Record<string, string | undefined>;
+  // Quais botões de atalho mostrar — por padrão, todos. Telas mais
+  // simples (ex.: Lista de leads) só precisam de um subconjunto.
+  atalhos?: (typeof OPCOES)[number]["valor"][];
+  mostrarMesEspecifico?: boolean;
 }) {
+  const opcoesVisiveis = atalhos ? OPCOES.filter((o) => atalhos.includes(o.valor)) : OPCOES;
   const router = useRouter();
   const anoAtual = new Date().getFullYear();
   const [mostrarCustom, setMostrarCustom] = useState(periodoAtual === "custom");
@@ -77,7 +84,7 @@ export function FiltroPeriodo({
   return (
     <div className="flex flex-wrap items-stretch gap-2">
       <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-neutral-200 bg-white px-2 py-2 shadow-sm">
-        {OPCOES.map((opcao) => (
+        {opcoesVisiveis.map((opcao) => (
           <button
             key={opcao.valor}
             type="button"
@@ -93,42 +100,44 @@ export function FiltroPeriodo({
         ))}
       </div>
 
-      <div className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
-        <div className="w-[90px]">
-          <MenuSelect
-            variante="sem-borda"
-            value={String(ano)}
-            onChange={(valor) => {
-              const novoAno = Number(valor);
-              setAno(novoAno);
-              if (mes) irParaMesEspecifico(novoAno, mes);
-            }}
-            options={[anoAtual, anoAtual + 1, anoAtual + 2, anoAtual + 3, anoAtual + 4].map((a) => ({
-              value: String(a),
-              label: String(a),
-            }))}
-          />
+      {mostrarMesEspecifico && (
+        <div className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+          <div className="w-[90px]">
+            <MenuSelect
+              variante="sem-borda"
+              value={String(ano)}
+              onChange={(valor) => {
+                const novoAno = Number(valor);
+                setAno(novoAno);
+                if (mes) irParaMesEspecifico(novoAno, mes);
+              }}
+              options={[anoAtual, anoAtual + 1, anoAtual + 2, anoAtual + 3, anoAtual + 4].map((a) => ({
+                value: String(a),
+                label: String(a),
+              }))}
+            />
+          </div>
+          <span className="text-neutral-200">|</span>
+          <div className="w-[140px]">
+            <MenuSelect
+              variante="sem-borda"
+              placeholder="Escolher mês"
+              value={mes}
+              onChange={(valor) => {
+                setMes(valor);
+                irParaMesEspecifico(ano, valor);
+              }}
+              options={[
+                { value: "ano", label: "Ano todo" },
+                ...NOMES_MES.map((nome, i) => ({
+                  value: String(i + 1).padStart(2, "0"),
+                  label: nome,
+                })),
+              ]}
+            />
+          </div>
         </div>
-        <span className="text-neutral-200">|</span>
-        <div className="w-[140px]">
-          <MenuSelect
-            variante="sem-borda"
-            placeholder="Escolher mês"
-            value={mes}
-            onChange={(valor) => {
-              setMes(valor);
-              irParaMesEspecifico(ano, valor);
-            }}
-            options={[
-              { value: "ano", label: "Ano todo" },
-              ...NOMES_MES.map((nome, i) => ({
-                value: String(i + 1).padStart(2, "0"),
-                label: nome,
-              })),
-            ]}
-          />
-        </div>
-      </div>
+      )}
 
       <button
         type="button"

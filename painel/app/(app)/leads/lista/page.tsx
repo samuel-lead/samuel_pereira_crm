@@ -94,6 +94,8 @@ export default async function ListaLeadsPage({
             deAtual={de}
             ateAtual={ate}
             outrosParams={{ nivel, busca }}
+            atalhos={["mes", "mes_passado"]}
+            mostrarMesEspecifico={false}
           />
 
           <form className="flex flex-1 flex-wrap items-stretch divide-x divide-neutral-100 rounded-xl border border-neutral-200 bg-white shadow-sm">
