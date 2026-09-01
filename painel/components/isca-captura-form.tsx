@@ -316,7 +316,7 @@ export function IscaCapturaForm({
         />
       </div>
 
-      <div className="mx-auto flex w-full min-w-0 max-w-md flex-col px-6 pb-10 pt-10">
+      <div className="mx-auto flex w-full min-w-0 max-w-md flex-col px-6 pb-28 pt-10">
         <div className="mb-5 min-w-0">
           <h1 className="mb-1 break-words text-sm font-semibold text-[#8b93a1]">{nomeIsca}</h1>
           <p className="text-xs text-[#5b6472]">
@@ -428,7 +428,7 @@ export function IscaCapturaForm({
 
             {erro && <p className="text-sm text-[#f87171]">{erro}</p>}
 
-            <div className="flex gap-3 pt-1">
+            <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex w-full max-w-md gap-3 border-t border-[#262f3d] bg-[#0b0e13] px-6 py-4">
               <button
                 type="button"
                 onClick={voltar}
@@ -452,7 +452,7 @@ export function IscaCapturaForm({
           <>
             {erro && <p className="mt-3 text-sm text-[#f87171]">{erro}</p>}
 
-            <div className="mt-4 flex gap-3">
+            <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex w-full max-w-md gap-3 border-t border-[#262f3d] bg-[#0b0e13] px-6 py-4">
               <button
                 type="button"
                 onClick={voltar}
