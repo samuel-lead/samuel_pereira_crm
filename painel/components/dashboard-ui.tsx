@@ -103,21 +103,31 @@ function CardComparativo({
   variacaoPct,
   esquema,
   Icone,
+  destaque = false,
 }: {
   titulo: string;
   valorFormatado: string;
   variacaoPct: number | null;
   esquema: keyof typeof ESQUEMAS_COMPARATIVO;
   Icone: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  // A Receita é a métrica que mais importa — fica sozinha na linha
+  // inteira (não divide espaço com as outras) pra chamar mais atenção e,
+  // de quebra, garante que sempre sobra um risquinho embaixo de Vendas
+  // igual nas outras linhas, sem depender de quantas métricas cabem.
+  destaque?: boolean;
 }) {
   const subiu = variacaoPct !== null && variacaoPct > 0;
   const desceu = variacaoPct !== null && variacaoPct < 0;
 
   return (
-    <div className="w-1/2 shrink-0 px-4 py-3 sm:w-1/3 lg:w-1/5">
+    <div className={`shrink-0 px-4 py-3 ${destaque ? "w-full lg:w-1/5" : "w-1/2 sm:w-1/3 lg:w-1/5"}`}>
       <div className="mb-1.5 flex items-center justify-between">
-        <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]}`}>
-          <Icone className="h-3 w-3" />
+        <span
+          className={`flex items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]} ${
+            destaque ? "h-8 w-8" : "h-6 w-6"
+          }`}
+        >
+          <Icone className={destaque ? "h-4 w-4" : "h-3 w-3"} />
         </span>
         {variacaoPct !== null && (
           <span
@@ -129,7 +139,7 @@ function CardComparativo({
           </span>
         )}
       </div>
-      <p className="text-xl font-extrabold text-white">{valorFormatado}</p>
+      <p className={`font-extrabold text-white ${destaque ? "text-3xl" : "text-xl"}`}>{valorFormatado}</p>
       <p className="mt-0.5 text-[11px] font-medium text-neutral-400">{titulo}</p>
     </div>
   );
@@ -288,6 +298,7 @@ export function SecaoPeriodo({
               variacaoPct={variacao(metricas.receita, metricasAnteriores.receita)}
               esquema="esmeralda"
               Icone={IconeMoeda}
+              destaque
             />
           </div>
         </div>
