@@ -14,6 +14,7 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
   const [nome, setNome] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTocado, setSlugTocado] = useState(false);
+  const [aba, setAba] = useState<"link" | "arquivo">("link");
 
   function aoMudarNome(valor: string) {
     setNome(valor);
@@ -63,20 +64,55 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
       </div>
 
       <div className="space-y-1">
-        <label className={labelClasse} htmlFor="material_url">
-          Link do material *
-        </label>
-        <input
-          id="material_url"
-          name="material_url"
-          type="url"
-          required
-          placeholder="Link do PDF, da aula, do que for"
-          className={campoClasse}
-        />
-        <p className="text-xs text-neutral-400">
-          Pode ser um PDF, um vídeo, uma aula gravada — qualquer link.
-        </p>
+        <label className={labelClasse}>Material *</label>
+        <div className="flex overflow-hidden rounded-md border border-neutral-200">
+          <button
+            type="button"
+            onClick={() => setAba("link")}
+            className={`flex-1 px-3 py-1.5 text-sm font-medium transition ${
+              aba === "link" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
+            }`}
+          >
+            Colar link
+          </button>
+          <button
+            type="button"
+            onClick={() => setAba("arquivo")}
+            className={`flex-1 px-3 py-1.5 text-sm font-medium transition ${
+              aba === "arquivo" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
+            }`}
+          >
+            Enviar arquivo
+          </button>
+        </div>
+
+        {aba === "link" ? (
+          <div className="space-y-1 pt-2">
+            <input
+              id="material_url"
+              name="material_url"
+              type="url"
+              placeholder="Link do PDF, da aula, do que for"
+              className={campoClasse}
+            />
+            <p className="text-xs text-neutral-400">
+              Pode ser um PDF, um vídeo, uma aula gravada — qualquer link.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-1 pt-2">
+            <input
+              id="material_arquivo"
+              name="material_arquivo"
+              type="file"
+              accept=".pdf,application/pdf"
+              className={`${campoClasse} file:mr-3 file:rounded file:border-0 file:bg-neutral-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-neutral-700`}
+            />
+            <p className="text-xs text-neutral-400">
+              Sobe o PDF direto — a pessoa que se cadastrar já abre ele na hora. Até 20MB.
+            </p>
+          </div>
+        )}
       </div>
 
       {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}
