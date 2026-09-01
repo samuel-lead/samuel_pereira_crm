@@ -10,6 +10,7 @@ type InteracaoComLead = {
   conteudo: string | null;
   ocorreu_em: string;
   lead_id: string;
+  usuario_id: string;
   leads: { nome: string } | null;
 };
 
@@ -19,6 +20,7 @@ type ReuniaoComLead = {
   status: string;
   resultado: string | null;
   lead_id: string;
+  usuario_id: string;
   leads: { nome: string } | null;
 };
 
@@ -30,6 +32,7 @@ type ItemFeed = {
   titulo: string;
   detalhe: string | null;
   cor: string;
+  responsavelId: string;
 };
 
 function formatarData(iso: string) {
@@ -47,22 +50,24 @@ export default async function AtividadesPage() {
   const { usuario } = await usuarioAutenticado();
   const publicoOrg = usuario!.publico_org;
 
-  const [{ data: interacoesData }, { data: reunioesData }] = await Promise.all([
+  const [{ data: interacoesData }, { data: reunioesData }, { data: usuariosData }] = await Promise.all([
     supabase
       .from("interacoes")
-      .select("id, tipo, canal, conteudo, ocorreu_em, lead_id, leads(nome)")
+      .select("id, tipo, canal, conteudo, ocorreu_em, lead_id, usuario_id, leads(nome)")
       .is("excluido_em", null)
       .order("ocorreu_em", { ascending: false })
       .limit(50),
     supabase
       .from("reunioes")
-      .select("id, agendada_para, status, resultado, lead_id, leads(nome)")
+      .select("id, agendada_para, status, resultado, lead_id, usuario_id, leads(nome)")
       .order("agendada_para", { ascending: false })
       .limit(50),
+    supabase.from("usuarios").select("id, nome"),
   ]);
 
   const interacoes = (interacoesData ?? []) as unknown as InteracaoComLead[];
   const reunioes = (reunioesData ?? []) as unknown as ReuniaoComLead[];
+  const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
 
   const itens: ItemFeed[] = [
     ...interacoes.map((i) => ({
@@ -73,6 +78,7 @@ export default async function AtividadesPage() {
       titulo: i.tipo ?? "Interação",
       detalhe: i.conteudo,
       cor: "border-neutral-300",
+      responsavelId: i.usuario_id,
     })),
     ...reunioes.map((r) => ({
       key: `reuniao-${r.id}`,
@@ -82,6 +88,7 @@ export default async function AtividadesPage() {
       titulo: `${Reuniao(publicoOrg)} · ${r.status}`,
       detalhe: r.resultado,
       cor: "border-amber-400",
+      responsavelId: r.usuario_id,
     })),
   ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
@@ -125,6 +132,9 @@ export default async function AtividadesPage() {
                 {item.detalhe && (
                   <p className="mt-1 text-sm text-neutral-600">{item.detalhe}</p>
                 )}
+                <p className="mt-1 text-xs text-neutral-400">
+                  Responsável: {nomePorUsuario.get(item.responsavelId) ?? "—"}
+                </p>
               </li>
             ))}
           </ul>
