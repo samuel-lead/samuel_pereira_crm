@@ -43,7 +43,7 @@ export function PerformanceSdr({
         <table className="w-full min-w-[640px] table-fixed text-left text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
-              <th className="px-3 py-2 text-left font-medium">SDR</th>
+              <th className="w-28 px-3 py-2 text-left font-medium">SDR</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Leads Novos</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Ligações</th>
               <th className="w-28 px-3 py-2 text-center font-medium">{Calls(publicoOrg)} marcadas</th>
@@ -63,7 +63,9 @@ export function PerformanceSdr({
                 key={linha.usuarioId}
                 className="border-b border-neutral-100 last:border-0"
               >
-                <td className="px-3 py-2 text-left font-medium text-neutral-900">{linha.nome}</td>
+                <td className="truncate px-3 py-2 text-left font-medium text-neutral-900" title={linha.nome}>
+                  {linha.nome}
+                </td>
                 <td className="px-3 py-2 text-center tabular-nums text-neutral-600">{linha.leadsTrabalhados}</td>
                 <td className="px-3 py-2 text-center tabular-nums text-neutral-600">{linha.ligacoes}</td>
                 <td className="px-3 py-2 text-center tabular-nums text-neutral-600">{linha.reunioesMarcadas}</td>

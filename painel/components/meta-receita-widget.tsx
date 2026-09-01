@@ -133,7 +133,7 @@ export function MetaReceitaWidget({
 
   if (compacta) {
     const conteudo = (
-      <div className="min-w-[128px] px-3 py-2 text-left">
+      <div className="min-w-[128px] px-3 py-2 pr-6 text-left">
         <p className="flex items-center gap-1 text-[10px] leading-tight text-neutral-500">
           <span>🎯</span> Meta de receita do mês
         </p>
@@ -159,7 +159,7 @@ export function MetaReceitaWidget({
         title="Clique pra editar a meta do mês"
         className="relative shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
       >
-        <IconeLapis className="absolute right-2 top-2 h-3.5 w-3.5 text-neutral-400" />
+        <IconeLapis className="absolute bottom-2 right-2 h-3.5 w-3.5 text-neutral-400" />
         {conteudo}
       </button>
     );

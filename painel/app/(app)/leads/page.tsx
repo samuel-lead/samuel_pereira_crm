@@ -8,6 +8,7 @@ import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { MetricasColapsaveis } from "@/components/metricas-colapsaveis";
+import { FiltrosColapsaveis } from "@/components/filtros-colapsaveis";
 import { StatCell } from "@/components/stat-cell";
 import { CartaoVendas } from "@/components/cartao-vendas";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
@@ -281,26 +282,30 @@ export default async function LeadsPage({
         <PageHeader
           titulo="Gestão dos leads"
           acao={
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
               <BuscaLeads />
-              <FiltrosLeads
-                usuarios={usuarios}
-                origens={origens}
-                usuarioInicial={usuarioFiltro}
-                origemInicial={origemFiltro}
-              />
-              <Link
-                href="/leads/importar"
-                className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-              >
-                Importar leads
-              </Link>
-              <Link
-                href="/leads/novo"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-              >
-                + Novo lead
-              </Link>
+              <FiltrosColapsaveis>
+                <div className="flex flex-wrap items-center gap-3">
+                  <FiltrosLeads
+                    usuarios={usuarios}
+                    origens={origens}
+                    usuarioInicial={usuarioFiltro}
+                    origemInicial={origemFiltro}
+                  />
+                  <Link
+                    href="/leads/importar"
+                    className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+                  >
+                    Importar leads
+                  </Link>
+                  <Link
+                    href="/leads/novo"
+                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                  >
+                    + Novo lead
+                  </Link>
+                </div>
+              </FiltrosColapsaveis>
             </div>
           }
         />

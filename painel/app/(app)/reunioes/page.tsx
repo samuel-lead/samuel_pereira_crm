@@ -7,6 +7,7 @@ import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
 import { MetricasColapsaveis } from "@/components/metricas-colapsaveis";
+import { FiltrosColapsaveis } from "@/components/filtros-colapsaveis";
 import { StatCell } from "@/components/stat-cell";
 import { CartaoVendas } from "@/components/cartao-vendas";
 import Link from "next/link";
@@ -258,15 +259,17 @@ export default async function VendasPage({
         <PageHeader
           titulo="Gestão de vendas"
           acao={
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
               <BuscaLeads />
-              <FiltrosLeads
-                usuarios={usuarios}
-                origens={origens}
-                usuarioInicial={usuarioFiltro}
-                origemInicial={origemFiltro}
-                baseHref="/reunioes"
-              />
+              <FiltrosColapsaveis>
+                <FiltrosLeads
+                  usuarios={usuarios}
+                  origens={origens}
+                  usuarioInicial={usuarioFiltro}
+                  origemInicial={origemFiltro}
+                  baseHref="/reunioes"
+                />
+              </FiltrosColapsaveis>
             </div>
           }
         />
