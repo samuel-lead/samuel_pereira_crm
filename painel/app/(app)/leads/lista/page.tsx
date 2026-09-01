@@ -96,7 +96,7 @@ export default async function ListaLeadsPage({
             outrosParams={{ nivel, busca }}
           />
 
-          <form className="flex flex-1 flex-wrap items-stretch divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <form className="flex flex-1 flex-wrap items-stretch divide-x divide-neutral-100 rounded-xl border border-neutral-200 bg-white shadow-sm">
             {periodo && <input type="hidden" name="periodo" value={periodo} />}
             {mesAno && <input type="hidden" name="mesAno" value={mesAno} />}
             {de && <input type="hidden" name="de" value={de} />}
