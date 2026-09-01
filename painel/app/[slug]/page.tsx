@@ -33,10 +33,8 @@ export default async function IscaPage({
   }
 
   return (
-    <div className={`flex min-h-screen items-center justify-center bg-[#f4f5f7] px-4 py-10 ${fonte.className}`}>
-      <div className="w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <IscaCapturaForm slug={slug} nomeIsca={isca.nome} />
-      </div>
+    <div className={`min-h-screen bg-[#0b0e13] ${fonte.className}`}>
+      <IscaCapturaForm slug={slug} nomeIsca={isca.nome} />
     </div>
   );
 }

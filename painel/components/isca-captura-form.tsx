@@ -4,9 +4,20 @@ import { useState, useTransition } from "react";
 import { registrarLeadIsca, type RespostasIsca } from "@/lib/iscas/actions";
 
 type Passo =
-  | { tipo: "escolha"; chave: "tempoMercado" | "atuacao"; pergunta: string; opcoes: string[] }
+  | {
+      tipo: "escolha";
+      chave: "tempoMercado" | "atuacao" | "disponibilidadeFinanceira";
+      pergunta: string;
+      opcoes: string[];
+    }
   | { tipo: "simNao"; chave: "prioridade"; pergunta: string }
-  | { tipo: "texto"; chave: "maiorDesafio" | "nome" | "telefone" | "instagram"; pergunta: string; placeholder: string; tipoInput?: string };
+  | {
+      tipo: "texto";
+      chave: "maiorDesafio" | "nome" | "telefone" | "instagram";
+      pergunta: string;
+      placeholder: string;
+      tipoInput?: string;
+    };
 
 const PASSOS: Passo[] = [
   {
@@ -25,6 +36,12 @@ const PASSOS: Passo[] = [
     tipo: "simNao",
     chave: "prioridade",
     pergunta: "Resolver esse desafio para você hoje é uma prioridade?",
+  },
+  {
+    tipo: "escolha",
+    chave: "disponibilidadeFinanceira",
+    pergunta: "Hoje você tem disponibilidade financeira pra estar investindo na solução desse desafio?",
+    opcoes: ["Sim, posso investir", "Não, não consigo investir nada", "Depende do valor do investimento"],
   },
   {
     tipo: "escolha",
@@ -60,6 +77,7 @@ const RESPOSTAS_INICIAIS: RespostasIsca = {
   tempoMercado: "",
   maiorDesafio: "",
   prioridade: null,
+  disponibilidadeFinanceira: "",
   atuacao: "",
 };
 
@@ -79,7 +97,17 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
   const ultimoPasso = passoAtual === PASSOS.length - 1;
   const progresso = Math.round(((passoAtual + (resultado ? 1 : 0)) / PASSOS.length) * 100);
 
-  function avancar(valorParcial: Partial<RespostasIsca>) {
+  const valorEscolhido =
+    passo.tipo === "escolha" || passo.tipo === "simNao" ? (respostas as Record<string, unknown>)[passo.chave] : undefined;
+  const podeAvancarEscolha =
+    passo.tipo === "escolha" ? Boolean(valorEscolhido) : passo.tipo === "simNao" ? valorEscolhido !== null : false;
+
+  function selecionar(valorParcial: Partial<RespostasIsca>) {
+    setRespostas((atual) => ({ ...atual, ...valorParcial }));
+    setErro(null);
+  }
+
+  function confirmarPasso(valorParcial: Partial<RespostasIsca> = {}) {
     const novasRespostas = { ...respostas, ...valorParcial };
     setRespostas(novasRespostas);
     setErro(null);
@@ -124,13 +152,13 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
       const linkCompartilhar = `https://wa.me/?text=${encodeURIComponent(mensagemCompartilhar)}`;
 
       return (
-        <div className="space-y-4 text-center">
-          <p className="text-lg font-semibold text-neutral-900">Seu material já está liberado.</p>
+        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
+          <p className="text-lg font-semibold text-[#eef1f6]">Seu material já está liberado.</p>
           <a
             href={resultado.materialUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            className="inline-flex w-full items-center justify-center rounded-md bg-[#22c55e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#16a34a]"
           >
             Clique aqui para acessar seu material
           </a>
@@ -138,7 +166,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
             href={linkCompartilhar}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-green-500 px-4 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#262f3d] px-4 py-3 text-sm font-semibold text-[#4ade80] transition hover:bg-[#10141b]"
           >
             Compartilhar no WhatsApp com um amigo(a)
           </a>
@@ -153,8 +181,8 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
       : null;
 
     return (
-      <div className="space-y-4 text-center">
-        <p className="text-lg font-semibold text-neutral-900">
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
+        <p className="text-lg font-semibold text-[#eef1f6]">
           {linkFalarComEquipe
             ? "Obrigado por preencher seus dados. Clique no botão abaixo para falar agora mesmo com nossa equipe no WhatsApp."
             : "Obrigado por preencher seus dados. Logo logo alguém da nossa equipe vai entrar em contato com você."}
@@ -166,7 +194,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
               href={linkFalarComEquipe}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#22c55e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#16a34a]"
             >
               Quero falar no WhatsApp
             </a>
@@ -177,112 +205,161 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="mb-1 text-lg font-bold text-neutral-900">{nomeIsca}</h1>
-        <p className="text-sm text-neutral-500">
-          Preenche seus dados pra liberar o acesso · leva menos de 2 minutos
-        </p>
-      </div>
-
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
+    <div className="min-h-screen">
+      <div className="fixed left-0 right-0 top-0 z-20 h-1 bg-[#1a2029]">
         <div
-          className="h-full rounded-full bg-blue-600 transition-all duration-300"
+          className="h-full bg-[#4ade80] transition-all duration-300"
           style={{ width: `${Math.max(progresso, 6)}%` }}
         />
       </div>
 
-      <p className="text-lg font-semibold text-neutral-900">{passo.pergunta}</p>
-
-      {passo.tipo === "escolha" && (
-        <div className="space-y-2">
-          {passo.opcoes.map((opcao) => (
-            <button
-              key={opcao}
-              type="button"
-              disabled={enviando}
-              onClick={() => avancar({ [passo.chave]: opcao } as Partial<RespostasIsca>)}
-              className="w-full rounded-md border border-neutral-300 px-4 py-3 text-left text-sm font-medium text-neutral-800 transition hover:border-blue-500 hover:bg-blue-50 disabled:opacity-50"
-            >
-              {opcao}
-            </button>
-          ))}
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
+        <div className="mb-6">
+          <h1 className="mb-1 text-lg font-bold text-[#eef1f6]">{nomeIsca}</h1>
+          <p className="text-sm text-[#8b93a1]">
+            Preenche seus dados pra liberar o acesso · leva menos de 2 minutos
+          </p>
         </div>
-      )}
 
-      {passo.tipo === "simNao" && (
-        <div className="flex gap-3">
-          <button
-            type="button"
-            disabled={enviando}
-            onClick={() => avancar({ prioridade: true })}
-            className="flex-1 rounded-md border border-neutral-300 px-4 py-3 text-sm font-medium text-neutral-800 transition hover:border-blue-500 hover:bg-blue-50 disabled:opacity-50"
+        <p className="mb-5 text-xl font-semibold leading-snug text-[#eef1f6]">{passo.pergunta}</p>
+
+        {passo.tipo === "escolha" && (
+          <div className="space-y-2">
+            {passo.opcoes.map((opcao) => {
+              const selecionado = valorEscolhido === opcao;
+              return (
+                <button
+                  key={opcao}
+                  type="button"
+                  disabled={enviando}
+                  onClick={() => selecionar({ [passo.chave]: opcao } as Partial<RespostasIsca>)}
+                  className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition disabled:opacity-50 ${
+                    selecionado
+                      ? "border-[#4ade80] bg-[#132018] text-[#eef1f6]"
+                      : "border-[#262f3d] bg-[#10141b] text-[#c4cad3] hover:border-[#3a4454]"
+                  }`}
+                >
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                      selecionado ? "border-[#4ade80] bg-[#4ade80]" : "border-[#3a4454]"
+                    }`}
+                  >
+                    {selecionado && <span className="h-1.5 w-1.5 rounded-full bg-[#0b0e13]" />}
+                  </span>
+                  {opcao}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {passo.tipo === "simNao" && (
+          <div className="space-y-2">
+            {(
+              [
+                { valor: true, emoji: "✅", texto: "Sim" },
+                { valor: false, emoji: "❌", texto: "Não" },
+              ] as const
+            ).map((opcao) => {
+              const selecionado = respostas.prioridade === opcao.valor;
+              return (
+                <button
+                  key={opcao.texto}
+                  type="button"
+                  disabled={enviando}
+                  onClick={() => selecionar({ prioridade: opcao.valor })}
+                  className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition disabled:opacity-50 ${
+                    selecionado
+                      ? "border-[#4ade80] bg-[#132018] text-[#eef1f6]"
+                      : "border-[#262f3d] bg-[#10141b] text-[#c4cad3] hover:border-[#3a4454]"
+                  }`}
+                >
+                  <span className="text-base">{opcao.emoji}</span>
+                  {opcao.texto}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {passo.tipo === "texto" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!textoAtual.trim()) return;
+              confirmarPasso({ [passo.chave]: textoAtual } as Partial<RespostasIsca>);
+            }}
+            className="space-y-3"
           >
-            Sim
-          </button>
-          <button
-            type="button"
-            disabled={enviando}
-            onClick={() => avancar({ prioridade: false })}
-            className="flex-1 rounded-md border border-neutral-300 px-4 py-3 text-sm font-medium text-neutral-800 transition hover:border-blue-500 hover:bg-blue-50 disabled:opacity-50"
-          >
-            Não
-          </button>
-        </div>
-      )}
+            {passo.chave === "maiorDesafio" ? (
+              <textarea
+                autoFocus
+                required
+                rows={3}
+                value={textoAtual}
+                onChange={(e) => setTextoAtual(e.target.value)}
+                placeholder={passo.placeholder}
+                className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-3 py-2 text-sm text-[#eef1f6] placeholder:text-[#5b6472] outline-none focus:border-[#4ade80] focus:ring-1 focus:ring-[#4ade80]"
+              />
+            ) : (
+              <input
+                autoFocus
+                required
+                type={passo.tipoInput ?? "text"}
+                value={textoAtual}
+                onChange={(e) => setTextoAtual(e.target.value)}
+                placeholder={passo.placeholder}
+                className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-3 py-2 text-sm text-[#eef1f6] placeholder:text-[#5b6472] outline-none focus:border-[#4ade80] focus:ring-1 focus:ring-[#4ade80]"
+              />
+            )}
 
-      {passo.tipo === "texto" && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!textoAtual.trim()) return;
-            avancar({ [passo.chave]: textoAtual } as Partial<RespostasIsca>);
-          }}
-          className="space-y-3"
-        >
-          {passo.chave === "maiorDesafio" ? (
-            <textarea
-              autoFocus
-              required
-              rows={3}
-              value={textoAtual}
-              onChange={(e) => setTextoAtual(e.target.value)}
-              placeholder={passo.placeholder}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            />
-          ) : (
-            <input
-              autoFocus
-              required
-              type={passo.tipoInput ?? "text"}
-              value={textoAtual}
-              onChange={(e) => setTextoAtual(e.target.value)}
-              placeholder={passo.placeholder}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            />
-          )}
-          <button
-            type="submit"
-            disabled={enviando}
-            className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
-          >
-            {enviando ? "Enviando..." : ultimoPasso ? "Concluir" : "Continuar"}
-          </button>
-        </form>
-      )}
+            {erro && <p className="text-sm text-[#f87171]">{erro}</p>}
 
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={voltar}
+                disabled={enviando || passoAtual === 0}
+                className="rounded-lg border border-[#262f3d] px-4 py-3 text-sm font-medium text-[#8b93a1] transition hover:border-[#3a4454] hover:text-[#c4cad3] disabled:opacity-30"
+              >
+                Anterior
+              </button>
+              <button
+                type="submit"
+                disabled={enviando}
+                className="flex-1 rounded-lg bg-[#22c55e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#16a34a] disabled:opacity-50"
+              >
+                {enviando ? "Enviando..." : ultimoPasso ? "Concluir" : "Próximo"}
+              </button>
+            </div>
+          </form>
+        )}
 
-      {passoAtual > 0 && (
-        <button
-          type="button"
-          onClick={voltar}
-          disabled={enviando}
-          className="text-xs font-medium text-neutral-400 hover:text-neutral-600"
-        >
-          ‹ Voltar
-        </button>
-      )}
+        {passo.tipo !== "texto" && (
+          <>
+            {erro && <p className="mt-3 text-sm text-[#f87171]">{erro}</p>}
+
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={voltar}
+                disabled={enviando || passoAtual === 0}
+                className="rounded-lg border border-[#262f3d] px-4 py-3 text-sm font-medium text-[#8b93a1] transition hover:border-[#3a4454] hover:text-[#c4cad3] disabled:opacity-30"
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                onClick={() => confirmarPasso()}
+                disabled={enviando || !podeAvancarEscolha}
+                className="flex-1 rounded-lg bg-[#22c55e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#16a34a] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {enviando ? "Enviando..." : ultimoPasso ? "Concluir" : "Próximo"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

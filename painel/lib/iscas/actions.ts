@@ -38,12 +38,14 @@ async function contextoAdmin() {
 
   const { data: usuario, error } = await supabase
     .from("usuarios")
-    .select("id, org_id, papel")
+    .select("id, org_id, papel, super_admin")
     .eq("id", user.id)
     .single();
 
   if (error || !usuario) throw new Error("Usuário não encontrado");
-  if (usuario.papel !== "admin") throw new Error("Só admin pode mexer em iscas.");
+  if (usuario.papel !== "admin" && !usuario.super_admin) {
+    throw new Error("Só admin pode mexer em iscas.");
+  }
 
   return { supabase, usuario };
 }
@@ -237,6 +239,7 @@ export type RespostasIsca = {
   tempoMercado: string;
   maiorDesafio: string;
   prioridade: boolean | null;
+  disponibilidadeFinanceira: string;
   atuacao: string;
 };
 
@@ -276,6 +279,7 @@ export async function registrarLeadIsca(
     p_maior_desafio: respostas.maiorDesafio.trim() || null,
     p_prioridade: respostas.prioridade,
     p_atuacao: respostas.atuacao || null,
+    p_disponibilidade_financeira: respostas.disponibilidadeFinanceira || null,
   });
 
   if (error) {
