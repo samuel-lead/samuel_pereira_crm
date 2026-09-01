@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { OrigensConfig } from "@/components/origens-config";
@@ -19,7 +18,6 @@ export default async function ConfiguracoesPage() {
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
-  const souSuperAdmin = usuario?.super_admin === true;
   const souAdmin = usuario?.papel === "admin";
   const ehImobiliario = usuario?.publico_org === "imobiliario";
 
@@ -53,24 +51,6 @@ export default async function ConfiguracoesPage() {
       <PageHeader titulo="Configurações" />
 
       <main className="max-w-5xl px-6 py-6">
-        {souSuperAdmin && (
-          <div className="mb-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-1 text-sm font-semibold text-neutral-800">
-              Empresas clientes
-            </h2>
-            <p className="mb-4 text-xs text-neutral-500">
-              Gerencie os clientes que usam esse CRM — cadastrar acesso novo,
-              suspender ou reativar.
-            </p>
-            <Link
-              href="/empresas"
-              className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-            >
-              Gerenciar empresas
-            </Link>
-          </div>
-        )}
-
         {metas && (
           <div className="mb-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
             <h2 className="mb-1 text-sm font-semibold text-neutral-800">
@@ -111,23 +91,6 @@ export default async function ConfiguracoesPage() {
                 atualiza todos os leads que já usam ele.
               </p>
               <ProdutosConfig produtos={produtos} />
-            </div>
-          )}
-
-          {souAdmin && (
-            <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-1 text-sm font-semibold text-neutral-800">
-                Integrações
-              </h2>
-              <p className="mb-4 text-xs text-neutral-500">
-                Conexões com outras ferramentas (Facebook, WhatsApp e outras).
-              </p>
-              <Link
-                href="/integracoes"
-                className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-              >
-                Gerenciar integrações
-              </Link>
             </div>
           )}
         </div>

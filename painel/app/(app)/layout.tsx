@@ -6,6 +6,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { usuario } = await usuarioAutenticado();
 
   let isAdmin = true;
+  let isSuperAdmin = false;
   let paginasPermitidas: string[] = [];
   let nomeUsuario = "";
   let fotoUsuario: string | null = null;
@@ -14,7 +15,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let publicoOrg = "mentoria";
 
   if (usuario) {
-    isAdmin = usuario.papel === "admin" || usuario.super_admin === true;
+    isSuperAdmin = usuario.super_admin === true;
+    isAdmin = usuario.papel === "admin" || isSuperAdmin;
     paginasPermitidas = usuario.paginas_permitidas ?? [];
     nomeUsuario = usuario.nome ?? "";
     fotoUsuario = usuario.foto_url ?? null;
@@ -34,6 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex h-screen gap-3 overflow-hidden bg-[#f4f5f7] p-3">
         <Sidebar
           isAdmin={isAdmin}
+          isSuperAdmin={isSuperAdmin}
           paginasPermitidas={paginasPermitidas}
           nomeUsuario={nomeUsuario}
           fotoUsuario={fotoUsuario}

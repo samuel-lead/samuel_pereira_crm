@@ -7,9 +7,25 @@ import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma } from "@/components/icons";
+import { IconeFunil, IconeLista, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeIntegracao, IconeEmpresa } from "@/components/icons";
 
-const GRUPOS = [
+type ItemMenu = {
+  href: string;
+  label: string;
+  Icone: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
+  pagina: string;
+  somenteImobiliario?: boolean;
+  somenteSuperAdmin?: boolean;
+};
+
+const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
+  {
+    titulo: "Plataforma",
+    itens: [
+      { href: "/empresas", label: "Empresas", Icone: IconeEmpresa, pagina: "empresas", somenteSuperAdmin: true },
+      { href: "/integracoes", label: "Integrações", Icone: IconeIntegracao, pagina: "admin" },
+    ],
+  },
   {
     titulo: "Funil",
     itens: [
@@ -43,6 +59,7 @@ const GRUPOS = [
 
 export function Sidebar({
   isAdmin = true,
+  isSuperAdmin = false,
   paginasPermitidas = [],
   nomeUsuario = "",
   fotoUsuario = null,
@@ -51,6 +68,7 @@ export function Sidebar({
   publicoOrg = "mentoria",
 }: {
   isAdmin?: boolean;
+  isSuperAdmin?: boolean;
   paginasPermitidas?: string[];
   nomeUsuario?: string;
   fotoUsuario?: string | null;
@@ -63,6 +81,9 @@ export function Sidebar({
   const gruposVisiveis = GRUPOS.map((grupo) => ({
     ...grupo,
     itens: grupo.itens.filter((item) => {
+      // Empresas é a página do dono da plataforma — nem todo admin de
+      // empresa cliente entra aqui, só quem é super admin de verdade.
+      if (item.somenteSuperAdmin) return isSuperAdmin;
       // Imóveis é exclusivo do público imobiliário — vale pra admin
       // também, diferente do resto (que admin sempre vê tudo).
       if (item.somenteImobiliario && publicoOrg !== "imobiliario") return false;
