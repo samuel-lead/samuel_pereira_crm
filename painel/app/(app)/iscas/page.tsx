@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { CopiarLinkIscaButton } from "@/components/copiar-link-isca-button";
 import { ArquivarIscaButton } from "@/components/arquivar-isca-button";
+import { QrCodeIsca } from "@/components/qr-code-isca";
+import { slugificar } from "@/lib/texto";
 
 type IscaLinha = {
   id: string;
@@ -77,6 +79,7 @@ export default async function IscasPage() {
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
                   <CopiarLinkIscaButton link={`${dominio}/${isca.slug}`} />
+                  <QrCodeIsca link={`${dominio}/${isca.slug}`} nomeArquivo={slugificar(isca.nome)} />
                   <Link
                     href={`/iscas/${isca.id}`}
                     className="text-xs font-medium text-blue-600 hover:text-blue-700"

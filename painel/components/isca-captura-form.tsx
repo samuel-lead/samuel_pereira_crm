@@ -125,9 +125,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
 
       return (
         <div className="space-y-4 text-center">
-          <p className="text-2xl">🎉</p>
-          <p className="text-lg font-semibold text-neutral-900">Prontinho!</p>
-          <p className="text-sm text-neutral-500">Seu material já está liberado.</p>
+          <p className="text-lg font-semibold text-neutral-900">Seu material já está liberado.</p>
           <a
             href={resultado.materialUrl}
             target="_blank"
@@ -156,23 +154,23 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
 
     return (
       <div className="space-y-4 text-center">
-        <p className="text-2xl">🎉</p>
-        <p className="text-lg font-semibold text-neutral-900">Prontinho!</p>
-        <p className="text-sm text-neutral-500">
-          Obrigado por preencher seus dados
+        <p className="text-lg font-semibold text-neutral-900">
           {linkFalarComEquipe
-            ? " — clique no botão abaixo e fale agora mesmo com a nossa equipe."
-            : ", logo logo alguém da nossa equipe vai entrar em contato com você."}
+            ? "Obrigado por preencher seus dados. Clique no botão abaixo para falar agora mesmo com nossa equipe no WhatsApp."
+            : "Obrigado por preencher seus dados. Logo logo alguém da nossa equipe vai entrar em contato com você."}
         </p>
         {linkFalarComEquipe && (
-          <a
-            href={linkFalarComEquipe}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
-          >
-            Falar agora com nossa equipe
-          </a>
+          <>
+            <p className="text-3xl">👇</p>
+            <a
+              href={linkFalarComEquipe}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
+            >
+              Quero falar no WhatsApp
+            </a>
+          </>
         )}
       </div>
     );
@@ -180,6 +178,13 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
 
   return (
     <div className="space-y-5">
+      <div>
+        <h1 className="mb-1 text-lg font-bold text-neutral-900">{nomeIsca}</h1>
+        <p className="text-sm text-neutral-500">
+          Preenche seus dados pra liberar o acesso · leva menos de 2 minutos
+        </p>
+      </div>
+
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
         <div
           className="h-full rounded-full bg-blue-600 transition-all duration-300"

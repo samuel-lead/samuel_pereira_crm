@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
+import { Inter } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { IscaCapturaForm } from "@/components/isca-captura-form";
+
+// Fonte só dessa página pública (não mexe na fonte do resto do painel) —
+// Samuel achou a fonte padrão feia aqui, Inter é mais legível pra uma
+// página de captura que qualquer visitante vai ver.
+const fonte = Inter({ subsets: ["latin"] });
 
 // Página pública de captura de uma isca — sem login, aberta pra qualquer
 // visitante que clicar no link (dominio.com/<slug>). O middleware
@@ -27,12 +33,8 @@ export default async function IscaPage({
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f4f5f7] px-4 py-10">
+    <div className={`flex min-h-screen items-center justify-center bg-[#f4f5f7] px-4 py-10 ${fonte.className}`}>
       <div className="w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <h1 className="mb-1 text-lg font-bold text-neutral-900">{isca.nome}</h1>
-        <p className="mb-4 text-sm text-neutral-500">
-          Preenche seus dados pra liberar o acesso · leva menos de 2 minutos
-        </p>
         <IscaCapturaForm slug={slug} nomeIsca={isca.nome} />
       </div>
     </div>
