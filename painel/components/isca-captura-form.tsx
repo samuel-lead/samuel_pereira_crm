@@ -402,7 +402,7 @@ export function IscaCapturaForm({
                 value={textoAtual}
                 onChange={(e) => setTextoAtual(e.target.value)}
                 placeholder={passo.placeholder}
-                className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-3 py-2 text-sm text-[#eef1f6] placeholder:text-[#5b6472] outline-none focus:border-[#4ade80] focus:ring-1 focus:ring-[#4ade80]"
+                className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-3 py-2 text-base text-[#eef1f6] placeholder:text-[#5b6472] outline-none focus:border-[#4ade80] focus:ring-1 focus:ring-[#4ade80]"
               />
             ) : (
               <input
@@ -412,7 +412,7 @@ export function IscaCapturaForm({
                 value={textoAtual}
                 onChange={(e) => setTextoAtual(e.target.value)}
                 placeholder={passo.placeholder}
-                className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-3 py-2 text-sm text-[#eef1f6] placeholder:text-[#5b6472] outline-none focus:border-[#4ade80] focus:ring-1 focus:ring-[#4ade80]"
+                className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-3 py-2 text-base text-[#eef1f6] placeholder:text-[#5b6472] outline-none focus:border-[#4ade80] focus:ring-1 focus:ring-[#4ade80]"
               />
             )}
 
