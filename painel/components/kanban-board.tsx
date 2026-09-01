@@ -400,8 +400,8 @@ export function KanbanBoard({
                             </p>
                           )}
                           {lead.origem && (
-                            <p className="flex items-center gap-1.5 truncate text-xs text-neutral-500">
-                              <IconeTag className="h-3 w-3 shrink-0" />
+                            <p className="flex items-start gap-1.5 text-xs text-neutral-500">
+                              <IconeTag className="mt-0.5 h-3 w-3 shrink-0" />
                               {lead.origem}
                             </p>
                           )}

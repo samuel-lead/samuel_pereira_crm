@@ -265,6 +265,14 @@ export default async function EditarLeadPage({
               <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
                 Respostas do cadastro na isca
               </p>
+              {leadTipado.origem?.startsWith("Isca: ") && (
+                <p>
+                  <span className="text-neutral-500">Isca: </span>
+                  <span className="font-medium text-neutral-800">
+                    {leadTipado.origem.slice("Isca: ".length)}
+                  </span>
+                </p>
+              )}
               {iscaRespostaData.tempo_mercado && (
                 <p>
                   <span className="text-neutral-500">Tempo no mercado: </span>

@@ -121,6 +121,14 @@ export function LeadModalConteudo({
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
               Respostas do cadastro na isca
             </p>
+            {lead.origem?.startsWith("Isca: ") && (
+              <p>
+                <span className="text-neutral-500">Isca: </span>
+                <span className="font-medium text-neutral-800">
+                  {lead.origem.slice("Isca: ".length)}
+                </span>
+              </p>
+            )}
             {iscaResposta.tempo_mercado && (
               <p>
                 <span className="text-neutral-500">Tempo no mercado: </span>
