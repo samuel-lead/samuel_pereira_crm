@@ -152,7 +152,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
       const linkCompartilhar = `https://wa.me/?text=${encodeURIComponent(mensagemCompartilhar)}`;
 
       return (
-        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
+        <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
           <p className="text-lg font-semibold text-[#eef1f6]">Seu material já está liberado.</p>
           <a
             href={resultado.materialUrl}
@@ -181,7 +181,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
       : null;
 
     return (
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
+      <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
         <p className="text-lg font-semibold text-[#eef1f6]">
           {linkFalarComEquipe
             ? "Obrigado por preencher seus dados. Clique no botão abaixo para falar agora mesmo com nossa equipe no WhatsApp."
@@ -205,7 +205,7 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <div className="fixed left-0 right-0 top-0 z-20 h-1 bg-[#1a2029]">
         <div
           className="h-full bg-[#4ade80] transition-all duration-300"
@@ -213,9 +213,9 @@ export function IscaCapturaForm({ slug, nomeIsca }: { slug: string; nomeIsca: st
         />
       </div>
 
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
-        <div className="mb-6">
-          <h1 className="mb-1 text-lg font-bold text-[#eef1f6]">{nomeIsca}</h1>
+      <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center px-6 py-16">
+        <div className="mb-6 min-w-0">
+          <h1 className="mb-1 break-words text-lg font-bold text-[#eef1f6]">{nomeIsca}</h1>
           <p className="text-sm text-[#8b93a1]">
             Preenche seus dados pra liberar o acesso · leva menos de 2 minutos
           </p>
