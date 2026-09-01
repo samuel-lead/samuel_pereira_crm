@@ -4,9 +4,12 @@ import { FotoPerfilForm } from "@/components/foto-perfil-form";
 import { TrocarSenhaForm } from "@/components/trocar-senha-form";
 import { TrocarTelefoneForm } from "@/components/trocar-telefone-form";
 import { PreferenciaWhatsappForm } from "@/components/preferencia-whatsapp-form";
+import { NotificacoesPushForm } from "@/components/notificacoes-push-form";
+import { temInscricaoPush } from "@/lib/notificacoes/actions";
 
 export default async function PerfilPage() {
   const { user, usuario } = await usuarioAutenticado();
+  const jaInscritoPush = await temInscricaoPush();
 
   const supabase = await createClient();
   const { data: dadosTelefone } = usuario
@@ -72,6 +75,19 @@ export default async function PerfilPage() {
           </p>
 
           <PreferenciaWhatsappForm />
+        </div>
+
+        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+            Notificações no celular
+          </h2>
+          <p className="mb-4 text-xs text-neutral-500">
+            Receba um aviso na tela do celular quando chegar lead novo,
+            quando um contato vencer ou quando um lead ficar parado — mesmo
+            com o app fechado.
+          </p>
+
+          <NotificacoesPushForm jaInscrito={jaInscritoPush} />
         </div>
 
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
