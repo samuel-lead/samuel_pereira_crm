@@ -133,6 +133,7 @@ export default async function EditarLeadPage({
     { data: usuariosData },
     { data: origensData },
     { data: produtosData },
+    { data: iscaRespostaData },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -161,6 +162,11 @@ export default async function EditarLeadPage({
     supabase.from("usuarios").select("id, nome, funcao").order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
+    supabase
+      .from("isca_respostas")
+      .select("tempo_mercado, maior_desafio, prioridade, atuacao")
+      .eq("lead_id", id)
+      .maybeSingle(),
   ]);
 
   if (!lead) {
@@ -251,6 +257,40 @@ export default async function EditarLeadPage({
               Você só pode visualizar este lead — o responsável é{" "}
               <strong>{nomeResponsavel ?? "outra pessoa"}</strong>. Quem edita, move
               ou anota é só ela (ou um admin).
+            </div>
+          )}
+
+          {iscaRespostaData && (
+            <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                Respostas do cadastro na isca
+              </p>
+              {iscaRespostaData.tempo_mercado && (
+                <p>
+                  <span className="text-neutral-500">Tempo no mercado: </span>
+                  <span className="font-medium text-neutral-800">{iscaRespostaData.tempo_mercado}</span>
+                </p>
+              )}
+              {iscaRespostaData.atuacao && (
+                <p>
+                  <span className="text-neutral-500">Atuação: </span>
+                  <span className="font-medium text-neutral-800">{iscaRespostaData.atuacao}</span>
+                </p>
+              )}
+              {iscaRespostaData.prioridade !== null && (
+                <p>
+                  <span className="text-neutral-500">É prioridade resolver agora: </span>
+                  <span className="font-medium text-neutral-800">
+                    {iscaRespostaData.prioridade ? "Sim" : "Não"}
+                  </span>
+                </p>
+              )}
+              {iscaRespostaData.maior_desafio && (
+                <p>
+                  <span className="text-neutral-500">Maior desafio: </span>
+                  <span className="font-medium text-neutral-800">{iscaRespostaData.maior_desafio}</span>
+                </p>
+              )}
             </div>
           )}
 

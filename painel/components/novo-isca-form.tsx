@@ -15,6 +15,7 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
   const [slug, setSlug] = useState("");
   const [slugTocado, setSlugTocado] = useState(false);
   const [aba, setAba] = useState<"link" | "arquivo">("link");
+  const [tipo, setTipo] = useState<"material" | "contato">("material");
 
   function aoMudarNome(valor: string) {
     setNome(valor);
@@ -64,56 +65,100 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
       </div>
 
       <div className="space-y-1">
-        <label className={labelClasse}>Material *</label>
+        <label className={labelClasse}>O que acontece depois que a pessoa se cadastra? *</label>
         <div className="flex overflow-hidden rounded-md border border-neutral-200">
           <button
             type="button"
-            onClick={() => setAba("link")}
+            onClick={() => setTipo("material")}
             className={`flex-1 px-3 py-1.5 text-sm font-medium transition ${
-              aba === "link" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
+              tipo === "material" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
             }`}
           >
-            Colar link
+            Entregar material
           </button>
           <button
             type="button"
-            onClick={() => setAba("arquivo")}
+            onClick={() => setTipo("contato")}
             className={`flex-1 px-3 py-1.5 text-sm font-medium transition ${
-              aba === "arquivo" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
+              tipo === "contato" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
             }`}
           >
-            Enviar arquivo
+            Só cadastro
           </button>
         </div>
-
-        {aba === "link" ? (
-          <div className="space-y-1 pt-2">
-            <input
-              id="material_url"
-              name="material_url"
-              type="url"
-              placeholder="Link do PDF, da aula, do que for"
-              className={campoClasse}
-            />
-            <p className="text-xs text-neutral-400">
-              Pode ser um PDF, um vídeo, uma aula gravada — qualquer link.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-1 pt-2">
-            <input
-              id="material_arquivo"
-              name="material_arquivo"
-              type="file"
-              accept=".pdf,application/pdf"
-              className={`${campoClasse} file:mr-3 file:rounded file:border-0 file:bg-neutral-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-neutral-700`}
-            />
-            <p className="text-xs text-neutral-400">
-              Sobe o PDF direto — a pessoa que se cadastrar já abre ele na hora. Até 20MB.
-            </p>
-          </div>
-        )}
+        <input type="hidden" name="tipo" value={tipo} />
       </div>
+
+      {tipo === "material" ? (
+        <div className="space-y-1">
+          <label className={labelClasse}>Material *</label>
+          <div className="flex overflow-hidden rounded-md border border-neutral-200">
+            <button
+              type="button"
+              onClick={() => setAba("link")}
+              className={`flex-1 px-3 py-1.5 text-sm font-medium transition ${
+                aba === "link" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
+              }`}
+            >
+              Colar link
+            </button>
+            <button
+              type="button"
+              onClick={() => setAba("arquivo")}
+              className={`flex-1 px-3 py-1.5 text-sm font-medium transition ${
+                aba === "arquivo" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
+              }`}
+            >
+              Enviar arquivo
+            </button>
+          </div>
+
+          {aba === "link" ? (
+            <div className="space-y-1 pt-2">
+              <input
+                id="material_url"
+                name="material_url"
+                type="url"
+                placeholder="Link do PDF, da aula, do que for"
+                className={campoClasse}
+              />
+              <p className="text-xs text-neutral-400">
+                Pode ser um PDF, um vídeo, uma aula gravada — qualquer link.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1 pt-2">
+              <input
+                id="material_arquivo"
+                name="material_arquivo"
+                type="file"
+                accept=".pdf,application/pdf"
+                className={`${campoClasse} file:mr-3 file:rounded file:border-0 file:bg-neutral-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-neutral-700`}
+              />
+              <p className="text-xs text-neutral-400">
+                Sobe o PDF direto — a pessoa que se cadastrar já abre ele na hora. Até 20MB.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-1">
+          <label className={labelClasse} htmlFor="whatsapp_contato">
+            WhatsApp da equipe (opcional)
+          </label>
+          <input
+            id="whatsapp_contato"
+            name="whatsapp_contato"
+            type="tel"
+            placeholder="(11) 99999-9999"
+            className={campoClasse}
+          />
+          <p className="text-xs text-neutral-400">
+            Se preencher, no final aparece um botão pra falar direto com esse WhatsApp. Se deixar
+            em branco, só mostra uma mensagem de agradecimento.
+          </p>
+        </div>
+      )}
 
       {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}
 

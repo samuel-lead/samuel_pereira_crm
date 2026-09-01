@@ -36,6 +36,15 @@ type LeadResumo = {
   // ao arrastar esse lead pra "Reunião marcada" de novo, precisa perguntar
   // se a pessoa sumiu ou avisou antes de remarcar (ver sincronizarReuniao).
   temReuniaoAnteriorPendente?: boolean;
+  // Só existe pra lead que veio de uma isca (respondeu o questionário) —
+  // "super_qualificado" | "qualificado" | "desqualificado" | null.
+  nivelQualificacao?: string | null;
+};
+
+const SELO_QUALIFICACAO: Record<string, { texto: string; classe: string }> = {
+  super_qualificado: { texto: "Super qualificado", classe: "bg-violet-100 text-violet-700" },
+  qualificado: { texto: "Qualificado", classe: "bg-green-100 text-green-700" },
+  desqualificado: { texto: "Desqualificado", classe: "bg-neutral-100 text-neutral-500" },
 };
 
 // Nomes de nível tipo "No Show (Marcou reunião e sumiu)" não cabem
@@ -356,6 +365,15 @@ export function KanbanBoard({
                             </span>
                           )}
                         </div>
+
+                        {lead.nivelQualificacao && SELO_QUALIFICACAO[lead.nivelQualificacao] && (
+                          <span
+                            className={`mb-2 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${SELO_QUALIFICACAO[lead.nivelQualificacao].classe}`}
+                          >
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+                            {SELO_QUALIFICACAO[lead.nivelQualificacao].texto}
+                          </span>
+                        )}
 
                         <div className="space-y-1">
                           {lead.declarado_em && (

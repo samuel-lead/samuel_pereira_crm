@@ -1405,6 +1405,12 @@ export type DetalhesLead = {
   reuniaoAtiva: { id: string; agendada_para: string } | null;
   reuniaoAnteriorPendente: boolean;
   numerosVisiveis: Record<number, number>;
+  iscaResposta: {
+    tempo_mercado: string | null;
+    maior_desafio: string | null;
+    prioridade: boolean | null;
+    atuacao: string | null;
+  } | null;
 };
 
 // Igual aos dados que app/(app)/leads/[id]/page.tsx busca pra montar a
@@ -1427,6 +1433,7 @@ export async function buscarDetalhesDoLead(
     { data: usuariosData },
     { data: origensData },
     { data: produtosData },
+    { data: iscaRespostaData },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -1455,6 +1462,11 @@ export async function buscarDetalhesDoLead(
     supabase.from("usuarios").select("id, nome, funcao").order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
+    supabase
+      .from("isca_respostas")
+      .select("tempo_mercado, maior_desafio, prioridade, atuacao")
+      .eq("lead_id", leadId)
+      .maybeSingle(),
   ]);
 
   if (!lead) {
@@ -1505,6 +1517,7 @@ export async function buscarDetalhesDoLead(
       reuniaoAtiva,
       reuniaoAnteriorPendente,
       numerosVisiveis,
+      iscaResposta: iscaRespostaData ?? null,
     },
   };
 }

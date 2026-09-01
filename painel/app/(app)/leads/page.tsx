@@ -32,6 +32,7 @@ type LeadResumo = {
   status: string;
   responsavel_id: string | null;
   proximo_follow_em: string | null;
+  isca_respostas: { nivel_qualificacao: string | null }[] | null;
 };
 
 export default async function LeadsPage({
@@ -58,7 +59,7 @@ export default async function LeadsPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, proximo_follow_em"
+      "id, nome, telefone_e164, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, proximo_follow_em, isca_respostas(nivel_qualificacao)"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
@@ -220,6 +221,7 @@ export default async function LeadsPage({
   const leadsComAtividade = leadsComAtividadeBase.map((lead) => ({
     ...lead,
     temReuniaoAnteriorPendente: leadsComReuniaoPendente.has(lead.id),
+    nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
   }));
 
   // Mesmo critério do selo vermelho "Xd parado" de cada card. Lead com

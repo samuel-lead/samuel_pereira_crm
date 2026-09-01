@@ -61,6 +61,7 @@ type LeadResumo = {
   proposta_valor: number | null;
   proximo_follow_em: string | null;
   reuniao_agendada_para?: string | null;
+  isca_respostas: { nivel_qualificacao: string | null }[] | null;
 };
 
 export default async function VendasPage({
@@ -87,7 +88,7 @@ export default async function VendasPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, valor_venda, proposta_valor, proximo_follow_em"
+      "id, nome, telefone_e164, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao)"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
@@ -191,6 +192,7 @@ export default async function VendasPage({
     leads.map((lead) => ({
       ...lead,
       reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
+      nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
     }))
   );
 

@@ -86,13 +86,17 @@ export async function criarIsca(
   const { supabase, usuario } = await contextoAdmin();
 
   const nome = String(formData.get("nome") ?? "").trim();
+  const tipo = String(formData.get("tipo") ?? "material");
   const materialUrl = String(formData.get("material_url") ?? "").trim();
   const slugDigitado = String(formData.get("slug") ?? "").trim();
   const arquivo = formData.get("material_arquivo") as File | null;
   const temArquivo = arquivo && arquivo.size > 0;
+  const whatsappContatoDigitado = String(formData.get("whatsapp_contato") ?? "").trim();
+  const whatsappContato = whatsappContatoDigitado ? normalizarTelefone(whatsappContatoDigitado) : null;
+  const whatsappMensagem = String(formData.get("whatsapp_mensagem") ?? "").trim() || null;
 
   if (!nome) return { erro: "Dá um nome pra essa isca" };
-  if (!materialUrl && !temArquivo) {
+  if (tipo === "material" && !materialUrl && !temArquivo) {
     return { erro: "Cola o link do material ou anexa um arquivo" };
   }
 
@@ -104,7 +108,8 @@ export async function criarIsca(
 
   // Insere primeiro com o link (ou um valor provisório, se for só arquivo)
   // pra ter o id da isca — o arquivo sobe pro Storage usando esse id no
-  // caminho, então precisa da isca já existir antes de enviar.
+  // caminho, então precisa da isca já existir antes de enviar. Isca "só
+  // cadastro" não tem material nenhum — fica null mesmo.
   const { data: iscaCriada, error } = await supabase
     .from("iscas")
     .insert({
@@ -112,7 +117,9 @@ export async function criarIsca(
       usuario_id: usuario.id,
       nome,
       slug,
-      material_url: materialUrl || "pendente",
+      material_url: tipo === "material" ? materialUrl || "pendente" : null,
+      whatsapp_contato_e164: whatsappContato,
+      whatsapp_mensagem: whatsappMensagem,
     })
     .select("id")
     .single();
@@ -150,23 +157,28 @@ export async function atualizarIsca(
   const { supabase, usuario } = await contextoAdmin();
 
   const nome = String(formData.get("nome") ?? "").trim();
+  const tipo = String(formData.get("tipo") ?? "material");
   const materialUrl = String(formData.get("material_url") ?? "").trim();
   const ativo = formData.get("ativo") === "on";
   const arquivo = formData.get("material_arquivo") as File | null;
   const temArquivo = arquivo && arquivo.size > 0;
+  const whatsappContatoDigitado = String(formData.get("whatsapp_contato") ?? "").trim();
+  const whatsappContato = whatsappContatoDigitado ? normalizarTelefone(whatsappContatoDigitado) : null;
+  const whatsappMensagem = String(formData.get("whatsapp_mensagem") ?? "").trim() || null;
 
   if (!nome) return { erro: "Dá um nome pra essa isca" };
 
   // Nem link novo nem arquivo novo: mantém o material que já estava —
-  // "deixa em branco pra manter o atual", como o formulário avisa.
+  // "deixa em branco pra manter o atual", como o formulário avisa. Virando
+  // "só cadastro" o material some (fica null), mesmo que já tivesse um.
   const { data: iscaAtual } = await supabase
     .from("iscas")
     .select("material_url")
     .eq("id", iscaId)
     .single();
 
-  let urlFinal = materialUrl || iscaAtual?.material_url || "";
-  if (temArquivo) {
+  let urlFinal: string | null = tipo === "material" ? materialUrl || iscaAtual?.material_url || "" : null;
+  if (tipo === "material" && temArquivo) {
     const { url, erro: erroUpload } = await subirMaterialSeTiverArquivo(
       supabase,
       usuario.org_id,
@@ -179,7 +191,14 @@ export async function atualizarIsca(
 
   const { error } = await supabase
     .from("iscas")
-    .update({ nome, material_url: urlFinal, ativo, updated_at: new Date().toISOString() })
+    .update({
+      nome,
+      material_url: urlFinal,
+      whatsapp_contato_e164: whatsappContato,
+      whatsapp_mensagem: whatsappMensagem,
+      ativo,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", iscaId)
     .eq("org_id", usuario.org_id);
 
@@ -207,24 +226,43 @@ export type EstadoCaptura = {
   erro: string | null;
   sucesso: boolean;
   materialUrl: string | null;
+  whatsappContatoE164: string | null;
+  whatsappMensagem: string | null;
 };
 
-// Chamada pela página pública (sem login) — passa direto pela função do
-// banco (criar_lead_via_isca), que é a única porta controlada pra um
-// visitante anônimo conseguir gravar um lead.
+export type RespostasIsca = {
+  nome: string;
+  telefone: string;
+  instagram: string;
+  tempoMercado: string;
+  maiorDesafio: string;
+  prioridade: boolean | null;
+  atuacao: string;
+};
+
+// Chamada pela página pública (sem login), direto pelo componente cliente
+// (não é um <form action=...> normal — o fluxo é passo a passo, então o
+// próprio componente junta as respostas e chama isso no final). Passa
+// direto pela função do banco (criar_lead_via_isca), que é a única porta
+// controlada pra um visitante anônimo conseguir gravar um lead.
 export async function registrarLeadIsca(
   slug: string,
-  _estadoAnterior: EstadoCaptura,
-  formData: FormData
+  respostas: RespostasIsca
 ): Promise<EstadoCaptura> {
   const supabase = await createClient();
 
-  const nome = String(formData.get("nome") ?? "").trim();
-  const telefoneDigitado = String(formData.get("telefone") ?? "").trim();
+  const nome = respostas.nome.trim();
+  const telefoneDigitado = respostas.telefone.trim();
 
-  if (!nome) return { erro: "Preenche seu nome", sucesso: false, materialUrl: null };
+  const semRespostaVazia = {
+    materialUrl: null,
+    whatsappContatoE164: null,
+    whatsappMensagem: null,
+  };
+
+  if (!nome) return { erro: "Preenche seu nome", sucesso: false, ...semRespostaVazia };
   if (!telefoneDigitado) {
-    return { erro: "Preenche seu WhatsApp", sucesso: false, materialUrl: null };
+    return { erro: "Preenche seu WhatsApp", sucesso: false, ...semRespostaVazia };
   }
 
   const telefone = normalizarTelefone(telefoneDigitado);
@@ -233,12 +271,27 @@ export async function registrarLeadIsca(
     p_slug: slug,
     p_nome: nome,
     p_telefone_e164: telefone,
+    p_instagram: respostas.instagram.trim() || null,
+    p_tempo_mercado: respostas.tempoMercado || null,
+    p_maior_desafio: respostas.maiorDesafio.trim() || null,
+    p_prioridade: respostas.prioridade,
+    p_atuacao: respostas.atuacao || null,
   });
 
   if (error) {
-    return { erro: "Não deu pra concluir seu cadastro — confere os dados e tenta de novo.", sucesso: false, materialUrl: null };
+    return {
+      erro: "Não deu pra concluir seu cadastro — confere os dados e tenta de novo.",
+      sucesso: false,
+      ...semRespostaVazia,
+    };
   }
 
   const resultado = Array.isArray(data) ? data[0] : data;
-  return { erro: null, sucesso: true, materialUrl: resultado?.material_url ?? null };
+  return {
+    erro: null,
+    sucesso: true,
+    materialUrl: resultado?.material_url ?? null,
+    whatsappContatoE164: resultado?.whatsapp_contato_e164 ?? null,
+    whatsappMensagem: resultado?.whatsapp_mensagem ?? null,
+  };
 }

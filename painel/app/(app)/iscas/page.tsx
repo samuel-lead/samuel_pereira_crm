@@ -9,7 +9,7 @@ type IscaLinha = {
   id: string;
   nome: string;
   slug: string;
-  material_url: string;
+  material_url: string | null;
   ativo: boolean;
 };
 
@@ -60,6 +60,11 @@ export default async function IscasPage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-medium text-neutral-900">{isca.nome}</p>
+                    {!isca.material_url && (
+                      <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-700">
+                        Só cadastro
+                      </span>
+                    )}
                     {!isca.ativo && (
                       <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-bold uppercase text-neutral-500">
                         Inativa

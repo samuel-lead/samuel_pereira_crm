@@ -19,7 +19,7 @@ export default async function EditarIscaPage({
 
   const { data: isca } = await supabase
     .from("iscas")
-    .select("id, nome, slug, material_url, ativo")
+    .select("id, nome, slug, material_url, whatsapp_contato_e164, whatsapp_mensagem, ativo")
     .eq("id", id)
     .single();
 

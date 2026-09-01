@@ -31,9 +31,9 @@ export default async function IscaPage({
       <div className="w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
         <h1 className="mb-1 text-lg font-bold text-neutral-900">{isca.nome}</h1>
         <p className="mb-4 text-sm text-neutral-500">
-          Preenche seus dados pra liberar o acesso.
+          Preenche seus dados pra liberar o acesso · leva menos de 2 minutos
         </p>
-        <IscaCapturaForm slug={slug} />
+        <IscaCapturaForm slug={slug} nomeIsca={isca.nome} />
       </div>
     </div>
   );

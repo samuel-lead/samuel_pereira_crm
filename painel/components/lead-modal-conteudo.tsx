@@ -72,6 +72,7 @@ export function LeadModalConteudo({
     reuniaoAtiva,
     reuniaoAnteriorPendente,
     numerosVisiveis,
+    iscaResposta,
   } = dados;
 
   const nomePorOrdem = new Map(niveis.map((n) => [n.ordem, n.nome]));
@@ -112,6 +113,40 @@ export function LeadModalConteudo({
             Você só pode visualizar este lead — o responsável é{" "}
             <strong>{nomeResponsavel ?? "outra pessoa"}</strong>. Quem edita, move
             ou anota é só ela (ou um admin).
+          </div>
+        )}
+
+        {iscaResposta && (
+          <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+              Respostas do cadastro na isca
+            </p>
+            {iscaResposta.tempo_mercado && (
+              <p>
+                <span className="text-neutral-500">Tempo no mercado: </span>
+                <span className="font-medium text-neutral-800">{iscaResposta.tempo_mercado}</span>
+              </p>
+            )}
+            {iscaResposta.atuacao && (
+              <p>
+                <span className="text-neutral-500">Atuação: </span>
+                <span className="font-medium text-neutral-800">{iscaResposta.atuacao}</span>
+              </p>
+            )}
+            {iscaResposta.prioridade !== null && (
+              <p>
+                <span className="text-neutral-500">É prioridade resolver agora: </span>
+                <span className="font-medium text-neutral-800">
+                  {iscaResposta.prioridade ? "Sim" : "Não"}
+                </span>
+              </p>
+            )}
+            {iscaResposta.maior_desafio && (
+              <p>
+                <span className="text-neutral-500">Maior desafio: </span>
+                <span className="font-medium text-neutral-800">{iscaResposta.maior_desafio}</span>
+              </p>
+            )}
           </div>
         )}
 
