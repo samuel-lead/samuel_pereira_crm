@@ -187,6 +187,49 @@ export async function atualizarBonusSdrConfig(
   return { erro: null };
 }
 
+export type EstadoPixelsConfig = { erro: string | null };
+
+export async function atualizarPixelsConfig(
+  _estadoAnterior: EstadoPixelsConfig,
+  formData: FormData
+): Promise<EstadoPixelsConfig> {
+  const supabase = await createClient();
+  const user = await usuarioDoToken(supabase);
+
+  if (!user) {
+    return { erro: "Não autenticado" };
+  }
+
+  const { data: usuario, error: erroUsuario } = await supabase
+    .from("usuarios")
+    .select("org_id, papel")
+    .eq("id", user.id)
+    .single();
+
+  if (erroUsuario || !usuario) {
+    return { erro: "Usuário não encontrado" };
+  }
+
+  if (usuario.papel !== "admin") {
+    return { erro: "Só admin pode editar os pixels de rastreamento" };
+  }
+
+  const metaPixelId = String(formData.get("meta_pixel_id") ?? "").trim() || null;
+  const googleTagId = String(formData.get("google_tag_id") ?? "").trim() || null;
+
+  const { error } = await supabase
+    .from("orgs")
+    .update({ meta_pixel_id: metaPixelId, google_tag_id: googleTagId })
+    .eq("id", usuario.org_id);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  revalidatePath("/configuracoes");
+  return { erro: null };
+}
+
 export type EstadoOrigem = { erro: string | null };
 
 async function usuarioAdminOuErro() {

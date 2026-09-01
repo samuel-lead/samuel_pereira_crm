@@ -20,21 +20,31 @@ export default async function IscaPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: isca } = await supabase
-    .from("iscas")
-    .select("nome")
-    .eq("slug", slug)
-    .eq("ativo", true)
-    .is("arquivado_em", null)
-    .maybeSingle();
+  const [{ data: isca }, { data: pixels }] = await Promise.all([
+    supabase
+      .from("iscas")
+      .select("nome")
+      .eq("slug", slug)
+      .eq("ativo", true)
+      .is("arquivado_em", null)
+      .maybeSingle(),
+    supabase.rpc("buscar_pixels_org", { p_slug: slug }).maybeSingle(),
+  ]);
 
   if (!isca) {
     notFound();
   }
 
+  const idsPixel = pixels as { meta_pixel_id: string | null; google_tag_id: string | null } | null;
+
   return (
     <div className={`min-h-screen overflow-x-hidden bg-[#0b0e13] ${fonte.className}`}>
-      <IscaCapturaForm slug={slug} nomeIsca={isca.nome} />
+      <IscaCapturaForm
+        slug={slug}
+        nomeIsca={isca.nome}
+        metaPixelId={idsPixel?.meta_pixel_id ?? null}
+        googleTagId={idsPixel?.google_tag_id ?? null}
+      />
     </div>
   );
 }

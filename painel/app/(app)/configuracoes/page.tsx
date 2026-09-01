@@ -5,6 +5,7 @@ import { OrigensConfig } from "@/components/origens-config";
 import { ProdutosConfig } from "@/components/produtos-config";
 import { MetasConfigForm } from "@/components/metas-config-form";
 import { BonusSdrConfigForm } from "@/components/bonus-sdr-config-form";
+import { PixelsConfigForm } from "@/components/pixels-config-form";
 import type { BonusSdrConfig } from "@/lib/metricas";
 
 type MetasConfig = {
@@ -23,7 +24,7 @@ export default async function ConfiguracoesPage() {
   const souSuperAdmin = usuario?.super_admin === true;
   const ehImobiliario = usuario?.publico_org === "imobiliario";
 
-  const [{ data: metasData }, { data: origensData }, { data: produtosData }, { data: bonusSdrData }] =
+  const [{ data: metasData }, { data: origensData }, { data: produtosData }, { data: bonusSdrData }, { data: orgData }] =
     await Promise.all([
       supabase
         .from("metas_config")
@@ -41,12 +42,16 @@ export default async function ConfiguracoesPage() {
       souAdmin && !ehImobiliario
         ? supabase.from("bonus_sdr_config").select("*").eq("org_id", usuario!.org_id).maybeSingle()
         : Promise.resolve({ data: null }),
+      souAdmin
+        ? supabase.from("orgs").select("meta_pixel_id, google_tag_id").eq("id", usuario!.org_id).single()
+        : Promise.resolve({ data: null }),
     ]);
 
   const metas = metasData as MetasConfig | null;
   const origens = origensData ?? [];
   const produtos = produtosData ?? [];
   const bonusSdrConfig = bonusSdrData as BonusSdrConfig | null;
+  const org = orgData as { meta_pixel_id: string | null; google_tag_id: string | null } | null;
 
   return (
     <>
@@ -90,6 +95,24 @@ export default async function ConfiguracoesPage() {
                 </Link>
               </div>
             )}
+          </div>
+        )}
+
+        {souAdmin && org && (
+          <div className="mb-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+              Pixels de rastreamento (Meta e Google)
+            </h2>
+            <p className="mb-4 text-xs text-neutral-500">
+              Um pixel só, vale pra todas as iscas dessa empresa. Dispara
+              &quot;Lead&quot; assim que a pessoa termina de responder todas
+              as perguntas na página de captura — não dispara ao só abrir a
+              página, nem ao clicar em WhatsApp ou baixar material.
+            </p>
+            <PixelsConfigForm
+              metaPixelId={org.meta_pixel_id}
+              googleTagId={org.google_tag_id}
+            />
           </div>
         )}
 
