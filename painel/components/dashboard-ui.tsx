@@ -114,7 +114,7 @@ function CardComparativo({
   const desceu = variacaoPct !== null && variacaoPct < 0;
 
   return (
-    <div className="bg-neutral-900 px-4 py-3">
+    <div className="w-1/2 shrink-0 px-4 py-3 sm:w-1/3 lg:w-1/5">
       <div className="mb-1.5 flex items-center justify-between">
         <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]}`}>
           <Icone className="h-3 w-3" />
@@ -253,7 +253,7 @@ export function SecaoPeriodo({
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
             Comparado com o período anterior
           </p>
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-neutral-800 shadow-sm sm:grid-cols-3 lg:grid-cols-5">
+          <div className="flex flex-wrap divide-x divide-y divide-neutral-800 overflow-hidden rounded-xl bg-neutral-900 shadow-sm">
             <CardComparativo
               titulo={`${Calls(publicoOrg)} agendadas`}
               valorFormatado={String(metricas.reunioesMarcadas)}
