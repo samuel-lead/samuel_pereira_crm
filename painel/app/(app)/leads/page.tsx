@@ -7,6 +7,7 @@ import { ProximosContatosLista } from "@/components/proximos-contatos-lista";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
+import { MetricasColapsaveis } from "@/components/metricas-colapsaveis";
 import { StatCell } from "@/components/stat-cell";
 import { CartaoVendas } from "@/components/cartao-vendas";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
@@ -304,6 +305,7 @@ export default async function LeadsPage({
           }
         />
 
+        <MetricasColapsaveis>
         <div className="space-y-2.5 border-b border-neutral-200 px-6 py-4">
           <div className="flex flex-wrap items-stretch gap-3">
             <div className="flex flex-1 flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
@@ -395,6 +397,7 @@ export default async function LeadsPage({
             </div>
           )}
         </div>
+        </MetricasColapsaveis>
       </BarraFixaKanban>
 
       <main className="flex flex-col px-4 py-4 md:h-[calc(100vh-var(--kanban-barra-altura,0px))] md:overflow-hidden md:px-6 md:py-6">

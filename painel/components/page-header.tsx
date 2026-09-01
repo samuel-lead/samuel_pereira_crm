@@ -6,11 +6,11 @@ export function PageHeader({
   acao?: React.ReactNode;
 }) {
   return (
-    <header className="border-b border-neutral-200 bg-white/90 px-4 py-4 shadow-sm backdrop-blur md:sticky md:top-0 md:z-10 sm:px-6 sm:py-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="h-8 w-1.5 shrink-0 rounded-full bg-[#2563eb]" />
-          <h1 className="min-w-0 break-words text-xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl">
+    <header className="border-b border-neutral-200 bg-white/90 px-4 py-2.5 shadow-sm backdrop-blur md:sticky md:top-0 md:z-10 sm:px-6 sm:py-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <span className="h-4 w-1 shrink-0 rounded-full bg-[#2563eb] sm:h-8 sm:w-1.5" />
+          <h1 className="min-w-0 break-words text-sm font-semibold text-neutral-700 sm:text-3xl sm:font-extrabold sm:tracking-tight sm:text-neutral-900">
             {titulo}
           </h1>
         </div>
