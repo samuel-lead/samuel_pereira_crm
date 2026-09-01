@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { SecaoPeriodo, type MetasConfig } from "@/components/dashboard-ui";
-import { FiltroPeriodoDashboard } from "@/components/filtro-periodo-dashboard";
+import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { GraficoEvolucaoMensal } from "@/components/grafico-evolucao-mensal";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
@@ -22,80 +22,15 @@ import {
   calcularReceitaOrg,
   calcularNegociacoesAbertas,
   buscarMetaReceitaMes,
-  inicioDaSemana,
-  fimDaSemana,
   inicioDoMes,
 } from "@/lib/metricas";
-import {
-  inicioDoDia,
-  UM_DIA_MS,
-  periodoAnteriorSemana,
-  periodoAnteriorMes,
-  periodoAnterior,
-  parseDataBrasil,
-} from "@/lib/datas";
+import { inicioDoDia, UM_DIA_MS, periodoAnteriorSemana, periodoAnteriorMes, periodoAnterior } from "@/lib/datas";
+import { resolverPeriodo, formatarDataCurta, type ChavePeriodo } from "@/lib/periodo";
 import { call, calls, reunioes, Reunioes } from "@/lib/terminologia";
 
-function formatarDataCurta(d: Date) {
-  return d.toLocaleDateString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    day: "2-digit",
-    month: "2-digit",
-  });
-}
-
-type ChavePeriodo = "hoje" | "ontem" | "semana" | "mes" | "custom";
-
-// Traduz o filtro (?periodo=hoje|ontem|semana|mes|custom&de=&ate=) no
-// intervalo de datas certo — mesmo padrão de leads/lista/page.tsx (parseData
-// Brasil + UM_DIA_MS pra fechar o "até").
-function resolverPeriodo(
-  periodo: string | undefined,
-  de: string | undefined,
-  ate: string | undefined,
-  agora: Date
-): { chave: ChavePeriodo; titulo: string; subtitulo?: string; inicio: Date; fim: Date } {
-  const inicioHoje = inicioDoDia(agora);
-  const amanha = new Date(inicioHoje.getTime() + UM_DIA_MS);
-
-  if (periodo === "ontem") {
-    const inicio = new Date(inicioHoje.getTime() - UM_DIA_MS);
-    return { chave: "ontem", titulo: "Ontem", subtitulo: formatarDataCurta(inicio), inicio, fim: inicioHoje };
-  }
-  if (periodo === "mes") {
-    return { chave: "mes", titulo: "Este mês", inicio: inicioDoMes(agora), fim: amanha };
-  }
-  if (periodo === "custom" && de && ate) {
-    const inicio = parseDataBrasil(de);
-    const fimSelecionado = parseDataBrasil(ate);
-    const fim = new Date(fimSelecionado.getTime() + UM_DIA_MS);
-    return {
-      chave: "custom",
-      titulo: "Período customizado",
-      subtitulo: `${formatarDataCurta(inicio)} a ${formatarDataCurta(fimSelecionado)}`,
-      inicio,
-      fim,
-    };
-  }
-  if (periodo === "hoje") {
-    return { chave: "hoje", titulo: "Hoje", subtitulo: formatarDataCurta(agora), inicio: inicioHoje, fim: amanha };
-  }
-
-  // Padrão: esta semana.
-  const inicio = inicioDaSemana(agora);
-  const fim = fimDaSemana(inicio);
-  return {
-    chave: "semana",
-    titulo: "Esta semana",
-    subtitulo: `domingo a sábado · ${formatarDataCurta(inicio)} a ${formatarDataCurta(fim)}`,
-    inicio,
-    fim: amanha,
-  };
-}
-
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
-// (periodoAnteriorSemana/Mes, já existentes); hoje/ontem/customizado usam
-// o deslocamento genérico pela mesma duração.
+// (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
+// deslocamento genérico pela mesma duração.
 function resolverPeriodoAnterior(chave: ChavePeriodo, inicio: Date, fim: Date, agora: Date) {
   if (chave === "semana") return periodoAnteriorSemana(inicio, agora);
   if (chave === "mes") return periodoAnteriorMes(inicio, agora);
@@ -105,9 +40,9 @@ function resolverPeriodoAnterior(chave: ChavePeriodo, inicio: Date, fim: Date, a
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string; de?: string; ate?: string; anoEvolucao?: string }>;
+  searchParams: Promise<{ periodo?: string; mesAno?: string; de?: string; ate?: string; anoEvolucao?: string }>;
 }) {
-  const { periodo, de, ate, anoEvolucao } = await searchParams;
+  const { periodo, mesAno, de, ate, anoEvolucao } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
@@ -122,7 +57,8 @@ export default async function DashboardPage({
 
   const souAdmin = usuario!.papel === "admin";
 
-  const periodoResolvido = resolverPeriodo(periodo, de, ate, agora);
+  const periodoResolvido =
+    resolverPeriodo({ periodo, mesAno, de, ate }, agora) ?? resolverPeriodo({ periodo: "semana" }, agora)!;
   const anteriorResolvido = resolverPeriodoAnterior(
     periodoResolvido.chave,
     periodoResolvido.inicio,
@@ -211,7 +147,13 @@ export default async function DashboardPage({
           podeEditar={souAdmin}
         />
 
-        <FiltroPeriodoDashboard periodoAtual={periodoResolvido.chave} deAtual={de} ateAtual={ate} />
+        <FiltroPeriodo
+          baseHref="/dashboard"
+          periodoAtual={periodoResolvido.chave}
+          mesAnoAtual={mesAno}
+          deAtual={de}
+          ateAtual={ate}
+        />
 
         {metas ? (
           <SecaoPeriodo

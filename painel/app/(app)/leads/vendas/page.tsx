@@ -5,14 +5,9 @@ import { LinkLead } from "@/components/link-lead";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { AvatarLead } from "@/components/avatar-lead";
 import { IconeMoeda } from "@/components/icons";
-import { anoMesBrasil, parseDataBrasil, UM_DIA_MS } from "@/lib/datas";
-import { MenuSelect } from "@/components/menu-select";
+import { FiltroPeriodo } from "@/components/filtro-periodo";
+import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
-
-const NOMES_MES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
 
 type LeadVendido = {
   id: string;
@@ -39,16 +34,22 @@ function formatarData(iso: string | null) {
 export default async function VendasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string; busca?: string; de?: string; ate?: string }>;
+  searchParams: Promise<{ periodo?: string; mesAno?: string; busca?: string; de?: string; ate?: string }>;
 }) {
   const {
     periodo: periodoFiltro,
+    mesAno: mesAnoFiltro,
     busca: buscaFiltro,
     de: deFiltro,
     ate: ateFiltro,
   } = await searchParams;
   const supabase = await createClient();
   await usuarioAutenticado();
+
+  const periodoResolvido = resolverPeriodo(
+    { periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro },
+    new Date()
+  );
 
   let consulta = supabase
     .from("leads")
@@ -57,53 +58,25 @@ export default async function VendasPage({
     .is("arquivado_em", null)
     .order("vendido_em", { ascending: false });
 
-  // Período personalizado (De/Até) manda mais que o atalho de mês — se a
-  // pessoa preencheu uma data customizada, é isso que ela quer ver.
-  if (deFiltro || ateFiltro) {
-    if (deFiltro) {
-      consulta = consulta.gte("vendido_em", parseDataBrasil(deFiltro).toISOString());
-    }
-    if (ateFiltro) {
-      const fim = new Date(parseDataBrasil(ateFiltro).getTime() + UM_DIA_MS);
-      consulta = consulta.lt("vendido_em", fim.toISOString());
-    }
-  } else if (periodoFiltro && /^\d{4}-\d{2}$/.test(periodoFiltro)) {
-    const [ano, mes] = periodoFiltro.split("-").map(Number);
-    const inicio = parseDataBrasil(`${ano}-${String(mes).padStart(2, "0")}-01`);
-    const proximoMes = mes === 12 ? 1 : mes + 1;
-    const anoProximoMes = mes === 12 ? ano + 1 : ano;
-    const fim = parseDataBrasil(`${anoProximoMes}-${String(proximoMes).padStart(2, "0")}-01`);
-    consulta = consulta.gte("vendido_em", inicio.toISOString()).lt("vendido_em", fim.toISOString());
+  if (periodoResolvido) {
+    consulta = consulta
+      .gte("vendido_em", periodoResolvido.inicio.toISOString())
+      .lt("vendido_em", periodoResolvido.fim.toISOString());
   }
   if (buscaFiltro) {
     consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
 
-  const [{ data: leadsData }, { data: todasVendasData }, { data: usuariosData }] = await Promise.all([
+  const [{ data: leadsData }, { data: usuariosData }] = await Promise.all([
     consulta,
-    supabase
-      .from("leads")
-      .select("vendido_em")
-      .eq("status", "vendido")
-      .is("arquivado_em", null)
-      .not("vendido_em", "is", null),
     supabase.from("usuarios").select("id, nome").order("nome"),
   ]);
-
-  const chavesPeriodo = new Set(
-    (todasVendasData ?? []).map((v) => anoMesBrasil(v.vendido_em as string))
-  );
-  const periodos = Array.from(chavesPeriodo)
-    .sort((a, b) => (a < b ? 1 : -1))
-    .map((chave) => {
-      const [ano, mes] = chave.split("-").map(Number);
-      return { valor: chave, nome: `${NOMES_MES[mes - 1]} de ${ano}` };
-    });
 
   const leads = (leadsData ?? []) as LeadVendido[];
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
   const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
-  const filtroAtivo = Boolean(periodoFiltro || buscaFiltro || deFiltro || ateFiltro);
+  const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+  const filtroAtivo = Boolean(periodoResolvido || buscaFiltro);
 
   return (
     <>
@@ -111,7 +84,16 @@ export default async function VendasPage({
 
       <main className="px-6 py-6">
         <div className="mb-6 flex flex-wrap items-stretch gap-3">
-          <form className="flex flex-1 flex-wrap items-stretch divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <FiltroPeriodo
+            baseHref="/leads/vendas"
+            periodoAtual={periodoResolvido?.chave ?? null}
+            mesAnoAtual={mesAnoFiltro}
+            deAtual={deFiltro}
+            ateAtual={ateFiltro}
+            outrosParams={{ busca: buscaFiltro }}
+          />
+
+          <form className="flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
             <div className="flex min-w-[160px] flex-col justify-center gap-0.5 px-4 py-2">
               <label className="text-[10px] font-medium text-neutral-500" htmlFor="busca">
                 Buscar por nome
@@ -124,69 +106,24 @@ export default async function VendasPage({
                 className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:ring-0"
               />
             </div>
-
-            {periodos.length > 0 && (
-              <div className="flex min-w-[150px] flex-col justify-center gap-0.5 px-4 py-2">
-                <label className="text-[10px] font-medium text-neutral-500" htmlFor="periodo">
-                  Mês (atalho)
-                </label>
-                <MenuSelect
-                  id="periodo"
-                  name="periodo"
-                  defaultValue={periodoFiltro ?? ""}
-                  variante="sem-borda"
-                  options={[
-                    { value: "", label: "Todos os períodos" },
-                    ...periodos.map((periodo) => ({
-                      value: periodo.valor,
-                      label: periodo.nome,
-                    })),
-                  ]}
-                />
-              </div>
-            )}
-
-            <div className="flex min-w-[220px] flex-col justify-center gap-0.5 px-4 py-2">
-              <label className="text-[10px] font-medium text-neutral-500" htmlFor="de">
-                Período personalizado
-              </label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  id="de"
-                  name="de"
-                  type="date"
-                  defaultValue={deFiltro ?? ""}
-                  className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
-                />
-                <span className="text-neutral-300">–</span>
-                <input
-                  id="ate"
-                  name="ate"
-                  type="date"
-                  defaultValue={ateFiltro ?? ""}
-                  aria-label="até"
-                  className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 px-4 py-2">
+            <div className="flex items-center px-3">
               <button
                 type="submit"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
               >
-                Filtrar
+                Buscar
               </button>
-              {filtroAtivo && (
-                <Link
-                  href="/leads/vendas"
-                  className="text-sm font-medium text-neutral-500 hover:text-neutral-700"
-                >
-                  Limpar
-                </Link>
-              )}
             </div>
           </form>
+
+          {filtroAtivo && (
+            <Link
+              href="/leads/vendas"
+              className="inline-flex items-center rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-500 shadow-sm hover:text-neutral-700"
+            >
+              Limpar filtros
+            </Link>
+          )}
 
           <div className="flex shrink-0 items-center rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-500 shadow-sm">
             {leads.length} cliente{leads.length === 1 ? "" : "s"}
@@ -207,6 +144,9 @@ export default async function VendasPage({
           <p className="relative mt-2 text-sm font-medium text-green-100">
             {leads.length} venda{leads.length === 1 ? "" : "s"} fechada
             {leads.length === 1 ? "" : "s"}
+          </p>
+          <p className="relative mt-1 text-xs text-green-200/80">
+            Faturamento: {formatarMoeda(totalFaturamento)}
           </p>
         </div>
 
