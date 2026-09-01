@@ -43,8 +43,8 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
         <label className={labelClasse} htmlFor="slug">
           Link público *
         </label>
-        <div className="flex items-center overflow-hidden rounded-md border border-neutral-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-          <span className="shrink-0 truncate bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
+        <div className="flex flex-col overflow-hidden rounded-md border border-neutral-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 sm:flex-row sm:items-center">
+          <span className="truncate bg-neutral-50 px-3 py-1.5 text-xs text-neutral-500 sm:shrink-0 sm:py-2 sm:text-sm">
             {dominio}/
           </span>
           <input
@@ -56,7 +56,7 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
               setSlugTocado(true);
               setSlug(slugificar(e.target.value));
             }}
-            className="w-full min-w-0 border-0 px-2 py-2 text-sm text-neutral-900 outline-none focus:ring-0"
+            className="w-full min-w-0 border-0 px-3 py-2 text-sm text-neutral-900 outline-none focus:ring-0 sm:px-2"
           />
         </div>
         <p className="text-xs text-neutral-400">

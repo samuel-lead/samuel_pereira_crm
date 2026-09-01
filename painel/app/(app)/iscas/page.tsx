@@ -77,7 +77,7 @@ export default async function IscasPage() {
                     {dominio}/{isca.slug}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-3">
+                <div className="flex flex-wrap items-start gap-3">
                   <CopiarLinkIscaButton link={`${dominio}/${isca.slug}`} />
                   <QrCodeIsca link={`${dominio}/${isca.slug}`} nomeArquivo={slugificar(isca.nome)} />
                   <Link
