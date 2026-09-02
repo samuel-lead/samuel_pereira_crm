@@ -32,6 +32,9 @@ type LeadResumo = {
   proposta_valor?: number | null;
   proximo_follow_em?: string | null;
   reuniao_agendada_para?: string | null;
+  // "Repescagem futura de ICP" — o lead fica de propósito esperando ser
+  // retomado depois, nunca conta como parado.
+  oportunidade_futura?: boolean;
   // Existe uma reunião anterior ainda "marcada" com a data já passada —
   // ao arrastar esse lead pra "Reunião marcada" de novo, precisa perguntar
   // se a pessoa sumiu ou avisou antes de remarcar (ver sincronizarReuniao).
@@ -337,7 +340,8 @@ export function KanbanBoard({
                         mostrarParado &&
                         diasParado >= 1 &&
                         !proximoContatoPendente &&
-                        !lead.reuniao_agendada_para;
+                        !lead.reuniao_agendada_para &&
+                        !lead.oportunidade_futura;
                       return (
                       <div
                         key={lead.id}
