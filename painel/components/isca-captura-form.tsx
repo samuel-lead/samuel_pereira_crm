@@ -159,6 +159,14 @@ export function IscaCapturaForm({
   const podeAvancarEscolha =
     passo.tipo === "escolha" ? Boolean(valorEscolhido) : passo.tipo === "simNao" ? valorEscolhido !== null : false;
 
+  // Botão "Próximo" do WhatsApp já nasce desligado se o número digitado
+  // não bate com o formato — não adianta deixar parecendo que vai
+  // avançar pra só travar depois que a pessoa clicar.
+  const telefoneInvalido =
+    passo.tipo === "texto" &&
+    passo.chave === "telefone" &&
+    (!textoAtual.trim() || !telefoneValido(normalizarTelefone(textoAtual)) || statusWhats === "nao_existe");
+
   // Carrega o Pixel do Meta e a tag do Google só se a empresa tiver
   // configurado (Configurações → Pixels de rastreamento). Só inicializa
   // aqui — o disparo do evento "Lead" acontece só quando o cadastro é
@@ -453,8 +461,8 @@ export function IscaCapturaForm({
               </button>
               <button
                 type="submit"
-                disabled={enviando}
-                className="flex-1 rounded-lg bg-[#22c55e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#16a34a] disabled:opacity-50"
+                disabled={enviando || telefoneInvalido}
+                className="flex-1 rounded-lg bg-[#22c55e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#16a34a] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {enviando ? "Enviando..." : ultimoPasso ? "Concluir" : "Próximo"}
               </button>
