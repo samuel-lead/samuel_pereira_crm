@@ -74,6 +74,7 @@ export function EditarLeadForm({
   publicoOrg = "mentoria",
   jaTeveReuniao = true,
   reuniaoAtivaAgendadaPara = null,
+  reuniaoAtivaCloserId = null,
 }: {
   lead: Lead;
   niveis: NivelResumo[];
@@ -98,6 +99,10 @@ export function EditarLeadForm({
   // desabilitar a opção "Sim" na pergunta "essa reunião aconteceu?" quando
   // a data ainda não chegou (mesma trava do servidor, mas visual).
   reuniaoAtivaAgendadaPara?: string | null;
+  // Closer definido na reunião marcada agora, se houver — pré-preenche o
+  // seletor de closer quando o lead já está em "Reunião marcada" (ver
+  // bloco logo abaixo de vaiEntrarEmReuniaoMarcada).
+  reuniaoAtivaCloserId?: string | null;
 }) {
   const modalAtivo = useLeadModalAtivo();
   const acaoComId = atualizarLead.bind(null, lead.id, !modalAtivo);
@@ -467,6 +472,23 @@ export function EditarLeadForm({
               )}
             </div>
           )}
+
+          {!vaiEntrarEmReuniaoMarcada &&
+            nivelSelecionado === NIVEL_REUNIAO_MARCADA &&
+            String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA && (
+              <div className="mt-2 space-y-1 rounded-md border border-green-200 bg-green-50 p-3">
+                <label className="text-sm font-medium text-green-800" htmlFor="closer_id">
+                  Closer (quem vai fazer a {reuniao(publicoOrg)})
+                </label>
+                <ResponsavelSelect
+                  usuarios={usuarios}
+                  valorInicial={reuniaoAtivaCloserId}
+                  name="closer_id"
+                  placeholder="Ainda não definido"
+                  funcaoFiltro="closer"
+                />
+              </div>
+            )}
 
           {vaiConfirmarReuniao && (
             <div className="mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">

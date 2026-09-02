@@ -663,6 +663,19 @@ export async function atualizarLead(
     if (erroReuniao) {
       return { erro: erroReuniao };
     }
+  } else if (novoNivel === NIVEL_REUNIAO_MARCADA && leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA) {
+    // Lead já estava em "Reunião marcada" (não mudou de nível agora) —
+    // o campo de Closer só aparece na hora da transição por padrão, então
+    // isso aqui é o que permite definir/trocar o closer depois que a
+    // reunião já foi marcada (ver bloco novo em editar-lead-form.tsx).
+    const { error: erroCloser } = await supabase
+      .from("reunioes")
+      .update({ closer_id: closerId })
+      .eq("lead_id", leadId)
+      .eq("status", "marcada");
+    if (erroCloser) {
+      return { erro: erroCloser.message };
+    }
   }
 
   const { error } = await supabase
@@ -1399,7 +1412,7 @@ export type DetalhesLead = {
   podeReivindicar: boolean;
   nomeResponsavel: string | undefined;
   nomeSdrOriginal: string | undefined;
-  reuniaoAtiva: { id: string; agendada_para: string } | null;
+  reuniaoAtiva: { id: string; agendada_para: string; closer_id: string | null } | null;
   reuniaoAnteriorPendente: boolean;
   numerosVisiveis: Record<number, number>;
   iscaResposta: {

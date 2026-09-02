@@ -172,6 +172,7 @@ export function LeadModalConteudo({
           publicoOrg={publicoOrg}
           jaTeveReuniao={reunioes.length > 0}
           reuniaoAtivaAgendadaPara={reuniaoAtiva?.agendada_para ?? null}
+          reuniaoAtivaCloserId={reuniaoAtiva?.closer_id ?? null}
         />
       </div>
 
