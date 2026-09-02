@@ -101,6 +101,7 @@ export function IscaCapturaForm({
   metaPixelId?: string | null;
   googleTagId?: string | null;
 }) {
+  const [mostrarIntro, setMostrarIntro] = useState(true);
   const [passoAtual, setPassoAtual] = useState(0);
   const [respostas, setRespostas] = useState<RespostasIsca>(RESPOSTAS_INICIAIS);
   const [textoAtual, setTextoAtual] = useState("");
@@ -245,6 +246,27 @@ export function IscaCapturaForm({
     setErro(null);
     setTextoAtual("");
     setPassoAtual((atual) => atual - 1);
+  }
+
+  if (mostrarIntro) {
+    return (
+      <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-6 px-6 py-16 text-center">
+        {scripts}
+        <h1 className="break-words text-2xl font-bold leading-snug text-[#eef1f6]">
+          {nomeIsca}
+        </h1>
+        <p className="text-base text-[#c4cad3]">
+          Em 2 minutos você se cadastra e consegue o acesso ao material.
+        </p>
+        <button
+          type="button"
+          onClick={() => setMostrarIntro(false)}
+          className="inline-flex w-full items-center justify-center rounded-md bg-[#22c55e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#16a34a]"
+        >
+          Ok, vamos começar
+        </button>
+      </div>
+    );
   }
 
   if (resultado) {

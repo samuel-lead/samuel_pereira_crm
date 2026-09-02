@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { IscaCapturaForm } from "@/components/isca-captura-form";
@@ -15,6 +16,33 @@ const fonte = Inter({ subsets: ["latin"] });
 // atendesse o visitante.
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+
+// Sem isso, o link compartilhado no WhatsApp mostrava sempre "Meu
+// Vendedor" (o título genérico do site inteiro) em vez do nome da isca.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+  const { data: isca } = await supabase
+    .from("iscas")
+    .select("nome")
+    .eq("slug", slug)
+    .eq("ativo", true)
+    .is("arquivado_em", null)
+    .maybeSingle();
+
+  if (!isca) return { title: "Meu Vendedor" };
+
+  const descricao = "Preenche seus dados pra liberar o acesso — leva menos de 2 minutos.";
+  return {
+    title: isca.nome,
+    description: descricao,
+    openGraph: { title: isca.nome, description: descricao },
+  };
+}
 
 // Página pública de captura de uma isca — sem login, aberta pra qualquer
 // visitante que clicar no link (dominio.com/<slug>). O middleware
