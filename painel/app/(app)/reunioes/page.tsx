@@ -199,18 +199,20 @@ export default async function VendasPage({
   );
 
   // Mesmo critério do selo vermelho "Xd parado" de cada card, igual em
-  // Pré-vendas. Lead com próximo contato marcado (e ainda não vencido) ou
-  // com reunião marcada não conta — já tem o próximo passo combinado, só
-  // volta a contar se ninguém mexer nele depois disso. "Repescagem futura
-  // de ICP" também nunca conta — o lead fica ali de propósito esperando
-  // ser retomado depois, sem precisar de próximo contato marcado.
+  // Pré-vendas. Lead com próximo contato marcado ou com reunião marcada
+  // não conta ENQUANTO a data não chegou — já tem o próximo passo
+  // combinado. Assim que a data passa sem ninguém ter mexido (reunião
+  // "esquecida", sem resultado registrado), volta a contar como parado.
+  // "Repescagem futura de ICP" nunca conta, não precisa de data marcada.
   function ehParado(lead: (typeof leadsComAtividade)[number]) {
     const proximoContatoPendente =
       !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
+    const reuniaoMarcadaPendente =
+      !!lead.reuniao_agendada_para && new Date(lead.reuniao_agendada_para).getTime() > Date.now();
     return (
       diasUteisDesde(lead.ultima_atividade_em) >= 1 &&
       !proximoContatoPendente &&
-      !lead.reuniao_agendada_para &&
+      !reuniaoMarcadaPendente &&
       !lead.oportunidade_futura
     );
   }
