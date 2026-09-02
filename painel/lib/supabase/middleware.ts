@@ -72,11 +72,16 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && !isLoginPage) {
     // Pode ser o link público de uma isca (dominio.com/<slug>, sem
-    // prefixo) — confere antes de mandar pro login. Só tenta pra caminhos
-    // de um nível só (sem barra no meio), pra não gastar consulta à toa
-    // em rotas de verdade tipo /leads/vendas quando a pessoa está
-    // deslogada.
-    const slugCandidato = pathname.replace(/^\//, "");
+    // prefixo) — confere antes de mandar pro login. Também libera a
+    // imagem de preview dela (dominio.com/<slug>/opengraph-image), senão
+    // o robô do WhatsApp/Instagram que busca essa imagem pro card do link
+    // cai no login e a isca aparece sem capa nenhuma. Só tenta pra esses
+    // dois formatos, pra não gastar consulta à toa em rotas de verdade
+    // tipo /leads/vendas quando a pessoa está deslogada.
+    const semBarraInicial = pathname.replace(/^\//, "");
+    const slugCandidato = semBarraInicial.endsWith("/opengraph-image")
+      ? semBarraInicial.slice(0, -"/opengraph-image".length)
+      : semBarraInicial;
     if (slugCandidato && !slugCandidato.includes("/")) {
       const { data: isca } = await supabase
         .from("iscas")
