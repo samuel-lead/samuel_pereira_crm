@@ -8,6 +8,14 @@ import { IscaCapturaForm } from "@/components/isca-captura-form";
 // página de captura que qualquer visitante vai ver.
 const fonte = Inter({ subsets: ["latin"] });
 
+// Nunca guarda em cache — sem isso, o Next podia servir pra algumas
+// pessoas uma versão velha da página (de antes da isca existir/estar
+// ativa), enquanto outras já viam a versão certa — dava 404 pra uns e
+// funcionava pra outros no mesmo link, dependendo de qual servidor
+// atendesse o visitante.
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 // Página pública de captura de uma isca — sem login, aberta pra qualquer
 // visitante que clicar no link (dominio.com/<slug>). O middleware
 // (lib/supabase/middleware.ts) já libera esse caminho antes de chegar
