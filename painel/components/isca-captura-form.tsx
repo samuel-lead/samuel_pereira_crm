@@ -438,15 +438,26 @@ export function IscaCapturaForm({
               />
             )}
 
-            {passo.chave === "telefone" && statusWhats === "checando" && (
-              <p className="text-xs text-[#8b93a1]">Conferindo o número...</p>
+            {passo.chave === "telefone" && textoAtual.trim() && !telefoneValido(normalizarTelefone(textoAtual)) && (
+              <p className="text-xs text-[#f87171]">
+                Digita um WhatsApp válido, com DDD (ex.: (11) 99999-9999).
+              </p>
             )}
-            {passo.chave === "telefone" && statusWhats === "existe" && (
-              <p className="text-xs text-[#4ade80]">✅ Esse número tem WhatsApp</p>
-            )}
-            {passo.chave === "telefone" && statusWhats === "nao_existe" && (
-              <p className="text-xs text-[#f87171]">❌ Esse número não tem WhatsApp — confere de novo</p>
-            )}
+            {passo.chave === "telefone" &&
+              telefoneValido(normalizarTelefone(textoAtual)) &&
+              statusWhats === "checando" && (
+                <p className="text-xs text-[#8b93a1]">Conferindo o número...</p>
+              )}
+            {passo.chave === "telefone" &&
+              telefoneValido(normalizarTelefone(textoAtual)) &&
+              statusWhats === "existe" && (
+                <p className="text-xs text-[#4ade80]">✅ Esse número tem WhatsApp</p>
+              )}
+            {passo.chave === "telefone" &&
+              telefoneValido(normalizarTelefone(textoAtual)) &&
+              statusWhats === "nao_existe" && (
+                <p className="text-xs text-[#f87171]">❌ Esse número não tem WhatsApp — confere de novo</p>
+              )}
 
             {erro && <p className="text-sm text-[#f87171]">{erro}</p>}
 
