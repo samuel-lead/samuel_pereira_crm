@@ -328,11 +328,16 @@ export function KanbanBoard({
                       const temProximoContato = !!lead.proximo_follow_em;
                       const contatoAtrasado =
                         temProximoContato && new Date(lead.proximo_follow_em!).getTime() < Date.now();
-                      // Lead com próximo contato marcado (e ainda não vencido)
-                      // não é "parado" — já tem plano. Só volta a contar
-                      // depois que a data passar sem ninguém ter mexido nele.
+                      // Lead com próximo contato marcado (e ainda não vencido) ou
+                      // com reunião marcada não é "parado" — já tem o próximo
+                      // passo combinado. Só volta a contar se ninguém mexer nele
+                      // depois disso.
                       const proximoContatoPendente = temProximoContato && !contatoAtrasado;
-                      const atrasado = mostrarParado && diasParado >= 1 && !proximoContatoPendente;
+                      const atrasado =
+                        mostrarParado &&
+                        diasParado >= 1 &&
+                        !proximoContatoPendente &&
+                        !lead.reuniao_agendada_para;
                       return (
                       <div
                         key={lead.id}

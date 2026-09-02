@@ -199,13 +199,17 @@ export default async function VendasPage({
   );
 
   // Mesmo critério do selo vermelho "Xd parado" de cada card, igual em
-  // Pré-vendas. Lead com próximo contato marcado (e ainda não vencido) não
-  // conta — já tem plano, só volta a contar depois que a data passar sem
-  // ninguém ter mexido nele.
+  // Pré-vendas. Lead com próximo contato marcado (e ainda não vencido) ou
+  // com reunião marcada não conta — já tem o próximo passo combinado, só
+  // volta a contar se ninguém mexer nele depois disso.
   function ehParado(lead: (typeof leadsComAtividade)[number]) {
     const proximoContatoPendente =
       !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
-    return diasUteisDesde(lead.ultima_atividade_em) >= 1 && !proximoContatoPendente;
+    return (
+      diasUteisDesde(lead.ultima_atividade_em) >= 1 &&
+      !proximoContatoPendente &&
+      !lead.reuniao_agendada_para
+    );
   }
 
   const leadsParados = leadsComAtividade.filter(ehParado).length;

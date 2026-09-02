@@ -190,6 +190,17 @@ export default async function LeadsPage({
         .lt("agendada_para", agora.toISOString())
     : null;
 
+  // Lead com reunião marcada não conta como "parado" no selo vermelho —
+  // já tem o próximo passo combinado (ver ehParado mais abaixo).
+  const consultaReuniaoAgendada = orgId
+    ? supabase
+        .from("reunioes")
+        .select("lead_id, agendada_para")
+        .eq("org_id", orgId)
+        .eq("status", "marcada")
+        .order("marcada_em", { ascending: false })
+    : null;
+
   const [
     { count: ligacoesHoje },
     { count: callsMarcadasHoje },
@@ -200,6 +211,7 @@ export default async function LeadsPage({
     leadsComAtividadeBase,
     { data: reunioesAnterioresPendentesData },
     vendasHoje,
+    { data: reunioesAgendadaData },
   ] = await Promise.all([
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
     consultaCallsMarcadasHoje ? filtrarPorEscopo(consultaCallsMarcadasHoje) : { count: null },
@@ -215,25 +227,39 @@ export default async function LeadsPage({
     anexarUltimaAtividade(supabase, leads),
     consultaReuniaoAnteriorPendente ?? Promise.resolve({ data: null }),
     orgId ? calcularVendasHoje(supabase, orgId, inicioHoje, amanha) : Promise.resolve(null),
+    consultaReuniaoAgendada ?? Promise.resolve({ data: [] as { lead_id: string; agendada_para: string }[] }),
   ]);
 
   const leadsComReuniaoPendente = new Set(
     (reunioesAnterioresPendentesData ?? []).map((r) => r.lead_id)
   );
+  // Um lead pode ter mais de uma reunião "marcada" ao longo do tempo (ex.:
+  // remarcações) — pega só a mais recente.
+  const reuniaoAgendadaPorLead = new Map<string, string>();
+  for (const reuniao of reunioesAgendadaData ?? []) {
+    if (!reuniaoAgendadaPorLead.has(reuniao.lead_id)) {
+      reuniaoAgendadaPorLead.set(reuniao.lead_id, reuniao.agendada_para);
+    }
+  }
   const leadsComAtividade = leadsComAtividadeBase.map((lead) => ({
     ...lead,
     temReuniaoAnteriorPendente: leadsComReuniaoPendente.has(lead.id),
     nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
+    reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
   }));
 
   // Mesmo critério do selo vermelho "Xd parado" de cada card. Lead com
-  // próximo contato marcado (e ainda não vencido) não conta — já tem
-  // plano, só volta a contar depois que a data passar sem ninguém ter
-  // mexido nele.
+  // próximo contato marcado (e ainda não vencido) ou com reunião marcada
+  // não conta — já tem o próximo passo combinado, só volta a contar se
+  // ninguém mexer nele depois disso.
   function ehParado(lead: (typeof leadsComAtividade)[number]) {
     const proximoContatoPendente =
       !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
-    return diasUteisDesde(lead.ultima_atividade_em) >= 1 && !proximoContatoPendente;
+    return (
+      diasUteisDesde(lead.ultima_atividade_em) >= 1 &&
+      !proximoContatoPendente &&
+      !lead.reuniao_agendada_para
+    );
   }
 
   const leadsParados = leadsComAtividade.filter(ehParado).length;
