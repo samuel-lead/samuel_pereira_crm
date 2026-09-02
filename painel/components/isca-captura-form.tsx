@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Script from "next/script";
 import { registrarLeadIsca, type RespostasIsca } from "@/lib/iscas/actions";
-import { normalizarTelefone } from "@/lib/telefone";
+import { normalizarTelefone, telefoneValido } from "@/lib/telefone";
 
 declare global {
   interface Window {
@@ -390,6 +390,18 @@ export function IscaCapturaForm({
             onSubmit={(e) => {
               e.preventDefault();
               if (!textoAtual.trim()) return;
+
+              if (passo.chave === "telefone") {
+                if (!telefoneValido(normalizarTelefone(textoAtual))) {
+                  setErro("Digita um WhatsApp válido, com DDD (ex.: (11) 99999-9999).");
+                  return;
+                }
+                if (statusWhats === "nao_existe") {
+                  setErro("Esse número não tem WhatsApp — confere e digita de novo.");
+                  return;
+                }
+              }
+
               confirmarPasso({ [passo.chave]: textoAtual } as Partial<RespostasIsca>);
             }}
             className="space-y-3"

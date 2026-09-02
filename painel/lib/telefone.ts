@@ -14,3 +14,14 @@ export function normalizarTelefone(valor: string): string {
 
   return digitos;
 }
+
+// Confere se um telefone já normalizado (com o 55 na frente) tem o
+// tamanho certo de um número brasileiro de verdade — 55 + DDD (2) +
+// número (8 pro fixo, 9 pro celular). Pega na hora números digitados
+// errado de propósito ou por engano (ex.: "9999999999999999").
+export function telefoneValido(numeroNormalizado: string): boolean {
+  return (
+    numeroNormalizado.startsWith("55") &&
+    (numeroNormalizado.length === 12 || numeroNormalizado.length === 13)
+  );
+}
