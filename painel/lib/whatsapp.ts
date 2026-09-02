@@ -59,18 +59,15 @@ export function abrirWhatsApp(telefone: string) {
   }
 
   if (preferencia === "web") {
-    window.open(
-      linkWhatsApp(telefone),
-      "whatsapp",
-      "width=420,height=680,noopener,noreferrer"
-    );
+    // Sem tamanho fixo e sem noopener de propósito: com esses dois, o
+    // navegador não reaproveita a aba já aberta do WhatsApp Web e ficava
+    // abrindo uma nova a cada clique. Só o nome "whatsapp" já basta pro
+    // navegador levar de volta a essa mesma aba nos cliques seguintes —
+    // se ela estiver fechada, abre uma nova, normal.
+    window.open(linkWhatsApp(telefone), "whatsapp");
     return;
   }
 
-  window.open(
-    linkWhatsApp(telefone),
-    "whatsapp",
-    "width=420,height=680,noopener,noreferrer"
-  );
+  window.open(linkWhatsApp(telefone), "whatsapp");
   window.location.href = linkWhatsAppApp(telefone);
 }
