@@ -14,9 +14,11 @@ const estadoInicial: EstadoPixelsConfig = { erro: null };
 export function PixelsConfigForm({
   metaPixelId,
   googleTagId,
+  instagramUrl,
 }: {
   metaPixelId: string | null;
   googleTagId: string | null;
+  instagramUrl: string | null;
 }) {
   const [estado, acaoFormulario, pendente] = useActionState(
     atualizarPixelsConfig,
@@ -67,6 +69,23 @@ export function PixelsConfigForm({
           defaultValue={googleTagId ?? ""}
           className={campoClasse}
         />
+      </div>
+      <div className="space-y-1">
+        <label className={labelClasse} htmlFor="instagram_url">
+          Link do Instagram
+        </label>
+        <input
+          id="instagram_url"
+          name="instagram_url"
+          type="text"
+          placeholder="Ex: https://instagram.com/seu_usuario"
+          defaultValue={instagramUrl ?? ""}
+          className={campoClasse}
+        />
+        <p className="text-xs text-neutral-400">
+          Usado no botão &quot;Seguir no Instagram&quot; que aparece pro lead
+          quando a isca é só de cadastro (sem material pra liberar).
+        </p>
       </div>
 
       {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}

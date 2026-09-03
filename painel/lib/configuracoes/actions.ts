@@ -216,10 +216,11 @@ export async function atualizarPixelsConfig(
 
   const metaPixelId = String(formData.get("meta_pixel_id") ?? "").trim() || null;
   const googleTagId = String(formData.get("google_tag_id") ?? "").trim() || null;
+  const instagramUrl = String(formData.get("instagram_url") ?? "").trim() || null;
 
   const { error } = await supabase
     .from("orgs")
-    .update({ meta_pixel_id: metaPixelId, google_tag_id: googleTagId })
+    .update({ meta_pixel_id: metaPixelId, google_tag_id: googleTagId, instagram_url: instagramUrl })
     .eq("id", usuario.org_id);
 
   if (error) {

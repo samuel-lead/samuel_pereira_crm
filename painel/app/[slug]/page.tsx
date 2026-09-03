@@ -71,7 +71,11 @@ export default async function IscaPage({
     notFound();
   }
 
-  const idsPixel = pixels as { meta_pixel_id: string | null; google_tag_id: string | null } | null;
+  const idsPixel = pixels as {
+    meta_pixel_id: string | null;
+    google_tag_id: string | null;
+    instagram_url: string | null;
+  } | null;
 
   return (
     <div className={`min-h-screen overflow-x-hidden bg-[#0b0e13] ${fonte.className}`}>
@@ -80,6 +84,7 @@ export default async function IscaPage({
         nomeIsca={isca.nome}
         metaPixelId={idsPixel?.meta_pixel_id ?? null}
         googleTagId={idsPixel?.google_tag_id ?? null}
+        instagramUrl={idsPixel?.instagram_url ?? null}
       />
     </div>
   );

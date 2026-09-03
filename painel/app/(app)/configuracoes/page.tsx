@@ -43,7 +43,11 @@ export default async function ConfiguracoesPage() {
         ? supabase.from("bonus_sdr_config").select("*").eq("org_id", usuario!.org_id).maybeSingle()
         : Promise.resolve({ data: null }),
       souAdmin
-        ? supabase.from("orgs").select("meta_pixel_id, google_tag_id").eq("id", usuario!.org_id).single()
+        ? supabase
+            .from("orgs")
+            .select("meta_pixel_id, google_tag_id, instagram_url")
+            .eq("id", usuario!.org_id)
+            .single()
         : Promise.resolve({ data: null }),
     ]);
 
@@ -51,7 +55,11 @@ export default async function ConfiguracoesPage() {
   const origens = origensData ?? [];
   const produtos = produtosData ?? [];
   const bonusSdrConfig = bonusSdrData as BonusSdrConfig | null;
-  const org = orgData as { meta_pixel_id: string | null; google_tag_id: string | null } | null;
+  const org = orgData as {
+    meta_pixel_id: string | null;
+    google_tag_id: string | null;
+    instagram_url: string | null;
+  } | null;
 
   return (
     <>
@@ -112,6 +120,7 @@ export default async function ConfiguracoesPage() {
             <PixelsConfigForm
               metaPixelId={org.meta_pixel_id}
               googleTagId={org.google_tag_id}
+              instagramUrl={org.instagram_url}
             />
           </div>
         )}

@@ -95,11 +95,13 @@ export function IscaCapturaForm({
   nomeIsca,
   metaPixelId,
   googleTagId,
+  instagramUrl,
 }: {
   slug: string;
   nomeIsca: string;
   metaPixelId?: string | null;
   googleTagId?: string | null;
+  instagramUrl?: string | null;
 }) {
   const [mostrarIntro, setMostrarIntro] = useState(true);
   const [passoAtual, setPassoAtual] = useState(0);
@@ -310,6 +312,55 @@ export function IscaCapturaForm({
           resultado.whatsappMensagem ? `?text=${encodeURIComponent(resultado.whatsappMensagem)}` : ""
         }`
       : null;
+
+    if (instagramUrl) {
+      return (
+        <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
+          {scripts}
+          <p className="text-lg font-semibold text-[#eef1f6]">
+            Obrigado! Recebemos o seu cadastro para conhecer mais sobre a
+            nossa metodologia.
+          </p>
+          <p className="text-base text-[#c4cad3]">
+            Nossa equipe vai entrar em contato com você por ligação e
+            WhatsApp. Fique atento.
+          </p>
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#f2542d] px-4 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#d8461f]"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="2" y="2" width="20" height="20" rx="5" />
+              <circle cx="12" cy="12" r="4.2" />
+              <circle cx="17.4" cy="6.6" r="1" fill="currentColor" stroke="none" />
+            </svg>
+            Seguir no Instagram
+          </a>
+          {linkFalarComEquipe && (
+            <a
+              href={linkFalarComEquipe}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#22c55e] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#16a34a]"
+            >
+              Quero falar no WhatsApp
+            </a>
+          )}
+        </div>
+      );
+    }
 
     return (
       <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
