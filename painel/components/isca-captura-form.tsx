@@ -342,7 +342,7 @@ export function IscaCapturaForm({
               background:
                 "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
             }}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:opacity-90"
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:opacity-90"
           >
             <svg
               width="18"

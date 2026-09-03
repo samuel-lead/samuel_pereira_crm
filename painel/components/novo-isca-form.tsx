@@ -9,13 +9,19 @@ const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 const labelClasse = "text-sm font-medium text-neutral-700";
 
-export function NovoIscaForm({ dominio }: { dominio: string }) {
+export function NovoIscaForm({
+  dominio,
+  tipoInicial = "material",
+}: {
+  dominio: string;
+  tipoInicial?: "material" | "contato";
+}) {
   const [estado, acaoFormulario] = useActionState(criarIsca, estadoInicial);
   const [nome, setNome] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTocado, setSlugTocado] = useState(false);
   const [aba, setAba] = useState<"link" | "arquivo">("link");
-  const [tipo, setTipo] = useState<"material" | "contato">("material");
+  const [tipo, setTipo] = useState<"material" | "contato">(tipoInicial);
 
   function aoMudarNome(valor: string) {
     setNome(valor);
@@ -26,7 +32,7 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
     <form action={acaoFormulario} className="space-y-4">
       <div className="space-y-1">
         <label className={labelClasse} htmlFor="nome">
-          Nome da isca *
+          {tipo === "material" ? "Nome da isca *" : "Nome do formulário *"}
         </label>
         <input
           id="nome"
@@ -65,7 +71,7 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
       </div>
 
       <div className="space-y-1">
-        <label className={labelClasse}>O que acontece depois que a pessoa se cadastra? *</label>
+        <label className={labelClasse}>O que você está criando? *</label>
         <div className="flex overflow-hidden rounded-md border border-neutral-200">
           <button
             type="button"
@@ -74,7 +80,7 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
               tipo === "material" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
             }`}
           >
-            Entregar material
+            Isca (entrega material)
           </button>
           <button
             type="button"
@@ -83,9 +89,14 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
               tipo === "contato" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
             }`}
           >
-            Só cadastro
+            Formulário (só cadastro)
           </button>
         </div>
+        <p className="text-xs text-neutral-400">
+          {tipo === "material"
+            ? "Isca: a pessoa se cadastra e já recebe o material na hora."
+            : "Formulário: a pessoa só se cadastra, sem nenhum material pra liberar."}
+        </p>
         <input type="hidden" name="tipo" value={tipo} />
       </div>
 
@@ -166,7 +177,7 @@ export function NovoIscaForm({ dominio }: { dominio: string }) {
         type="submit"
         className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
       >
-        Criar isca
+        {tipo === "material" ? "Criar isca" : "Criar formulário"}
       </button>
     </form>
   );

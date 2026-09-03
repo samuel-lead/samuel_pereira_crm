@@ -32,7 +32,7 @@ export function EditarIscaForm({
     <form action={acaoFormulario} className="space-y-4">
       <div className="space-y-1">
         <label className={labelClasse} htmlFor="nome">
-          Nome da isca *
+          {tipo === "material" ? "Nome da isca *" : "Nome do formulário *"}
         </label>
         <input id="nome" name="nome" required defaultValue={isca.nome} className={campoClasse} />
       </div>
@@ -48,7 +48,7 @@ export function EditarIscaForm({
       </div>
 
       <div className="space-y-1">
-        <label className={labelClasse}>O que acontece depois que a pessoa se cadastra? *</label>
+        <label className={labelClasse}>O que você está editando? *</label>
         <div className="flex overflow-hidden rounded-md border border-neutral-200">
           <button
             type="button"
@@ -57,7 +57,7 @@ export function EditarIscaForm({
               tipo === "material" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
             }`}
           >
-            Entregar material
+            Isca (entrega material)
           </button>
           <button
             type="button"
@@ -66,7 +66,7 @@ export function EditarIscaForm({
               tipo === "contato" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
             }`}
           >
-            Só cadastro
+            Formulário (só cadastro)
           </button>
         </div>
         <input type="hidden" name="tipo" value={tipo} />
@@ -156,7 +156,7 @@ export function EditarIscaForm({
 
       <label className="flex items-center gap-2 text-sm text-neutral-700">
         <input type="checkbox" name="ativo" defaultChecked={isca.ativo} className="h-4 w-4" />
-        Isca ativa (link funcionando)
+        {tipo === "material" ? "Isca ativa (link funcionando)" : "Formulário ativo (link funcionando)"}
       </label>
 
       {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}

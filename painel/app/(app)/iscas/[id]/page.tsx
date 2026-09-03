@@ -30,7 +30,7 @@ export default async function EditarIscaPage({
   return (
     <>
       <PageHeader
-        titulo="Editar isca"
+        titulo={isca.material_url ? "Editar isca" : "Editar formulário"}
         acao={
           <Link href="/iscas" className="text-sm text-neutral-500 hover:text-neutral-700">
             Voltar

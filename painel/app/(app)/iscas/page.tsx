@@ -35,12 +35,20 @@ export default async function IscasPage() {
       <PageHeader
         titulo="Iscas"
         acao={
-          <Link
-            href="/iscas/novo"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-          >
-            + Nova isca
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/iscas/novo?tipo=contato"
+              className="rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 shadow-sm transition hover:bg-blue-50"
+            >
+              + Novo forms
+            </Link>
+            <Link
+              href="/iscas/novo?tipo=material"
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+            >
+              + Nova isca
+            </Link>
+          </div>
         }
       />
 
@@ -64,7 +72,7 @@ export default async function IscasPage() {
                     <p className="truncate font-medium text-neutral-900">{isca.nome}</p>
                     {!isca.material_url && (
                       <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-700">
-                        Só cadastro
+                        Formulário
                       </span>
                     )}
                     {!isca.ativo && (
