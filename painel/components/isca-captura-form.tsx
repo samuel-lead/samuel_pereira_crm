@@ -319,11 +319,8 @@ export function IscaCapturaForm({
           {scripts}
           <p className="text-3xl font-extrabold uppercase leading-tight text-[#eef1f6]">
             Obrigado! Recebemos o seu cadastro para conhecer mais sobre a
-            nossa metodologia.
-          </p>
-          <p className="text-base text-[#c4cad3]">
-            Nossa equipe vai entrar em contato com você por ligação e
-            WhatsApp. Fique atento.
+            nossa metodologia. Nossa equipe vai entrar em contato com você
+            por ligação e WhatsApp. Fique atento.
           </p>
           <a
             href={instagramUrl}
