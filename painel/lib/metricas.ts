@@ -120,26 +120,33 @@ export async function calcularMetricas(
     // período (marcada_em), não importa quando a call vai acontecer — e sem
     // contar reagendamento (reagendada=true), que não é call nova, é a
     // mesma call mudando de data.
+    //
+    // Filtra por quem MARCOU a reunião (reunioes.usuario_id), não por quem
+    // é responsável pelo lead hoje — sem isso, uma reunião que o SDR marcou
+    // e realizou sumia da conta dele assim que o lead passava pro Closer
+    // (transferir_lead_para_closer troca o responsável na hora que a
+    // reunião vira "realizada"), fazendo parecer que ele marcou tudo e não
+    // realizou nada.
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
-      .eq("leads.responsavel_id", usuarioId)
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
       .eq("reagendada", false)
       .is("leads.arquivado_em", null)
       .gte("marcada_em", inicioISO)
       .lt("marcada_em", fimISO),
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
-      .eq("leads.responsavel_id", usuarioId)
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
       .eq("reagendada", true)
       .is("leads.arquivado_em", null)
       .gte("marcada_em", inicioISO)
       .lt("marcada_em", fimISO),
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
-      .eq("leads.responsavel_id", usuarioId)
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
       .eq("status", "realizada")
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
@@ -151,8 +158,8 @@ export async function calcularMetricas(
     // remarcar, não conta nem a favor nem contra o comparecimento.
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
-      .eq("leads.responsavel_id", usuarioId)
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
       .is("leads.arquivado_em", null)
       .neq("status", "cancelada")
       .gte("agendada_para", inicioISO)
@@ -164,8 +171,8 @@ export async function calcularMetricas(
     // venda de verdade, não entra nem no numerador nem no denominador.
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, responsavel_id, proposta_valor, status)", { count: "exact", head: true })
-      .eq("leads.responsavel_id", usuarioId)
+      .select("id, leads!inner(arquivado_em, proposta_valor, status)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
       .eq("status", "realizada")
       .is("leads.arquivado_em", null)
       .or("proposta_valor.not.is.null,status.eq.vendido", { foreignTable: "leads" })
@@ -183,8 +190,8 @@ export async function calcularMetricas(
       .lt("proposta_enviada_em", fimISO),
     supabase
       .from("reunioes")
-      .select("id, leads!inner(arquivado_em, responsavel_id)", { count: "exact", head: true })
-      .eq("leads.responsavel_id", usuarioId)
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
       .eq("status", "nao_compareceu")
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)

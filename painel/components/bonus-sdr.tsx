@@ -117,7 +117,14 @@ export function BonusSdrTabela({
             className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm"
           >
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-bold text-neutral-900">{linha.nome}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-neutral-900">{linha.nome}</h3>
+                {periodo && (
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                    Mês de {periodo}
+                  </span>
+                )}
+              </div>
               <span className="rounded-full bg-green-50 px-3 py-1 text-sm font-bold tabular-nums text-green-700">
                 {formatarMoeda(linha.totalBonus)} de bônus
               </span>
