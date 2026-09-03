@@ -60,7 +60,7 @@ export default async function BasePage({
 
   const [{ data: leadsData }, { data: usuariosData }] = await Promise.all([
     consulta,
-    supabase.from("usuarios").select("id, nome"),
+    supabase.from("usuarios").select("id, nome, foto_url"),
   ]);
 
   const leads = (leadsData ?? []) as LeadComHistorico[];
@@ -83,6 +83,7 @@ export default async function BasePage({
   }
 
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
+  const fotoPorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.foto_url]));
 
   const leadsPorMotivo: Record<MotivoBase, LeadBase[]> = {
     nao_reagendados: [],
@@ -111,7 +112,11 @@ export default async function BasePage({
       </BarraFixaKanban>
 
       <main className="flex flex-col px-4 py-4 md:h-[calc(100vh-var(--kanban-barra-altura,0px))] md:overflow-hidden md:px-6 md:py-6">
-        <BaseLeadsBoard leadsPorMotivo={leadsPorMotivo} nomePorUsuario={nomePorUsuario} />
+        <BaseLeadsBoard
+          leadsPorMotivo={leadsPorMotivo}
+          nomePorUsuario={nomePorUsuario}
+          fotoPorUsuario={fotoPorUsuario}
+        />
       </main>
     </>
   );

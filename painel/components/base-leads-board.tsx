@@ -65,9 +65,11 @@ function formatarMoeda(valor: number) {
 export function BaseLeadsBoard({
   leadsPorMotivo,
   nomePorUsuario,
+  fotoPorUsuario,
 }: {
   leadsPorMotivo: Record<MotivoBase, LeadBase[]>;
   nomePorUsuario: Map<string, string>;
+  fotoPorUsuario?: Map<string, string | null>;
 }) {
   const abrirLead = useAbrirLeadModal();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -148,9 +150,14 @@ export function BaseLeadsBoard({
                           <p className="truncate text-xs text-neutral-500">{lead.telefone_e164}</p>
                         )}
                         {lead.responsavel_id && nomePorUsuario.get(lead.responsavel_id) && (
-                          <p className="truncate text-[11px] text-neutral-500">
+                          <p className="flex items-center gap-1 truncate text-[11px] text-neutral-500">
                             Responsável:{" "}
-                            <span className="font-medium text-neutral-600">
+                            <AvatarLead
+                              nome={nomePorUsuario.get(lead.responsavel_id)!}
+                              fotoUrl={fotoPorUsuario?.get(lead.responsavel_id)}
+                              tamanho="h-4 w-4 text-[8px]"
+                            />
+                            <span className="truncate font-medium text-neutral-600">
                               {nomePorUsuario.get(lead.responsavel_id)}
                             </span>
                           </p>

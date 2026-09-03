@@ -98,9 +98,10 @@ export function KanbanBoard({
   souAdmin?: boolean;
   usuarioAtualId?: string | null;
   publicoOrg?: string;
-  // Nome de cada responsável, pra mostrar "Responsável: Fulano" no card
-  // sem precisar buscar de novo — a lista já vem carregada pro filtro.
-  usuarios?: { id: string; nome: string }[];
+  // Nome (e foto) de cada responsável, pra mostrar "Responsável: Fulano"
+  // no card sem precisar buscar de novo — a lista já vem carregada pro
+  // filtro.
+  usuarios?: { id: string; nome: string; foto_url?: string | null }[];
   // Valor só faz sentido em Vendas — em Pré-vendas o lead ainda nem
   // negociou nada, então o quadro de Leads nunca passa isso como true.
   mostrarValor?: boolean;
@@ -118,6 +119,7 @@ export function KanbanBoard({
   const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
   const [, iniciarTransicao] = useTransition();
   const nomePorUsuario = new Map(usuarios.map((u) => [u.id, u.nome]));
+  const fotoPorUsuario = new Map(usuarios.map((u) => [u.id, u.foto_url ?? null]));
   const { perguntar, modal: modalConfirmacao } = useConfirmacaoTravaTela();
   const idRoladoRef = useRef<string | null>(null);
 
@@ -417,9 +419,14 @@ export function KanbanBoard({
                             </p>
                           )}
                           {lead.responsavel_id && nomePorUsuario.get(lead.responsavel_id) && (
-                            <p className="truncate text-[11px] text-neutral-500">
+                            <p className="flex items-center gap-1 truncate text-[11px] text-neutral-500">
                               Responsável:{" "}
-                              <span className="font-medium text-neutral-600">
+                              <AvatarLead
+                                nome={nomePorUsuario.get(lead.responsavel_id)!}
+                                fotoUrl={fotoPorUsuario.get(lead.responsavel_id)}
+                                tamanho="h-4 w-4 text-[8px]"
+                              />
+                              <span className="truncate font-medium text-neutral-600">
                                 {nomePorUsuario.get(lead.responsavel_id)}
                               </span>
                             </p>
