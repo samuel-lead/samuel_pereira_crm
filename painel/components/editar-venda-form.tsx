@@ -51,12 +51,14 @@ function CampoMoeda({
 
 export function EditarVendaForm({
   leadId,
+  vendidoEm,
   valorVenda,
   receitaVenda,
   produto,
   produtos,
 }: {
   leadId: string;
+  vendidoEm: string | null;
   valorVenda: number | null;
   receitaVenda: number | null;
   produto: string | null;
@@ -93,13 +95,29 @@ export function EditarVendaForm({
         onClick={() => setAberto(true)}
         className="text-xs font-medium text-green-700 underline hover:text-green-800"
       >
-        Editar valores da venda
+        Editar data e valores da venda
       </button>
     );
   }
 
+  const hoje = new Date().toISOString().slice(0, 10);
+
   return (
     <form action={acaoFormulario} className="space-y-2 border-t border-green-200 pt-3">
+      <div>
+        <label className="mb-1 block text-xs font-medium text-green-800" htmlFor="vendido_em_editar">
+          Data da venda
+        </label>
+        <input
+          id="vendido_em_editar"
+          name="vendido_em"
+          type="date"
+          required
+          defaultValue={vendidoEm ? vendidoEm.slice(0, 10) : hoje}
+          max={hoje}
+          className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+        />
+      </div>
       <CampoMoeda name="valor_venda" label="Valor da venda (R$)" valorInicial={valorVenda} />
       <CampoMoeda name="receita_venda" label="Receita recebida (R$)" valorInicial={receitaVenda} />
       <div>

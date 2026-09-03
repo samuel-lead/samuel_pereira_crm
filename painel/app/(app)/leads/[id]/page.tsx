@@ -382,6 +382,7 @@ export default async function EditarLeadPage({
                 <div className="mt-3">
                   <EditarVendaForm
                     leadId={leadTipado.id}
+                    vendidoEm={leadTipado.vendido_em}
                     valorVenda={leadTipado.valor_venda}
                     receitaVenda={leadTipado.receita_venda}
                     produto={leadTipado.produto}

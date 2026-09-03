@@ -980,6 +980,15 @@ export async function editarVenda(
     return { erro: "Informe o valor da venda" };
   }
 
+  const dataVendaRaw = String(formData.get("vendido_em") ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataVendaRaw)) {
+    return { erro: "Informe a data em que a venda aconteceu" };
+  }
+  const vendidoEm = new Date(`${dataVendaRaw}T12:00:00Z`);
+  if (Number.isNaN(vendidoEm.getTime()) || vendidoEm.getTime() > Date.now()) {
+    return { erro: "Data da venda inválida — não pode ser uma data futura" };
+  }
+
   // Receita é opcional: tem venda que fecha (contrato assinado, valor
   // combinado) mas o dinheiro só entra depois — fica em branco até lá.
   const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
@@ -989,7 +998,7 @@ export async function editarVenda(
 
   const { error } = await supabase
     .from("leads")
-    .update({ valor_venda: valor, receita_venda: receita, produto })
+    .update({ valor_venda: valor, receita_venda: receita, produto, vendido_em: vendidoEm.toISOString() })
     .eq("id", leadId)
     .eq("status", "vendido");
 

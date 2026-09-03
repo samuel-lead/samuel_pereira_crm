@@ -222,6 +222,7 @@ export function LeadModalConteudo({
               <div className="mt-3">
                 <EditarVendaForm
                   leadId={lead.id}
+                  vendidoEm={lead.vendido_em}
                   valorVenda={lead.valor_venda}
                   receitaVenda={lead.receita_venda}
                   produto={lead.produto}
