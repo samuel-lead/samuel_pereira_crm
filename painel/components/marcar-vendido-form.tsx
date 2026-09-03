@@ -7,6 +7,12 @@ import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
+function hojeNoInputDate() {
+  const agora = new Date();
+  const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
 function formatarCentavos(centavos: number) {
   return (centavos / 100).toLocaleString("pt-BR", {
     style: "currency",
@@ -86,6 +92,23 @@ export function MarcarVendidoForm({
         Ao marcar como vendido, o lead sai do Funil e vai para Clientes.
       </p>
       <form action={acaoFormulario} className="space-y-2">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-green-800" htmlFor="vendido_em">
+            Data da venda
+          </label>
+          <input
+            id="vendido_em"
+            name="vendido_em"
+            type="date"
+            required
+            defaultValue={hojeNoInputDate()}
+            max={hojeNoInputDate()}
+            className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+          />
+          <p className="mt-1 text-[10px] text-neutral-400">
+            O dia em que a venda realmente aconteceu — não precisa ser hoje.
+          </p>
+        </div>
         <CampoMoeda
           key={propostaValor ?? "sem-proposta"}
           name="valor_venda"

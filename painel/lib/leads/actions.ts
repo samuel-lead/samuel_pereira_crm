@@ -891,6 +891,19 @@ export async function marcarVendido(
     return { erro: "Informe o valor da venda" };
   }
 
+  // Data em que a venda REALMENTE aconteceu — sem isso, o sistema contava
+  // a venda como se tivesse sido feita na hora em que alguém lembrou de
+  // registrar no CRM, mesmo horas ou dias depois. Isso distorcia os
+  // relatórios por dia.
+  const dataVendaRaw = String(formData.get("vendido_em") ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataVendaRaw)) {
+    return { erro: "Informe a data em que a venda aconteceu" };
+  }
+  const vendidoEm = new Date(`${dataVendaRaw}T12:00:00Z`);
+  if (Number.isNaN(vendidoEm.getTime()) || vendidoEm.getTime() > Date.now()) {
+    return { erro: "Data da venda inválida — não pode ser uma data futura" };
+  }
+
   // Receita é opcional: tem venda que fecha (contrato assinado, valor
   // combinado) mas o dinheiro só entra depois — fica em branco até lá.
   const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
@@ -924,7 +937,7 @@ export async function marcarVendido(
       valor_venda: valor,
       receita_venda: receita,
       produto,
-      vendido_em: new Date().toISOString(),
+      vendido_em: vendidoEm.toISOString(),
     })
     .eq("id", leadId);
 
