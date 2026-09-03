@@ -78,7 +78,7 @@ explícita e a reunião fica marcada como não-qualificada, separada em todo rel
 - Venda ≥ **40%** (vendas ÷ realizadas)
 
 ### Piso fixo de volume — é chão, nunca teto
-- **30 leads trabalhados por dia útil** (150/semana)
+- **15 leads trabalhados por dia útil** (75/semana)
 - **3 reuniões marcadas por dia** (15/semana)
 
 "Lead trabalhado" num período = o lead **declarado** naquele período **ou**
