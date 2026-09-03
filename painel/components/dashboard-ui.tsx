@@ -48,6 +48,7 @@ function CardNumero({
   amostraInsuficiente,
   esquema,
   Icone,
+  formatoPercentual,
 }: {
   titulo: string;
   valor: number;
@@ -55,6 +56,9 @@ function CardNumero({
   amostraInsuficiente?: boolean;
   esquema: keyof typeof ESQUEMAS;
   Icone: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  // Mostra "valor%" em vez do número cru — usado no No-show, que faz
+  // mais sentido como taxa do que como contagem.
+  formatoPercentual?: boolean;
 }) {
   const cor = ESQUEMAS[esquema];
   const bateuMeta = meta !== undefined ? valor >= meta : null;
@@ -73,7 +77,9 @@ function CardNumero({
       <p className={`text-[11px] font-semibold uppercase tracking-wide ${cor.texto}`}>
         {titulo}
       </p>
-      <p className="mt-0.5 text-2xl font-extrabold text-neutral-900">{valor}</p>
+      <p className="mt-0.5 text-2xl font-extrabold text-neutral-900">
+        {formatoPercentual ? `${valor}%` : valor}
+      </p>
       {amostraInsuficiente && (
         <p className="mt-0.5 text-[10px] text-neutral-400">amostra pequena</p>
       )}
@@ -218,6 +224,12 @@ export function SecaoPeriodo({
   // não faz sentido).
   const taxaAgendamentoLeadsNovos =
     leadsNovosValor > 0 ? metricas.reunioesMarcadasLeadNovo / leadsNovosValor : null;
+  // No-show em % (não número cru) — só reunião cuja data já venceu
+  // (reunioesDevidas), mesma régua da taxa de Comparecimento.
+  const noShowPct =
+    metricas.reunioesDevidas > 0
+      ? Math.round((metricas.noShow / metricas.reunioesDevidas) * 100)
+      : 0;
 
   return (
     <section>
@@ -279,7 +291,8 @@ export function SecaoPeriodo({
         />
         <CardNumero
           titulo="No-show"
-          valor={metricas.noShow}
+          valor={noShowPct}
+          formatoPercentual
           esquema="rosa"
           Icone={IconeAlerta}
         />
