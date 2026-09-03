@@ -286,7 +286,7 @@ export function IscaCapturaForm({
     // a equipe do Samuel).
     if (resultado.materialUrl) {
       const linkDaIsca = typeof window !== "undefined" ? window.location.href : "";
-      const mensagemCompartilhar = `Olha esse material que eu recebi, pode te ajudar: "${nomeIsca}" — ${linkDaIsca}`;
+      const mensagemCompartilhar = `Olha, esse material que eu recebi, acredito que vai te ajudar muito no seu dia aí no mercado imobiliário. 👇\n\n${linkDaIsca}`;
       const linkCompartilhar = `https://wa.me/?text=${encodeURIComponent(mensagemCompartilhar)}`;
 
       return (
