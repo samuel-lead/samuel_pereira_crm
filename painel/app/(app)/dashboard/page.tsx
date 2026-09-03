@@ -58,7 +58,7 @@ export default async function DashboardPage({
   const souAdmin = usuario!.papel === "admin";
 
   const periodoResolvido =
-    resolverPeriodo({ periodo, mesAno, de, ate }, agora) ?? resolverPeriodo({ periodo: "semana" }, agora)!;
+    resolverPeriodo({ periodo, mesAno, de, ate }, agora) ?? resolverPeriodo({ periodo: "mes" }, agora)!;
   const anteriorResolvido = resolverPeriodoAnterior(
     periodoResolvido.chave,
     periodoResolvido.inicio,
