@@ -324,13 +324,13 @@ export function IscaCapturaForm({
         <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16">
           {scripts}
           <p className="text-2xl font-extrabold uppercase leading-tight text-[#eef1f6]">
-            Obrigado! Recebemos o seu cadastro para conhecer mais sobre a
-            nossa metodologia.
+            Obrigado, recebemos o seu cadastro para conhecer a nossa
+            metodologia.
           </p>
           <p className="text-base text-[#c4cad3]">
-            Nossa equipe vai entrar em contato com você{" "}
+            Nossa equipe vai entrar em contato com você por{" "}
             <span className="underline decoration-2 underline-offset-4">
-              por ligação e WhatsApp
+              ligação e WhatsApp
             </span>
             . Fique atento.
           </p>
