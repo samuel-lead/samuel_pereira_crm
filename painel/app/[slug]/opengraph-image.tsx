@@ -27,7 +27,7 @@ export default async function Image({
   const nome = isca?.nome ?? "Meu Vendedor";
   const subtitulo = isca?.material_url
     ? "Preenche seus dados pra liberar o acesso"
-    : "Preenche seus dados pra nossa equipe entrar em contato";
+    : "Preenche seus dados para nossa equipe entrar em contato.";
 
   return new ImageResponse(
     (
