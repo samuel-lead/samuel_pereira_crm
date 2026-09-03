@@ -93,17 +93,23 @@ const RESPOSTAS_INICIAIS: RespostasIsca = {
 export function IscaCapturaForm({
   slug,
   nomeIsca,
+  soCadastro = false,
   metaPixelId,
   googleTagId,
   instagramUrl,
 }: {
   slug: string;
   nomeIsca: string;
+  // Isca "só cadastro" não tem material pra liberar — a tela inicial
+  // ("Em 2 minutos você se cadastra...") só faz sentido prometendo um
+  // acesso que essa isca não entrega, então pula direto pra primeira
+  // pergunta.
+  soCadastro?: boolean;
   metaPixelId?: string | null;
   googleTagId?: string | null;
   instagramUrl?: string | null;
 }) {
-  const [mostrarIntro, setMostrarIntro] = useState(true);
+  const [mostrarIntro, setMostrarIntro] = useState(!soCadastro);
   const [passoAtual, setPassoAtual] = useState(0);
   const [respostas, setRespostas] = useState<RespostasIsca>(RESPOSTAS_INICIAIS);
   const [textoAtual, setTextoAtual] = useState("");

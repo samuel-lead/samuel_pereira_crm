@@ -59,7 +59,7 @@ export default async function IscaPage({
   const [{ data: isca }, { data: pixels }] = await Promise.all([
     supabase
       .from("iscas")
-      .select("nome")
+      .select("nome, material_url")
       .eq("slug", slug)
       .eq("ativo", true)
       .is("arquivado_em", null)
@@ -82,6 +82,7 @@ export default async function IscaPage({
       <IscaCapturaForm
         slug={slug}
         nomeIsca={isca.nome}
+        soCadastro={!isca.material_url}
         metaPixelId={idsPixel?.meta_pixel_id ?? null}
         googleTagId={idsPixel?.google_tag_id ?? null}
         instagramUrl={idsPixel?.instagram_url ?? null}
