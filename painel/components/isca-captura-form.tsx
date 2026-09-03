@@ -317,7 +317,7 @@ export function IscaCapturaForm({
       return (
         <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
           {scripts}
-          <p className="text-lg font-semibold text-[#eef1f6]">
+          <p className="text-3xl font-extrabold uppercase leading-tight text-[#eef1f6]">
             Obrigado! Recebemos o seu cadastro para conhecer mais sobre a
             nossa metodologia.
           </p>
