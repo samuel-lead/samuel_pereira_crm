@@ -34,6 +34,7 @@ type LeadResumo = {
   status: string;
   responsavel_id: string | null;
   proximo_follow_em: string | null;
+  oportunidade_futura: boolean;
   isca_respostas: { nivel_qualificacao: string | null }[] | null;
 };
 
@@ -61,7 +62,7 @@ export default async function LeadsPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, proximo_follow_em, isca_respostas(nivel_qualificacao)"
+      "id, nome, telefone_e164, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, proximo_follow_em, oportunidade_futura, isca_respostas(nivel_qualificacao)"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
@@ -248,18 +249,25 @@ export default async function LeadsPage({
     reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
   }));
 
-  // Mesmo critério do selo vermelho "Xd parado" de cada card. Lead com
-  // próximo contato marcado (e ainda não vencido) ou com reunião marcada
-  // não conta — já tem o próximo passo combinado, só volta a contar se
-  // ninguém mexer nele depois disso.
+  // Mesmo critério do selo vermelho de cada card: "parado" (1 dia útil sem
+  // nenhuma atividade, e sem próximo contato/reunião pendente ainda por
+  // vencer) OU "atrasado" (próximo contato ou reunião já venceu a data e
+  // ninguém atualizou — esse acende na hora, sem esperar 1 dia parado).
   function ehParado(lead: (typeof leadsComAtividade)[number]) {
     const proximoContatoPendente =
       !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
-    return (
+    const contatoAtrasado =
+      !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() < Date.now();
+    const reuniaoMarcadaPendente =
+      !!lead.reuniao_agendada_para && new Date(lead.reuniao_agendada_para).getTime() > Date.now();
+    const reuniaoAtrasada =
+      !!lead.reuniao_agendada_para && new Date(lead.reuniao_agendada_para).getTime() < Date.now();
+    const parado =
       diasUteisDesde(lead.ultima_atividade_em) >= 1 &&
       !proximoContatoPendente &&
-      !lead.reuniao_agendada_para
-    );
+      !reuniaoMarcadaPendente &&
+      !lead.oportunidade_futura;
+    return parado || contatoAtrasado || reuniaoAtrasada;
   }
 
   const leadsParados = leadsComAtividade.filter(ehParado).length;
@@ -341,7 +349,7 @@ export default async function LeadsPage({
           <div className="flex flex-wrap items-stretch gap-3">
             <div className="flex flex-1 flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
               <StatCell
-                label={mostrarSoParados ? "Leads parados" : "Leads ao todo"}
+                label={mostrarSoParados ? "Leads parados/atrasados" : "Leads ao todo"}
                 value={mostrarSoParados ? leadsExibidos.length : leads.length}
                 sub={
                   mostrarSoParados ? (
@@ -352,11 +360,11 @@ export default async function LeadsPage({
                     leadsParados > 0 && (
                       <Link
                         href={hrefLigarParado}
-                        title="Clique pra ver só os leads parados"
+                        title="Clique pra ver só os leads parados ou atrasados"
                         className="inline-flex items-center gap-1.5 font-medium text-red-600 hover:underline"
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                        {leadsParados} parado{leadsParados === 1 ? "" : "s"}
+                        {leadsParados} parado{leadsParados === 1 ? "" : "s"}/atrasado{leadsParados === 1 ? "" : "s"}
                       </Link>
                     )
                   )
