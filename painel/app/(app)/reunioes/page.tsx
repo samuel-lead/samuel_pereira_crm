@@ -204,17 +204,24 @@ export default async function VendasPage({
   // combinado. Assim que a data passa sem ninguém ter mexido (reunião
   // "esquecida", sem resultado registrado), volta a contar como parado.
   // "Repescagem futura de ICP" nunca conta, não precisa de data marcada.
+  // Além do "parado" (1 dia útil sem atividade), conta também como
+  // "atrasado" quem tem próximo contato ou reunião com data já vencida —
+  // não precisa esperar o dia útil passar pra saber que travou.
   function ehParado(lead: (typeof leadsComAtividade)[number]) {
     const proximoContatoPendente =
       !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
+    const contatoAtrasado =
+      !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() < Date.now();
     const reuniaoMarcadaPendente =
       !!lead.reuniao_agendada_para && new Date(lead.reuniao_agendada_para).getTime() > Date.now();
-    return (
+    const reuniaoAtrasada =
+      !!lead.reuniao_agendada_para && new Date(lead.reuniao_agendada_para).getTime() < Date.now();
+    const parado =
       diasUteisDesde(lead.ultima_atividade_em) >= 1 &&
       !proximoContatoPendente &&
       !reuniaoMarcadaPendente &&
-      !lead.oportunidade_futura
-    );
+      !lead.oportunidade_futura;
+    return parado || contatoAtrasado || reuniaoAtrasada;
   }
 
   const leadsParados = leadsComAtividade.filter(ehParado).length;
@@ -288,7 +295,7 @@ export default async function VendasPage({
           <div className="flex flex-wrap items-stretch gap-3">
             <div className="flex flex-1 flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
               <StatCell
-                label={mostrarSoParados ? "Leads parados" : "Leads em vendas"}
+                label={mostrarSoParados ? "Leads parados/atrasados" : "Leads em vendas"}
                 value={mostrarSoParados ? leadsExibidos.length : leads.length}
                 sub={
                   mostrarSoParados ? (
@@ -299,11 +306,12 @@ export default async function VendasPage({
                     leadsParados > 0 && (
                       <Link
                         href={hrefLigarParado}
-                        title="Clique pra ver só os leads parados"
+                        title="Clique pra ver só os leads parados ou atrasados"
                         className="inline-flex items-center gap-1.5 font-medium text-red-600 hover:underline"
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                        {leadsParados} parado{leadsParados === 1 ? "" : "s"}
+                        {leadsParados} parado{leadsParados === 1 ? "" : "s"}/atrasado
+                        {leadsParados === 1 ? "" : "s"}
                       </Link>
                     )
                   )
