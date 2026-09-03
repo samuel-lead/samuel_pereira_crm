@@ -806,8 +806,12 @@ export async function calcularBonusPorSdr(
 
       return {
         ...m,
+        // Só conta contra o SDR reunião cuja data JÁ PASSOU (reunioesDevidas)
+        // — reunião marcada pro futuro ainda não teve chance de acontecer,
+        // não é no-show. Antes dividia por reunioesMarcadas (que inclui
+        // futuro), o que fazia o % de no-show parecer bem pior do que era.
         noShowPercentual:
-          m.reunioesMarcadas > 0 ? 1 - m.reunioesRealizadas / m.reunioesMarcadas : null,
+          m.reunioesDevidas > 0 ? 1 - m.reunioesRealizadas / m.reunioesDevidas : null,
         bonusPorCallRealizada,
         bonusFimDeSemana,
         bonusPorFaturamento,
