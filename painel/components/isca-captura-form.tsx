@@ -292,9 +292,9 @@ export function IscaCapturaForm({
       return (
         <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16">
           {scripts}
-          <p className="text-2xl font-extrabold uppercase leading-tight text-[#eef1f6]">
-            Obrigado, seu cadastro foi concluído, e é só você clicar no
-            link abaixo para acessar o material.
+          <p className="text-lg text-[#c4cad3]">Obrigado, seu cadastro foi concluído.</p>
+          <p className="text-2xl font-bold leading-tight text-[#eef1f6]">
+            Só você clicar no link abaixo para acessar o seu material.
           </p>
           <p className="text-3xl">👇</p>
           <a
