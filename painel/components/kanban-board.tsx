@@ -340,6 +340,14 @@ export function KanbanBoard({
                       const reuniaoMarcadaPendente =
                         !!lead.reuniao_agendada_para &&
                         new Date(lead.reuniao_agendada_para).getTime() > Date.now();
+                      // Reunião com hora marcada que já passou e ninguém
+                      // disse se aconteceu ou não — diferente do "parado"
+                      // de baixo, essa acende na hora, sem esperar 1 dia
+                      // sem atividade nenhuma.
+                      const reuniaoAtrasada =
+                        !!lead.reuniao_agendada_para &&
+                        new Date(lead.reuniao_agendada_para).getTime() < Date.now();
+                      const temAlgoAtrasado = reuniaoAtrasada || contatoAtrasado;
                       const atrasado =
                         mostrarParado &&
                         diasParado >= 1 &&
@@ -383,11 +391,18 @@ export function KanbanBoard({
                               {lead.nome}
                             </p>
                           </div>
-                          {atrasado && (
-                            <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
-                              {diasParado}d parado
-                            </span>
-                          )}
+                          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                            {temAlgoAtrasado && (
+                              <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
+                                Atrasado
+                              </span>
+                            )}
+                            {atrasado && (
+                              <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
+                                {diasParado}d parado
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {lead.nivelQualificacao && SELO_QUALIFICACAO[lead.nivelQualificacao] && (
@@ -432,9 +447,14 @@ export function KanbanBoard({
                             </p>
                           )}
                           {lead.reuniao_agendada_para && (
-                            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-700">
+                            <p
+                              className={`flex items-center gap-1.5 text-[11px] font-semibold ${
+                                reuniaoAtrasada ? "text-red-600" : "text-blue-700"
+                              }`}
+                            >
                               <IconeCalendario className="h-3 w-3 shrink-0" />
-                              {Reuniao(publicoOrg)}: {formatarDataHora(lead.reuniao_agendada_para)}
+                              {reuniaoAtrasada ? `${Reuniao(publicoOrg)} atrasada` : Reuniao(publicoOrg)}:{" "}
+                              {formatarDataHora(lead.reuniao_agendada_para)}
                             </p>
                           )}
                           {temProximoContato && (
