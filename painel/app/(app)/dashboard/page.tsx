@@ -104,7 +104,12 @@ export default async function DashboardPage({
     calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha, {
       apenasDeclaradosNoPeriodo: true,
     }),
-    calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    // "Leads Novos" da tabela também precisa ser estrito, mesmo motivo do
+    // card acima — sem isso, a coluna mostrava o número largo (com
+    // carry-forward) embaixo de um título que promete "novos".
+    calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
+      apenasDeclaradosNoPeriodo: true,
+    }),
     calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
       apenasDeclaradosNoPeriodo: true,
     }),
