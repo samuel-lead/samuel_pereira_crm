@@ -105,7 +105,9 @@ export default async function DashboardPage({
       apenasDeclaradosNoPeriodo: true,
     }),
     calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
-    calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
+      apenasDeclaradosNoPeriodo: true,
+    }),
     calcularResumoAno(supabase, usuario!.org_id, anoEvolucaoResolvido),
     // Meta de receita é sempre do mês civil corrente — não depende do filtro.
     calcularReceitaOrg(supabase, usuario!.org_id, inicioMesAtual, amanha),

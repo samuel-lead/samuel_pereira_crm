@@ -563,8 +563,13 @@ export async function calcularLeadsPorOrigem(
   supabase: SupabaseServerClient,
   orgId: string,
   inicio: Date,
-  fim: Date
+  fim: Date,
+  // "Leads novos" (dashboard) precisa da contagem estrita, sem
+  // carry-forward de lead de período anterior que só teve reunião agora
+  // — mesma distinção que calcularMetricas/calcularMetricasOrg já fazem.
+  opcoes: { apenasDeclaradosNoPeriodo?: boolean } = {}
 ): Promise<LeadPorOrigem[]> {
+  const apenasDeclarados = opcoes.apenasDeclaradosNoPeriodo ?? false;
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
 
@@ -576,14 +581,16 @@ export async function calcularLeadsPorOrigem(
       .is("arquivado_em", null)
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
-    supabase
-      .from("reunioes")
-      .select("lead_id, leads!inner(origem, arquivado_em)")
-      .eq("org_id", orgId)
-      .is("leads.arquivado_em", null)
-      .or(
-        `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
-      ),
+    apenasDeclarados
+      ? Promise.resolve({ data: [] as { lead_id: string; leads: unknown }[] })
+      : supabase
+          .from("reunioes")
+          .select("lead_id, leads!inner(origem, arquivado_em)")
+          .eq("org_id", orgId)
+          .is("leads.arquivado_em", null)
+          .or(
+            `and(marcada_em.gte.${inicioISO},marcada_em.lt.${fimISO}),and(agendada_para.gte.${inicioISO},agendada_para.lt.${fimISO})`
+          ),
   ]);
 
   const origemPorLead = new Map<string, string | null>();
