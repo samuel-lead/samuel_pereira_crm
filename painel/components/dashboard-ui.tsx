@@ -8,7 +8,7 @@ import {
   IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Reunioes, Calls } from "@/lib/terminologia";
+import { Reunioes, Calls, reuniao } from "@/lib/terminologia";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -149,10 +149,16 @@ function BarraTaxa({
   nome,
   valor,
   minimo,
+  detalhe,
 }: {
   nome: string;
   valor: number | null;
   minimo: number;
+  // Texto pequeno embaixo da barra mostrando a conta (numerador ÷
+  // denominador) — só a Taxa de Agendamento usa isso, pra dar pra
+  // conferir de onde vem o %, já que o denominador (leads trabalhados)
+  // não aparece em nenhum outro lugar visível da tela.
+  detalhe?: string;
 }) {
   const bateu = valor !== null ? valor >= minimo : null;
   const larguraPct = valor !== null ? Math.min(100, Math.round(valor * 100)) : 0;
@@ -174,6 +180,7 @@ function BarraTaxa({
           style={{ width: `${larguraPct}%` }}
         />
       </div>
+      {detalhe && <p className="mt-1 text-[11px] text-neutral-400">{detalhe}</p>}
     </div>
   );
 }
@@ -205,6 +212,11 @@ export function SecaoPeriodo({
   const pisoLeads = metas.piso_leads_dia * metricas.diasUteis;
   const pisoReunioes = metas.piso_reunioes_dia * metricas.diasUteis;
   const leadsNovosValor = leadsNovos ?? metricas.leadsTrabalhados;
+  // Segunda leitura da mesma taxa, olhando só quem entrou nesse período —
+  // sem o carry-forward de lead antigo. As duas ficam lado a lado de
+  // propósito, pra dar pra comparar.
+  const taxaAgendamentoLeadsNovos =
+    leadsNovosValor > 0 ? metricas.reunioesMarcadas / leadsNovosValor : null;
 
   return (
     <section>
@@ -244,6 +256,12 @@ export function SecaoPeriodo({
           amostraInsuficiente={leadsNovosValor < 20}
           esquema="violeta"
           Icone={IconeAlvo}
+        />
+        <CardNumero
+          titulo="Leads trabalhados"
+          valor={metricas.leadsTrabalhados}
+          esquema="violeta"
+          Icone={IconeCarta}
         />
         <CardNumero
           titulo={`${Reunioes(publicoOrg)} marcadas`}
@@ -320,6 +338,13 @@ export function SecaoPeriodo({
           nome="Agendamento"
           valor={metricas.taxaAgendamento}
           minimo={metas.taxa_agendamento_min}
+          detalhe={`${metricas.reunioesMarcadas} ${Reunioes(publicoOrg).toLowerCase()} marcadas ÷ ${metricas.leadsTrabalhados} leads trabalhados (inclui lead de período anterior que teve ${reuniao(publicoOrg)} agora)`}
+        />
+        <BarraTaxa
+          nome="Agendamento (só leads novos)"
+          valor={taxaAgendamentoLeadsNovos}
+          minimo={metas.taxa_agendamento_min}
+          detalhe={`${metricas.reunioesMarcadas} ${Reunioes(publicoOrg).toLowerCase()} marcadas ÷ ${leadsNovosValor} leads novos (só quem entrou nesse período)`}
         />
         <BarraTaxa
           nome="Comparecimento"
