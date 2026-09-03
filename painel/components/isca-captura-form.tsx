@@ -250,7 +250,7 @@ export function IscaCapturaForm({
 
   if (mostrarIntro) {
     return (
-      <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-6 px-6 py-16 text-center">
+      <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-6 px-6 py-16">
         {scripts}
         <h1 className="break-words text-2xl font-bold leading-snug text-[#eef1f6]">
           {nomeIsca}
