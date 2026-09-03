@@ -69,6 +69,7 @@ export default async function DashboardPage({
   const [
     metricasHoje,
     metricas,
+    metricasLeadsNovos,
     metricasAnteriores,
     vendasPorCanal,
     vendasPorProduto,
@@ -90,6 +91,13 @@ export default async function DashboardPage({
           apenasDeclaradosNoPeriodo: true,
         }),
     calcularMetricasOrg(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    // "Leads novos" do card tem que ser só quem entrou de verdade no
+    // período — sem o carry-forward de lead de mês anterior que só teve
+    // reunião agora (isso o leadsTrabalhados normal, acima, já cobre pra
+    // quem precisa dele, tipo a Taxa de Agendamento).
+    calcularMetricasOrg(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
+      apenasDeclaradosNoPeriodo: true,
+    }),
     calcularMetricasOrg(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
     calcularVendasPorCanal(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     calcularVendasPorProduto(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
@@ -163,6 +171,7 @@ export default async function DashboardPage({
             metricasAnteriores={metricasAnteriores}
             metas={metas}
             publicoOrg={publicoOrg}
+            leadsNovos={metricasLeadsNovos.leadsTrabalhados}
             acao={
               souAdmin ? (
                 <CopiarResultadoSemanaButton

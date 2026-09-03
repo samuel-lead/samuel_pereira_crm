@@ -186,6 +186,7 @@ export function SecaoPeriodo({
   metas,
   acao,
   publicoOrg = "mentoria",
+  leadsNovos,
 }: {
   titulo: string;
   subtitulo?: string;
@@ -194,9 +195,16 @@ export function SecaoPeriodo({
   metas: MetasConfig;
   acao?: React.ReactNode;
   publicoOrg?: string;
+  // "Leads novos" tem que ser só quem entrou de verdade no período (sem
+  // carry-forward de mês anterior) — diferente de leadsTrabalhados, que
+  // é usado em outro lugar (Taxa de Agendamento) e continua incluindo
+  // lead de período passado que teve reunião agora. Se não vier, cai de
+  // volta pro leadsTrabalhados normal.
+  leadsNovos?: number;
 }) {
   const pisoLeads = metas.piso_leads_dia * metricas.diasUteis;
   const pisoReunioes = metas.piso_reunioes_dia * metricas.diasUteis;
+  const leadsNovosValor = leadsNovos ?? metricas.leadsTrabalhados;
 
   return (
     <section>
@@ -231,9 +239,9 @@ export function SecaoPeriodo({
       <div className="flex flex-wrap divide-x divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
         <CardNumero
           titulo="Leads novos"
-          valor={metricas.leadsTrabalhados}
+          valor={leadsNovosValor}
           meta={pisoLeads}
-          amostraInsuficiente={metricas.leadsTrabalhados < 20}
+          amostraInsuficiente={leadsNovosValor < 20}
           esquema="violeta"
           Icone={IconeAlvo}
         />
