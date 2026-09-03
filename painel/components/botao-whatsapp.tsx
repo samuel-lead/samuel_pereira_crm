@@ -16,9 +16,9 @@ export function BotaoWhatsapp({ telefone }: { telefone: string }) {
         abrirWhatsApp(telefone);
       }}
       title="Chamar no WhatsApp"
-      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-600"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-600"
     >
-      <IconeWhatsapp className="h-3 w-3" />
+      <IconeWhatsapp className="h-4 w-4" />
     </a>
   );
 }

@@ -11,6 +11,7 @@ import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
+import { AvatarUsuario } from "@/components/avatar-usuario";
 import { Reuniao } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
@@ -68,6 +69,7 @@ export function LeadModalConteudo({
     podeEditar,
     podeReivindicar,
     nomeResponsavel,
+    fotoResponsavel,
     nomeSdrOriginal,
     reuniaoAtiva,
     reuniaoAnteriorPendente,
@@ -85,9 +87,12 @@ export function LeadModalConteudo({
         </p>
 
         {(nomeResponsavel || nomeSdrOriginal) && (
-          <div className="flex flex-wrap gap-x-4 gap-y-1 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">
-            <p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">
+            <p className="flex items-center gap-2">
               <span className="text-neutral-500">Responsável atual: </span>
+              {nomeResponsavel && (
+                <AvatarUsuario nome={nomeResponsavel} fotoUrl={fotoResponsavel} tamanho="h-6 w-6 text-xs" />
+              )}
               <span className="font-medium text-neutral-800">
                 {nomeResponsavel ?? "sem responsável"}
               </span>

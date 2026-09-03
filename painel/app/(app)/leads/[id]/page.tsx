@@ -13,6 +13,7 @@ import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
+import { AvatarUsuario } from "@/components/avatar-usuario";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { Reuniao } from "@/lib/terminologia";
 
@@ -159,7 +160,7 @@ export default async function EditarLeadPage({
       .select("id, de_ordem, para_ordem, motivo, automatico, usuario_id, ocorreu_em")
       .eq("lead_id", id)
       .order("ocorreu_em", { ascending: false }),
-    supabase.from("usuarios").select("id, nome, funcao").order("nome"),
+    supabase.from("usuarios").select("id, nome, funcao, foto_url").order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
     supabase
@@ -198,7 +199,9 @@ export default async function EditarLeadPage({
   const podeEditar =
     souAdmin || leadTipado.responsavel_id === user?.id || souCloserAtivo;
   const podeReivindicar = !souAdmin && leadTipado.responsavel_id === null;
-  const nomeResponsavel = usuarios.find((u) => u.id === leadTipado.responsavel_id)?.nome;
+  const usuarioResponsavel = usuarios.find((u) => u.id === leadTipado.responsavel_id);
+  const nomeResponsavel = usuarioResponsavel?.nome;
+  const fotoResponsavel = usuarioResponsavel?.foto_url;
   // SDR original = quem marcou a primeira reunião — depois que a reunião é
   // realizada, o responsável do lead vira o Closer (ver transferir_lead_
   // para_closer), então esse é o único jeito de saber quem foi o SDR.
@@ -229,9 +232,12 @@ export default async function EditarLeadPage({
           </p>
 
           {(nomeResponsavel || nomeSdrOriginal) && (
-            <div className="flex flex-wrap gap-x-4 gap-y-1 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">
-              <p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">
+              <p className="flex items-center gap-2">
                 <span className="text-neutral-500">Responsável atual: </span>
+                {nomeResponsavel && (
+                  <AvatarUsuario nome={nomeResponsavel} fotoUrl={fotoResponsavel} tamanho="h-6 w-6 text-xs" />
+                )}
                 <span className="font-medium text-neutral-800">
                   {nomeResponsavel ?? "sem responsável"}
                 </span>

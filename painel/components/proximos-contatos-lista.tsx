@@ -90,9 +90,9 @@ function Linha({
             href={linkWhatsApp(lead.telefone_e164)}
             onClick={(e) => aoClicarWhatsapp(e, lead.telefone_e164!)}
             title="Chamar no WhatsApp"
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-600"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-600"
           >
-            <IconeWhatsapp className="h-3.5 w-3.5" />
+            <IconeWhatsapp className="h-4 w-4" />
           </a>
         )}
       </div>

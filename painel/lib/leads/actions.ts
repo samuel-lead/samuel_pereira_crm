@@ -1403,7 +1403,7 @@ export type DetalhesLead = {
     usuario_id: string | null;
     ocorreu_em: string;
   }[];
-  usuarios: { id: string; nome: string; funcao: string | null }[];
+  usuarios: { id: string; nome: string; funcao: string | null; foto_url: string | null }[];
   origens: { id: string; nome: string }[];
   produtos: string[];
   souAdmin: boolean;
@@ -1411,6 +1411,7 @@ export type DetalhesLead = {
   podeEditar: boolean;
   podeReivindicar: boolean;
   nomeResponsavel: string | undefined;
+  fotoResponsavel: string | null | undefined;
   nomeSdrOriginal: string | undefined;
   reuniaoAtiva: { id: string; agendada_para: string; closer_id: string | null } | null;
   reuniaoAnteriorPendente: boolean;
@@ -1469,7 +1470,7 @@ export async function buscarDetalhesDoLead(
       .select("id, de_ordem, para_ordem, motivo, automatico, usuario_id, ocorreu_em")
       .eq("lead_id", leadId)
       .order("ocorreu_em", { ascending: false }),
-    supabase.from("usuarios").select("id, nome, funcao").order("nome"),
+    supabase.from("usuarios").select("id, nome, funcao, foto_url").order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
     supabase
@@ -1498,7 +1499,9 @@ export async function buscarDetalhesDoLead(
   );
   const podeEditar = souAdmin || lead.responsavel_id === usuario.id || souCloser;
   const podeReivindicar = !souAdmin && lead.responsavel_id === null;
-  const nomeResponsavel = usuarios.find((u) => u.id === lead.responsavel_id)?.nome;
+  const usuarioResponsavel = usuarios.find((u) => u.id === lead.responsavel_id);
+  const nomeResponsavel = usuarioResponsavel?.nome;
+  const fotoResponsavel = usuarioResponsavel?.foto_url;
   const sdrOriginalId = reunioes.length
     ? [...reunioes].sort(
         (a, b) => new Date(a.marcada_em).getTime() - new Date(b.marcada_em).getTime()
@@ -1523,6 +1526,7 @@ export async function buscarDetalhesDoLead(
       podeEditar,
       podeReivindicar,
       nomeResponsavel,
+      fotoResponsavel,
       nomeSdrOriginal,
       reuniaoAtiva,
       reuniaoAnteriorPendente,
