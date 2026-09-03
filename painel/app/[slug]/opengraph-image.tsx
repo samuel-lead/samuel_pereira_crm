@@ -18,13 +18,16 @@ export default async function Image({
   const supabase = await createClient();
   const { data: isca } = await supabase
     .from("iscas")
-    .select("nome")
+    .select("nome, material_url")
     .eq("slug", slug)
     .eq("ativo", true)
     .is("arquivado_em", null)
     .maybeSingle();
 
   const nome = isca?.nome ?? "Meu Vendedor";
+  const subtitulo = isca?.material_url
+    ? "Preenche seus dados pra liberar o acesso"
+    : "Preenche seus dados pra nossa equipe entrar em contato";
 
   return new ImageResponse(
     (
@@ -62,7 +65,7 @@ export default async function Image({
           {nome}
         </div>
         <div style={{ fontSize: 30, color: "#8b93a1", marginTop: 28, display: "flex" }}>
-          Preenche seus dados pra liberar o acesso
+          {subtitulo}
         </div>
       </div>
     ),

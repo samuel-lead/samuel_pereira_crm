@@ -28,7 +28,7 @@ export async function generateMetadata({
   const supabase = await createClient();
   const { data: isca } = await supabase
     .from("iscas")
-    .select("nome")
+    .select("nome, material_url")
     .eq("slug", slug)
     .eq("ativo", true)
     .is("arquivado_em", null)
@@ -36,7 +36,9 @@ export async function generateMetadata({
 
   if (!isca) return { title: "Meu Vendedor" };
 
-  const descricao = "Preenche seus dados pra liberar o acesso — leva menos de 2 minutos.";
+  const descricao = isca.material_url
+    ? "Preenche seus dados pra liberar o acesso — leva menos de 2 minutos."
+    : "Preenche seus dados pra nossa equipe entrar em contato — leva menos de 2 minutos.";
   return {
     title: isca.nome,
     description: descricao,
