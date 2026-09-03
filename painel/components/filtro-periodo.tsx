@@ -8,8 +8,9 @@ import { MenuSelect } from "@/components/menu-select";
 const OPCOES = [
   { valor: "hoje", label: "Hoje" },
   { valor: "ontem", label: "Ontem" },
-  { valor: "semana", label: "Semana" },
-  { valor: "mes", label: "Mês" },
+  { valor: "semana", label: "Semana atual" },
+  { valor: "semana_passada", label: "Semana passada" },
+  { valor: "mes", label: "Mês atual" },
   { valor: "mes_passado", label: "Mês passado" },
   { valor: "ultimos_3_meses", label: "Últimos 3 meses" },
 ] as const;

@@ -9,6 +9,7 @@ export type ChavePeriodo =
   | "hoje"
   | "ontem"
   | "semana"
+  | "semana_passada"
   | "mes"
   | "mes_passado"
   | "ultimos_3_meses"
@@ -109,6 +110,17 @@ export function resolverPeriodo(
       subtitulo: `${formatarDataCurta(inicio)} a ${formatarDataCurta(new Date(inicio.getTime() + 6 * UM_DIA_MS))}`,
       inicio,
       fim: amanha,
+    };
+  }
+  if (periodo === "semana_passada") {
+    const inicioSemanaAtual = inicioDaSemana(agora);
+    const inicio = new Date(inicioSemanaAtual.getTime() - 7 * UM_DIA_MS);
+    return {
+      chave: "semana_passada",
+      titulo: "Semana passada",
+      subtitulo: `${formatarDataCurta(inicio)} a ${formatarDataCurta(new Date(inicio.getTime() + 6 * UM_DIA_MS))}`,
+      inicio,
+      fim: inicioSemanaAtual,
     };
   }
   if (periodo === "mes") {
