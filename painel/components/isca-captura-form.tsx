@@ -328,8 +328,7 @@ export function IscaCapturaForm({
             nossa metodologia.
           </p>
           <p className="text-base text-[#c4cad3]">
-            <strong className="font-bold text-[#eef1f6]">Nossa equipe</strong>{" "}
-            vai entrar em contato com você{" "}
+            Nossa equipe vai entrar em contato com você{" "}
             <span className="underline decoration-2 underline-offset-4">
               por ligação e WhatsApp
             </span>
