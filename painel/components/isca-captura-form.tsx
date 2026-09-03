@@ -294,8 +294,7 @@ export function IscaCapturaForm({
           {scripts}
           <p className="text-lg text-[#c4cad3]">Obrigado, seu cadastro foi concluído.</p>
           <p className="text-2xl font-bold leading-tight text-[#eef1f6]">
-            Clique no link abaixo ou clique no botão abaixo para acessar
-            o seu material.
+            Clique no botão abaixo para acessar o seu material.
           </p>
           <p className="text-3xl">👇</p>
           <a
