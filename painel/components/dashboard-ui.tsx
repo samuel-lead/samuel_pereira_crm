@@ -8,7 +8,7 @@ import {
   IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Reunioes, Calls, reuniao } from "@/lib/terminologia";
+import { Reunioes, Calls } from "@/lib/terminologia";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -212,11 +212,12 @@ export function SecaoPeriodo({
   const pisoLeads = metas.piso_leads_dia * metricas.diasUteis;
   const pisoReunioes = metas.piso_reunioes_dia * metricas.diasUteis;
   const leadsNovosValor = leadsNovos ?? metricas.leadsTrabalhados;
-  // Segunda leitura da mesma taxa, olhando só quem entrou nesse período —
-  // sem o carry-forward de lead antigo. As duas ficam lado a lado de
-  // propósito, pra dar pra comparar.
+  // Segunda leitura da mesma taxa, olhando só reunião de lead que TAMBÉM
+  // entrou nesse período (não é toda reunião marcada — isso incluiria
+  // reunião de lead antigo em cima do denominador de lead novo, o que
+  // não faz sentido).
   const taxaAgendamentoLeadsNovos =
-    leadsNovosValor > 0 ? metricas.reunioesMarcadas / leadsNovosValor : null;
+    leadsNovosValor > 0 ? metricas.reunioesMarcadasLeadNovo / leadsNovosValor : null;
 
   return (
     <section>
@@ -335,16 +336,16 @@ export function SecaoPeriodo({
           Taxas
         </p>
         <BarraTaxa
-          nome="Agendamento"
-          valor={metricas.taxaAgendamento}
-          minimo={metas.taxa_agendamento_min}
-          detalhe={`${metricas.reunioesMarcadas} ${Reunioes(publicoOrg).toLowerCase()} marcadas ÷ ${metricas.leadsTrabalhados} leads trabalhados (inclui lead de período anterior que teve ${reuniao(publicoOrg)} agora)`}
-        />
-        <BarraTaxa
           nome="Agendamento (só leads novos)"
           valor={taxaAgendamentoLeadsNovos}
           minimo={metas.taxa_agendamento_min}
-          detalhe={`${metricas.reunioesMarcadas} ${Reunioes(publicoOrg).toLowerCase()} marcadas ÷ ${leadsNovosValor} leads novos (só quem entrou nesse período)`}
+          detalhe={`${metricas.reunioesMarcadasLeadNovo} de ${leadsNovosValor} leads novos, este mês.`}
+        />
+        <BarraTaxa
+          nome="Agendamento (leads novos e antigos)"
+          valor={metricas.taxaAgendamento}
+          minimo={metas.taxa_agendamento_min}
+          detalhe={`${metricas.reunioesMarcadas} de ${metricas.leadsTrabalhados} trabalhados este mês, incluindo lead do período anterior e que chegou nesse mês.`}
         />
         <BarraTaxa
           nome="Comparecimento"

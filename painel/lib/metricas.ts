@@ -11,6 +11,11 @@ export type Metricas = {
   leadsTrabalhados: number;
   ligacoes: number;
   reunioesMarcadas: number;
+  // Das reuniões marcadas no período, quantas são de lead que TAMBÉM
+  // entrou nesse mesmo período (não é lead antigo com reunião nova) —
+  // usada pra taxa de agendamento "só leads novos" não misturar reunião
+  // de lead velho em cima do denominador de lead novo.
+  reunioesMarcadasLeadNovo: number;
   reunioesReagendadas: number;
   reunioesRealizadas: number;
   reunioesComPitch: number;
@@ -74,6 +79,7 @@ export async function calcularMetricas(
     { count: ligacoes },
     { data: reunioesDoPeriodo },
     { count: reunioesMarcadasNovas },
+    { count: reunioesMarcadasLeadNovo },
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesDevidas },
@@ -135,6 +141,18 @@ export async function calcularMetricas(
       .is("leads.arquivado_em", null)
       .gte("marcada_em", inicioISO)
       .lt("marcada_em", fimISO),
+    // Mesma coisa, mas só as reuniões cujo LEAD também entrou nesse
+    // período — mesmo motivo da versão de org (ver calcularMetricasOrg).
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em, declarado_em)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
+      .eq("reagendada", false)
+      .is("leads.arquivado_em", null)
+      .gte("marcada_em", inicioISO)
+      .lt("marcada_em", fimISO)
+      .gte("leads.declarado_em", inicioISO)
+      .lt("leads.declarado_em", fimISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -234,6 +252,7 @@ export async function calcularMetricas(
     leadsTrabalhados: leads,
     ligacoes: ligacoes ?? 0,
     reunioesMarcadas: marcadas,
+    reunioesMarcadasLeadNovo: reunioesMarcadasLeadNovo ?? 0,
     reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
     reunioesComPitch: comPitch,
@@ -272,6 +291,7 @@ export async function calcularMetricasOrg(
     { count: ligacoes },
     { data: reunioesDoPeriodo },
     { count: reunioesMarcadasNovas },
+    { count: reunioesMarcadasLeadNovo },
     { count: reunioesReagendadas },
     { count: reunioesRealizadas },
     { count: reunioesDevidas },
@@ -316,6 +336,19 @@ export async function calcularMetricasOrg(
       .is("leads.arquivado_em", null)
       .gte("marcada_em", inicioISO)
       .lt("marcada_em", fimISO),
+    // Mesma coisa, mas só as reuniões cujo LEAD também entrou nesse
+    // período — pra taxa de agendamento "só leads novos" não contar
+    // reunião de lead antigo em cima do denominador de lead novo.
+    supabase
+      .from("reunioes")
+      .select("id, leads!inner(arquivado_em, declarado_em)", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("reagendada", false)
+      .is("leads.arquivado_em", null)
+      .gte("marcada_em", inicioISO)
+      .lt("marcada_em", fimISO)
+      .gte("leads.declarado_em", inicioISO)
+      .lt("leads.declarado_em", fimISO),
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -407,6 +440,7 @@ export async function calcularMetricasOrg(
     leadsTrabalhados: leads,
     ligacoes: ligacoes ?? 0,
     reunioesMarcadas: marcadas,
+    reunioesMarcadasLeadNovo: reunioesMarcadasLeadNovo ?? 0,
     reunioesReagendadas: reunioesReagendadas ?? 0,
     reunioesRealizadas: realizadas,
     reunioesComPitch: comPitch,
