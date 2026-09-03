@@ -321,12 +321,19 @@ export function IscaCapturaForm({
 
     if (instagramUrl) {
       return (
-        <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16 text-center">
+        <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center space-y-4 px-6 py-16">
           {scripts}
-          <p className="text-3xl font-extrabold uppercase leading-tight text-[#eef1f6]">
+          <p className="text-2xl font-extrabold uppercase leading-tight text-[#eef1f6]">
             Obrigado! Recebemos o seu cadastro para conhecer mais sobre a
-            nossa metodologia. Nossa equipe vai entrar em contato com você
-            por ligação e WhatsApp. Fique atento.
+            nossa metodologia.
+          </p>
+          <p className="text-base text-[#c4cad3]">
+            <strong className="font-bold text-[#eef1f6]">Nossa equipe</strong>{" "}
+            vai entrar em contato com você{" "}
+            <span className="underline decoration-2 underline-offset-4">
+              por ligação e WhatsApp
+            </span>
+            . Fique atento.
           </p>
           <a
             href={instagramUrl}
