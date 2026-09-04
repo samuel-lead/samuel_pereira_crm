@@ -287,6 +287,24 @@ export default async function LeadsPage({
     leadsPorNivel[lead.nivel_ordem] = lista;
   }
 
+  // Só em Novos Leads (ordem 0): quem já veio filtrado de uma isca fica
+  // por hierarquia de qualificação — super qualificado primeiro, depois
+  // qualificado, depois desqualificado. Quem não respondeu isca nenhuma
+  // fica por último. .sort é estável, então dentro de cada faixa mantém
+  // a ordem por data de entrada que já veio antes.
+  const RANK_QUALIFICACAO_NOVOS_LEADS: Record<string, number> = {
+    super_qualificado: 0,
+    qualificado: 1,
+    desqualificado: 2,
+  };
+  if (leadsPorNivel[0]) {
+    leadsPorNivel[0] = [...leadsPorNivel[0]].sort(
+      (a, b) =>
+        (RANK_QUALIFICACAO_NOVOS_LEADS[a.nivelQualificacao ?? ""] ?? 3) -
+        (RANK_QUALIFICACAO_NOVOS_LEADS[b.nivelQualificacao ?? ""] ?? 3)
+    );
+  }
+
   // Leads com próximo contato marcado — modo à parte do Kanban por nível:
   // troca as colunas por uma lista só, dividida em "hoje" e "futuros", pra
   // planejar o dia sem precisar procurar coluna por coluna.
