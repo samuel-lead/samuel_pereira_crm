@@ -4,7 +4,15 @@
 // (ex.: Portugal +351) passa direto, sem o Brasil "grudado" na frente —
 // antes isso quebrava o link pra qualquer lead de fora do Brasil.
 function digitosWhatsApp(telefone: string) {
-  const digitos = telefone.replace(/\D/g, "");
+  let digitos = telefone.replace(/\D/g, "");
+
+  // "0" sobrando na frente do DDD — erro comum de digitação (prefixo
+  // interurbano antigo, tipo "0" + DDD + número). Sem tirar isso, um
+  // número de 11 dígitos (DDD + 9) vira 12 e parece um número
+  // internacional, quebrando o link (foi o caso do Guthierre).
+  if (digitos.startsWith("0") && (digitos.length === 11 || digitos.length === 12)) {
+    digitos = digitos.slice(1);
+  }
 
   // Já vem com o 55 na frente (DDD + 8 ou 9 dígitos) — usa como está.
   if (digitos.startsWith("55") && (digitos.length === 12 || digitos.length === 13)) {
