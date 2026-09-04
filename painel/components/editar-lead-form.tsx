@@ -319,6 +319,7 @@ export function EditarLeadForm({
               usuarios={usuarios}
               valorInicial={lead.responsavel_id}
               funcaoFiltro="sdr"
+              permiteVazio
             />
           ) : (
             <p className={`${campoClasse} bg-neutral-50 text-neutral-600`}>
