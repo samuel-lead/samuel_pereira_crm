@@ -505,9 +505,10 @@ export function KanbanBoard({
                               href={linkWhatsApp(lead.telefone_e164)}
                               onClick={(e) => aoClicarWhatsapp(e, lead.telefone_e164!)}
                               title="Chamar no WhatsApp"
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-600"
+                              className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2 text-white shadow-[0_3px_8px_rgba(37,211,102,0.4)] transition hover:bg-[#20bd5a]"
                             >
                               <IconeWhatsapp className="h-4 w-4" />
+                              <span className="text-[13px] font-medium">WhatsApp</span>
                             </a>
                           )}
                         </div>
