@@ -62,7 +62,7 @@ function BotaoReativar({
           e.stopPropagation();
           setAberto(true);
         }}
-        className="mt-2.5 w-full border-t border-neutral-100 pt-2 text-center text-xs font-medium text-neutral-500 transition hover:text-neutral-700"
+        className="mt-2.5 w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 text-center text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-800"
       >
         ↩ Reativar
       </button>
@@ -73,7 +73,7 @@ function BotaoReativar({
     <form
       onClick={(e) => e.stopPropagation()}
       onSubmit={aoConfirmar}
-      className="mt-2.5 space-y-2 border-t border-neutral-100 pt-2"
+      className="mt-2.5 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3"
     >
       <MenuSelect
         name="nivel_ordem"
