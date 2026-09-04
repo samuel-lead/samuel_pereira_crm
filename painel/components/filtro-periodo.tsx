@@ -58,15 +58,19 @@ export function FiltroPeriodo({
     return params;
   }
 
+  function hrefDoAtalho(valor: string) {
+    const params = comOutrosParams(new URLSearchParams());
+    params.set("periodo", valor);
+    return `${baseHref}?${params.toString()}`;
+  }
+
   // scroll: false — trocar o período é só um filtro na mesma tela, não
   // faz sentido voltar pro topo da página (comportamento padrão do
   // Next.js), principalmente com o filtro grudado (sticky) no topo.
   function irPara(valor: string) {
     setMostrarCustom(false);
     setMes("");
-    const params = comOutrosParams(new URLSearchParams());
-    params.set("periodo", valor);
-    router.push(`${baseHref}?${params.toString()}`, { scroll: false });
+    router.push(hrefDoAtalho(valor), { scroll: false });
   }
 
   function irParaMesEspecifico(anoEscolhido: number, mesEscolhido: string) {
@@ -93,6 +97,9 @@ export function FiltroPeriodo({
             key={opcao.valor}
             type="button"
             onClick={() => irPara(opcao.valor)}
+            onMouseEnter={() => router.prefetch(hrefDoAtalho(opcao.valor))}
+            onFocus={() => router.prefetch(hrefDoAtalho(opcao.valor))}
+            onTouchStart={() => router.prefetch(hrefDoAtalho(opcao.valor))}
             className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
               periodoAtual === opcao.valor
                 ? "bg-blue-600 text-white shadow-sm"
