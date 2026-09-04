@@ -138,7 +138,7 @@ async function sincronizarReuniao(
     // normal exige (Samuel pediu essa distinção explicitamente).
     querFutura?: boolean;
   }
-): Promise<string | null> {
+): Promise<{ erro: string | null; transferirParaCloserId?: string | null }> {
   const {
     orgId,
     usuarioId,
@@ -167,7 +167,9 @@ async function sincronizarReuniao(
     paraOrdem !== NIVEL_FOLLOW_POS_REUNIAO &&
     paraOrdem !== NIVEL_REUNIAO_FEITA
   ) {
-    return `Não dá pra sair de "${Reuniao(publicoOrg)} marcada" direto pra esse nível — a ${reuniao(publicoOrg)} ficaria perdida no sistema. Se ela não aconteceu, mova pra "No-show" ou "Precisa reagendar"; se aconteceu, mova pra "Follow após reunião" ou "Oportunidades".`;
+    return {
+      erro: `Não dá pra sair de "${Reuniao(publicoOrg)} marcada" direto pra esse nível — a ${reuniao(publicoOrg)} ficaria perdida no sistema. Se ela não aconteceu, mova pra "No-show" ou "Precisa reagendar"; se aconteceu, mova pra "Follow após reunião" ou "Oportunidades".`,
+    };
   }
 
   // Trava 2: não dá pra pular direto pra Follow/Oportunidades sem o lead
@@ -189,25 +191,27 @@ async function sincronizarReuniao(
       .eq("lead_id", leadId);
 
     if (!totalReunioes) {
-      return `Esse lead nunca teve uma ${reuniao(publicoOrg)} registrada — não dá pra pular direto pra esse nível. Marque a ${reuniao(publicoOrg)} primeiro.`;
+      return {
+        erro: `Esse lead nunca teve uma ${reuniao(publicoOrg)} registrada — não dá pra pular direto pra esse nível. Marque a ${reuniao(publicoOrg)} primeiro.`,
+      };
     }
   }
 
   if (paraOrdem === NIVEL_REUNIAO_MARCADA && deOrdem !== NIVEL_REUNIAO_MARCADA) {
     if (!agendadaPara) {
-      return `Informe a data e hora da ${reuniao(publicoOrg)}.`;
+      return { erro: `Informe a data e hora da ${reuniao(publicoOrg)}.` };
     }
 
     const data = parseDataHoraLocal(agendadaPara);
     if (Number.isNaN(data.getTime())) {
-      return `Data da ${reuniao(publicoOrg)} inválida.`;
+      return { erro: `Data da ${reuniao(publicoOrg)} inválida.` };
     }
 
     let dataMarcada = new Date();
     if (marcadaEm) {
       const parsed = parseDataHoraLocal(marcadaEm);
       if (Number.isNaN(parsed.getTime())) {
-        return "Data de agendamento inválida.";
+        return { erro: "Data de agendamento inválida." };
       }
       dataMarcada = parsed;
     }
@@ -228,7 +232,9 @@ async function sincronizarReuniao(
 
     if (reunioesPendentes && reunioesPendentes.length > 0) {
       if (reuniaoAnteriorSumiu === undefined) {
-        return `Antes de marcar essa nova ${reuniao(publicoOrg)}, confirme: na ${reuniao(publicoOrg)} anterior (que já passou da data), a pessoa sumiu sem avisar ou avisou antes que precisava remarcar?`;
+        return {
+          erro: `Antes de marcar essa nova ${reuniao(publicoOrg)}, confirme: na ${reuniao(publicoOrg)} anterior (que já passou da data), a pessoa sumiu sem avisar ou avisou antes que precisava remarcar?`,
+        };
       }
 
       const { error: erroAnterior } = await supabase
@@ -238,7 +244,7 @@ async function sincronizarReuniao(
           "id",
           reunioesPendentes.map((r) => r.id)
         );
-      if (erroAnterior) return erroAnterior.message;
+      if (erroAnterior) return { erro: erroAnterior.message };
     }
 
     // Se o lead já teve alguma reunião antes, essa aqui é um reagendamento
@@ -260,8 +266,8 @@ async function sincronizarReuniao(
       reagendada: !!reunioesAnteriores && reunioesAnteriores > 0,
     });
 
-    if (error) return error.message;
-    return null;
+    if (error) return { erro: error.message };
+    return { erro: null };
   }
 
   if (
@@ -297,32 +303,38 @@ async function sincronizarReuniao(
       // ainda não chegou — foi o que aconteceu com o Jardel Alves (data
       // errada, 31/08, marcada como realizada antes mesmo de chegar lá).
       if (novoStatus === "realizada" && new Date(reuniaoAtiva.agendada_para) > new Date()) {
-        return `Essa ${reuniao(publicoOrg)} está marcada pra uma data que ainda não chegou (${new Date(
-          reuniaoAtiva.agendada_para
-        ).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}) — confira se a data está certa antes de marcar como realizada.`;
+        return {
+          erro: `Essa ${reuniao(publicoOrg)} está marcada pra uma data que ainda não chegou (${new Date(
+            reuniaoAtiva.agendada_para
+          ).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}) — confira se a data está certa antes de marcar como realizada.`,
+        };
       }
 
       const { error } = await supabase
         .from("reunioes")
         .update({ status: novoStatus })
         .eq("id", reuniaoAtiva.id);
-      if (error) return error.message;
+      if (error) return { erro: error.message };
 
       // Reunião realizada de verdade (foi pra Follow ou já virou
       // Oportunidade E a reunião de fato aconteceu): o lead passa a ser
-      // 100% do Closer que fez a call.
+      // 100% do Closer que fez a call. A transferência em si só acontece
+      // DEPOIS que quem chamou essa função já salvou tudo que precisava
+      // salvar como o dono atual do lead (nivel_ordem, histórico) — se
+      // ela rodasse aqui, o responsavel_id mudava no meio do caminho e o
+      // resto das escritas (feitas pela pessoa que ainda não é a dona
+      // nova) era barrado pela política de segurança do banco, sem erro
+      // nenhum aparecer pra avisar (foi o que aconteceu com um lead do
+      // Rafael Torres — reunião marcada como realizada, mas o card nunca
+      // saiu de "Reunião marcada").
       if (novoStatus === "realizada" && reuniaoAtiva.closer_id) {
-        const { error: erroTransferencia } = await supabase.rpc(
-          "transferir_lead_para_closer",
-          { p_lead_id: leadId, p_closer_id: reuniaoAtiva.closer_id }
-        );
-        if (erroTransferencia) return erroTransferencia.message;
+        return { erro: null, transferirParaCloserId: reuniaoAtiva.closer_id };
       }
     }
-    return null;
+    return { erro: null };
   }
 
-  return null;
+  return { erro: null };
 }
 
 export async function criarLead(
@@ -543,14 +555,6 @@ export async function atualizarLead(
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
 
-  // Reunião marcada → Oportunidades: o responsável pode ter sido trocado
-  // pro Closer automaticamente (ver sincronizarReuniao). Não sobrescreve
-  // com o valor antigo do formulário nesse caso específico.
-  const transferenciaParaCloser =
-    nivelMudou &&
-    leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA &&
-    novoNivel === NIVEL_REUNIAO_FEITA;
-
   // Nenhuma reunião pode ser marcada sem os 3 critérios de qualificação
   // preenchidos (regra do CLAUDE.md) — checa só quando o lead está
   // entrando em "Reunião marcada" agora, não em quem já estava lá.
@@ -640,8 +644,9 @@ export async function atualizarLead(
 
   const motivoBase = novoNivel === NIVEL_BASE ? motivoBaseForm ?? leadAtual.motivo_base : null;
 
+  let transferirParaCloserId: string | null | undefined;
   if (nivelMudou) {
-    const erroReuniao = await sincronizarReuniao(supabase, {
+    const resultadoSincronizacao = await sincronizarReuniao(supabase, {
       orgId: usuario.org_id,
       usuarioId: usuario.id,
       leadId,
@@ -660,9 +665,10 @@ export async function atualizarLead(
       publicoOrg: usuario.publico_org,
       querFutura: oportunidadeFutura,
     });
-    if (erroReuniao) {
-      return { erro: erroReuniao };
+    if (resultadoSincronizacao.erro) {
+      return { erro: resultadoSincronizacao.erro };
     }
+    transferirParaCloserId = resultadoSincronizacao.transferirParaCloserId;
   } else if (novoNivel === NIVEL_REUNIAO_MARCADA && leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA) {
     // Lead já estava em "Reunião marcada" (não mudou de nível agora) —
     // o campo de Closer só aparece na hora da transição por padrão, então
@@ -692,7 +698,10 @@ export async function atualizarLead(
       nivel_ordem: novoNivel,
       oportunidade_futura: oportunidadeFutura,
       motivo_base: motivoBase,
-      ...(transferenciaParaCloser ? {} : { responsavel_id: responsavelId }),
+      // Quando a reunião realizada tem Closer definido, o responsável
+      // final é transferido depois (ver bloco após o histórico) — não
+      // sobrescreve aqui com o valor antigo do formulário.
+      ...(transferirParaCloserId ? {} : { responsavel_id: responsavelId }),
       // Mover de nível cumpre o lembrete de "próximo contato" — sem isso,
       // continuava marcado como atrasado mesmo com o lead já andando.
       ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString(), proximo_follow_em: null } : {}),
@@ -736,6 +745,19 @@ export async function atualizarLead(
 
     if (erroHistorico) {
       return { erro: erroHistorico.message };
+    }
+  }
+
+  // Só transfere o lead pro Closer por último, depois de já ter salvo
+  // tudo que precisava salvar como o dono atual — ver comentário em
+  // sincronizarReuniao sobre por que a ordem importa.
+  if (transferirParaCloserId) {
+    const { error: erroTransferencia } = await supabase.rpc("transferir_lead_para_closer", {
+      p_lead_id: leadId,
+      p_closer_id: transferirParaCloserId,
+    });
+    if (erroTransferencia) {
+      return { erro: erroTransferencia.message };
     }
   }
 
@@ -803,7 +825,7 @@ export async function moverLeadNivel(
     return `Só dá pra marcar "${nomeNivel}" a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`;
   }
 
-  const erroReuniao = await sincronizarReuniao(supabase, {
+  const { erro: erroReuniao, transferirParaCloserId } = await sincronizarReuniao(supabase, {
     orgId: usuario.org_id,
     usuarioId: usuario.id,
     leadId,
@@ -845,6 +867,19 @@ export async function moverLeadNivel(
 
   if (erroHistorico) {
     return erroHistorico.message;
+  }
+
+  // Só transfere o lead pro Closer por último, depois de já ter salvo
+  // tudo que precisava salvar como o dono atual — ver comentário em
+  // sincronizarReuniao sobre por que a ordem importa.
+  if (transferirParaCloserId) {
+    const { error: erroTransferencia } = await supabase.rpc("transferir_lead_para_closer", {
+      p_lead_id: leadId,
+      p_closer_id: transferirParaCloserId,
+    });
+    if (erroTransferencia) {
+      return erroTransferencia.message;
+    }
   }
 
   revalidatePath("/leads");
