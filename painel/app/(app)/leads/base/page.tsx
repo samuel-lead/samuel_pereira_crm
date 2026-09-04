@@ -4,6 +4,7 @@ import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { BuscaLeads } from "@/components/busca-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 import { removerAcento } from "@/lib/texto";
+import { NIVEIS_REATIVACAO } from "@/lib/niveis";
 
 type LeadComHistorico = LeadBase & {
   criterio_problema: string | null;
@@ -11,6 +12,7 @@ type LeadComHistorico = LeadBase & {
   criterio_capacidade: string;
   proposta_enviada_em: string | null;
   motivo_base: string | null;
+  motivo_base_detalhe: string | null;
 };
 
 // Motivo já vem escolhido na hora de mover o lead pra Base (ver
@@ -47,7 +49,7 @@ export default async function BasePage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, instagram, foto_url, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor, motivo_base"
+      "id, nome, telefone_e164, instagram, foto_url, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor, motivo_base, motivo_base_detalhe"
     )
     .eq("nivel_ordem", 9)
     .neq("status", "vendido")
@@ -58,10 +60,12 @@ export default async function BasePage({
     consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
 
-  const [{ data: leadsData }, { data: usuariosData }] = await Promise.all([
+  const [{ data: leadsData }, { data: usuariosData }, { data: niveisData }] = await Promise.all([
     consulta,
     supabase.from("usuarios").select("id, nome, foto_url"),
+    supabase.from("niveis").select("ordem, nome").in("ordem", NIVEIS_REATIVACAO).order("ordem"),
   ]);
+  const niveisReativacao = niveisData ?? [];
 
   const leads = (leadsData ?? []) as LeadComHistorico[];
   const leadIds = leads.map((l) => l.id);
@@ -86,6 +90,7 @@ export default async function BasePage({
   const fotoPorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.foto_url]));
 
   const leadsPorMotivo: Record<MotivoBase, LeadBase[]> = {
+    desqualificado: [],
     nao_reagendados: [],
     proposta_nao_comprou: [],
     nao_iniciou_conversa: [],
@@ -116,6 +121,7 @@ export default async function BasePage({
           leadsPorMotivo={leadsPorMotivo}
           nomePorUsuario={nomePorUsuario}
           fotoPorUsuario={fotoPorUsuario}
+          niveisReativacao={niveisReativacao}
         />
       </main>
     </>

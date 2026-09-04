@@ -23,6 +23,7 @@ const MOTIVOS_BASE = [
   { valor: "iniciou_sem_interesse", nome: "Iniciei conversa e não teve interesse" },
   { valor: "nao_reagendados", nome: "Não reagendados" },
   { valor: "proposta_nao_comprou", nome: "Fiz proposta e não comprou" },
+  { valor: "desqualificado", nome: "Desqualificado (sem perfil pro momento)" },
 ] as const;
 
 function agoraParaInputLocal() {
@@ -52,6 +53,7 @@ type Lead = {
   responsavel_id: string | null;
   oportunidade_futura: boolean;
   motivo_base: string | null;
+  motivo_base_detalhe: string | null;
   status: string;
 };
 
@@ -134,6 +136,7 @@ export function EditarLeadForm({
   const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
   const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
+  const [motivoBaseSelecionado, setMotivoBaseSelecionado] = useState(lead.motivo_base ?? "");
 
   // "Oportunidades futuras" não é um nível de verdade no banco — é o nível
   // 7 (Leads para fim do mês) + essa marcação. Mas o SDR quer escolher ela
@@ -562,16 +565,34 @@ export function EditarLeadForm({
               <label className="text-sm font-medium text-neutral-700" htmlFor="motivo_base">
                 Por que esse lead está indo pra Base?
               </label>
+              <input type="hidden" name="motivo_base" value={motivoBaseSelecionado} />
               <MenuSelect
                 id="motivo_base"
-                name="motivo_base"
-                defaultValue={lead.motivo_base ?? ""}
+                value={motivoBaseSelecionado}
+                onChange={setMotivoBaseSelecionado}
                 placeholder="Selecione o motivo..."
                 options={MOTIVOS_BASE.map((motivo) => ({
                   value: motivo.valor,
                   label: motivo.nome,
                 }))}
               />
+
+              {motivoBaseSelecionado === "desqualificado" && (
+                <div className="space-y-1 pt-1">
+                  <label className="text-xs font-medium text-neutral-700" htmlFor="motivo_base_detalhe">
+                    Por que esse lead está desqualificado? Descreva o perfil dele.
+                  </label>
+                  <textarea
+                    id="motivo_base_detalhe"
+                    name="motivo_base_detalhe"
+                    required
+                    rows={3}
+                    defaultValue={lead.motivo_base_detalhe ?? ""}
+                    placeholder="Ex.: não tem equipe de vendas hoje, só corretor autônomo — não é o perfil da mentoria agora."
+                    className={campoClasse}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

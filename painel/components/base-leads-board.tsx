@@ -1,13 +1,55 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { IconeWhatsapp, IconeInstagram } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
+import { MenuSelect } from "@/components/menu-select";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
 import { formatarTelefone, handleInstagram, linkInstagram } from "@/lib/texto";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
+import { reativarLead } from "@/lib/leads/actions";
+
+// Botão pra tirar o lead da Base sem abrir o card inteiro — escolhe pra
+// qual nível de Pré-vendas ele volta e já move na hora. Fica só com os
+// níveis "limpos" (sem reunião nenhuma pendente pra resolver primeiro),
+// que é o que a função reativarLead aceita no servidor.
+function BotaoReativar({
+  leadId,
+  niveisReativacao,
+}: {
+  leadId: string;
+  niveisReativacao: { ordem: number; nome: string }[];
+}) {
+  const [pendente, iniciarTransicao] = useTransition();
+  const [erro, setErro] = useState<string | null>(null);
+
+  function aoEscolher(valor: string) {
+    if (!valor) return;
+    setErro(null);
+    iniciarTransicao(() => {
+      reativarLead(leadId, Number(valor)).then(setErro);
+    });
+  }
+
+  if (niveisReativacao.length === 0) return null;
+
+  return (
+    <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
+      <MenuSelect
+        variante="pilula"
+        titulo="Reativar pra Pré-vendas"
+        placeholder="↩ Reativar..."
+        disabled={pendente}
+        value=""
+        onChange={aoEscolher}
+        options={niveisReativacao.map((n) => ({ value: String(n.ordem), label: n.nome }))}
+      />
+      {erro && <p className="mt-1 text-[11px] text-red-600">{erro}</p>}
+    </div>
+  );
+}
 
 export type LeadBase = {
   id: string;
@@ -19,9 +61,11 @@ export type LeadBase = {
   responsavel_id: string | null;
   entrou_nivel_em: string;
   proposta_valor: number | null;
+  motivo_base_detalhe?: string | null;
 };
 
 export type MotivoBase =
+  | "desqualificado"
   | "nao_reagendados"
   | "proposta_nao_comprou"
   | "nao_iniciou_conversa"
@@ -29,6 +73,11 @@ export type MotivoBase =
   | "iniciou_sem_interesse";
 
 const COLUNAS: { chave: MotivoBase; nome: string; cor: { header: string; borda: string; badge: string } }[] = [
+  {
+    chave: "desqualificado",
+    nome: "Desqualificado",
+    cor: { header: "bg-rose-50", borda: "border-rose-200", badge: "bg-rose-200 text-rose-700" },
+  },
   {
     chave: "nao_iniciou_conversa",
     nome: "Não consegui iniciar conversa",
@@ -68,10 +117,12 @@ export function BaseLeadsBoard({
   leadsPorMotivo,
   nomePorUsuario,
   fotoPorUsuario,
+  niveisReativacao,
 }: {
   leadsPorMotivo: Record<MotivoBase, LeadBase[]>;
   nomePorUsuario: Map<string, string>;
   fotoPorUsuario?: Map<string, string | null>;
+  niveisReativacao: { ordem: number; nome: string }[];
 }) {
   const abrirLead = useAbrirLeadModal();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -170,6 +221,11 @@ export function BaseLeadsBoard({
                           Na base há {diasNaBase(lead.entrou_nivel_em)} dia
                           {diasNaBase(lead.entrou_nivel_em) === 1 ? "" : "s"}
                         </p>
+                        {lead.motivo_base_detalhe && (
+                          <p className="mt-1 rounded-md bg-rose-50 px-2 py-1 text-xs text-rose-700">
+                            {lead.motivo_base_detalhe}
+                          </p>
+                        )}
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
                           {lead.origem && (
                             <span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">
@@ -213,6 +269,7 @@ export function BaseLeadsBoard({
                             </a>
                           )}
                         </div>
+                        <BotaoReativar leadId={lead.id} niveisReativacao={niveisReativacao} />
                       </div>
                     </div>
                   </div>

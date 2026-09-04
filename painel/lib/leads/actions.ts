@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
-import { ORDEM_OPORTUNIDADE_FUTURA, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { ORDEM_OPORTUNIDADE_FUTURA, numerarNiveis, NIVEIS_REATIVACAO, type NivelResumo } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
 import { reuniao, Reuniao } from "@/lib/terminologia";
@@ -518,6 +518,7 @@ export async function atualizarLead(
   const reuniaoMarcadaEm = String(formData.get("marcada_em") ?? "").trim() || null;
   const closerId = String(formData.get("closer_id") ?? "").trim() || null;
   const motivoBaseForm = String(formData.get("motivo_base") ?? "").trim() || null;
+  const motivoBaseDetalheForm = String(formData.get("motivo_base_detalhe") ?? "").trim() || null;
   const reuniaoAconteceuForm = String(formData.get("reuniao_aconteceu") ?? "").trim();
   const reuniaoAnteriorSumiuForm = String(formData.get("reuniao_anterior_sumiu") ?? "").trim();
   // Só faz sentido em Oportunidades (nível 6) — fora dele, fica sempre false.
@@ -575,6 +576,21 @@ export async function atualizarLead(
   // separar certo nas colunas de "por que não virou venda".
   if (nivelMudou && novoNivel === NIVEL_BASE && !motivoBaseForm) {
     return { erro: "Escolha o motivo pelo qual esse lead está indo pra Base." };
+  }
+
+  // "Desqualificado" exige dizer por quê — sem isso, a coluna vira um
+  // monte de lead sem perfil nenhum registrado, e ninguém sabe depois o
+  // que exatamente tirou esse lead do perfil ideal (Samuel pediu que
+  // fosse obrigatório).
+  if (
+    nivelMudou &&
+    novoNivel === NIVEL_BASE &&
+    motivoBaseForm === "desqualificado" &&
+    !motivoBaseDetalheForm
+  ) {
+    return {
+      erro: 'Descreva por que esse lead está desqualificado antes de mover pra "Base".',
+    };
   }
 
   // No Show só existe se teve reunião marcada antes — sem isso não tem o
@@ -643,6 +659,7 @@ export async function atualizarLead(
   }
 
   const motivoBase = novoNivel === NIVEL_BASE ? motivoBaseForm ?? leadAtual.motivo_base : null;
+  const motivoBaseDetalhe = motivoBase === "desqualificado" ? motivoBaseDetalheForm : null;
 
   let transferirParaCloserId: string | null | undefined;
   if (nivelMudou) {
@@ -698,6 +715,7 @@ export async function atualizarLead(
       nivel_ordem: novoNivel,
       oportunidade_futura: oportunidadeFutura,
       motivo_base: motivoBase,
+      ...(motivoBase === "desqualificado" ? { motivo_base_detalhe: motivoBaseDetalhe } : {}),
       // Quando a reunião realizada tem Closer definido, o responsável
       // final é transferido depois (ver bloco após o histórico) — não
       // sobrescreve aqui com o valor antigo do formulário.
@@ -882,6 +900,66 @@ export async function moverLeadNivel(
     }
   }
 
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
+  return null;
+}
+
+export async function reativarLead(leadId: string, novoNivel: number): Promise<string | null> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  if (!NIVEIS_REATIVACAO.includes(novoNivel)) {
+    return "Nível inválido pra reativação.";
+  }
+
+  const { data: leadAtual, error: erroAtual } = await supabase
+    .from("leads")
+    .select("nivel_ordem, responsavel_id")
+    .eq("id", leadId)
+    .single();
+
+  if (erroAtual || !leadAtual) {
+    return "Lead não encontrado";
+  }
+
+  if (
+    usuario.papel !== "admin" &&
+    leadAtual.responsavel_id !== usuario.id &&
+    !(await souCloserAtivo(supabase, leadId, usuario.id))
+  ) {
+    return ERRO_SEM_PERMISSAO;
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      nivel_ordem: novoNivel,
+      motivo_base: null,
+      motivo_base_detalhe: null,
+      entrou_nivel_em: new Date().toISOString(),
+      proximo_follow_em: null,
+    })
+    .eq("id", leadId);
+
+  if (error) {
+    return mensagemAmigavel(error.code, error.message);
+  }
+
+  const { error: erroHistorico } = await supabase.from("nivel_historico").insert({
+    org_id: usuario.org_id,
+    lead_id: leadId,
+    de_ordem: leadAtual.nivel_ordem,
+    para_ordem: novoNivel,
+    motivo: "Reativado da Base",
+    automatico: false,
+    usuario_id: usuario.id,
+  });
+
+  if (erroHistorico) {
+    return erroHistorico.message;
+  }
+
+  revalidatePath("/leads/base");
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);
   return null;
@@ -1427,6 +1505,7 @@ export type DetalhesLead = {
     responsavel_id: string | null;
     oportunidade_futura: boolean;
     motivo_base: string | null;
+    motivo_base_detalhe: string | null;
     proposta_valor: number | null;
     proposta_enviada_em: string | null;
     proposta_observacao: string | null;
@@ -1506,7 +1585,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow"
       )
       .eq("id", leadId)
       .single(),

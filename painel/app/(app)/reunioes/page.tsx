@@ -30,6 +30,7 @@ import {
 } from "@/lib/niveis";
 
 const NIVEL_OPORTUNIDADES = 8;
+const NIVEL_REUNIAO_MARCADA = 4;
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -245,6 +246,17 @@ export default async function VendasPage({
     const lista = leadsPorNivel[chave] ?? [];
     lista.push(lead);
     leadsPorNivel[chave] = lista;
+  }
+
+  // "Reunião marcada" fica ordenada pela reunião mais próxima primeiro —
+  // é o que precisa de atenção agora, não quem entrou na coluna por
+  // último (Samuel pediu essa ordem específica).
+  if (leadsPorNivel[NIVEL_REUNIAO_MARCADA]) {
+    leadsPorNivel[NIVEL_REUNIAO_MARCADA] = [...leadsPorNivel[NIVEL_REUNIAO_MARCADA]].sort((a, b) => {
+      if (!a.reuniao_agendada_para) return 1;
+      if (!b.reuniao_agendada_para) return -1;
+      return new Date(a.reuniao_agendada_para).getTime() - new Date(b.reuniao_agendada_para).getTime();
+    });
   }
 
   // Leads com próximo contato marcado — modo à parte do Kanban por nível:

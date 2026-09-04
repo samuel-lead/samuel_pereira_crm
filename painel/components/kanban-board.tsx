@@ -388,30 +388,36 @@ export function KanbanBoard({
                           arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"
                         }`}
                       >
-                        <div className="mb-2 flex items-start justify-between gap-2">
-                          <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="mb-2 space-y-1.5">
+                          <div className="flex items-center gap-2.5">
                             <AvatarLead
                               nome={lead.nome}
                               fotoUrl={lead.foto_url}
-                              tamanho="h-9 w-9 text-xs"
+                              tamanho="h-9 w-9 shrink-0 text-xs"
                               classeBadge="bg-neutral-200 text-neutral-700"
                             />
-                            <p className="truncate text-[15px] font-bold text-neutral-900 group-hover:underline">
+                            {/* Nunca abrevia o nome do lead — quebra linha em vez de
+                                cortar com "...", mesmo com os selos de atrasado
+                                embaixo disputando espaço (Samuel pediu isso
+                                explicitamente depois de um nome ficar escondido). */}
+                            <p className="min-w-0 flex-1 break-words text-[15px] font-bold leading-snug text-neutral-900 group-hover:underline">
                               {lead.nome}
                             </p>
                           </div>
-                          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
-                            {temAlgoAtrasado && (
-                              <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
-                                Atrasado
-                              </span>
-                            )}
-                            {atrasado && (
-                              <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
-                                {diasParado}d parado
-                              </span>
-                            )}
-                          </div>
+                          {(temAlgoAtrasado || atrasado) && (
+                            <div className="flex flex-wrap items-center justify-end gap-1">
+                              {temAlgoAtrasado && (
+                                <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
+                                  Atrasado
+                                </span>
+                              )}
+                              {atrasado && (
+                                <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
+                                  {diasParado}d parado
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {lead.nivelQualificacao && SELO_QUALIFICACAO[lead.nivelQualificacao] && (

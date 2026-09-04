@@ -138,6 +138,12 @@ export const NIVEIS_VENDAS = [4, 7, 8];
 // assim que entra nela.
 export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 4, 5, 6];
 
+// Níveis pra onde dá pra reativar um lead direto do card na Base, sem
+// passar por mais nada — os que não exigem reunião nenhuma registrada
+// ainda. "Reunião marcada" pra frente fica de fora de propósito: precisa
+// de data/closer, e isso o botão rápido do card não tem como perguntar.
+export const NIVEIS_REATIVACAO = [0, 1, 2, 3];
+
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
 // do nível 8 (Oportunidades), pro lead que já fez a reunião (ICP
 // qualificado) mas avisou que só fecha depois. Usada só no quadro Vendas —
