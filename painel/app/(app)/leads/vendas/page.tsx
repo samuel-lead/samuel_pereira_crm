@@ -76,6 +76,26 @@ export default async function VendasPage({
 
   const leads = (leadsData ?? []) as LeadVendido[];
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
+
+  // SDR que fez a reunião que resultou na venda — não é o mesmo que
+  // "Responsável", que é quem tá com o lead agora (pode já ter passado
+  // pro closer). Pega a reunião realizada mais recente de cada lead.
+  const leadIds = leads.map((l) => l.id);
+  const { data: reunioesRealizadasData } = leadIds.length
+    ? await supabase
+        .from("reunioes")
+        .select("lead_id, usuario_id, agendada_para")
+        .in("lead_id", leadIds)
+        .eq("status", "realizada")
+        .order("agendada_para", { ascending: false })
+    : { data: [] as { lead_id: string; usuario_id: string; agendada_para: string }[] };
+
+  const sdrPorLead = new Map<string, string>();
+  for (const reuniao of reunioesRealizadasData ?? []) {
+    if (!sdrPorLead.has(reuniao.lead_id)) {
+      sdrPorLead.set(reuniao.lead_id, reuniao.usuario_id);
+    }
+  }
   const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
   const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
   const filtroAtivo = Boolean(periodoFiltro || mesAnoFiltro || deFiltro || ateFiltro || buscaFiltro);
@@ -162,14 +182,15 @@ export default async function VendasPage({
                 <th className="px-4 py-3 font-medium">Produto</th>
                 <th className="px-4 py-3 font-medium">Valor da venda</th>
                 <th className="px-4 py-3 font-medium">Receita</th>
-                <th className="px-4 py-3 font-medium">Responsável</th>
+                <th className="px-4 py-3 font-medium">SDR</th>
+                <th className="px-4 py-3 font-medium">Closer</th>
                 <th className="px-4 py-3 font-medium">Vendido em</th>
               </tr>
             </thead>
             <tbody>
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-neutral-400">
+                  <td colSpan={9} className="px-4 py-10 text-center text-sm text-neutral-400">
                     Nenhum cliente encontrado
                   </td>
                 </tr>
@@ -204,6 +225,9 @@ export default async function VendasPage({
                     </td>
                     <td className="px-4 py-3 text-emerald-700">
                       {lead.receita_venda != null ? formatarMoeda(lead.receita_venda) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-600">
+                      {sdrPorLead.has(lead.id) ? nomePorUsuario.get(sdrPorLead.get(lead.id)!) ?? "—" : "—"}
                     </td>
                     <td className="px-4 py-3 text-neutral-600">
                       {lead.responsavel_id ? nomePorUsuario.get(lead.responsavel_id) ?? "—" : "—"}
