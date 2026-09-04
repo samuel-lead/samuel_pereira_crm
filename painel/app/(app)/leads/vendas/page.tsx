@@ -76,6 +76,8 @@ export default async function VendasPage({
 
   const leads = (leadsData ?? []) as LeadVendido[];
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
+  // Mesma conta de sempre: faturamento ÷ vendas (cartao-vendas.tsx,
+  // lib/metricas.ts) — não é receita ÷ vendas.
 
   // SDR que fez a reunião que resultou na venda — não é o mesmo que
   // "Responsável", que é quem tá com o lead agora (pode já ter passado
@@ -98,6 +100,7 @@ export default async function VendasPage({
   }
   const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
   const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+  const ticketMedio = leads.length > 0 ? totalFaturamento / leads.length : 0;
   const filtroAtivo = Boolean(periodoFiltro || mesAnoFiltro || deFiltro || ateFiltro || buscaFiltro);
 
   return (
@@ -166,6 +169,7 @@ export default async function VendasPage({
           <p className="relative mt-2 text-sm font-medium text-green-100">
             {leads.length} venda{leads.length === 1 ? "" : "s"} fechada
             {leads.length === 1 ? "" : "s"}
+            {leads.length > 0 && ` · ticket médio ${formatarMoeda(ticketMedio)}`}
           </p>
           <p className="relative mt-1 text-xs text-green-200/80">
             Faturamento: {formatarMoeda(totalFaturamento)}
