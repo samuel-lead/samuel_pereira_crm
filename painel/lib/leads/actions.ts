@@ -1265,6 +1265,15 @@ export async function reagendarReuniao(
     throw new Error(`Data da ${reuniao(usuario.publico_org)} inválida.`);
   }
 
+  // Guarda a data antiga antes de sobrescrever — sem isso, reagendar
+  // apagava qualquer rastro de que a reunião já tinha sido marcada pra
+  // outro dia (Samuel pediu que ficasse registrado).
+  const { data: reuniaoAtual } = await supabase
+    .from("reunioes")
+    .select("agendada_para")
+    .eq("id", reuniaoId)
+    .single();
+
   const { error } = await supabase
     .from("reunioes")
     .update({ agendada_para: data.toISOString() })
@@ -1274,6 +1283,31 @@ export async function reagendarReuniao(
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (reuniaoAtual?.agendada_para) {
+    const formatarDataHoraBr = (iso: string) =>
+      new Date(iso).toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+    await supabase.from("interacoes").insert({
+      org_id: usuario.org_id,
+      usuario_id: usuario.id,
+      lead_id: leadId,
+      tipo: "nota",
+      canal: "manual",
+      conteudo: `${Reuniao(usuario.publico_org)} reagendada: de ${formatarDataHoraBr(
+        reuniaoAtual.agendada_para
+      )} para ${formatarDataHoraBr(data.toISOString())}.`,
+      ocorreu_em: new Date().toISOString(),
+      origem: "declarado",
+    });
   }
 
   revalidatePath("/leads");
