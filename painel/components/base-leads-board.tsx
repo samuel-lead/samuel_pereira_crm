@@ -336,14 +336,14 @@ export function BaseLeadsBoard({
                             </a>
                           )}
                         </div>
-                        <BotaoReativar
-                          leadId={lead.id}
-                          niveisReativacao={niveisReativacao}
-                          usuarios={usuarios}
-                          souAdmin={souAdmin}
-                        />
                       </div>
                     </div>
+                    <BotaoReativar
+                      leadId={lead.id}
+                      niveisReativacao={niveisReativacao}
+                      usuarios={usuarios}
+                      souAdmin={souAdmin}
+                    />
                   </div>
                 ))
               )}
