@@ -905,7 +905,14 @@ export async function moverLeadNivel(
   return null;
 }
 
-export async function reativarLead(leadId: string, novoNivel: number): Promise<string | null> {
+export async function reativarLead(
+  leadId: string,
+  novoNivel: number,
+  // Só admin escolhe o responsável na reativação — mesma regra de sempre
+  // (ver ResponsavelSelect em editar-lead-form.tsx). Pra quem não é
+  // admin, esse valor é ignorado e o responsável não muda.
+  novoResponsavelId?: string | null
+): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
   if (!NIVEIS_REATIVACAO.includes(novoNivel)) {
@@ -938,6 +945,7 @@ export async function reativarLead(leadId: string, novoNivel: number): Promise<s
       motivo_base_detalhe: null,
       entrou_nivel_em: new Date().toISOString(),
       proximo_follow_em: null,
+      ...(usuario.papel === "admin" ? { responsavel_id: novoResponsavelId || null } : {}),
     })
     .eq("id", leadId);
 

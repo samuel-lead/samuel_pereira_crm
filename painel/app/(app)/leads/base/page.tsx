@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { BuscaLeads } from "@/components/busca-leads";
@@ -45,6 +45,8 @@ export default async function BasePage({
 }) {
   const { busca: buscaFiltro } = await searchParams;
   const supabase = await createClient();
+  const { usuario: usuarioAtual } = await usuarioAutenticado();
+  const souAdmin = usuarioAtual?.papel === "admin";
 
   let consulta = supabase
     .from("leads")
@@ -62,7 +64,7 @@ export default async function BasePage({
 
   const [{ data: leadsData }, { data: usuariosData }, { data: niveisData }] = await Promise.all([
     consulta,
-    supabase.from("usuarios").select("id, nome, foto_url"),
+    supabase.from("usuarios").select("id, nome, foto_url, funcao"),
     supabase.from("niveis").select("ordem, nome").in("ordem", NIVEIS_REATIVACAO).order("ordem"),
   ]);
   const niveisReativacao = niveisData ?? [];
@@ -88,6 +90,7 @@ export default async function BasePage({
 
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
   const fotoPorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.foto_url]));
+  const usuarios = usuariosData ?? [];
 
   const leadsPorMotivo: Record<MotivoBase, LeadBase[]> = {
     desqualificado: [],
@@ -122,6 +125,8 @@ export default async function BasePage({
           nomePorUsuario={nomePorUsuario}
           fotoPorUsuario={fotoPorUsuario}
           niveisReativacao={niveisReativacao}
+          usuarios={usuarios}
+          souAdmin={souAdmin}
         />
       </main>
     </>

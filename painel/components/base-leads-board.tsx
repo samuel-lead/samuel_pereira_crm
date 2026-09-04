@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { IconeWhatsapp, IconeInstagram } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { MenuSelect } from "@/components/menu-select";
+import { ResponsavelSelect } from "@/components/responsavel-select";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
 import { formatarTelefone, handleInstagram, linkInstagram } from "@/lib/texto";
@@ -11,43 +12,105 @@ import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
 import { reativarLead } from "@/lib/leads/actions";
 
-// Botão pra tirar o lead da Base sem abrir o card inteiro — escolhe pra
-// qual nível de Pré-vendas ele volta e já move na hora. Fica só com os
-// níveis "limpos" (sem reunião nenhuma pendente pra resolver primeiro),
-// que é o que a função reativarLead aceita no servidor.
+// Botão de rodapé pra tirar o lead da Base sem abrir o card inteiro.
+// Clicar em "Reativar" abre um miniformulário com o nível de Pré-vendas
+// (só os "limpos", sem reunião pendente pra resolver primeiro) e, pra
+// admin, também quem vai ser o responsável.
 function BotaoReativar({
   leadId,
   niveisReativacao,
+  usuarios,
+  souAdmin,
 }: {
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
+  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  souAdmin: boolean;
 }) {
+  const [aberto, setAberto] = useState(false);
   const [pendente, iniciarTransicao] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
 
-  function aoEscolher(valor: string) {
-    if (!valor) return;
+  function aoConfirmar(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const formData = new FormData(evento.currentTarget);
+    const novoNivel = String(formData.get("nivel_ordem") ?? "");
+    const novoResponsavelId = String(formData.get("responsavel_id") ?? "");
+
+    if (!novoNivel) {
+      setErro("Escolha pra qual nível reativar.");
+      return;
+    }
     setErro(null);
     iniciarTransicao(() => {
-      reativarLead(leadId, Number(valor)).then(setErro);
+      reativarLead(leadId, Number(novoNivel), souAdmin ? novoResponsavelId : undefined).then(
+        (erro) => {
+          setErro(erro);
+          if (!erro) setAberto(false);
+        }
+      );
     });
   }
 
   if (niveisReativacao.length === 0) return null;
 
+  if (!aberto) {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setAberto(true);
+        }}
+        className="-mx-3.5 -mb-3.5 mt-2.5 border-t border-neutral-100 px-3.5 py-2 text-center text-xs font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-700"
+      >
+        ↩ Reativar
+      </button>
+    );
+  }
+
   return (
-    <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
+    <form
+      onClick={(e) => e.stopPropagation()}
+      onSubmit={aoConfirmar}
+      className="-mx-3.5 -mb-3.5 mt-2.5 space-y-2 border-t border-neutral-100 bg-neutral-50 p-3"
+    >
       <MenuSelect
-        variante="pilula"
-        titulo="Reativar pra Pré-vendas"
-        placeholder="↩ Reativar..."
+        name="nivel_ordem"
+        titulo="Reativar pra qual nível"
+        placeholder="Nível de Pré-vendas..."
         disabled={pendente}
-        value=""
-        onChange={aoEscolher}
         options={niveisReativacao.map((n) => ({ value: String(n.ordem), label: n.nome }))}
       />
-      {erro && <p className="mt-1 text-[11px] text-red-600">{erro}</p>}
-    </div>
+      {souAdmin && (
+        <ResponsavelSelect
+          usuarios={usuarios}
+          funcaoFiltro="sdr"
+          permiteVazio
+          placeholder="Quem vai ser o responsável..."
+        />
+      )}
+      {erro && <p className="text-[11px] text-red-600">{erro}</p>}
+      <div className="flex gap-1.5">
+        <button
+          type="submit"
+          disabled={pendente}
+          className="flex-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+        >
+          Confirmar
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setAberto(false);
+            setErro(null);
+          }}
+          className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -118,11 +181,15 @@ export function BaseLeadsBoard({
   nomePorUsuario,
   fotoPorUsuario,
   niveisReativacao,
+  usuarios,
+  souAdmin,
 }: {
   leadsPorMotivo: Record<MotivoBase, LeadBase[]>;
   nomePorUsuario: Map<string, string>;
   fotoPorUsuario?: Map<string, string | null>;
   niveisReativacao: { ordem: number; nome: string }[];
+  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  souAdmin: boolean;
 }) {
   const abrirLead = useAbrirLeadModal();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -186,7 +253,7 @@ export function BaseLeadsBoard({
                       if (e.key === "Enter") abrirLead(lead.id);
                     }}
                     onMouseEnter={() => prefetchLead(lead.id)}
-                    className="kanban-card group block cursor-pointer rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg"
+                    className="kanban-card group block cursor-pointer overflow-hidden rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg"
                   >
                     <div className="flex items-start gap-2.5">
                       <AvatarLead
@@ -269,7 +336,12 @@ export function BaseLeadsBoard({
                             </a>
                           )}
                         </div>
-                        <BotaoReativar leadId={lead.id} niveisReativacao={niveisReativacao} />
+                        <BotaoReativar
+                          leadId={lead.id}
+                          niveisReativacao={niveisReativacao}
+                          usuarios={usuarios}
+                          souAdmin={souAdmin}
+                        />
                       </div>
                     </div>
                   </div>
