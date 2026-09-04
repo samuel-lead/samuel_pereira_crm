@@ -3,8 +3,17 @@
 // do país. Sem isso, "5511933681288" e "(11) 93368-1288" viram dois leads
 // diferentes pro banco, mesmo sendo o mesmo número.
 export function normalizarTelefone(valor: string): string {
-  const digitos = valor.replace(/\D/g, "");
+  let digitos = valor.replace(/\D/g, "");
   if (!digitos) return "";
+
+  // "0" sobrando na frente do DDD — erro comum de digitação (prefixo
+  // interurbano antigo, tipo "0" + DDD + número). Sem tirar isso, um
+  // número de 11 dígitos (DDD + celular) vira 12 e passa pela primeira
+  // regra abaixo como se já tivesse o código do país — salvando errado
+  // e quebrando o link do WhatsApp mais pra frente.
+  if (digitos.startsWith("0") && (digitos.length === 11 || digitos.length === 12)) {
+    digitos = digitos.slice(1);
+  }
 
   // Já tem código do país (Brasil = 55) + DDD + número.
   if (digitos.length >= 12) return digitos;

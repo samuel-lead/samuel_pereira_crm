@@ -29,6 +29,14 @@ export function slugificar(texto: string): string {
 // parênteses — não dá pra adivinhar o DDD, mas dá pra separar o número.
 export function formatarTelefone(telefone: string): string {
   let digitos = telefone.replace(/\D/g, "");
+
+  // "0" sobrando na frente do DDD — mesmo erro de digitação tratado em
+  // normalizarTelefone/lib/whatsapp.ts, tratado aqui também pra exibir
+  // certo mesmo um telefone salvo antes dessa correção existir.
+  if (digitos.startsWith("0") && (digitos.length === 11 || digitos.length === 12)) {
+    digitos = digitos.slice(1);
+  }
+
   if (digitos.length >= 12 && digitos.startsWith("55")) {
     digitos = digitos.slice(2);
   }
