@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { IconeWhatsapp } from "@/components/icons";
+import { IconeWhatsapp, IconeInstagram } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
+import { formatarTelefone, handleInstagram, linkInstagram } from "@/lib/texto";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
 
@@ -12,6 +13,7 @@ export type LeadBase = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  instagram?: string | null;
   foto_url: string | null;
   origem: string | null;
   responsavel_id: string | null;
@@ -147,10 +149,12 @@ export function BaseLeadsBoard({
                           {lead.nome}
                         </p>
                         {lead.telefone_e164 && (
-                          <p className="truncate text-xs text-neutral-500">{lead.telefone_e164}</p>
+                          <p className="truncate text-[13px] text-neutral-500">
+                            {formatarTelefone(lead.telefone_e164)}
+                          </p>
                         )}
                         {lead.responsavel_id && nomePorUsuario.get(lead.responsavel_id) && (
-                          <p className="flex items-center gap-1 truncate text-[11px] text-neutral-500">
+                          <p className="flex items-center gap-1 truncate text-xs text-neutral-500">
                             Responsável:{" "}
                             <AvatarLead
                               nome={nomePorUsuario.get(lead.responsavel_id)!}
@@ -168,7 +172,7 @@ export function BaseLeadsBoard({
                         </p>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
                           {lead.origem && (
-                            <span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600">
+                            <span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">
                               {lead.origem}
                             </span>
                           )}
@@ -190,6 +194,22 @@ export function BaseLeadsBoard({
                             >
                               <IconeWhatsapp className="h-4 w-4" />
                               <span className="text-[13px] font-medium">WhatsApp</span>
+                            </a>
+                          )}
+                          {lead.instagram && (
+                            <a
+                              href={linkInstagram(lead.instagram)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              title={`@${handleInstagram(lead.instagram)} no Instagram`}
+                              style={{
+                                background:
+                                  "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
+                              }}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-[0_3px_8px_rgba(204,35,102,0.35)] transition hover:opacity-90"
+                            >
+                              <IconeInstagram className="h-4 w-4" />
                             </a>
                           )}
                         </div>

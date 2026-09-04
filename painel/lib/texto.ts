@@ -21,3 +21,35 @@ export function slugificar(texto: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
+// "5562993237085" (formato salvo, telefone_e164 sem o "+") vira
+// "(62) 99323-7085" pra exibir nos cards — separa DDD e quebra o número
+// em dois grupos, igual todo mundo já lê um telefone no Brasil.
+export function formatarTelefone(telefone: string): string {
+  let digitos = telefone.replace(/\D/g, "");
+  if (digitos.length >= 12 && digitos.startsWith("55")) {
+    digitos = digitos.slice(2);
+  }
+
+  if (digitos.length === 11) {
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`;
+  }
+  if (digitos.length === 10) {
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
+  }
+  return telefone;
+}
+
+// O campo instagram do lead aceita "@usuario" ou o link do perfil (ver
+// editar-lead-form.tsx) — essas duas funções tiram o @ pra exibir e
+// montam o link certo pra abrir o perfil, não importa em qual formato
+// foi salvo.
+export function handleInstagram(valor: string): string {
+  const semEspacos = valor.trim();
+  const doLink = semEspacos.match(/instagram\.com\/([^/?]+)/i);
+  return (doLink ? doLink[1] : semEspacos).replace(/^@/, "");
+}
+
+export function linkInstagram(valor: string): string {
+  return `https://instagram.com/${handleInstagram(valor)}`;
+}

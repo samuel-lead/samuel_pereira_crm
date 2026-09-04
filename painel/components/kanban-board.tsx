@@ -5,7 +5,15 @@ import { corDoNivel, numerarNiveis, ORDEM_OPORTUNIDADE_FUTURA, type NivelResumo 
 import { moverLeadNivel } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasUteisDesde } from "@/lib/datas";
-import { IconeWhatsapp, IconeAtividade, IconeTelefone, IconeTag, IconeCalendario } from "@/components/icons";
+import { formatarTelefone, handleInstagram, linkInstagram } from "@/lib/texto";
+import {
+  IconeWhatsapp,
+  IconeInstagram,
+  IconeAtividade,
+  IconeTelefone,
+  IconeTag,
+  IconeCalendario,
+} from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { Reuniao, reuniao } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
@@ -20,6 +28,7 @@ type LeadResumo = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  instagram?: string | null;
   foto_url?: string | null;
   origem: string | null;
   nivel_ordem: number;
@@ -416,25 +425,25 @@ export function KanbanBoard({
 
                         <div className="space-y-1">
                           {lead.declarado_em && (
-                            <p className="flex items-center gap-1.5 truncate text-xs text-neutral-500">
+                            <p className="flex items-center gap-1.5 truncate text-[13px] text-neutral-500">
                               <IconeCalendario className="h-3 w-3 shrink-0" />
                               Entrou: {formatarDataHora(lead.declarado_em)}
                             </p>
                           )}
                           {lead.telefone_e164 && (
-                            <p className="flex items-center gap-1.5 truncate text-xs text-neutral-500">
+                            <p className="flex items-center gap-1.5 truncate text-[13px] text-neutral-500">
                               <IconeTelefone className="h-3 w-3 shrink-0" />
-                              {lead.telefone_e164}
+                              {formatarTelefone(lead.telefone_e164)}
                             </p>
                           )}
                           {lead.origem && (
-                            <p className="flex items-start gap-1.5 text-xs text-neutral-500">
+                            <p className="flex items-start gap-1.5 text-[13px] text-neutral-500">
                               <IconeTag className="mt-0.5 h-3 w-3 shrink-0" />
                               {lead.origem}
                             </p>
                           )}
                           {lead.responsavel_id && nomePorUsuario.get(lead.responsavel_id) && (
-                            <p className="flex items-center gap-1 truncate text-[11px] text-neutral-500">
+                            <p className="flex items-center gap-1 truncate text-xs text-neutral-500">
                               Responsável:{" "}
                               <AvatarLead
                                 nome={nomePorUsuario.get(lead.responsavel_id)!}
@@ -500,17 +509,35 @@ export function KanbanBoard({
                               </span>
                             )}
                           </div>
-                          {lead.telefone_e164 && (
-                            <a
-                              href={linkWhatsApp(lead.telefone_e164)}
-                              onClick={(e) => aoClicarWhatsapp(e, lead.telefone_e164!)}
-                              title="Chamar no WhatsApp"
-                              className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2 text-white shadow-[0_3px_8px_rgba(37,211,102,0.4)] transition hover:bg-[#20bd5a]"
-                            >
-                              <IconeWhatsapp className="h-4 w-4" />
-                              <span className="text-[13px] font-medium">WhatsApp</span>
-                            </a>
-                          )}
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            {lead.telefone_e164 && (
+                              <a
+                                href={linkWhatsApp(lead.telefone_e164)}
+                                onClick={(e) => aoClicarWhatsapp(e, lead.telefone_e164!)}
+                                title="Chamar no WhatsApp"
+                                className="flex items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2 text-white shadow-[0_3px_8px_rgba(37,211,102,0.4)] transition hover:bg-[#20bd5a]"
+                              >
+                                <IconeWhatsapp className="h-4 w-4" />
+                                <span className="text-[13px] font-medium">WhatsApp</span>
+                              </a>
+                            )}
+                            {lead.instagram && (
+                              <a
+                                href={linkInstagram(lead.instagram)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                title={`@${handleInstagram(lead.instagram)} no Instagram`}
+                                style={{
+                                  background:
+                                    "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-[0_3px_8px_rgba(204,35,102,0.35)] transition hover:opacity-90"
+                              >
+                                <IconeInstagram className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
                         </div>
 
                         {arrastavel && (

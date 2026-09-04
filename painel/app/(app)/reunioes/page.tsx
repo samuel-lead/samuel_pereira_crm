@@ -52,6 +52,7 @@ type LeadResumo = {
   id: string;
   nome: string;
   telefone_e164: string | null;
+  instagram: string | null;
   origem: string | null;
   nivel_ordem: number;
   declarado_em: string;
@@ -90,7 +91,7 @@ export default async function VendasPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao)"
+      "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao)"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
