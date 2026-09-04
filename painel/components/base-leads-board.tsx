@@ -62,7 +62,7 @@ function BotaoReativar({
           e.stopPropagation();
           setAberto(true);
         }}
-        className="-mx-3.5 -mb-3.5 mt-2.5 border-t border-neutral-100 px-3.5 py-2 text-center text-xs font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-700"
+        className="mt-2.5 w-full border-t border-neutral-100 pt-2 text-center text-xs font-medium text-neutral-500 transition hover:text-neutral-700"
       >
         ↩ Reativar
       </button>
@@ -73,7 +73,7 @@ function BotaoReativar({
     <form
       onClick={(e) => e.stopPropagation()}
       onSubmit={aoConfirmar}
-      className="-mx-3.5 -mb-3.5 mt-2.5 space-y-2 border-t border-neutral-100 bg-neutral-50 p-3"
+      className="mt-2.5 space-y-2 border-t border-neutral-100 pt-2"
     >
       <MenuSelect
         name="nivel_ordem"
@@ -253,7 +253,7 @@ export function BaseLeadsBoard({
                       if (e.key === "Enter") abrirLead(lead.id);
                     }}
                     onMouseEnter={() => prefetchLead(lead.id)}
-                    className="kanban-card group block cursor-pointer overflow-hidden rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg"
+                    className="kanban-card group block cursor-pointer rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg"
                   >
                     <div className="flex items-start gap-2.5">
                       <AvatarLead
