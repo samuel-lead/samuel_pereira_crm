@@ -439,7 +439,7 @@ export function KanbanBoard({
                           {lead.origem && (
                             <p className="flex items-start gap-1.5 text-[13px] text-neutral-500">
                               <IconeTag className="mt-0.5 h-3 w-3 shrink-0" />
-                              Origem do lead: {lead.origem}
+                              Origem: {lead.origem}
                             </p>
                           )}
                           {lead.responsavel_id && nomePorUsuario.get(lead.responsavel_id) && (
