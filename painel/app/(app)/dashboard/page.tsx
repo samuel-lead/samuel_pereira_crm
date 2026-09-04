@@ -162,13 +162,15 @@ export default async function DashboardPage({
           podeEditar={souAdmin}
         />
 
-        <FiltroPeriodo
-          baseHref="/dashboard"
-          periodoAtual={periodoResolvido.chave}
-          mesAnoAtual={mesAno}
-          deAtual={de}
-          ateAtual={ate}
-        />
+        <div className="sticky top-0 z-10 -mx-6 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)]">
+          <FiltroPeriodo
+            baseHref="/dashboard"
+            periodoAtual={periodoResolvido.chave}
+            mesAnoAtual={mesAno}
+            deAtual={de}
+            ateAtual={ate}
+          />
+        </div>
 
         {metas ? (
           <SecaoPeriodo
