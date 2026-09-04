@@ -24,7 +24,9 @@ export function slugificar(texto: string): string {
 
 // "5562993237085" (formato salvo, telefone_e164 sem o "+") vira
 // "(62) 99323-7085" pra exibir nos cards — separa DDD e quebra o número
-// em dois grupos, igual todo mundo já lê um telefone no Brasil.
+// em dois grupos, igual todo mundo já lê um telefone no Brasil. Quando
+// falta o DDD no cadastro (9 ou 8 dígitos só), formata mesmo assim sem o
+// parênteses — não dá pra adivinhar o DDD, mas dá pra separar o número.
 export function formatarTelefone(telefone: string): string {
   let digitos = telefone.replace(/\D/g, "");
   if (digitos.length >= 12 && digitos.startsWith("55")) {
@@ -36,6 +38,12 @@ export function formatarTelefone(telefone: string): string {
   }
   if (digitos.length === 10) {
     return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
+  }
+  if (digitos.length === 9) {
+    return `${digitos.slice(0, 5)}-${digitos.slice(5)}`;
+  }
+  if (digitos.length === 8) {
+    return `${digitos.slice(0, 4)}-${digitos.slice(4)}`;
   }
   return telefone;
 }
