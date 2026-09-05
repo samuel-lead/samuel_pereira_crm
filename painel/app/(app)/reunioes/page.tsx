@@ -69,6 +69,7 @@ type LeadResumo = {
   proximo_follow_em: string | null;
   reuniao_agendada_para?: string | null;
   isca_respostas: { nivel_qualificacao: string | null }[] | null;
+  jaTeveReuniao?: boolean;
 };
 
 export default async function VendasPage({
@@ -164,6 +165,7 @@ export default async function VendasPage({
   const [
     [receitaOrgMes, metaReceita, vendasHoje, ultimaVenda, vendasMes],
     { data: reunioesMarcadasData },
+    { data: todasReunioesData },
   ] = await Promise.all([
       orgId
         ? Promise.all([
@@ -184,6 +186,12 @@ export default async function VendasPage({
             .eq("status", "marcada")
             .order("marcada_em", { ascending: false })
         : Promise.resolve({ data: [] as { lead_id: string; agendada_para: string }[] }),
+      // Todas as reuniões já registradas (não só as "marcada" de agora) —
+      // usado pelo "Mover para..." do celular, mesma trava do menu Nível
+      // dentro do card (ver nivelDeveApareceNoMenu).
+      leadIds.length
+        ? supabase.from("reunioes").select("lead_id").in("lead_id", leadIds)
+        : Promise.resolve({ data: [] as { lead_id: string }[] }),
     ]);
 
   // Um lead pode ter mais de uma reunião "marcada" ao longo do tempo (ex.:
@@ -195,12 +203,15 @@ export default async function VendasPage({
     }
   }
 
+  const leadsComReuniaoRegistrada = new Set((todasReunioesData ?? []).map((r) => r.lead_id));
+
   const leadsComAtividade = await anexarUltimaAtividade(
     supabase,
     leads.map((lead) => ({
       ...lead,
       reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
       nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
+      jaTeveReuniao: leadsComReuniaoRegistrada.has(lead.id),
     }))
   );
 
@@ -398,6 +409,7 @@ export default async function VendasPage({
         ) : (
           <KanbanBoard
             niveis={niveis}
+            todosNiveis={todosNiveis}
             leadsPorNivel={leadsPorNivel}
             souAdmin={souAdmin}
             usuarioAtualId={user?.id ?? null}

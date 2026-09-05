@@ -5,6 +5,7 @@ import {
   corDoNivel,
   numerarNiveis,
   rotuloNivel,
+  nivelDeveApareceNoMenu,
   ORDEM_OPORTUNIDADE_FUTURA,
   type NivelResumo,
 } from "@/lib/niveis";
@@ -66,6 +67,10 @@ type LeadResumo = {
   // que "acaba", é um fato histórico que ajuda a entender o lead.
   reativado_da_base_em?: string | null;
   reativado_origem?: string | null;
+  // Já teve alguma reunião registrada alguma vez (não importa o status) —
+  // usado só pelo "Mover para..." do celular, pra aplicar exatamente a
+  // mesma trava do menu Nível dentro do card (ver nivelDeveApareceNoMenu).
+  jaTeveReuniao?: boolean;
 };
 
 const SELO_QUALIFICACAO: Record<string, { texto: string; classe: string }> = {
@@ -308,6 +313,7 @@ export function KanbanBoard({
   permitirMarcarReuniaoRapido = false,
   niveisReativacao = [],
   permitirProximoContatoRapido = false,
+  todosNiveis,
 }: {
   niveis: NivelResumo[];
   leadsPorNivel: Record<number, LeadResumo[]>;
@@ -331,6 +337,11 @@ export function KanbanBoard({
   // só pra Pré-vendas, pra não precisar abrir o card inteiro no celular
   // só pra isso (ver BotaoProximoContatoRapido).
   permitirProximoContatoRapido?: boolean;
+  // Lista COMPLETA de níveis da org (não só as colunas desse quadro) —
+  // usada pelo "Mover para..." do celular, que precisa oferecer TODOS os
+  // destinos válidos (ex.: Base e Repescagem futura a partir de qualquer
+  // nível de Pré-vendas), exatamente igual o menu Nível dentro do card.
+  todosNiveis?: NivelResumo[];
   // Valor só faz sentido em Vendas — em Pré-vendas o lead ainda nem
   // negociou nada, então o quadro de Leads nunca passa isso como true.
   mostrarValor?: boolean;
@@ -809,32 +820,56 @@ export function KanbanBoard({
                               className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-600 outline-none focus:border-blue-400"
                             >
                               <option value="">Mover para...</option>
-                              {niveis
+                              {(todosNiveis ?? niveis)
                                 .filter((n) => {
                                   if (n.ordem === lead.nivel_ordem) return false;
-                                  // "Novos Leads" é porta de mão única —
-                                  // uma vez que o lead saiu de lá, não
-                                  // aparece mais como opção (mesma trava
-                                  // do menu Nível dentro do card).
-                                  if (n.ordem === 0 && lead.nivel_ordem !== 0) return false;
-                                  // No-show/Reagendamento só fazem sentido
-                                  // saindo de "Reunião marcada".
-                                  if (
-                                    (n.ordem === NIVEL_NO_SHOW || n.ordem === NIVEL_REAGENDAMENTO) &&
-                                    lead.nivel_ordem !== NIVEL_REUNIAO_MARCADA
-                                  ) {
-                                    return false;
-                                  }
-                                  return true;
+                                  // "Reunião marcada" precisa de data (e
+                                  // opcionalmente closer) — não dá pra
+                                  // escolher direto nesse select simples,
+                                  // por isso nem aparece aqui (mesma razão
+                                  // do menu Nível no card ter um botão
+                                  // "Agendar reunião" à parte pra isso).
+                                  if (n.ordem === NIVEL_REUNIAO_MARCADA) return false;
+                                  // Nível 8 sempre passa aqui, mesmo sem
+                                  // reunião — o flatMap logo abaixo decide
+                                  // entre mostrar só a "Repescagem futura"
+                                  // ou as duas, porque nascem da mesma linha
+                                  // (mesmo tratamento do menu Nível no card).
+                                  if (n.ordem === NIVEL_REUNIAO_FEITA) return true;
+                                  return nivelDeveApareceNoMenu(
+                                    lead.nivel_ordem,
+                                    lead.jaTeveReuniao ?? false,
+                                    n.ordem
+                                  );
                                 })
-                                .map((n) => {
+                                .flatMap((n) => {
                                   const numero = numerosVisiveis.get(n.ordem);
-                                  return (
-                                    <option key={n.ordem} value={n.ordem}>
-                                      {numero ? `N${numero} - ` : ""}
-                                      {separarExplicacao(n.nome).titulo}
+                                  const rotulo = `${numero ? `N${numero} - ` : ""}${separarExplicacao(n.nome).titulo}`;
+
+                                  if (n.ordem !== NIVEL_REUNIAO_FEITA) {
+                                    return [
+                                      <option key={n.ordem} value={n.ordem}>
+                                        {rotulo}
+                                      </option>,
+                                    ];
+                                  }
+
+                                  // "Oportunidades" normal exige reunião
+                                  // registrada — sem isso só sobra a
+                                  // "Repescagem futura", que não exige.
+                                  const opcoes = lead.jaTeveReuniao
+                                    ? [
+                                        <option key={n.ordem} value={n.ordem}>
+                                          {rotulo}
+                                        </option>,
+                                      ]
+                                    : [];
+                                  opcoes.push(
+                                    <option key="futura" value={ORDEM_OPORTUNIDADE_FUTURA}>
+                                      ↳ Repescagem futura de ICP
                                     </option>
                                   );
+                                  return opcoes;
                                 })}
                             </select>
                           </div>

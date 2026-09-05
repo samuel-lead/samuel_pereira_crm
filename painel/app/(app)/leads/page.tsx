@@ -40,6 +40,7 @@ type LeadResumo = {
   reativado_origem: string | null;
   proposta_valor: number | null;
   isca_respostas: { nivel_qualificacao: string | null }[] | null;
+  jaTeveReuniao?: boolean;
 };
 
 export default async function LeadsPage({
@@ -206,6 +207,13 @@ export default async function LeadsPage({
         .order("marcada_em", { ascending: false })
     : null;
 
+  // Todas as reuniões já registradas (não só as "marcada" de agora) — usado
+  // pelo "Mover para..." do celular, pra aplicar a mesma trava do menu
+  // Nível dentro do card (ver nivelDeveApareceNoMenu).
+  const consultaTodasReunioes = orgId
+    ? supabase.from("reunioes").select("lead_id").eq("org_id", orgId)
+    : null;
+
   const [
     { count: ligacoesHoje },
     { count: callsMarcadasHoje },
@@ -217,6 +225,7 @@ export default async function LeadsPage({
     { data: reunioesAnterioresPendentesData },
     vendasHoje,
     { data: reunioesAgendadaData },
+    { data: todasReunioesData },
   ] = await Promise.all([
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
     consultaCallsMarcadasHoje ? filtrarPorEscopo(consultaCallsMarcadasHoje) : { count: null },
@@ -233,8 +242,10 @@ export default async function LeadsPage({
     consultaReuniaoAnteriorPendente ?? Promise.resolve({ data: null }),
     orgId ? calcularVendasHoje(supabase, orgId, inicioHoje, amanha) : Promise.resolve(null),
     consultaReuniaoAgendada ?? Promise.resolve({ data: [] as { lead_id: string; agendada_para: string }[] }),
+    consultaTodasReunioes ?? Promise.resolve({ data: [] as { lead_id: string }[] }),
   ]);
 
+  const leadsComReuniaoRegistrada = new Set((todasReunioesData ?? []).map((r) => r.lead_id));
   const leadsComReuniaoPendente = new Set(
     (reunioesAnterioresPendentesData ?? []).map((r) => r.lead_id)
   );
@@ -251,6 +262,7 @@ export default async function LeadsPage({
     temReuniaoAnteriorPendente: leadsComReuniaoPendente.has(lead.id),
     nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
     reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
+    jaTeveReuniao: leadsComReuniaoRegistrada.has(lead.id),
   }));
 
   // Mesmo critério do selo vermelho de cada card: "parado" (1 dia útil sem
@@ -473,6 +485,7 @@ export default async function LeadsPage({
         ) : (
           <KanbanBoard
             niveis={niveis}
+            todosNiveis={todosNiveis}
             leadsPorNivel={leadsPorNivel}
             souAdmin={souAdmin}
             usuarioAtualId={user?.id ?? null}

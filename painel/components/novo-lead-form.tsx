@@ -132,12 +132,10 @@ export function NovoLeadForm({
           )}
         </div>
 
-        <p className="flex items-start gap-2 rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        <p className="flex items-start gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-700">
           <span aria-hidden className="mt-0.5">💡</span>
-          O lead entra em &quot;Leads&quot; (ainda não abordado). Assim que
-          mandar a primeira mensagem, mova ele pro Nível 1. Os 3
-          critérios de qualificação você preenche depois, editando o
-          lead.
+          O lead entra em Novos Leads, ainda não abordado. Assim que você
+          fizer a primeira abordagem, mova ele pro Nível 1.
         </p>
 
         {estado.erro && (

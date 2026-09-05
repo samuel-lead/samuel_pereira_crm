@@ -185,3 +185,40 @@ export function rotuloNivel(nivel: { nome: string }, numeroVisivel: number | und
 export function rotuloNivelCurto(nivel: NivelResumo, numeroVisivel: number | undefined) {
   return numeroVisivel ? `Nível ${numeroVisivel}` : nivel.nome;
 }
+
+// Única fonte de verdade pra "esse nível deve aparecer na lista pra
+// escolher" — usada tanto no menu Nível dentro do card (editar-lead-form)
+// quanto no "Mover para..." do celular (kanban-board), pra nunca mais os
+// dois ficarem diferentes um do outro (foi exatamente isso que deu
+// confusão: o celular tinha uma trava a mais que o desktop não tem).
+// Não cobre a opção sintética "Repescagem futura de ICP" — essa sempre
+// aparece à parte, sem exigir reunião nenhuma (ver ORDEM_OPORTUNIDADE_FUTURA).
+export function nivelDeveApareceNoMenu(
+  nivelAtual: number,
+  jaTeveReuniao: boolean,
+  ordemDestino: number
+): boolean {
+  if (ordemDestino === nivelAtual) return true;
+
+  // Novos Leads → Sem conversa → Em qualificação → Topou reunião é uma
+  // progressão de mão única: se o lead já está em qualquer um desses
+  // níveis, não existe voltar pra um de antes — não tem lógica nenhuma
+  // (ex.: quem já "Topou reunião" claramente já teve conversa, não faz
+  // sentido rebaixar pra "Sem conversa iniciada"). Vale independente de
+  // já ter tido reunião ou não — Samuel foi enfático que isso é sempre,
+  // não só depois da reunião.
+  if (ordemDestino <= 3 && ordemDestino < nivelAtual) return false;
+
+  // No-show/Reagendamento só fazem sentido saindo de "Reunião marcada".
+  if ((ordemDestino === 5 || ordemDestino === 6) && nivelAtual !== 4) {
+    return false;
+  }
+
+  // Follow após reunião e Oportunidades (a normal, não a futura) só
+  // existem pra quem já teve reunião de verdade em algum momento.
+  if ((ordemDestino === 7 || ordemDestino === 8) && !jaTeveReuniao) {
+    return false;
+  }
+
+  return true;
+}

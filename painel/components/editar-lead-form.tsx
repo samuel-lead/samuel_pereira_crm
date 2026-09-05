@@ -5,7 +5,7 @@ import { atualizarLead, reativarLead, type EstadoFormulario } from "@/lib/leads/
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { MenuSelect } from "@/components/menu-select";
-import { rotuloNivel, NIVEIS_REATIVACAO, type NivelResumo } from "@/lib/niveis";
+import { rotuloNivel, NIVEIS_REATIVACAO, nivelDeveApareceNoMenu, type NivelResumo } from "@/lib/niveis";
 import { reuniao, Reuniao } from "@/lib/terminologia";
 import { IconeCalendario, IconeReativar } from "@/components/icons";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
@@ -384,42 +384,11 @@ export function EditarLeadForm({
   // enfático — "já aconteceu, não tem como voltar" pros níveis de antes da
   // reunião, e No-show/Reagendamento só fazem sentido saindo de "Reunião
   // marcada" — de qualquer outro nível nem é opção.
+  // Delega pra lib/niveis.ts — única fonte de verdade, também usada pelo
+  // "Mover para..." do celular (kanban-board.tsx), pra nunca mais os dois
+  // ficarem diferentes um do outro.
   function deveApareceNoMenu(ordemDestino: string): boolean {
-    const nivelAtual = String(lead.nivel_ordem);
-    if (ordemDestino === nivelAtual) return true;
-
-    // "Novos Leads" é porta de mão única: uma vez que o lead saiu de lá,
-    // não existe voltar — não importa se já teve reunião ou não (Samuel
-    // foi enfático: o lead já avançou na conversa).
-    if (ordemDestino === "0" && nivelAtual !== "0") {
-      return false;
-    }
-
-    if (
-      jaTeveReuniao &&
-      (ordemDestino === "1" || ordemDestino === "2" || ordemDestino === "3")
-    ) {
-      return false;
-    }
-
-    if (
-      (ordemDestino === NIVEL_NO_SHOW || ordemDestino === NIVEL_REAGENDAMENTO) &&
-      nivelAtual !== NIVEL_REUNIAO_MARCADA
-    ) {
-      return false;
-    }
-
-    // "Follow após reunião" só existe pra quem já teve reunião de
-    // verdade em algum momento — sem essa trava dava pra pular direto de
-    // "Novos Leads" pra lá (Samuel pegou isso ao vivo). "Oportunidades"
-    // tem a mesma exigência, mas é tratada à parte lá no flatMap das
-    // opções, porque a "Repescagem futura" usa o mesmo nível 8 sem essa
-    // exigência.
-    if (ordemDestino === NIVEL_FOLLOW_POS_REUNIAO && !jaTeveReuniao) {
-      return false;
-    }
-
-    return true;
+    return nivelDeveApareceNoMenu(lead.nivel_ordem, jaTeveReuniao, Number(ordemDestino));
   }
 
   const saindoDeReuniaoMarcada = String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA;
@@ -569,7 +538,12 @@ export function EditarLeadForm({
                         // (não "Selecione..."), pra ficar claro o que vai
                         // acontecer e dar pra trocar de volta se quiser.
                         nivelSelecionado === NIVEL_REUNIAO_MARCADA) &&
-                      deveApareceNoMenu(String(nivel.ordem))
+                      // Nível 8 sempre passa aqui, mesmo sem reunião — é o
+                      // flatMap logo abaixo que decide entre mostrar só a
+                      // "Repescagem futura" ou as duas opções, porque as
+                      // duas nascem dessa mesma linha (ver comentário lá).
+                      (String(nivel.ordem) === NIVEL_OPORTUNIDADES ||
+                        deveApareceNoMenu(String(nivel.ordem)))
                   )
                   .flatMap((nivel) => {
                     const opcao = {

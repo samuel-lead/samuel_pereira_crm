@@ -619,51 +619,35 @@ export async function atualizarLead(
     };
   }
 
-  // "Novos Leads" é porta de mão única: uma vez que o lead saiu de lá,
-  // não existe voltar — não importa se já teve reunião ou não (Samuel foi
-  // enfático: o lead já avançou na conversa, não faz sentido reaparecer
-  // como se nunca tivesse respondido nada). Mesma trava do menu (ver
-  // deveApareceNoMenu em editar-lead-form.tsx), agora no servidor pra não
+  // Novos Leads → Sem conversa → Em qualificação → Topou reunião é uma
+  // progressão de mão única: uma vez num desses níveis, não existe voltar
+  // pra um de antes — não importa se já teve reunião ou não (Samuel foi
+  // enfático: não tem lógica nenhuma, ex. quem já "Topou reunião"
+  // claramente já teve conversa). Mesma trava do menu (ver
+  // nivelDeveApareceNoMenu em lib/niveis.ts), agora no servidor pra não
   // dar pra burlar.
-  if (nivelMudou && novoNivel === 0 && leadAtual.nivel_ordem !== 0) {
+  if (
+    nivelMudou &&
+    (novoNivel === 0 || novoNivel === 1 || novoNivel === 2 || novoNivel === 3) &&
+    novoNivel < leadAtual.nivel_ordem
+  ) {
     return {
-      erro: 'Esse lead já saiu de "Novos Leads" — não dá pra voltar pra lá.',
+      erro: "Esse lead já avançou — não dá pra voltar pra um nível de antes.",
     };
   }
 
-  // Depois de já ter tido uma reunião, não dá pra voltar pros níveis de
-  // antes dela (Em qualificação até Topou reunião sem horário) — isso já
-  // aconteceu, não tem como desfazer, e voltar pra trás corrompe as
-  // taxas de agendamento/comparecimento que já foram contadas com base
-  // nessa reunião. E o caminho inverso também tem trava: Follow após
-  // reunião e Oportunidades só existem pra quem já teve uma reunião de
-  // verdade em algum momento — sem isso dava pra pular direto de "Novos
-  // Leads" pra lá (Samuel pegou isso ao vivo, testando). Mesma trava do
-  // menu (ver deveApareceNoMenu em editar-lead-form.tsx), agora no
-  // servidor pra não dar pra burlar.
-  if (
-    nivelMudou &&
-    (novoNivel === 1 ||
-      novoNivel === 2 ||
-      novoNivel === 3 ||
-      novoNivel === NIVEL_FOLLOW_POS_REUNIAO ||
-      novoNivel === NIVEL_REUNIAO_FEITA)
-  ) {
+  // Follow após reunião e Oportunidades só existem pra quem já teve uma
+  // reunião de verdade em algum momento — sem essa trava dava pra pular
+  // direto de "Novos Leads" pra lá (Samuel pegou isso ao vivo, testando).
+  // Mesma trava do menu (ver nivelDeveApareceNoMenu em lib/niveis.ts),
+  // agora no servidor pra não dar pra burlar.
+  if (nivelMudou && (novoNivel === NIVEL_FOLLOW_POS_REUNIAO || novoNivel === NIVEL_REUNIAO_FEITA)) {
     const { count: totalReunioes } = await supabase
       .from("reunioes")
       .select("id", { count: "exact", head: true })
       .eq("lead_id", leadId);
 
-    if ((novoNivel === 1 || novoNivel === 2 || novoNivel === 3) && totalReunioes && totalReunioes > 0) {
-      return {
-        erro: `Esse lead já teve uma ${reuniao(usuario.publico_org)} registrada — não dá pra voltar pra um nível de antes dela.`,
-      };
-    }
-
-    if (
-      (novoNivel === NIVEL_FOLLOW_POS_REUNIAO || novoNivel === NIVEL_REUNIAO_FEITA) &&
-      !totalReunioes
-    ) {
+    if (!totalReunioes) {
       return {
         erro: `Esse lead nunca teve uma ${reuniao(usuario.publico_org)} registrada — não dá pra pular direto pra "${novoNivel === NIVEL_FOLLOW_POS_REUNIAO ? "Follow após reunião" : "Oportunidades"}".`,
       };
@@ -919,6 +903,16 @@ export async function moverLeadNivel(
     leadAtual.proposta_valor == null
   ) {
     return `Você disse que teve proposta — registre o valor no card de Proposta antes de mover esse lead.`;
+  }
+
+  // Mesma trava de atualizarLead: Novos Leads → Sem conversa → Em
+  // qualificação → Topou reunião é mão única, não dá pra arrastar de
+  // volta pra um nível de antes.
+  if (
+    (nivelReal === 0 || nivelReal === 1 || nivelReal === 2 || nivelReal === 3) &&
+    nivelReal < leadAtual.nivel_ordem
+  ) {
+    return "Esse lead já avançou — não dá pra voltar pra um nível de antes.";
   }
 
   const { erro: erroReuniao, transferirParaCloserId } = await sincronizarReuniao(supabase, {
