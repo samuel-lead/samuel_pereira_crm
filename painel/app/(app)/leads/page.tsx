@@ -383,13 +383,14 @@ export default async function LeadsPage({
                 </div>
                 {/* Empurrado pro canto direito de propósito (justify-between
                     no pai) — Samuel pediu bem separado do "Novo lead", quase
-                    sozinho no canto. Única aparição do aviso agora — o de
-                    dentro de Métricas foi removido, esse cobre os dois
-                    tamanhos de tela. */}
+                    sozinho no canto. Só no celular (md:hidden) — no desktop
+                    o aviso continua só dentro de Métricas, do jeito que
+                    sempre foi (Samuel foi enfático: mexer no mobile não é
+                    pra mudar nada no desktop). */}
                 {mostrarSoParados ? (
                   <Link
                     href={hrefTirarParado}
-                    className="shrink-0 text-xs font-medium text-red-600 hover:underline"
+                    className="shrink-0 text-xs font-medium text-red-600 hover:underline md:hidden"
                   >
                     Ver todos ✕
                   </Link>
@@ -398,7 +399,7 @@ export default async function LeadsPage({
                     <Link
                       href={hrefLigarParado}
                       title="Clique pra ver só os leads parados ou atrasados"
-                      className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
+                      className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-red-600 hover:underline md:hidden"
                     >
                       <span className="relative flex h-2.5 w-2.5">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-90 [animation-duration:0.8s]" />
@@ -420,6 +421,27 @@ export default async function LeadsPage({
               <StatCell
                 label={mostrarSoParados ? "Leads parados/atrasados" : "Leads ao todo"}
                 value={mostrarSoParados ? leadsExibidos.length : leads.length}
+                sub={
+                  mostrarSoParados ? (
+                    <Link href={hrefTirarParado} className="font-medium text-red-600 hover:underline">
+                      Ver todos ✕
+                    </Link>
+                  ) : (
+                    leadsParados > 0 && (
+                      <Link
+                        href={hrefLigarParado}
+                        title="Clique pra ver só os leads parados ou atrasados"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
+                      >
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-90 [animation-duration:0.8s]" />
+                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600" />
+                        </span>
+                        {leadsParados} parado{leadsParados === 1 ? "" : "s"}/atrasado{leadsParados === 1 ? "" : "s"}
+                      </Link>
+                    )
+                  )
+                }
               />
               {ligacoesHoje !== null && (
                 <StatCell
