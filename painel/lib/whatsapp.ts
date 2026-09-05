@@ -63,6 +63,11 @@ export function salvarPreferenciaWhatsapp(preferencia: PreferenciaWhatsapp) {
   window.localStorage.setItem(CHAVE_PREFERENCIA_WHATSAPP, preferencia);
 }
 
+function ehMobile() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 // Sem preferência definida, dispara o app E o Web ao mesmo tempo, sem
 // tentar adivinhar antes se o app está instalado — não dá pra saber isso
 // de forma confiável (o navegador não avisa a tempo, então uma tentativa
@@ -70,6 +75,16 @@ export function salvarPreferenciaWhatsapp(preferencia: PreferenciaWhatsapp) {
 // os dois de qualquer jeito, só que atrasado e confuso). Com preferência
 // definida (ver components/preferencia-whatsapp-form.tsx), abre só aquele.
 export function abrirWhatsApp(telefone: string) {
+  // No celular esse joguinho de "abre os dois ao mesmo tempo" não faz
+  // sentido: web.whatsapp.com é feito pra computador (nem tem o que abrir
+  // sozinho lá), e o link wa.me é o oficial que o próprio Android/iOS já
+  // sabe interceptar e mandar direto pro app instalado. Samuel reparou que
+  // no celular estava caindo no WhatsApp Web em vez do app.
+  if (ehMobile()) {
+    window.location.href = `https://wa.me/${digitosWhatsApp(telefone)}`;
+    return;
+  }
+
   const preferencia = lerPreferenciaWhatsapp();
 
   if (preferencia === "app") {
