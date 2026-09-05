@@ -810,7 +810,23 @@ export function KanbanBoard({
                             >
                               <option value="">Mover para...</option>
                               {niveis
-                                .filter((n) => n.ordem !== lead.nivel_ordem)
+                                .filter((n) => {
+                                  if (n.ordem === lead.nivel_ordem) return false;
+                                  // "Novos Leads" é porta de mão única —
+                                  // uma vez que o lead saiu de lá, não
+                                  // aparece mais como opção (mesma trava
+                                  // do menu Nível dentro do card).
+                                  if (n.ordem === 0 && lead.nivel_ordem !== 0) return false;
+                                  // No-show/Reagendamento só fazem sentido
+                                  // saindo de "Reunião marcada".
+                                  if (
+                                    (n.ordem === NIVEL_NO_SHOW || n.ordem === NIVEL_REAGENDAMENTO) &&
+                                    lead.nivel_ordem !== NIVEL_REUNIAO_MARCADA
+                                  ) {
+                                    return false;
+                                  }
+                                  return true;
+                                })
                                 .map((n) => {
                                   const numero = numerosVisiveis.get(n.ordem);
                                   return (
@@ -852,7 +868,9 @@ export function KanbanBoard({
                         )}
 
                         {permitirProximoContatoRapido && !lead.proximo_follow_em && (
-                          <BotaoProximoContatoRapido leadId={lead.id} />
+                          <div className="md:hidden">
+                            <BotaoProximoContatoRapido leadId={lead.id} />
+                          </div>
                         )}
                       </div>
                       );
