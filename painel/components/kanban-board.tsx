@@ -592,7 +592,8 @@ export function KanbanBoard({
                           </div>
                         )}
 
-                        {permitirMarcarReuniaoRapido && !lead.reuniao_agendada_para && (
+                        {(permitirMarcarReuniaoRapido || lead.oportunidade_futura) &&
+                          !lead.reuniao_agendada_para && (
                           <button
                             type="button"
                             onClick={(e) => {
