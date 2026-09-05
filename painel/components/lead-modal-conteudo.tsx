@@ -68,7 +68,7 @@ export function LeadModalConteudo({
   useEffect(() => {
     if (!focarProposta) return;
     propostaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    const tempo = setTimeout(() => setFocarProposta(false), 4000);
+    const tempo = setTimeout(() => setFocarProposta(false), 10000);
     return () => clearTimeout(tempo);
   }, [focarProposta]);
   const {

@@ -738,7 +738,7 @@ export function EditarLeadForm({
             )}
 
           {vaiConfirmarReuniao && (
-            <div className="mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+            <div className="destaque-proposta mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
               <p className="text-sm font-medium text-amber-800">
                 Essa {reuniao(publicoOrg)} realmente aconteceu?
               </p>
@@ -787,7 +787,7 @@ export function EditarLeadForm({
           )}
 
           {vaiConfirmarReuniao && reuniaoAconteceu === "sim" && (
-            <div className="mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+            <div className="destaque-proposta mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
               <p className="text-sm font-medium text-amber-800">
                 Essa {reuniao(publicoOrg)} teve proposta?
               </p>
