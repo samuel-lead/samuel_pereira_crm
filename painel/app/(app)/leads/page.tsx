@@ -350,9 +350,9 @@ export default async function LeadsPage({
         <PageHeader
           titulo="Gestão dos leads"
           acao={
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
               <BuscaLeads />
-              <div className="flex w-full items-center justify-between gap-2">
+              <div className="flex w-full items-center justify-between gap-2 md:w-auto">
                 <div className="flex flex-wrap items-center gap-2">
                   <FiltrosColapsaveis>
                     <div className="flex flex-wrap items-center gap-3">
