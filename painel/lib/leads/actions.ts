@@ -720,9 +720,10 @@ export async function atualizarLead(
       // final é transferido depois (ver bloco após o histórico) — não
       // sobrescreve aqui com o valor antigo do formulário.
       ...(transferirParaCloserId ? {} : { responsavel_id: responsavelId }),
-      // Mover de nível cumpre o lembrete de "próximo contato" — sem isso,
-      // continuava marcado como atrasado mesmo com o lead já andando.
-      ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString(), proximo_follow_em: null } : {}),
+      // Mudar de nível NÃO apaga mais o "próximo contato" (Samuel pediu
+      // que o lembrete sobrevivesse à movimentação — só registrar
+      // nota/ligação ou cancelar manualmente é que cumpre ele de verdade).
+      ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString() } : {}),
     })
     .eq("id", leadId);
 
@@ -864,8 +865,6 @@ export async function moverLeadNivel(
       nivel_ordem: nivelReal,
       oportunidade_futura: querFutura,
       entrou_nivel_em: new Date().toISOString(),
-      // Mesma ideia do atualizarLead: arrastar o card cumpre o lembrete.
-      proximo_follow_em: null,
     })
     .eq("id", leadId);
 
@@ -944,7 +943,6 @@ export async function reativarLead(
       motivo_base: null,
       motivo_base_detalhe: null,
       entrou_nivel_em: new Date().toISOString(),
-      proximo_follow_em: null,
       ...(usuario.papel === "admin" ? { responsavel_id: novoResponsavelId || null } : {}),
     })
     .eq("id", leadId);
