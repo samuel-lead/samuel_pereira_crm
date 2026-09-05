@@ -391,7 +391,7 @@ export function EditarLeadForm({
           {vaiEntrarEmReuniaoMarcada && (
             <div
               ref={camposReuniaoRef}
-              className="mt-2 space-y-3 rounded-md border border-green-200 bg-green-50 p-3"
+              className="mt-2 scroll-mt-4 space-y-3 rounded-md border border-green-200 bg-green-50 p-3"
             >
               <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="marcada_em">
