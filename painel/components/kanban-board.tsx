@@ -35,6 +35,7 @@ const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
 const NIVEL_FOLLOW_POS_REUNIAO = 7;
 const NIVEL_REUNIAO_FEITA = 8;
+const NIVEL_BASE = 9;
 
 type LeadResumo = {
   id: string;
@@ -808,12 +809,23 @@ export function KanbanBoard({
                               onChange={(e) => {
                                 const novaOrdem = Number(e.target.value);
                                 if (!Number.isNaN(novaOrdem)) {
-                                  moverPara(
-                                    lead.id,
-                                    lead.nivel_ordem,
-                                    novaOrdem,
-                                    lead.temReuniaoAnteriorPendente ?? false
-                                  );
+                                  if (novaOrdem === NIVEL_BASE) {
+                                    // Base sempre exige escolher o motivo
+                                    // (em que área da Base o lead vai) —
+                                    // esse select simples não tem como
+                                    // perguntar isso, então abre o card
+                                    // inteiro pra escolher lá, igual o
+                                    // desktop já faz (Samuel foi vítima
+                                    // disso: moveu sem querer, sem motivo).
+                                    abrirLead(lead.id);
+                                  } else {
+                                    moverPara(
+                                      lead.id,
+                                      lead.nivel_ordem,
+                                      novaOrdem,
+                                      lead.temReuniaoAnteriorPendente ?? false
+                                    );
+                                  }
                                 }
                                 e.target.value = "";
                               }}
