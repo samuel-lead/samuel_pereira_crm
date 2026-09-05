@@ -104,7 +104,7 @@ export function BonusSdrTabela({
         <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
           {formatarMoeda(totalEquipe)}
         </p>
-        <p className="relative mt-2 text-sm font-medium text-green-100">
+        <p className="relative mt-2 hidden text-sm font-medium text-green-100 sm:block">
           {`${Calls(publicoOrg)} realizadas (≥${config.calls_tier1_qtd}/${config.calls_tier2_qtd}/${config.calls_tier3_qtd} → ${moedaCurta(config.calls_tier1_valor)}/${moedaCurta(config.calls_tier2_valor)}/${moedaCurta(config.calls_tier3_valor)}) + ${moedaCurta(config.valor_call_fim_semana)} por ${call(publicoOrg)} realizada que foi marcada no fim de semana + faturamento do mês (≥${moedaCurta(config.faturamento_tier1_valor)}/${moedaCurta(config.faturamento_tier2_valor)}/${moedaCurta(config.faturamento_tier3_valor)} → ${moedaCurta(config.faturamento_tier1_bonus)}/${moedaCurta(config.faturamento_tier2_bonus)}/${moedaCurta(config.faturamento_tier3_bonus)}).`}
           {periodo && <> Mês de {periodo}.</>}
         </p>
@@ -116,16 +116,16 @@ export function BonusSdrTabela({
             key={linha.usuarioId}
             className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm"
           >
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-neutral-900">{linha.nome}</h3>
+            <div className="mb-4 flex flex-nowrap items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <h3 className="truncate text-base font-bold text-neutral-900">{linha.nome}</h3>
                 {periodo && (
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  <span className="shrink-0 whitespace-nowrap rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
                     Mês de {periodo}
                   </span>
                 )}
               </div>
-              <span className="rounded-full bg-green-50 px-3 py-1 text-sm font-bold tabular-nums text-green-700">
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-green-50 px-3 py-1 text-sm font-bold tabular-nums text-green-700">
                 {formatarMoeda(linha.totalBonus)} de bônus
               </span>
             </div>

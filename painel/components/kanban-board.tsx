@@ -8,7 +8,7 @@ import {
   ORDEM_OPORTUNIDADE_FUTURA,
   type NivelResumo,
 } from "@/lib/niveis";
-import { moverLeadNivel, reativarLead } from "@/lib/leads/actions";
+import { moverLeadNivel, reativarLead, marcarProximoContato } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasUteisDesde } from "@/lib/datas";
 import { formatarTelefone, handleInstagram, linkInstagram } from "@/lib/texto";
@@ -218,6 +218,83 @@ function BotaoReativarOportunidade({
   );
 }
 
+// Botão de rodapé pra marcar "Próximo contato" sem abrir o card inteiro —
+// Samuel pediu isso especificamente pra Pré-vendas no mobile, onde abrir
+// o card só pra isso é lento demais. Só aparece pra quem ainda não tem
+// nada marcado (o card já mostra a data em cima, quando já tem).
+function BotaoProximoContatoRapido({ leadId }: { leadId: string }) {
+  const [aberto, setAberto] = useState(false);
+  const [pendente, iniciarTransicao] = useTransition();
+  const [erro, setErro] = useState<string | null>(null);
+
+  function aoConfirmar(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    setErro(null);
+    const formData = new FormData(evento.currentTarget);
+    iniciarTransicao(async () => {
+      try {
+        await marcarProximoContato(leadId, formData);
+        setAberto(false);
+      } catch (e) {
+        setErro(e instanceof Error ? e.message : "Não deu pra marcar");
+      }
+    });
+  }
+
+  if (!aberto) {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setAberto(true);
+        }}
+        className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 py-2 text-center text-xs font-semibold text-teal-700 transition hover:bg-teal-100"
+      >
+        <IconeCalendario className="h-3.5 w-3.5" />
+        Marcar próximo contato
+      </button>
+    );
+  }
+
+  return (
+    <form
+      onClick={(e) => e.stopPropagation()}
+      onSubmit={aoConfirmar}
+      className="mt-2.5 space-y-2 rounded-lg border border-teal-200 bg-teal-50 p-3"
+    >
+      <input
+        type="datetime-local"
+        name="proximo_follow_em"
+        required
+        autoFocus
+        onClick={(e) => e.currentTarget.showPicker?.()}
+        className="w-full rounded-md border border-teal-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      />
+      {erro && <p className="text-[11px] text-red-600">{erro}</p>}
+      <div className="flex gap-1.5">
+        <button
+          type="submit"
+          disabled={pendente}
+          className="flex-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+        >
+          Confirmar
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setAberto(false);
+            setErro(null);
+          }}
+          className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export function KanbanBoard({
   niveis,
   leadsPorNivel,
@@ -230,6 +307,7 @@ export function KanbanBoard({
   publicoOrg = "mentoria",
   permitirMarcarReuniaoRapido = false,
   niveisReativacao = [],
+  permitirProximoContatoRapido = false,
 }: {
   niveis: NivelResumo[];
   leadsPorNivel: Record<number, LeadResumo[]>;
@@ -249,6 +327,10 @@ export function KanbanBoard({
   // qualificação, Topou reunião) — usado só pelo botão "Reativar" nos
   // leads em "Repescagem futura de ICP" (ver BotaoReativarOportunidade).
   niveisReativacao?: { ordem: number; nome: string }[];
+  // Botão "Marcar próximo contato" no rodapé de cada card — Samuel pediu
+  // só pra Pré-vendas, pra não precisar abrir o card inteiro no celular
+  // só pra isso (ver BotaoProximoContatoRapido).
+  permitirProximoContatoRapido?: boolean;
   // Valor só faz sentido em Vendas — em Pré-vendas o lead ainda nem
   // negociou nada, então o quadro de Leads nunca passa isso como true.
   mostrarValor?: boolean;
@@ -767,6 +849,10 @@ export function KanbanBoard({
                                 : `Agendar ${reuniao(publicoOrg)}`}
                             </button>
                           )
+                        )}
+
+                        {permitirProximoContatoRapido && !lead.proximo_follow_em && (
+                          <BotaoProximoContatoRapido leadId={lead.id} />
                         )}
                       </div>
                       );
