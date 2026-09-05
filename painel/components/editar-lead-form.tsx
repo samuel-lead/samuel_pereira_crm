@@ -5,7 +5,13 @@ import { atualizarLead, reativarLead, type EstadoFormulario } from "@/lib/leads/
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { MenuSelect } from "@/components/menu-select";
-import { rotuloNivel, NIVEIS_REATIVACAO, nivelDeveApareceNoMenu, type NivelResumo } from "@/lib/niveis";
+import {
+  rotuloNivel,
+  NIVEIS_REATIVACAO,
+  MOTIVOS_BASE,
+  nivelDeveApareceNoMenu,
+  type NivelResumo,
+} from "@/lib/niveis";
 import { reuniao, Reuniao } from "@/lib/terminologia";
 import { IconeCalendario, IconeReativar } from "@/components/icons";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
@@ -17,15 +23,6 @@ const NIVEL_FOLLOW_POS_REUNIAO = "7";
 const NIVEL_OPORTUNIDADES = "8";
 const NIVEL_BASE = "9";
 const OPCAO_OPORTUNIDADE_FUTURA = "oportunidade_futura";
-
-const MOTIVOS_BASE = [
-  { valor: "nao_iniciou_conversa", nome: "Não consegui iniciar conversa" },
-  { valor: "qualificou_sumiu", nome: "Iniciei conversa, qualifiquei e sumiu" },
-  { valor: "iniciou_sem_interesse", nome: "Iniciei conversa e não teve interesse" },
-  { valor: "nao_reagendados", nome: "Não reagendados" },
-  { valor: "proposta_nao_comprou", nome: "Fiz proposta e não comprou" },
-  { valor: "desqualificado", nome: "Desqualificado (sem perfil pro momento)" },
-] as const;
 
 function agoraParaInputLocal() {
   const agora = new Date();

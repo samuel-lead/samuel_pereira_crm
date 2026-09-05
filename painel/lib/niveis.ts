@@ -145,6 +145,18 @@ export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
 // de data/closer, e isso o botão rápido do card não tem como perguntar.
 export const NIVEIS_REATIVACAO = [0, 1, 2, 3];
 
+// Motivos de ir pra Base — única fonte de verdade, usada tanto no menu
+// Nível dentro do card (editar-lead-form) quanto no miniformulário do
+// "Mover para..." no celular (kanban-board), pra nunca ficarem diferentes.
+export const MOTIVOS_BASE = [
+  { valor: "nao_iniciou_conversa", nome: "Não consegui iniciar conversa" },
+  { valor: "qualificou_sumiu", nome: "Iniciei conversa, qualifiquei e sumiu" },
+  { valor: "iniciou_sem_interesse", nome: "Iniciei conversa e não teve interesse" },
+  { valor: "nao_reagendados", nome: "Não reagendados" },
+  { valor: "proposta_nao_comprou", nome: "Fiz proposta e não comprou" },
+  { valor: "desqualificado", nome: "Desqualificado (sem perfil pro momento)" },
+] as const;
+
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
 // do nível 8 (Oportunidades), pro lead que já fez a reunião (ICP
 // qualificado) mas avisou que só fecha depois. Usada só no quadro Vendas —

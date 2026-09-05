@@ -7,6 +7,7 @@ import {
   rotuloNivel,
   nivelDeveApareceNoMenu,
   ORDEM_OPORTUNIDADE_FUTURA,
+  MOTIVOS_BASE,
   type NivelResumo,
 } from "@/lib/niveis";
 import { moverLeadNivel, reativarLead, marcarProximoContato } from "@/lib/leads/actions";
@@ -298,6 +299,174 @@ function BotaoProximoContatoRapido({ leadId }: { leadId: string }) {
         </button>
       </div>
     </form>
+  );
+}
+
+// Select de "Mover para..." só do mobile (alternativa ao arrastar). Base
+// exige escolher o motivo (mesma trava do menu Nível no card) — em vez de
+// abrir o card inteiro, mostra um miniformulário próprio no lugar do
+// select, só com as opções da Base (Samuel pediu especificamente isso:
+// nada de abrir o card, só o motivo).
+function SeletorMoverParaMobile({
+  lead,
+  todosNiveis,
+  numerosVisiveis,
+  moverPara,
+}: {
+  lead: LeadResumo;
+  todosNiveis: NivelResumo[];
+  numerosVisiveis: Map<number, number>;
+  moverPara: (
+    leadId: string,
+    nivelOrigem: number,
+    ordem: number,
+    temReuniaoPendente: boolean
+  ) => void;
+}) {
+  const [escolhendoMotivoBase, setEscolhendoMotivoBase] = useState(false);
+  const [motivoBase, setMotivoBase] = useState("");
+  const [motivoBaseDetalhe, setMotivoBaseDetalhe] = useState("");
+  const [pendente, iniciarTransicao] = useTransition();
+  const [erro, setErro] = useState<string | null>(null);
+
+  function aoConfirmarBase() {
+    if (!motivoBase) {
+      setErro("Escolha o motivo.");
+      return;
+    }
+    if (motivoBase === "desqualificado" && !motivoBaseDetalhe.trim()) {
+      setErro("Descreva por que está desqualificado.");
+      return;
+    }
+    setErro(null);
+    iniciarTransicao(() => {
+      moverLeadNivel(
+        lead.id,
+        NIVEL_BASE,
+        undefined,
+        undefined,
+        undefined,
+        motivoBase,
+        motivoBaseDetalhe || undefined
+      ).then((erro) => {
+        if (erro) {
+          setErro(erro);
+          return;
+        }
+        setEscolhendoMotivoBase(false);
+        setMotivoBase("");
+        setMotivoBaseDetalhe("");
+      });
+    });
+  }
+
+  if (escolhendoMotivoBase) {
+    return (
+      <div className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-2">
+        <MenuSelect
+          titulo="Por que esse lead está indo pra Base"
+          placeholder="Selecione o motivo..."
+          disabled={pendente}
+          value={motivoBase}
+          onChange={setMotivoBase}
+          abrirAoMontar
+          options={MOTIVOS_BASE.map((m) => ({ value: m.valor, label: m.nome }))}
+        />
+        {motivoBase === "desqualificado" && (
+          <textarea
+            value={motivoBaseDetalhe}
+            onChange={(e) => setMotivoBaseDetalhe(e.target.value)}
+            placeholder="Descreva por que está desqualificado..."
+            rows={2}
+            className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-xs text-neutral-900 outline-none focus:border-blue-400"
+          />
+        )}
+        {erro && <p className="text-[11px] text-red-600">{erro}</p>}
+        <div className="flex gap-1.5">
+          <button
+            type="button"
+            disabled={pendente}
+            onClick={aoConfirmarBase}
+            className="flex-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+          >
+            Confirmar
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEscolhendoMotivoBase(false);
+              setErro(null);
+            }}
+            className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <select
+      value=""
+      onChange={(e) => {
+        const novaOrdem = Number(e.target.value);
+        if (!Number.isNaN(novaOrdem)) {
+          if (novaOrdem === NIVEL_BASE) {
+            setEscolhendoMotivoBase(true);
+          } else {
+            moverPara(lead.id, lead.nivel_ordem, novaOrdem, lead.temReuniaoAnteriorPendente ?? false);
+          }
+        }
+        e.target.value = "";
+      }}
+      className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-600 outline-none focus:border-blue-400"
+    >
+      <option value="">Mover para...</option>
+      {todosNiveis
+        .filter((n) => {
+          if (n.ordem === lead.nivel_ordem) return false;
+          // "Reunião marcada" precisa de data (e opcionalmente closer) —
+          // não dá pra escolher direto nesse select simples, por isso nem
+          // aparece aqui (mesma razão do menu Nível no card ter um botão
+          // "Agendar reunião" à parte pra isso).
+          if (n.ordem === NIVEL_REUNIAO_MARCADA) return false;
+          // Nível 8 sempre passa aqui, mesmo sem reunião — o flatMap logo
+          // abaixo decide entre mostrar só a "Repescagem futura" ou as
+          // duas, porque nascem da mesma linha (mesmo tratamento do menu
+          // Nível no card).
+          if (n.ordem === NIVEL_REUNIAO_FEITA) return true;
+          return nivelDeveApareceNoMenu(lead.nivel_ordem, lead.jaTeveReuniao ?? false, n.ordem);
+        })
+        .flatMap((n) => {
+          const numero = numerosVisiveis.get(n.ordem);
+          const rotulo = `${numero ? `N${numero} - ` : ""}${separarExplicacao(n.nome).titulo}`;
+
+          if (n.ordem !== NIVEL_REUNIAO_FEITA) {
+            return [
+              <option key={n.ordem} value={n.ordem}>
+                {rotulo}
+              </option>,
+            ];
+          }
+
+          // "Oportunidades" normal exige reunião registrada — sem isso só
+          // sobra a "Repescagem futura", que não exige.
+          const opcoes = lead.jaTeveReuniao
+            ? [
+                <option key={n.ordem} value={n.ordem}>
+                  {rotulo}
+                </option>,
+              ]
+            : [];
+          opcoes.push(
+            <option key="futura" value={ORDEM_OPORTUNIDADE_FUTURA}>
+              ↳ Repescagem futura de ICP
+            </option>
+          );
+          return opcoes;
+        })}
+    </select>
   );
 }
 
@@ -804,86 +973,12 @@ export function KanbanBoard({
 
                         {arrastavel && (
                           <div className="mt-2 border-t border-neutral-100 pt-2 md:hidden" onClick={(e) => e.stopPropagation()}>
-                            <select
-                              value=""
-                              onChange={(e) => {
-                                const novaOrdem = Number(e.target.value);
-                                if (!Number.isNaN(novaOrdem)) {
-                                  if (novaOrdem === NIVEL_BASE) {
-                                    // Base sempre exige escolher o motivo
-                                    // (em que área da Base o lead vai) —
-                                    // esse select simples não tem como
-                                    // perguntar isso, então abre o card
-                                    // inteiro pra escolher lá, igual o
-                                    // desktop já faz (Samuel foi vítima
-                                    // disso: moveu sem querer, sem motivo).
-                                    abrirLead(lead.id);
-                                  } else {
-                                    moverPara(
-                                      lead.id,
-                                      lead.nivel_ordem,
-                                      novaOrdem,
-                                      lead.temReuniaoAnteriorPendente ?? false
-                                    );
-                                  }
-                                }
-                                e.target.value = "";
-                              }}
-                              className="w-full rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-xs text-neutral-600 outline-none focus:border-blue-400"
-                            >
-                              <option value="">Mover para...</option>
-                              {(todosNiveis ?? niveis)
-                                .filter((n) => {
-                                  if (n.ordem === lead.nivel_ordem) return false;
-                                  // "Reunião marcada" precisa de data (e
-                                  // opcionalmente closer) — não dá pra
-                                  // escolher direto nesse select simples,
-                                  // por isso nem aparece aqui (mesma razão
-                                  // do menu Nível no card ter um botão
-                                  // "Agendar reunião" à parte pra isso).
-                                  if (n.ordem === NIVEL_REUNIAO_MARCADA) return false;
-                                  // Nível 8 sempre passa aqui, mesmo sem
-                                  // reunião — o flatMap logo abaixo decide
-                                  // entre mostrar só a "Repescagem futura"
-                                  // ou as duas, porque nascem da mesma linha
-                                  // (mesmo tratamento do menu Nível no card).
-                                  if (n.ordem === NIVEL_REUNIAO_FEITA) return true;
-                                  return nivelDeveApareceNoMenu(
-                                    lead.nivel_ordem,
-                                    lead.jaTeveReuniao ?? false,
-                                    n.ordem
-                                  );
-                                })
-                                .flatMap((n) => {
-                                  const numero = numerosVisiveis.get(n.ordem);
-                                  const rotulo = `${numero ? `N${numero} - ` : ""}${separarExplicacao(n.nome).titulo}`;
-
-                                  if (n.ordem !== NIVEL_REUNIAO_FEITA) {
-                                    return [
-                                      <option key={n.ordem} value={n.ordem}>
-                                        {rotulo}
-                                      </option>,
-                                    ];
-                                  }
-
-                                  // "Oportunidades" normal exige reunião
-                                  // registrada — sem isso só sobra a
-                                  // "Repescagem futura", que não exige.
-                                  const opcoes = lead.jaTeveReuniao
-                                    ? [
-                                        <option key={n.ordem} value={n.ordem}>
-                                          {rotulo}
-                                        </option>,
-                                      ]
-                                    : [];
-                                  opcoes.push(
-                                    <option key="futura" value={ORDEM_OPORTUNIDADE_FUTURA}>
-                                      ↳ Repescagem futura de ICP
-                                    </option>
-                                  );
-                                  return opcoes;
-                                })}
-                            </select>
+                            <SeletorMoverParaMobile
+                              lead={lead}
+                              todosNiveis={todosNiveis ?? niveis}
+                              numerosVisiveis={numerosVisiveis}
+                              moverPara={moverPara}
+                            />
                           </div>
                         )}
 

@@ -852,7 +852,12 @@ export async function moverLeadNivel(
   // Resposta da pergunta "teve proposta?" no Kanban (arrastar o card) —
   // mesma trava de atualizarLead: se disse "sim" mas a proposta ainda não
   // foi registrada, o lead não sai de "Reunião marcada" (Samuel pediu).
-  tevePropostaConfirmada?: boolean
+  tevePropostaConfirmada?: boolean,
+  // Só usado indo pra Base (nível 9) — o "Mover para..." do celular pede
+  // isso num miniformulário próprio, sem abrir o card inteiro (mesma
+  // trava obrigatória de atualizarLead).
+  motivoBase?: string,
+  motivoBaseDetalhe?: string
 ): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -915,6 +920,17 @@ export async function moverLeadNivel(
     return "Esse lead já avançou — não dá pra voltar pra um nível de antes.";
   }
 
+  // Igual atualizarLead: ninguém move pra Base sem dizer o motivo — sem
+  // essa trava dava pra mover sem querer (foi o que aconteceu com o
+  // Samuel testando o "Mover para..." do celular).
+  if (nivelReal === NIVEL_BASE && !motivoBase) {
+    return "Escolha o motivo pelo qual esse lead está indo pra Base.";
+  }
+
+  if (nivelReal === NIVEL_BASE && motivoBase === "desqualificado" && !motivoBaseDetalhe) {
+    return 'Descreva por que esse lead está desqualificado antes de mover pra "Base".';
+  }
+
   const { erro: erroReuniao, transferirParaCloserId } = await sincronizarReuniao(supabase, {
     orgId: usuario.org_id,
     usuarioId: usuario.id,
@@ -936,6 +952,9 @@ export async function moverLeadNivel(
       nivel_ordem: nivelReal,
       oportunidade_futura: querFutura,
       entrou_nivel_em: new Date().toISOString(),
+      ...(nivelReal === NIVEL_BASE
+        ? { motivo_base: motivoBase, motivo_base_detalhe: motivoBaseDetalhe ?? null }
+        : {}),
     })
     .eq("id", leadId);
 
