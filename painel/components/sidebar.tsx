@@ -5,7 +5,6 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
-import { SinoNotificacoes } from "@/components/sino-notificacoes";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeX } from "@/components/icons";
 
@@ -187,8 +186,7 @@ export function Sidebar({
           )}
         </Link>
 
-        <div className={`mb-3 flex gap-2 ${colapsado ? "flex-col items-center" : ""}`}>
-          <SinoNotificacoes />
+        <div className="mb-3">
           <ThemeToggle colapsado={colapsado} />
         </div>
 

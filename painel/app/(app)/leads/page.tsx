@@ -401,9 +401,12 @@ export default async function LeadsPage({
                       <Link
                         href={hrefLigarParado}
                         title="Clique pra ver só os leads parados ou atrasados"
-                        className="inline-flex items-center gap-1.5 font-medium text-red-600 hover:underline"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
                       >
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500" />
+                        </span>
                         {leadsParados} parado{leadsParados === 1 ? "" : "s"}/atrasado{leadsParados === 1 ? "" : "s"}
                       </Link>
                     )
