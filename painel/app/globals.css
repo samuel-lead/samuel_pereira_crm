@@ -186,6 +186,14 @@ body {
   background-color: rgba(37, 99, 235, 0.15);
 }
 
+/* Sem essa regra, passar o mouse numa opção do menu (ex.: motivo da
+   Base) ficava com fundo azul claro do Tailwind puro mesmo no modo
+   escuro — texto claro (já ajustado pra ficar legível no fundo escuro
+   normal) virava quase invisível em cima desse azul claro sobrando. */
+.dark .hover\:bg-blue-50:hover {
+  background-color: rgba(37, 99, 235, 0.15);
+}
+
 .dark .bg-amber-50 {
   background-color: rgba(217, 119, 6, 0.15);
 }
