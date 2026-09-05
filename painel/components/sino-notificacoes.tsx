@@ -71,20 +71,6 @@ export function SinoNotificacoes() {
 
   const naoLidas = notificacoes.filter((n) => !lidas.has(chaveNotificacao(n)));
 
-  // Começa como conjunto vazio (não null) de propósito: se começasse null,
-  // a primeira carga (quando a pessoa abre o CRM) só preenchia essa lista
-  // em silêncio, sem disparar nenhuma notificação — quem já estava
-  // atrasado ANTES da pessoa abrir o CRM nunca gerava aviso, só aparecia
-  // escondido no sininho. Com conjunto vazio, a primeira carga já conta
-  // tudo que existe como "novo" e avisa.
-  const jaNotificadasRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (typeof Notification !== "undefined" && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
-
   useEffect(() => {
     const supabase = createClient();
     let ativo = true;
@@ -93,18 +79,6 @@ export function SinoNotificacoes() {
       const { data } = await supabase.rpc("listar_notificacoes");
       const lista = (data as Notificacao[]) ?? [];
       if (!ativo) return;
-
-      const chaves = new Set(lista.map((n) => `${n.tipo}-${n.lead_id}`));
-
-      const novas = lista.filter(
-        (n) => !jaNotificadasRef.current.has(`${n.tipo}-${n.lead_id}`)
-      );
-      if (novas.length > 0 && typeof Notification !== "undefined" && Notification.permission === "granted") {
-        for (const n of novas) {
-          new Notification("Meu Vendedor", { body: n.mensagem });
-        }
-      }
-      jaNotificadasRef.current = chaves;
 
       setNotificacoes(lista);
     }
