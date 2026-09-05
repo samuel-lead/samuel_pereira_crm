@@ -30,6 +30,8 @@ import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
 
 const NIVEL_REUNIAO_MARCADA = 4;
+const NIVEL_NO_SHOW = 5;
+const NIVEL_REAGENDAMENTO = 6;
 const NIVEL_FOLLOW_POS_REUNIAO = 7;
 const NIVEL_REUNIAO_FEITA = 8;
 
@@ -760,7 +762,9 @@ export function KanbanBoard({
                               className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 py-2 text-center text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-800"
                             >
                               <IconeCalendario className="h-3.5 w-3.5" />
-                              Agendar {reuniao(publicoOrg)}
+                              {lead.nivel_ordem === NIVEL_NO_SHOW || lead.nivel_ordem === NIVEL_REAGENDAMENTO
+                                ? `Reagendar ${reuniao(publicoOrg)}`
+                                : `Agendar ${reuniao(publicoOrg)}`}
                             </button>
                           )
                         )}
