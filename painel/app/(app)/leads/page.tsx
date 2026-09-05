@@ -423,7 +423,10 @@ export default async function LeadsPage({
                 value={mostrarSoParados ? leadsExibidos.length : leads.length}
                 sub={
                   mostrarSoParados ? (
-                    <Link href={hrefTirarParado} className="font-medium text-red-600 hover:underline">
+                    <Link
+                      href={hrefTirarParado}
+                      className="hidden font-medium text-red-600 hover:underline md:inline"
+                    >
                       Ver todos ✕
                     </Link>
                   ) : (
@@ -431,7 +434,7 @@ export default async function LeadsPage({
                       <Link
                         href={hrefLigarParado}
                         title="Clique pra ver só os leads parados ou atrasados"
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
+                        className="hidden items-center gap-1.5 text-xs font-medium text-red-600 hover:underline md:inline-flex"
                       >
                         <span className="relative flex h-2.5 w-2.5">
                           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-90 [animation-duration:0.8s]" />
