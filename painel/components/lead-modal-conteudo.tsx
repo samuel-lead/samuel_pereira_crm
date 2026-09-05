@@ -64,13 +64,20 @@ export function LeadModalConteudo({
 }) {
   const [focarProposta, setFocarProposta] = useState(!!abrirProposta);
   const propostaRef = useRef<HTMLDivElement>(null);
+  // Diferente das perguntas do formulário (que param em 3 piscadas): aqui
+  // só para quando a proposta é registrada de verdade — não tem timer.
+  // Samuel foi explícito: "quando eu preencher a proposta e registrar,
+  // para de piscar", não antes disso.
+  const brilhoPropostaAtivo = focarProposta && dados.lead.proposta_valor == null;
 
   useEffect(() => {
     if (!focarProposta) return;
     propostaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    const tempo = setTimeout(() => setFocarProposta(false), 10000);
-    return () => clearTimeout(tempo);
   }, [focarProposta]);
+
+  useEffect(() => {
+    if (dados.lead.proposta_valor != null) setFocarProposta(false);
+  }, [dados.lead.proposta_valor]);
   const {
     lead,
     niveis,
@@ -255,7 +262,7 @@ export function LeadModalConteudo({
           lead.nivel_ordem !== NIVEL_REAGENDAMENTO && (
             <div
               ref={propostaRef}
-              className={`scroll-mt-4 rounded-lg ${focarProposta ? "destaque-proposta" : ""}`}
+              className={`scroll-mt-4 rounded-lg ${brilhoPropostaAtivo ? "destaque-proposta" : ""}`}
             >
               <PropostaVendaCard
                 leadId={lead.id}

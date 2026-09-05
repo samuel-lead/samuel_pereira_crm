@@ -507,6 +507,9 @@ body {
   }
 }
 
+/* Pisca sem parar — quem usa essa classe é responsável por tirá-la assim
+   que a coisa for resolvida (pergunta respondida, proposta registrada).
+   Samuel foi explícito: não é um número fixo de piscadas, é até resolver. */
 .destaque-proposta {
   animation: brilho-proposta 1.3s ease-in-out infinite;
 }

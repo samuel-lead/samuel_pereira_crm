@@ -520,6 +520,7 @@ export async function atualizarLead(
   const motivoBaseForm = String(formData.get("motivo_base") ?? "").trim() || null;
   const motivoBaseDetalheForm = String(formData.get("motivo_base_detalhe") ?? "").trim() || null;
   const reuniaoAconteceuForm = String(formData.get("reuniao_aconteceu") ?? "").trim();
+  const tevePropostaForm = String(formData.get("teve_proposta") ?? "").trim();
   const reuniaoAnteriorSumiuForm = String(formData.get("reuniao_anterior_sumiu") ?? "").trim();
   // Só faz sentido em Oportunidades (nível 6) — fora dele, fica sempre false.
   const oportunidadeFutura =
@@ -707,6 +708,18 @@ export async function atualizarLead(
         erro: `Como a ${reuniao(usuario.publico_org)} não aconteceu, o lead continua em "${Reuniao(usuario.publico_org)} marcada". Mova pra "No-show" ou "Precisa reagendar" se for o caso.`,
       };
     }
+
+    // Disse que teve proposta mas não preencheu — trava o movimento
+    // inteiro igual o "Não" acima, o lead continua em "Reunião marcada"
+    // até a proposta ser registrada no card ao lado (Samuel pediu essa
+    // trava pra ninguém esquecer de registrar).
+    if (tevePropostaForm === "sim" && leadAtual.proposta_valor == null) {
+      const nomeDestino =
+        novoNivel === NIVEL_FOLLOW_POS_REUNIAO ? "Follow após reunião" : "Oportunidades";
+      return {
+        erro: `Você disse que teve proposta — registre o valor no card de Proposta (menu lateral) antes de mover pra "${nomeDestino}".`,
+      };
+    }
   }
 
   const motivoBase = novoNivel === NIVEL_BASE ? motivoBaseForm ?? leadAtual.motivo_base : null;
@@ -851,13 +864,17 @@ export async function moverLeadNivel(
   leadId: string,
   novoNivel: number,
   agendadaPara?: string | null,
-  reuniaoAconteceu?: boolean
+  reuniaoAconteceu?: boolean,
+  // Resposta da pergunta "teve proposta?" no Kanban (arrastar o card) —
+  // mesma trava de atualizarLead: se disse "sim" mas a proposta ainda não
+  // foi registrada, o lead não sai de "Reunião marcada" (Samuel pediu).
+  tevePropostaConfirmada?: boolean
 ): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id, oportunidade_futura")
+    .select("nivel_ordem, responsavel_id, oportunidade_futura, proposta_valor")
     .eq("id", leadId)
     .single();
 
@@ -893,6 +910,15 @@ export async function moverLeadNivel(
   ) {
     const nomeNivel = nivelReal === NIVEL_NO_SHOW ? "No-show" : "Precisa reagendar";
     return `Só dá pra marcar "${nomeNivel}" a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`;
+  }
+
+  if (
+    leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA &&
+    (nivelReal === NIVEL_FOLLOW_POS_REUNIAO || nivelReal === NIVEL_REUNIAO_FEITA) &&
+    tevePropostaConfirmada &&
+    leadAtual.proposta_valor == null
+  ) {
+    return `Você disse que teve proposta — registre o valor no card de Proposta antes de mover esse lead.`;
   }
 
   const { erro: erroReuniao, transferirParaCloserId } = await sincronizarReuniao(supabase, {

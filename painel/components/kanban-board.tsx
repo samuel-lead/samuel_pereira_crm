@@ -382,11 +382,11 @@ export function KanbanBoard({
       // Proposta, pra pessoa preencher na hora.
       const tevepProposta = await perguntar(`Essa ${reuniao(publicoOrg)} teve proposta?`);
       iniciarTransicao(() => {
-        moverLeadNivel(leadId, ordem, undefined, true).then((erro) => {
-          if (erro) {
-            alert(erro);
-            return;
-          }
+        moverLeadNivel(leadId, ordem, undefined, true, tevepProposta).then((erro) => {
+          if (erro) alert(erro);
+          // Abre com "sim" mesmo se o servidor recusou o movimento por
+          // falta de proposta registrada — é exatamente onde a pessoa
+          // precisa ir preencher pra poder tentar mover de novo depois.
           if (tevepProposta) abrirLead({ leadId, abrirProposta: true });
         });
       });
