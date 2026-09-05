@@ -17,6 +17,7 @@ function json(status: number, body: unknown) {
 function niveisPadrao(publico: string) {
   const palavra = publico === "imobiliario" ? "visita" : "reunião";
   const Palavra = publico === "imobiliario" ? "Visita" : "Reunião";
+  const PalavraPlural = publico === "imobiliario" ? "Visitas" : "Reuniões";
 
   return [
     {
@@ -62,11 +63,11 @@ function niveisPadrao(publico: string) {
     },
     {
       ordem: 4,
-      nome: `${Palavra} marcada`,
+      nome: `${PalavraPlural} marcadas`,
       definicao: "Dia e hora definidos",
       prazo_dias: null,
       destino_ao_estourar: null,
-      etiqueta_wpp: `${Palavra} marcada`,
+      etiqueta_wpp: `${PalavraPlural} marcadas`,
       numerado: false,
       destacado: true,
     },
@@ -224,7 +225,7 @@ Deno.serve(async (req: Request) => {
   const { error: erroMetas } = await admin.from("metas_config").insert({
     org_id: novaOrg.id,
     usuario_id: novoAuth.user.id,
-    piso_leads_dia: 30,
+    piso_leads_dia: 15,
     piso_reunioes_dia: 3,
     taxa_agendamento_min: 0.1,
     taxa_comparecimento_min: 0.8,

@@ -28,7 +28,7 @@ novos_niveis as (
     (1, 'Sem conversa iniciada', 'Mandei mensagem; o lead só visualizou, não respondeu, ou respondeu só "boa tarde" sem engatar', 5, 6),
     (2, 'Em qualificação', 'Conversa engatou, atendimento rolando, levantando os 3 critérios', null, null),
     (3, 'Topou reunião, sem horário', 'Qualificado e aceitou reunir, mas dia e hora não definidos', null, null),
-    (4, 'Reunião marcada', 'Dia e hora definidos', null, null),
+    (4, 'Reuniões marcadas', 'Dia e hora definidos', null, null),
     (5, 'Reunião feita, sem fechar', 'Reuniu, proposta na mesa, não comprou ainda', null, null),
     (6, 'Base', 'Passou por todo o processo e não virou nada. Também recebe os do nível 1 que estouraram os 5 dias', null, null)
   ) as v(ordem, nome, definicao, prazo_dias, destino_ao_estourar)
