@@ -131,6 +131,17 @@ export function EditarLeadForm({
   const [nivelSelecionado, setNivelSelecionado] = useState(
     preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
   );
+
+  // Veio do botão "Agendar reunião" — pula direto pro campo de data em vez
+  // de abrir o formulário lá em cima, obrigando a pessoa a descer pra
+  // achar o que veio fazer (Samuel pediu isso explicitamente).
+  const camposReuniaoRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (preSelecionarReuniao) {
+      camposReuniaoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [oportunidadeFutura, setOportunidadeFutura] = useState(lead.oportunidade_futura);
   const [reuniaoAconteceu, setReuniaoAconteceu] = useState("");
   const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
@@ -378,7 +389,10 @@ export function EditarLeadForm({
           )}
 
           {vaiEntrarEmReuniaoMarcada && (
-            <div className="mt-2 space-y-3 rounded-md border border-green-200 bg-green-50 p-3">
+            <div
+              ref={camposReuniaoRef}
+              className="mt-2 space-y-3 rounded-md border border-green-200 bg-green-50 p-3"
+            >
               <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="marcada_em">
                   Data em que foi marcada
