@@ -383,7 +383,13 @@ export function EditarLeadForm({
                   .filter(
                     (nivel) =>
                       String(nivel.ordem) !== NIVEL_REUNIAO_MARCADA ||
-                      String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA
+                      String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA ||
+                      // Acabou de clicar em "Agendar reunião" — mesmo essa
+                      // opção não aparecendo mais na lista normal, o campo
+                      // precisa mostrar "Reuniões marcadas" selecionado
+                      // (não "Selecione..."), pra ficar claro o que vai
+                      // acontecer e dar pra trocar de volta se quiser.
+                      nivelSelecionado === NIVEL_REUNIAO_MARCADA
                   )
                   .flatMap((nivel) => {
                     const opcao = {
