@@ -80,6 +80,10 @@ function BotaoReativar({
         titulo="Reativar pra qual nível"
         placeholder="Nível de Pré-vendas..."
         disabled={pendente}
+        // Já vem com o primeiro nível marcado — sem isso parecia que só o
+        // responsável importava, e o nível ficava esquecido vazio até
+        // alguém abrir o menu e escolher (Samuel achou estranho).
+        defaultValue={niveisReativacao[0] ? String(niveisReativacao[0].ordem) : undefined}
         options={niveisReativacao.map((n) => ({ value: String(n.ordem), label: n.nome }))}
       />
       {souAdmin && (

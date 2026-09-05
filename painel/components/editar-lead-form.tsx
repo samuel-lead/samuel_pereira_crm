@@ -220,6 +220,18 @@ export function EditarLeadForm({
       return false;
     }
 
+    // No-show e "Precisa reagendar" só existem vindo de "Reunião marcada"
+    // — os dois descrevem o que aconteceu com UMA reunião marcada
+    // específica, não dá pra pular pra eles de qualquer nível. Mesma trava
+    // de lib/leads/actions.ts, só que aqui bloqueia antes de tentar salvar
+    // (Samuel reparou que essa aqui estava faltando).
+    if (
+      (ordemDestino === NIVEL_NO_SHOW || ordemDestino === NIVEL_REAGENDAMENTO) &&
+      nivelAtual !== NIVEL_REUNIAO_MARCADA
+    ) {
+      return false;
+    }
+
     // Base e "Oportunidades futuras" ficam de fora dessa trava (Samuel
     // pediu explicitamente os dois) — só Follow e a "Oportunidades" normal
     // exigem reunião registrada.
@@ -242,6 +254,9 @@ export function EditarLeadForm({
     niveis.some(
       (n) => String(n.ordem) === NIVEL_FOLLOW_POS_REUNIAO || String(n.ordem) === NIVEL_OPORTUNIDADES
     );
+  const temNivelBloqueadoPorNaoEstarEmReuniao =
+    !saindoDeReuniaoMarcada &&
+    niveis.some((n) => String(n.ordem) === NIVEL_NO_SHOW || String(n.ordem) === NIVEL_REAGENDAMENTO);
 
   const reuniaoAtivaEhFutura = Boolean(
     reuniaoAtivaAgendadaPara && new Date(reuniaoAtivaAgendadaPara) > new Date()
@@ -353,55 +368,58 @@ export function EditarLeadForm({
         {vendido ? (
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
         ) : (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-2">
-            <label className={labelClasse} htmlFor="nivel_ordem">
-              Nível
-            </label>
+        <div className="space-y-1.5">
+          <label className="text-base font-bold text-neutral-900" htmlFor="nivel_ordem">
+            Nível
+          </label>
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <MenuSelect
+                id="nivel_ordem"
+                value={valorMenuNivel}
+                onChange={aoMudarNivel}
+                buscar={false}
+                options={niveis
+                  .filter(
+                    (nivel) =>
+                      String(nivel.ordem) !== NIVEL_REUNIAO_MARCADA ||
+                      String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA
+                  )
+                  .flatMap((nivel) => {
+                    const opcao = {
+                      value: String(nivel.ordem),
+                      label: rotuloNivel(nivel, numerosVisiveis[nivel.ordem]),
+                      disabled: !nivelPermitido(String(nivel.ordem)),
+                    };
+                    if (String(nivel.ordem) !== NIVEL_OPORTUNIDADES) return [opcao];
+                    return [
+                      opcao,
+                      {
+                        value: OPCAO_OPORTUNIDADE_FUTURA,
+                        label: "Repescagem futura de ICP",
+                        disabled: !nivelPermitido(NIVEL_OPORTUNIDADES, true),
+                        indentado: true,
+                      },
+                    ];
+                  })}
+              />
+            </div>
             {/* "Reuniões marcadas" saiu da lista de opções — tem campo
                 próprio (data, closer) que não cabe num clique só, então
-                vira um botão dedicado do lado do título "Nível", mesmo
-                visual do botão do card (Samuel pediu essa separação). */}
+                vira um botão dedicado do lado do SELETOR de nível (não só
+                do título) — Samuel confirmou essa posição depois de ver
+                ao vivo, maior e destacado igual o botão do card. */}
             {!vendido && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA && (
               <button
                 type="button"
                 onClick={aoClicarAgendarReuniao}
-                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-800"
+                className="flex shrink-0 items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm font-bold text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
               >
-                <IconeCalendario className="h-3.5 w-3.5" />
+                <IconeCalendario className="h-4 w-4" />
                 Agendar {reuniao(publicoOrg)}
               </button>
             )}
           </div>
-          <MenuSelect
-            id="nivel_ordem"
-            value={valorMenuNivel}
-            onChange={aoMudarNivel}
-            buscar={false}
-            options={niveis
-              .filter(
-                (nivel) =>
-                  String(nivel.ordem) !== NIVEL_REUNIAO_MARCADA ||
-                  String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA
-              )
-              .flatMap((nivel) => {
-                const opcao = {
-                  value: String(nivel.ordem),
-                  label: rotuloNivel(nivel, numerosVisiveis[nivel.ordem]),
-                  disabled: !nivelPermitido(String(nivel.ordem)),
-                };
-                if (String(nivel.ordem) !== NIVEL_OPORTUNIDADES) return [opcao];
-                return [
-                  opcao,
-                  {
-                    value: OPCAO_OPORTUNIDADE_FUTURA,
-                    label: "Repescagem futura de ICP",
-                    disabled: !nivelPermitido(NIVEL_OPORTUNIDADES, true),
-                    indentado: true,
-                  },
-                ];
-              })}
-          />
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
 
           {temNivelBloqueadoPorReuniaoMarcada && (
@@ -415,6 +433,12 @@ export function EditarLeadForm({
             <p className="text-xs text-neutral-400">
               Follow e Oportunidades estão bloqueados: esse lead nunca teve uma{" "}
               {reuniao(publicoOrg)} registrada.
+            </p>
+          )}
+          {temNivelBloqueadoPorNaoEstarEmReuniao && (
+            <p className="text-xs text-neutral-400">
+              No-show e Precisa reagendar estão bloqueados: só dá pra marcar a partir de
+              &quot;{Reuniao(publicoOrg)} marcada&quot;.
             </p>
           )}
 
