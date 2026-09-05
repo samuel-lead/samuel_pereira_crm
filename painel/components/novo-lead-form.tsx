@@ -134,7 +134,7 @@ export function NovoLeadForm({
 
         <p className="flex items-start gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-700">
           <span aria-hidden className="mt-0.5">💡</span>
-          O lead entra em Novos Leads, ainda não abordado. Assim que você
+          O lead entra em &quot;Novos leads&quot; (ainda não abordado). Assim que
           fizer a primeira abordagem, mova ele pro Nível 1.
         </p>
 
