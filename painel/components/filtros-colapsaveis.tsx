@@ -11,7 +11,10 @@ export function FiltrosColapsaveis({ children }: { children: React.ReactNode }) 
   const [aberto, setAberto] = useState(false);
 
   return (
-    <div className="min-w-0">
+    // Aberto, ocupa a linha inteira (só no celular) — o pai é um flex-wrap,
+    // então isso empurra o que vem depois (ex.: "Novo lead") pra uma linha
+    // nova em vez de ficar espremido do lado do painel de filtros aberto.
+    <div className={`min-w-0 ${aberto ? "w-full md:w-auto" : ""}`}>
       <button
         type="button"
         onClick={() => setAberto((atual) => !atual)}

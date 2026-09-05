@@ -352,49 +352,62 @@ export default async function LeadsPage({
           acao={
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
               <BuscaLeads />
-              <div className="flex items-center gap-2">
-                <FiltrosColapsaveis>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <FiltrosLeads
-                      usuarios={usuarios}
-                      origens={origens}
-                      usuarioInicial={usuarioFiltro}
-                      origemInicial={origemFiltro}
-                    />
-                    <Link
-                      href="/leads/importar"
-                      className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-                    >
-                      Importar leads
-                    </Link>
-                  </div>
-                </FiltrosColapsaveis>
-                {/* Fora do "Filtros" de propósito — no celular, criar lead é
-                    uma ação do dia a dia, não faz sentido esconder atrás do
-                    botão de filtro (Samuel pediu que ficasse sempre à
-                    mostra, do lado). No desktop não muda nada, já aparecia. */}
-                <Link
-                  href="/leads/novo"
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-                >
-                  + Novo lead
-                </Link>
-                {/* Só no celular — "Métricas" fica escondida por padrão lá,
-                    então esse aviso ficava enterrado sem ninguém ver
-                    (Samuel pediu pra ficar sempre à mostra, do lado do
-                    Novo lead). No desktop já aparece normal ali embaixo. */}
-                {leadsParados > 0 && (
+              <div className="flex w-full items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <FiltrosColapsaveis>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <FiltrosLeads
+                        usuarios={usuarios}
+                        origens={origens}
+                        usuarioInicial={usuarioFiltro}
+                        origemInicial={origemFiltro}
+                      />
+                      <Link
+                        href="/leads/importar"
+                        className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+                      >
+                        Importar leads
+                      </Link>
+                    </div>
+                  </FiltrosColapsaveis>
+                  {/* Fora do "Filtros" de propósito — no celular, criar lead é
+                      uma ação do dia a dia, não faz sentido esconder atrás do
+                      botão de filtro (Samuel pediu que ficasse sempre à
+                      mostra, do lado). No desktop não muda nada, já aparecia. */}
                   <Link
-                    href={hrefLigarParado}
-                    title="Clique pra ver só os leads parados ou atrasados"
-                    className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-red-600 hover:underline md:hidden"
+                    href="/leads/novo"
+                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
                   >
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-90 [animation-duration:0.8s]" />
-                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600" />
-                    </span>
-                    {leadsParados} parado{leadsParados === 1 ? "" : "s"}/atrasado{leadsParados === 1 ? "" : "s"}
+                    + Novo lead
                   </Link>
+                </div>
+                {/* Empurrado pro canto direito de propósito (justify-between
+                    no pai) — Samuel pediu bem separado do "Novo lead", quase
+                    sozinho no canto. Só no celular — "Métricas" fica
+                    escondida por padrão lá, então esse aviso ficava
+                    enterrado sem ninguém ver. No desktop já aparece normal
+                    ali embaixo. */}
+                {mostrarSoParados ? (
+                  <Link
+                    href={hrefTirarParado}
+                    className="shrink-0 text-xs font-medium text-red-600 hover:underline md:hidden"
+                  >
+                    Ver todos ✕
+                  </Link>
+                ) : (
+                  leadsParados > 0 && (
+                    <Link
+                      href={hrefLigarParado}
+                      title="Clique pra ver só os leads parados ou atrasados"
+                      className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-red-600 hover:underline md:hidden"
+                    >
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-90 [animation-duration:0.8s]" />
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600" />
+                      </span>
+                      {leadsParados} parado{leadsParados === 1 ? "" : "s"}/atrasado{leadsParados === 1 ? "" : "s"}
+                    </Link>
+                  )
                 )}
               </div>
             </div>
