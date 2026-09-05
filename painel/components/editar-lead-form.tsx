@@ -816,7 +816,7 @@ export function EditarLeadForm({
               </div>
               {tevePropostaResposta === "sim" && (
                 <p className="text-xs text-amber-700">
-                  Depois de salvar, o card de Proposta abre destacado pra você preencher.
+                  Depois de salvar, registre a proposta no menu lateral à direita.
                 </p>
               )}
             </div>
