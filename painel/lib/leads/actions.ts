@@ -971,7 +971,7 @@ export async function reativarLead(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id")
+    .select("nivel_ordem, responsavel_id, oportunidade_futura")
     .eq("id", leadId)
     .single();
 
@@ -987,16 +987,23 @@ export async function reativarLead(
     return ERRO_SEM_PERMISSAO;
   }
 
+  // Reativar de "Repescagem futura de ICP" usa o mesmo botão e a mesma
+  // trava de Base, mas o card em Pré-vendas precisa dizer de onde veio —
+  // Samuel foi explícito que os dois textos são diferentes.
+  const origem = leadAtual.nivel_ordem === NIVEL_BASE ? "base" : "repescagem_icp";
+
   const { error } = await supabase
     .from("leads")
     .update({
       nivel_ordem: novoNivel,
       motivo_base: null,
       motivo_base_detalhe: null,
+      oportunidade_futura: false,
       entrou_nivel_em: new Date().toISOString(),
       // Fica marcado pra sempre — Samuel quer isso visível direto no
       // card, não só escondido na linha do tempo do lead.
       reativado_da_base_em: new Date().toISOString(),
+      reativado_origem: origem,
       ...(usuario.papel === "admin" ? { responsavel_id: novoResponsavelId || null } : {}),
     })
     .eq("id", leadId);
@@ -1010,7 +1017,7 @@ export async function reativarLead(
     lead_id: leadId,
     de_ordem: leadAtual.nivel_ordem,
     para_ordem: novoNivel,
-    motivo: "Reativado da Base",
+    motivo: origem === "base" ? "Reativado da Base" : "Reativado da Repescagem de ICP",
     automatico: false,
     usuario_id: usuario.id,
   });

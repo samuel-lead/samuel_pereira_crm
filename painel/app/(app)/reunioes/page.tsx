@@ -23,6 +23,7 @@ import {
 } from "@/lib/metricas";
 import {
   NIVEIS_VENDAS,
+  NIVEIS_REATIVACAO,
   NIVEL_OPORTUNIDADE_FUTURA,
   ORDEM_OPORTUNIDADE_FUTURA,
   numerarNiveis,
@@ -62,6 +63,7 @@ type LeadResumo = {
   responsavel_id: string | null;
   oportunidade_futura: boolean;
   reativado_da_base_em: string | null;
+  reativado_origem: string | null;
   valor_venda: number | null;
   proposta_valor: number | null;
   proximo_follow_em: string | null;
@@ -93,7 +95,7 @@ export default async function VendasPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, reativado_da_base_em, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao)"
+      "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, reativado_da_base_em, reativado_origem, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao)"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
@@ -118,7 +120,7 @@ export default async function VendasPage({
   ] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     consulta,
-    supabase.from("usuarios").select("id, nome, foto_url").order("nome"),
+    supabase.from("usuarios").select("id, nome, foto_url, funcao").order("nome"),
     supabase
       .from("leads")
       .select("origem")
@@ -138,6 +140,7 @@ export default async function VendasPage({
     ...todosNiveis.filter((nivel) => NIVEIS_VENDAS.includes(nivel.ordem)),
     NIVEL_OPORTUNIDADE_FUTURA,
   ];
+  const niveisReativacao = todosNiveis.filter((nivel) => NIVEIS_REATIVACAO.includes(nivel.ordem));
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
@@ -399,6 +402,7 @@ export default async function VendasPage({
             souAdmin={souAdmin}
             usuarioAtualId={user?.id ?? null}
             usuarios={usuarios}
+            niveisReativacao={niveisReativacao}
             mostrarValor
             numerosVisiveis={numerosVisiveis}
             publicoOrg={publicoOrg}

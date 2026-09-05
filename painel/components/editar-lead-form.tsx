@@ -72,11 +72,13 @@ const estadoInicial: EstadoFormulario = { erro: null };
 function BlocoReativarLead({
   leadId,
   niveisReativacao,
+  numerosVisiveis,
   usuarios,
   souAdmin,
 }: {
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
+  numerosVisiveis: Record<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin: boolean;
 }) {
@@ -128,7 +130,10 @@ function BlocoReativarLead({
         value={nivel}
         onChange={setNivel}
         abrirAoMontar
-        options={niveisReativacao.map((n) => ({ value: String(n.ordem), label: n.nome }))}
+        options={niveisReativacao.map((n) => ({
+          value: String(n.ordem),
+          label: rotuloNivel(n, numerosVisiveis[n.ordem]),
+        }))}
       />
       {nivel && souAdmin && (
         <MenuSelect
@@ -320,10 +325,11 @@ export function EditarLeadForm({
   const vendido = lead.status === "vendido";
   const nomeResponsavelAtual =
     usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
-  // Lead na Base: sem nível pra escolher, sem "Agendar reunião" — só o
-  // botão "Reativar" (Samuel foi explícito: reativar é coisa de Base, a
-  // "Repescagem futura de ICP" continua exatamente como estava).
-  const estaNaBase = String(lead.nivel_ordem) === NIVEL_BASE;
+  // Lead na Base ou em "Repescagem futura de ICP": sem nível pra
+  // escolher, sem "Agendar reunião" — só o botão "Reativar", igual nos
+  // dois casos (Samuel pediu explicitamente que a Repescagem futura
+  // ficasse igual à Base).
+  const estaNaBase = String(lead.nivel_ordem) === NIVEL_BASE || lead.oportunidade_futura;
   const niveisReativacao = niveis.filter((n) => NIVEIS_REATIVACAO.includes(n.ordem));
 
   // Mesmas travas de painel/lib/leads/actions.ts (sincronizarReuniao), só
@@ -535,6 +541,7 @@ export function EditarLeadForm({
             <BlocoReativarLead
               leadId={lead.id}
               niveisReativacao={niveisReativacao}
+              numerosVisiveis={numerosVisiveis}
               usuarios={usuarios}
               souAdmin={souAdmin}
             />

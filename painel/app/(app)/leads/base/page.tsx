@@ -4,7 +4,7 @@ import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { BuscaLeads } from "@/components/busca-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 import { removerAcento } from "@/lib/texto";
-import { NIVEIS_REATIVACAO } from "@/lib/niveis";
+import { NIVEIS_REATIVACAO, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
 type LeadComHistorico = LeadBase & {
   criterio_problema: string | null;
@@ -65,9 +65,11 @@ export default async function BasePage({
   const [{ data: leadsData }, { data: usuariosData }, { data: niveisData }] = await Promise.all([
     consulta,
     supabase.from("usuarios").select("id, nome, foto_url, funcao"),
-    supabase.from("niveis").select("ordem, nome").in("ordem", NIVEIS_REATIVACAO).order("ordem"),
+    supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
   ]);
-  const niveisReativacao = niveisData ?? [];
+  const todosNiveis = (niveisData ?? []) as NivelResumo[];
+  const numerosVisiveis = numerarNiveis(todosNiveis);
+  const niveisReativacao = todosNiveis.filter((nivel) => NIVEIS_REATIVACAO.includes(nivel.ordem));
 
   const leads = (leadsData ?? []) as LeadComHistorico[];
   const leadIds = leads.map((l) => l.id);
@@ -125,6 +127,7 @@ export default async function BasePage({
           nomePorUsuario={nomePorUsuario}
           fotoPorUsuario={fotoPorUsuario}
           niveisReativacao={niveisReativacao}
+          numerosVisiveis={numerosVisiveis}
           usuarios={usuarios}
           souAdmin={souAdmin}
         />

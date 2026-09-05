@@ -178,7 +178,7 @@ export function numerarNiveis(niveis: NivelResumo[]) {
   return numeros;
 }
 
-export function rotuloNivel(nivel: NivelResumo, numeroVisivel: number | undefined) {
+export function rotuloNivel(nivel: { nome: string }, numeroVisivel: number | undefined) {
   return numeroVisivel ? `Nível ${numeroVisivel}. ${nivel.nome}` : nivel.nome;
 }
 

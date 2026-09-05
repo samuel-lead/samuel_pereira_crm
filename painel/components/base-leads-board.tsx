@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { IconeWhatsapp, IconeInstagram, IconeReativar } from "@/components/icons";
+import { rotuloNivel } from "@/lib/niveis";
 import { AvatarLead } from "@/components/avatar-lead";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
@@ -19,11 +20,13 @@ import { reativarLead } from "@/lib/leads/actions";
 function BotaoReativar({
   leadId,
   niveisReativacao,
+  numerosVisiveis,
   usuarios,
   souAdmin,
 }: {
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
+  numerosVisiveis: Map<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin: boolean;
 }) {
@@ -84,7 +87,10 @@ function BotaoReativar({
         value={nivel}
         onChange={setNivel}
         abrirAoMontar
-        options={niveisReativacao.map((n) => ({ value: String(n.ordem), label: n.nome }))}
+        options={niveisReativacao.map((n) => ({
+          value: String(n.ordem),
+          label: rotuloNivel(n, numerosVisiveis.get(n.ordem)),
+        }))}
       />
       {/* Responsável só aparece depois de escolher o nível — Samuel pediu
           essa revelação em etapas, uma coisa de cada vez. */}
@@ -188,6 +194,7 @@ export function BaseLeadsBoard({
   nomePorUsuario,
   fotoPorUsuario,
   niveisReativacao,
+  numerosVisiveis,
   usuarios,
   souAdmin,
 }: {
@@ -195,6 +202,7 @@ export function BaseLeadsBoard({
   nomePorUsuario: Map<string, string>;
   fotoPorUsuario?: Map<string, string | null>;
   niveisReativacao: { ordem: number; nome: string }[];
+  numerosVisiveis: Map<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin: boolean;
 }) {
@@ -348,6 +356,7 @@ export function BaseLeadsBoard({
                     <BotaoReativar
                       leadId={lead.id}
                       niveisReativacao={niveisReativacao}
+                      numerosVisiveis={numerosVisiveis}
                       usuarios={usuarios}
                       souAdmin={souAdmin}
                     />
