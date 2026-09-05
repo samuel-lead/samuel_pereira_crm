@@ -246,6 +246,32 @@ export function EditarLeadForm({
     return true;
   }
 
+  // Diferente de nivelPermitido (que só desabilita, deixando visível e
+  // acinzentado): esses dois casos nem devem aparecer na lista. Samuel foi
+  // enfático — "já aconteceu, não tem como voltar" pros níveis de antes da
+  // reunião, e No-show/Reagendamento só fazem sentido saindo de "Reunião
+  // marcada" — de qualquer outro nível nem é opção.
+  function deveApareceNoMenu(ordemDestino: string): boolean {
+    const nivelAtual = String(lead.nivel_ordem);
+    if (ordemDestino === nivelAtual) return true;
+
+    if (
+      jaTeveReuniao &&
+      (ordemDestino === "0" || ordemDestino === "1" || ordemDestino === "2" || ordemDestino === "3")
+    ) {
+      return false;
+    }
+
+    if (
+      (ordemDestino === NIVEL_NO_SHOW || ordemDestino === NIVEL_REAGENDAMENTO) &&
+      nivelAtual !== NIVEL_REUNIAO_MARCADA
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
   const saindoDeReuniaoMarcada = String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA;
   const temNivelBloqueadoPorReuniaoMarcada =
     saindoDeReuniaoMarcada && niveis.some((n) => !nivelPermitido(String(n.ordem)));
@@ -254,9 +280,6 @@ export function EditarLeadForm({
     niveis.some(
       (n) => String(n.ordem) === NIVEL_FOLLOW_POS_REUNIAO || String(n.ordem) === NIVEL_OPORTUNIDADES
     );
-  const temNivelBloqueadoPorNaoEstarEmReuniao =
-    !saindoDeReuniaoMarcada &&
-    niveis.some((n) => String(n.ordem) === NIVEL_NO_SHOW || String(n.ordem) === NIVEL_REAGENDAMENTO);
 
   const reuniaoAtivaEhFutura = Boolean(
     reuniaoAtivaAgendadaPara && new Date(reuniaoAtivaAgendadaPara) > new Date()
@@ -382,14 +405,15 @@ export function EditarLeadForm({
                 options={niveis
                   .filter(
                     (nivel) =>
-                      String(nivel.ordem) !== NIVEL_REUNIAO_MARCADA ||
-                      String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA ||
-                      // Acabou de clicar em "Agendar reunião" — mesmo essa
-                      // opção não aparecendo mais na lista normal, o campo
-                      // precisa mostrar "Reuniões marcadas" selecionado
-                      // (não "Selecione..."), pra ficar claro o que vai
-                      // acontecer e dar pra trocar de volta se quiser.
-                      nivelSelecionado === NIVEL_REUNIAO_MARCADA
+                      (String(nivel.ordem) !== NIVEL_REUNIAO_MARCADA ||
+                        String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA ||
+                        // Acabou de clicar em "Agendar reunião" — mesmo essa
+                        // opção não aparecendo mais na lista normal, o campo
+                        // precisa mostrar "Reuniões marcadas" selecionado
+                        // (não "Selecione..."), pra ficar claro o que vai
+                        // acontecer e dar pra trocar de volta se quiser.
+                        nivelSelecionado === NIVEL_REUNIAO_MARCADA) &&
+                      deveApareceNoMenu(String(nivel.ordem))
                   )
                   .flatMap((nivel) => {
                     const opcao = {
@@ -441,13 +465,6 @@ export function EditarLeadForm({
               {reuniao(publicoOrg)} registrada.
             </p>
           )}
-          {temNivelBloqueadoPorNaoEstarEmReuniao && (
-            <p className="text-xs text-neutral-400">
-              No-show e Precisa reagendar estão bloqueados: só dá pra marcar a partir de
-              &quot;{Reuniao(publicoOrg)} marcada&quot;.
-            </p>
-          )}
-
           {vaiEntrarEmReuniaoMarcada && (
             <div
               ref={camposReuniaoRef}

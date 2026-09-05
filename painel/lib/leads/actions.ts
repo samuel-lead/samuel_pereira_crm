@@ -618,6 +618,25 @@ export async function atualizarLead(
     };
   }
 
+  // Depois de já ter tido uma reunião, não dá pra voltar pros níveis de
+  // antes dela (Novos Leads até Topou reunião sem horário) — isso já
+  // aconteceu, não tem como desfazer, e voltar pra trás corrompe as
+  // taxas de agendamento/comparecimento que já foram contadas com base
+  // nessa reunião. Mesma trava do menu (ver deveApareceNoMenu em
+  // editar-lead-form.tsx), agora no servidor pra não dar pra burlar.
+  if (nivelMudou && (novoNivel === 0 || novoNivel === 1 || novoNivel === 2 || novoNivel === 3)) {
+    const { count: totalReunioes } = await supabase
+      .from("reunioes")
+      .select("id", { count: "exact", head: true })
+      .eq("lead_id", leadId);
+
+    if (totalReunioes && totalReunioes > 0) {
+      return {
+        erro: `Esse lead já teve uma ${reuniao(usuario.publico_org)} registrada — não dá pra voltar pra um nível de antes dela.`,
+      };
+    }
+  }
+
   // "Fiz proposta e não comprou" só faz sentido se a proposta e o perfil
   // do lead já estiverem registrados — senão fica um lead na Base sem
   // nenhum contexto de por que não fechou.
