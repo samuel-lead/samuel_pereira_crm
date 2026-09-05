@@ -943,6 +943,9 @@ export async function reativarLead(
       motivo_base: null,
       motivo_base_detalhe: null,
       entrou_nivel_em: new Date().toISOString(),
+      // Fica marcado pra sempre — Samuel quer isso visível direto no
+      // card, não só escondido na linha do tempo do lead.
+      reativado_da_base_em: new Date().toISOString(),
       ...(usuario.papel === "admin" ? { responsavel_id: novoResponsavelId || null } : {}),
     })
     .eq("id", leadId);
