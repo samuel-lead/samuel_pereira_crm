@@ -35,7 +35,7 @@ export function ThemeToggle({ colapsado = false }: { colapsado?: boolean }) {
     <button
       type="button"
       onClick={alternar}
-      className="flex h-9 flex-1 items-center justify-center rounded-md border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-700"
+      className="flex h-9 w-full items-center justify-center rounded-md border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-700"
     >
       {escuro ? "Modo claro" : "Modo escuro"}
     </button>
