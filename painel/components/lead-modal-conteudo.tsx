@@ -262,7 +262,7 @@ export function LeadModalConteudo({
           lead.nivel_ordem !== NIVEL_REAGENDAMENTO && (
             <div
               ref={propostaRef}
-              className={`scroll-mt-4 rounded-lg ${brilhoPropostaAtivo ? "destaque-proposta" : ""}`}
+              className={`scroll-mt-16 rounded-lg ${brilhoPropostaAtivo ? "destaque-proposta" : ""}`}
             >
               <PropostaVendaCard
                 leadId={lead.id}
