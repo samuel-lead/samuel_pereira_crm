@@ -379,6 +379,23 @@ export default async function LeadsPage({
                 >
                   + Novo lead
                 </Link>
+                {/* Só no celular — "Métricas" fica escondida por padrão lá,
+                    então esse aviso ficava enterrado sem ninguém ver
+                    (Samuel pediu pra ficar sempre à mostra, do lado do
+                    Novo lead). No desktop já aparece normal ali embaixo. */}
+                {leadsParados > 0 && (
+                  <Link
+                    href={hrefLigarParado}
+                    title="Clique pra ver só os leads parados ou atrasados"
+                    className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-red-600 hover:underline md:hidden"
+                  >
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-90 [animation-duration:0.8s]" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600" />
+                    </span>
+                    {leadsParados} parado{leadsParados === 1 ? "" : "s"}/atrasado{leadsParados === 1 ? "" : "s"}
+                  </Link>
+                )}
               </div>
             </div>
           }
