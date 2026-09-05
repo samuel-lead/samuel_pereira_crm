@@ -131,12 +131,13 @@ export const NIVEIS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
 export const NIVEIS_VENDAS = [4, 7, 8];
 
 // Diferente de NIVEIS_PRE_VENDAS: essa é a lista de COLUNAS mostradas no
-// quadro de Pré-vendas — inclui "Reunião marcada" (ordem 4) mesmo ela nunca
-// tendo lead de verdade ali (olhe NIVEIS_PRE_VENDAS acima). A coluna existe
-// só como alvo pro SDR arrastar o card e abrir o formulário de marcar a
-// reunião; a coluna sempre aparece vazia porque o lead sai do Pré-vendas
-// assim que entra nela.
-export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 4, 5, 6];
+// quadro de Pré-vendas. "Reunião marcada" (ordem 4) NÃO entra mais aqui —
+// ela ficava sempre vazia (o lead sai do Pré-vendas assim que entra nela) e
+// Samuel achou sem sentido manter uma coluna que nunca tem lead nenhum. O
+// jeito de marcar a reunião agora é o botão "Marcar {call}" no rodapé do
+// card (ver permitirMarcarReuniaoRapido em kanban-board.tsx), não mais
+// arrastar pra uma coluna.
+export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
 
 // Níveis pra onde dá pra reativar um lead direto do card na Base, sem
 // passar por mais nada — os que não exigem reunião nenhuma registrada

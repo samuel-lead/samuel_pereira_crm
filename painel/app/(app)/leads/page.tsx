@@ -470,6 +470,7 @@ export default async function LeadsPage({
             usuarios={usuarios}
             numerosVisiveis={numerosVisiveis}
             publicoOrg={publicoOrg}
+            permitirMarcarReuniaoRapido
           />
         )}
       </main>

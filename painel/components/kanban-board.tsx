@@ -101,12 +101,18 @@ export function KanbanBoard({
   mostrarParado = true,
   numerosVisiveis: numerosVisiveisExternos,
   publicoOrg = "mentoria",
+  permitirMarcarReuniaoRapido = false,
 }: {
   niveis: NivelResumo[];
   leadsPorNivel: Record<number, LeadResumo[]>;
   souAdmin?: boolean;
   usuarioAtualId?: string | null;
   publicoOrg?: string;
+  // Botão "Marcar {call}" no rodapé de cada card — só faz sentido em
+  // Pré-vendas, onde a coluna "Reunião marcada" nem aparece mais (Samuel
+  // achou sem sentido ficar uma coluna sempre vazia só como alvo de
+  // arrastar). Em Vendas a coluna continua normal, com lead de verdade.
+  permitirMarcarReuniaoRapido?: boolean;
   // Nome (e foto) de cada responsável, pra mostrar "Responsável: Fulano"
   // no card sem precisar buscar de novo — a lista já vem carregada pro
   // filtro.
@@ -193,29 +199,35 @@ export function KanbanBoard({
   // Mesma lógica de mover um lead de nível, usada tanto ao soltar o card
   // arrastado (mouse) quanto ao escolher no menu "Mover para" (touch/celular,
   // onde não dá pra arrastar) — as travas e confirmações valem pros dois.
+  // "Reunião marcada" precisa da data da reunião — manda pra tela de
+  // editar em vez de mover na hora, pra usar o seletor de data de verdade.
+  // Se esse lead tem uma reunião anterior esquecida (ainda "marcada",
+  // data já passada), pergunta na hora — um aviso que trava a tela, igual
+  // "Excluir lead" — em vez de deixar a pergunta escondida dentro do
+  // formulário. A resposta vai junto na URL, pra tela nem perguntar de novo.
+  // Usada tanto ao arrastar o card pra "Reunião marcada" quanto pelo botão
+  // "Marcar {call}" — mesmo caminho, dois jeitos de chegar nele.
+  async function abrirParaMarcarReuniao(leadId: string, temReuniaoPendente: boolean) {
+    if (temReuniaoPendente) {
+      const sumiu = await perguntar(
+        `Esse lead tem uma ${reuniao(publicoOrg)} anterior marcada que já passou da data. O que aconteceu?`,
+        "Sumiu, não avisou nada",
+        "Avisou antes"
+      );
+      abrirLead({ leadId, marcarReuniao: true, reuniaoAnteriorSumiu: sumiu ? "sim" : "nao" });
+      return;
+    }
+    abrirLead({ leadId, marcarReuniao: true });
+  }
+
   async function moverPara(
     leadId: string,
     nivelOrigem: number,
     ordem: number,
     temReuniaoPendente: boolean
   ) {
-    // "Reunião marcada" precisa da data da reunião — manda pra tela de
-    // editar em vez de mover na hora, pra usar o seletor de data de verdade.
-    // Se esse lead tem uma reunião anterior esquecida (ainda "marcada",
-    // data já passada), pergunta na hora — um aviso que trava a tela, igual
-    // "Excluir lead" — em vez de deixar a pergunta escondida dentro do
-    // formulário. A resposta vai junto na URL, pra tela nem perguntar de novo.
     if (ordem === NIVEL_REUNIAO_MARCADA) {
-      if (temReuniaoPendente) {
-        const sumiu = await perguntar(
-          `Esse lead tem uma ${reuniao(publicoOrg)} anterior marcada que já passou da data. O que aconteceu?`,
-          "Sumiu, não avisou nada",
-          "Avisou antes"
-        );
-        abrirLead({ leadId, marcarReuniao: true, reuniaoAnteriorSumiu: sumiu ? "sim" : "nao" });
-        return;
-      }
-      abrirLead({ leadId, marcarReuniao: true });
+      await abrirParaMarcarReuniao(leadId, temReuniaoPendente);
       return;
     }
 
@@ -578,6 +590,20 @@ export function KanbanBoard({
                                 })}
                             </select>
                           </div>
+                        )}
+
+                        {permitirMarcarReuniaoRapido && !lead.reuniao_agendada_para && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              abrirParaMarcarReuniao(lead.id, lead.temReuniaoAnteriorPendente ?? false);
+                            }}
+                            className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 py-2 text-center text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-800"
+                          >
+                            <IconeCalendario className="h-3.5 w-3.5" />
+                            Agendar {reuniao(publicoOrg)}
+                          </button>
                         )}
                       </div>
                       );
