@@ -255,9 +255,7 @@ export function LeadModalConteudo({
           lead.nivel_ordem !== NIVEL_REAGENDAMENTO && (
             <div
               ref={propostaRef}
-              className={`scroll-mt-4 rounded-lg transition ${
-                focarProposta ? "ring-2 ring-amber-400" : ""
-              }`}
+              className={`scroll-mt-4 rounded-lg ${focarProposta ? "destaque-proposta" : ""}`}
             >
               <PropostaVendaCard
                 leadId={lead.id}
