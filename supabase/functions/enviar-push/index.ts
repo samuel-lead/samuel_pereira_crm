@@ -62,8 +62,12 @@ Deno.serve(async (req: Request) => {
     if (error || !data.user) return json(401, { erro: "Token inválido" });
 
     usuarioId = data.user.id;
-    titulo = "Meu Vendedor";
-    mensagem = "Notificação de teste — se você viu isso, tá funcionando! 🎉";
+    // Não usa "Meu Vendedor" aqui de propósito — o iOS já gruda "from Meu
+    // Vendedor" embaixo do título sozinho (é o nome do app instalado, não
+    // dá pra tirar via código); repetir o mesmo texto como título deixava
+    // parecendo duplicado à toa.
+    titulo = "Notificação de teste";
+    mensagem = "Se você viu isso, tá funcionando! 🎉";
     url = "/perfil";
   } else {
     // Chamada interna (gatilhos do CRM) — exige o segredo interno, não o
