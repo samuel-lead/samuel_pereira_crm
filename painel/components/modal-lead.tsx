@@ -15,11 +15,13 @@ export function ModalLead({
   leadId,
   marcarReuniao,
   reuniaoAnteriorSumiu,
+  abrirProposta,
   aoFechar,
 }: {
   leadId: string;
   marcarReuniao?: boolean;
   reuniaoAnteriorSumiu?: "sim" | "nao";
+  abrirProposta?: boolean;
   aoFechar: () => void;
 }) {
   // Se a pessoa passou o mouse no card antes de clicar, os dados já
@@ -111,6 +113,7 @@ export function ModalLead({
                   dados={dados}
                   marcarReuniao={marcarReuniao}
                   reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
+                  abrirProposta={abrirProposta}
                 />
               </ContextoLeadModalAtivo.Provider>
             </>

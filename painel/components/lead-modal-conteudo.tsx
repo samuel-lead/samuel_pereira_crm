@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { RegistrarNotaForm } from "@/components/registrar-nota-form";
 import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
@@ -50,11 +51,26 @@ export function LeadModalConteudo({
   dados,
   marcarReuniao,
   reuniaoAnteriorSumiu,
+  abrirProposta,
 }: {
   dados: DetalhesLead;
   marcarReuniao?: boolean;
   reuniaoAnteriorSumiu?: "sim" | "nao";
+  // Veio do Kanban (arrastou e confirmou "teve proposta") ou do próprio
+  // formulário aqui dentro (mudou o nível manualmente e confirmou também)
+  // — nos dois casos, rola até o card de Proposta e destaca, pra ninguém
+  // esquecer de preencher (Samuel pediu essa trava).
+  abrirProposta?: boolean;
 }) {
+  const [focarProposta, setFocarProposta] = useState(!!abrirProposta);
+  const propostaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!focarProposta) return;
+    propostaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const tempo = setTimeout(() => setFocarProposta(false), 4000);
+    return () => clearTimeout(tempo);
+  }, [focarProposta]);
   const {
     lead,
     niveis,
@@ -178,6 +194,7 @@ export function LeadModalConteudo({
           jaTeveReuniao={reunioes.length > 0}
           reuniaoAtivaAgendadaPara={reuniaoAtiva?.agendada_para ?? null}
           reuniaoAtivaCloserId={reuniaoAtiva?.closer_id ?? null}
+          aoConfirmarTeveProposta={() => setFocarProposta(true)}
         />
       </div>
 
@@ -236,15 +253,22 @@ export function LeadModalConteudo({
           lead.nivel_ordem >= NIVEL_REUNIAO_MARCADA &&
           lead.nivel_ordem !== NIVEL_NO_SHOW &&
           lead.nivel_ordem !== NIVEL_REAGENDAMENTO && (
-            <PropostaVendaCard
-              leadId={lead.id}
-              propostaAtual={{
-                valor: lead.proposta_valor,
-                enviadaEm: lead.proposta_enviada_em,
-                observacao: lead.proposta_observacao,
-              }}
-              produtos={produtos}
-            />
+            <div
+              ref={propostaRef}
+              className={`scroll-mt-4 rounded-lg transition ${
+                focarProposta ? "ring-2 ring-amber-400" : ""
+              }`}
+            >
+              <PropostaVendaCard
+                leadId={lead.id}
+                propostaAtual={{
+                  valor: lead.proposta_valor,
+                  enviadaEm: lead.proposta_enviada_em,
+                  observacao: lead.proposta_observacao,
+                }}
+                produtos={produtos}
+              />
+            </div>
           )
         )}
 

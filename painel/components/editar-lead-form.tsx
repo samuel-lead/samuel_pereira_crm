@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
-import { atualizarLead, type EstadoFormulario } from "@/lib/leads/actions";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { atualizarLead, reativarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { MenuSelect } from "@/components/menu-select";
-import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
+import { rotuloNivel, NIVEIS_REATIVACAO, type NivelResumo } from "@/lib/niveis";
 import { reuniao, Reuniao } from "@/lib/terminologia";
-import { IconeCalendario } from "@/components/icons";
+import { IconeCalendario, IconeReativar } from "@/components/icons";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const NIVEL_REUNIAO_MARCADA = "4";
@@ -63,6 +63,114 @@ const campoClasse =
 const labelClasse = "text-sm font-medium text-neutral-700";
 const estadoInicial: EstadoFormulario = { erro: null };
 
+// Lead na Base: o card inteiro (aberto por aqui, "por dentro") não tem
+// mais nível pra escolher nem "Agendar reunião" — só esse botão, igual ao
+// que já existe "por fora" no rodapé do card em base-leads-board.tsx.
+// Não pode ser um <form> de verdade porque esse componente já vive dentro
+// do <form> principal do lead (HTML não permite form aninhado) — por
+// isso o nível e o responsável ficam em estado local em vez de FormData.
+function BlocoReativarLead({
+  leadId,
+  niveisReativacao,
+  usuarios,
+  souAdmin,
+}: {
+  leadId: string;
+  niveisReativacao: { ordem: number; nome: string }[];
+  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  souAdmin: boolean;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [nivel, setNivel] = useState("");
+  const [responsavelId, setResponsavelId] = useState("");
+  const [pendente, iniciarTransicao] = useTransition();
+  const [erro, setErro] = useState<string | null>(null);
+
+  function aoConfirmar() {
+    if (!nivel) {
+      setErro("Escolha pra qual nível reativar.");
+      return;
+    }
+    setErro(null);
+    iniciarTransicao(() => {
+      reativarLead(leadId, Number(nivel), souAdmin ? responsavelId : undefined).then((erro) => {
+        setErro(erro);
+        if (!erro) {
+          setAberto(false);
+          setNivel("");
+          setResponsavelId("");
+        }
+      });
+    });
+  }
+
+  if (niveisReativacao.length === 0) return null;
+
+  if (!aberto) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 py-2.5 text-sm font-bold text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
+      >
+        <IconeReativar className="h-4 w-4" />
+        Reativar
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+      <MenuSelect
+        titulo="Reativar pra qual nível"
+        placeholder="Nível de Pré-vendas..."
+        disabled={pendente}
+        value={nivel}
+        onChange={setNivel}
+        abrirAoMontar
+        options={niveisReativacao.map((n) => ({ value: String(n.ordem), label: n.nome }))}
+      />
+      {nivel && souAdmin && (
+        <MenuSelect
+          titulo="Quem vai ser o responsável"
+          placeholder="Quem vai ser o responsável..."
+          disabled={pendente}
+          value={responsavelId}
+          onChange={setResponsavelId}
+          abrirAoMontar
+          options={[
+            { value: "", label: "— Sem responsável —" },
+            ...usuarios
+              .filter((u) => u.funcao === "sdr")
+              .map((u) => ({ value: u.id, label: u.nome })),
+          ]}
+        />
+      )}
+      {erro && <p className="text-[11px] text-red-600">{erro}</p>}
+      <div className="flex gap-1.5">
+        <button
+          type="button"
+          disabled={pendente}
+          onClick={aoConfirmar}
+          className="flex-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+        >
+          Confirmar
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setAberto(false);
+            setErro(null);
+          }}
+          className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function EditarLeadForm({
   lead,
   niveis,
@@ -78,6 +186,7 @@ export function EditarLeadForm({
   jaTeveReuniao = true,
   reuniaoAtivaAgendadaPara = null,
   reuniaoAtivaCloserId = null,
+  aoConfirmarTeveProposta,
 }: {
   lead: Lead;
   niveis: NivelResumo[];
@@ -106,6 +215,10 @@ export function EditarLeadForm({
   // seletor de closer quando o lead já está em "Reunião marcada" (ver
   // bloco logo abaixo de vaiEntrarEmReuniaoMarcada).
   reuniaoAtivaCloserId?: string | null;
+  // Avisa o pop-up (lead-modal-conteudo.tsx) que a pessoa confirmou "teve
+  // proposta" ao mover manualmente pra Follow/Oportunidades — o pop-up
+  // rola até o card de Proposta e destaca, em vez de fechar sozinho.
+  aoConfirmarTeveProposta?: () => void;
 }) {
   const modalAtivo = useLeadModalAtivo();
   const acaoComId = atualizarLead.bind(null, lead.id, !modalAtivo);
@@ -123,7 +236,15 @@ export function EditarLeadForm({
     if (enviandoRef.current) {
       enviandoRef.current = false;
       if (estado.erro === null) {
-        modalAtivo?.fechar();
+        // "Teve proposta? Sim" — em vez de fechar, mantém o pop-up aberto
+        // rolado até o card de Proposta, pra pessoa preencher na hora (ver
+        // aoConfirmarTeveProposta em lead-modal-conteudo.tsx).
+        if (tevePropostaResposta === "sim") {
+          modalAtivo?.recarregar();
+          aoConfirmarTeveProposta?.();
+        } else {
+          modalAtivo?.fechar();
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -141,6 +262,7 @@ export function EditarLeadForm({
   const camposReuniaoRef = useRef<HTMLDivElement>(null);
   const [oportunidadeFutura, setOportunidadeFutura] = useState(lead.oportunidade_futura);
   const [reuniaoAconteceu, setReuniaoAconteceu] = useState("");
+  const [tevePropostaResposta, setTevePropostaResposta] = useState("");
   const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
   const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
@@ -198,6 +320,11 @@ export function EditarLeadForm({
   const vendido = lead.status === "vendido";
   const nomeResponsavelAtual =
     usuarios.find((u) => u.id === lead.responsavel_id)?.nome ?? "Ninguém definido";
+  // Lead na Base: sem nível pra escolher, sem "Agendar reunião" — só o
+  // botão "Reativar" (Samuel foi explícito: reativar é coisa de Base, a
+  // "Repescagem futura de ICP" continua exatamente como estava).
+  const estaNaBase = String(lead.nivel_ordem) === NIVEL_BASE;
+  const niveisReativacao = niveis.filter((n) => NIVEIS_REATIVACAO.includes(n.ordem));
 
   // Mesmas travas de painel/lib/leads/actions.ts (sincronizarReuniao), só
   // que aplicadas aqui pra desabilitar a opção no menu em vez de deixar
@@ -255,9 +382,16 @@ export function EditarLeadForm({
     const nivelAtual = String(lead.nivel_ordem);
     if (ordemDestino === nivelAtual) return true;
 
+    // "Novos Leads" é porta de mão única: uma vez que o lead saiu de lá,
+    // não existe voltar — não importa se já teve reunião ou não (Samuel
+    // foi enfático: o lead já avançou na conversa).
+    if (ordemDestino === "0" && nivelAtual !== "0") {
+      return false;
+    }
+
     if (
       jaTeveReuniao &&
-      (ordemDestino === "0" || ordemDestino === "1" || ordemDestino === "2" || ordemDestino === "3")
+      (ordemDestino === "1" || ordemDestino === "2" || ordemDestino === "3")
     ) {
       return false;
     }
@@ -269,17 +403,22 @@ export function EditarLeadForm({
       return false;
     }
 
+    // "Follow após reunião" só existe pra quem já teve reunião de
+    // verdade em algum momento — sem essa trava dava pra pular direto de
+    // "Novos Leads" pra lá (Samuel pegou isso ao vivo). "Oportunidades"
+    // tem a mesma exigência, mas é tratada à parte lá no flatMap das
+    // opções, porque a "Repescagem futura" usa o mesmo nível 8 sem essa
+    // exigência.
+    if (ordemDestino === NIVEL_FOLLOW_POS_REUNIAO && !jaTeveReuniao) {
+      return false;
+    }
+
     return true;
   }
 
   const saindoDeReuniaoMarcada = String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA;
   const temNivelBloqueadoPorReuniaoMarcada =
     saindoDeReuniaoMarcada && niveis.some((n) => !nivelPermitido(String(n.ordem)));
-  const temNivelBloqueadoPorFaltaReuniao =
-    !jaTeveReuniao &&
-    niveis.some(
-      (n) => String(n.ordem) === NIVEL_FOLLOW_POS_REUNIAO || String(n.ordem) === NIVEL_OPORTUNIDADES
-    );
 
   const reuniaoAtivaEhFutura = Boolean(
     reuniaoAtivaAgendadaPara && new Date(reuniaoAtivaAgendadaPara) > new Date()
@@ -390,6 +529,16 @@ export function EditarLeadForm({
 
         {vendido ? (
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
+        ) : estaNaBase ? (
+          <>
+            <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
+            <BlocoReativarLead
+              leadId={lead.id}
+              niveisReativacao={niveisReativacao}
+              usuarios={usuarios}
+              souAdmin={souAdmin}
+            />
+          </>
         ) : (
         <div className="space-y-1.5">
           <label className="text-base font-bold text-neutral-900" htmlFor="nivel_ordem">
@@ -422,15 +571,17 @@ export function EditarLeadForm({
                       disabled: !nivelPermitido(String(nivel.ordem)),
                     };
                     if (String(nivel.ordem) !== NIVEL_OPORTUNIDADES) return [opcao];
-                    return [
-                      opcao,
-                      {
-                        value: OPCAO_OPORTUNIDADE_FUTURA,
-                        label: "Repescagem futura de ICP",
-                        disabled: !nivelPermitido(NIVEL_OPORTUNIDADES, true),
-                        indentado: true,
-                      },
-                    ];
+                    const futura = {
+                      value: OPCAO_OPORTUNIDADE_FUTURA,
+                      label: "Repescagem futura de ICP",
+                      disabled: !nivelPermitido(NIVEL_OPORTUNIDADES, true),
+                      indentado: true,
+                    };
+                    // A "Oportunidades" normal exige reunião registrada —
+                    // sem isso só sobra a "Repescagem futura", que não exige
+                    // (Samuel pediu essa exceção explicitamente).
+                    if (!jaTeveReuniao) return [futura];
+                    return [opcao, futura];
                   })}
               />
             </div>
@@ -457,12 +608,6 @@ export function EditarLeadForm({
               Alguns níveis estão bloqueados: saindo de &quot;{Reuniao(publicoOrg)} marcada&quot; só
               dá pra ir pra &quot;No-show&quot;, &quot;Precisa reagendar&quot;, &quot;Follow após reunião&quot; ou
               &quot;Oportunidades&quot;.
-            </p>
-          )}
-          {temNivelBloqueadoPorFaltaReuniao && (
-            <p className="text-xs text-neutral-400">
-              Follow e Oportunidades estão bloqueados: esse lead nunca teve uma{" "}
-              {reuniao(publicoOrg)} registrada.
             </p>
           )}
           {vaiEntrarEmReuniaoMarcada && (
@@ -629,6 +774,42 @@ export function EditarLeadForm({
                 <p className="text-xs text-amber-700">
                   Se marcar &quot;Não&quot;, o lead continua em &quot;{Reuniao(publicoOrg)} marcada&quot;
                   — mova pra &quot;No-show&quot; ou &quot;Precisa reagendar&quot; se for o caso.
+                </p>
+              )}
+            </div>
+          )}
+
+          {vaiConfirmarReuniao && reuniaoAconteceu === "sim" && (
+            <div className="mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm font-medium text-amber-800">
+                Essa {reuniao(publicoOrg)} teve proposta?
+              </p>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                  <input
+                    type="radio"
+                    name="teve_proposta"
+                    value="sim"
+                    checked={tevePropostaResposta === "sim"}
+                    onChange={() => setTevePropostaResposta("sim")}
+                    required
+                  />
+                  Sim
+                </label>
+                <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                  <input
+                    type="radio"
+                    name="teve_proposta"
+                    value="nao"
+                    checked={tevePropostaResposta === "nao"}
+                    onChange={() => setTevePropostaResposta("nao")}
+                  />
+                  Não
+                </label>
+              </div>
+              {tevePropostaResposta === "sim" && (
+                <p className="text-xs text-amber-700">
+                  Depois de salvar, o card de Proposta abre destacado pra você preencher.
                 </p>
               )}
             </div>

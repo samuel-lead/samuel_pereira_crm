@@ -6,6 +6,11 @@ export type ParametrosAbrirLead = {
   leadId: string;
   marcarReuniao?: boolean;
   reuniaoAnteriorSumiu?: "sim" | "nao";
+  // Abre o pop-up já rolado até o card de Proposta, destacado — usado
+  // depois que a pessoa confirma (arrastando o card) que a reunião
+  // aconteceu E teve proposta, pra não deixar passar batido sem
+  // registrar (ver moverPara em kanban-board.tsx).
+  abrirProposta?: boolean;
 };
 
 // Função que qualquer tela (Kanban, Lista de leads, Atividades, Reuniões,

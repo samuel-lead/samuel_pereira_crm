@@ -26,6 +26,7 @@ export function ProvedorLeadModal({ children }: { children: React.ReactNode }) {
           leadId={aberto.leadId}
           marcarReuniao={aberto.marcarReuniao}
           reuniaoAnteriorSumiu={aberto.reuniaoAnteriorSumiu}
+          abrirProposta={aberto.abrirProposta}
           aoFechar={() => setAberto(null)}
         />
       )}

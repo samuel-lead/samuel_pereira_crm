@@ -618,21 +618,53 @@ export async function atualizarLead(
     };
   }
 
+  // "Novos Leads" é porta de mão única: uma vez que o lead saiu de lá,
+  // não existe voltar — não importa se já teve reunião ou não (Samuel foi
+  // enfático: o lead já avançou na conversa, não faz sentido reaparecer
+  // como se nunca tivesse respondido nada). Mesma trava do menu (ver
+  // deveApareceNoMenu em editar-lead-form.tsx), agora no servidor pra não
+  // dar pra burlar.
+  if (nivelMudou && novoNivel === 0 && leadAtual.nivel_ordem !== 0) {
+    return {
+      erro: 'Esse lead já saiu de "Novos Leads" — não dá pra voltar pra lá.',
+    };
+  }
+
   // Depois de já ter tido uma reunião, não dá pra voltar pros níveis de
-  // antes dela (Novos Leads até Topou reunião sem horário) — isso já
+  // antes dela (Em qualificação até Topou reunião sem horário) — isso já
   // aconteceu, não tem como desfazer, e voltar pra trás corrompe as
   // taxas de agendamento/comparecimento que já foram contadas com base
-  // nessa reunião. Mesma trava do menu (ver deveApareceNoMenu em
-  // editar-lead-form.tsx), agora no servidor pra não dar pra burlar.
-  if (nivelMudou && (novoNivel === 0 || novoNivel === 1 || novoNivel === 2 || novoNivel === 3)) {
+  // nessa reunião. E o caminho inverso também tem trava: Follow após
+  // reunião e Oportunidades só existem pra quem já teve uma reunião de
+  // verdade em algum momento — sem isso dava pra pular direto de "Novos
+  // Leads" pra lá (Samuel pegou isso ao vivo, testando). Mesma trava do
+  // menu (ver deveApareceNoMenu em editar-lead-form.tsx), agora no
+  // servidor pra não dar pra burlar.
+  if (
+    nivelMudou &&
+    (novoNivel === 1 ||
+      novoNivel === 2 ||
+      novoNivel === 3 ||
+      novoNivel === NIVEL_FOLLOW_POS_REUNIAO ||
+      novoNivel === NIVEL_REUNIAO_FEITA)
+  ) {
     const { count: totalReunioes } = await supabase
       .from("reunioes")
       .select("id", { count: "exact", head: true })
       .eq("lead_id", leadId);
 
-    if (totalReunioes && totalReunioes > 0) {
+    if ((novoNivel === 1 || novoNivel === 2 || novoNivel === 3) && totalReunioes && totalReunioes > 0) {
       return {
         erro: `Esse lead já teve uma ${reuniao(usuario.publico_org)} registrada — não dá pra voltar pra um nível de antes dela.`,
+      };
+    }
+
+    if (
+      (novoNivel === NIVEL_FOLLOW_POS_REUNIAO || novoNivel === NIVEL_REUNIAO_FEITA) &&
+      !totalReunioes
+    ) {
+      return {
+        erro: `Esse lead nunca teve uma ${reuniao(usuario.publico_org)} registrada — não dá pra pular direto pra "${novoNivel === NIVEL_FOLLOW_POS_REUNIAO ? "Follow após reunião" : "Oportunidades"}".`,
       };
     }
   }

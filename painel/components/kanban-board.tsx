@@ -247,9 +247,18 @@ export function KanbanBoard({
     ) {
       const aconteceu = await perguntar(`Essa ${reuniao(publicoOrg)} realmente aconteceu?`);
       if (!aconteceu) return;
+      // Pergunta separada, só depois de confirmar que aconteceu — pra não
+      // deixar passar batido um lead que teve proposta e ninguém registrou
+      // (Samuel pediu essa trava). "Sim" abre o card já rolado até a
+      // Proposta, pra pessoa preencher na hora.
+      const tevepProposta = await perguntar(`Essa ${reuniao(publicoOrg)} teve proposta?`);
       iniciarTransicao(() => {
         moverLeadNivel(leadId, ordem, undefined, true).then((erro) => {
-          if (erro) alert(erro);
+          if (erro) {
+            alert(erro);
+            return;
+          }
+          if (tevepProposta) abrirLead({ leadId, abrirProposta: true });
         });
       });
       return;
