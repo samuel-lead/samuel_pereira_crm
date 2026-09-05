@@ -7,6 +7,7 @@ import { ResponsavelSelect } from "@/components/responsavel-select";
 import { MenuSelect } from "@/components/menu-select";
 import { rotuloNivel, type NivelResumo } from "@/lib/niveis";
 import { reuniao, Reuniao } from "@/lib/terminologia";
+import { IconeCalendario } from "@/components/icons";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const NIVEL_REUNIAO_MARCADA = "4";
@@ -132,16 +133,12 @@ export function EditarLeadForm({
     preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
   );
 
-  // Veio do botão "Agendar reunião" — pula direto pro campo de data em vez
-  // de abrir o formulário lá em cima, obrigando a pessoa a descer pra
-  // achar o que veio fazer (Samuel pediu isso explicitamente).
+  // Rola até o campo de data sempre que a pessoa entra em "vai marcar
+  // reunião" — seja porque já veio assim do botão do card (marcarReuniao),
+  // seja porque clicou em "Agendar {reunião}" aqui dentro do formulário.
+  // Sem isso ela abria lá em cima, obrigando a descer pra achar o que veio
+  // fazer (Samuel pediu isso explicitamente).
   const camposReuniaoRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (preSelecionarReuniao) {
-      camposReuniaoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const [oportunidadeFutura, setOportunidadeFutura] = useState(lead.oportunidade_futura);
   const [reuniaoAconteceu, setReuniaoAconteceu] = useState("");
   const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
@@ -169,6 +166,17 @@ export function EditarLeadForm({
       : nivelSelecionado;
   const vaiEntrarEmReuniaoMarcada =
     nivelSelecionado === NIVEL_REUNIAO_MARCADA && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA;
+
+  useEffect(() => {
+    if (vaiEntrarEmReuniaoMarcada) {
+      camposReuniaoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [vaiEntrarEmReuniaoMarcada]);
+
+  function aoClicarAgendarReuniao() {
+    aoMudarNivel(NIVEL_REUNIAO_MARCADA);
+  }
+
   const vaiEntrarEmBase =
     nivelSelecionado === NIVEL_BASE && String(lead.nivel_ordem) !== NIVEL_BASE;
   // Saindo de "Reunião marcada" pra "Follow após reunião" ou
@@ -346,31 +354,53 @@ export function EditarLeadForm({
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
         ) : (
         <div className="space-y-1">
-          <label className={labelClasse} htmlFor="nivel_ordem">
-            Nível
-          </label>
+          <div className="flex items-center justify-between gap-2">
+            <label className={labelClasse} htmlFor="nivel_ordem">
+              Nível
+            </label>
+            {/* "Reuniões marcadas" saiu da lista de opções — tem campo
+                próprio (data, closer) que não cabe num clique só, então
+                vira um botão dedicado do lado do título "Nível", mesmo
+                visual do botão do card (Samuel pediu essa separação). */}
+            {!vendido && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA && (
+              <button
+                type="button"
+                onClick={aoClicarAgendarReuniao}
+                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-800"
+              >
+                <IconeCalendario className="h-3.5 w-3.5" />
+                Agendar {reuniao(publicoOrg)}
+              </button>
+            )}
+          </div>
           <MenuSelect
             id="nivel_ordem"
             value={valorMenuNivel}
             onChange={aoMudarNivel}
             buscar={false}
-            options={niveis.flatMap((nivel) => {
-              const opcao = {
-                value: String(nivel.ordem),
-                label: rotuloNivel(nivel, numerosVisiveis[nivel.ordem]),
-                disabled: !nivelPermitido(String(nivel.ordem)),
-              };
-              if (String(nivel.ordem) !== NIVEL_OPORTUNIDADES) return [opcao];
-              return [
-                opcao,
-                {
-                  value: OPCAO_OPORTUNIDADE_FUTURA,
-                  label: "Repescagem futura de ICP",
-                  disabled: !nivelPermitido(NIVEL_OPORTUNIDADES, true),
-                  indentado: true,
-                },
-              ];
-            })}
+            options={niveis
+              .filter(
+                (nivel) =>
+                  String(nivel.ordem) !== NIVEL_REUNIAO_MARCADA ||
+                  String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA
+              )
+              .flatMap((nivel) => {
+                const opcao = {
+                  value: String(nivel.ordem),
+                  label: rotuloNivel(nivel, numerosVisiveis[nivel.ordem]),
+                  disabled: !nivelPermitido(String(nivel.ordem)),
+                };
+                if (String(nivel.ordem) !== NIVEL_OPORTUNIDADES) return [opcao];
+                return [
+                  opcao,
+                  {
+                    value: OPCAO_OPORTUNIDADE_FUTURA,
+                    label: "Repescagem futura de ICP",
+                    disabled: !nivelPermitido(NIVEL_OPORTUNIDADES, true),
+                    indentado: true,
+                  },
+                ];
+              })}
           />
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
 
