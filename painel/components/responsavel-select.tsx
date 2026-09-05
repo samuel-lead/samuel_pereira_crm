@@ -13,6 +13,7 @@ export function ResponsavelSelect({
   // responsável" (o placeholder só aparece quando nunca teve ninguém
   // escolhido). Samuel pediu que isso ficasse fácil pro admin.
   permiteVazio = false,
+  abrirAoMontar = false,
 }: {
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   valorInicial?: string | null;
@@ -20,6 +21,7 @@ export function ResponsavelSelect({
   placeholder?: string;
   funcaoFiltro?: "sdr" | "closer";
   permiteVazio?: boolean;
+  abrirAoMontar?: boolean;
 }) {
   // Filtra pela função (SDR/Closer), mas sempre mantém quem já tava
   // escolhido na lista — pra não sumir a seleção de quem não tem função
@@ -34,6 +36,7 @@ export function ResponsavelSelect({
       name={name}
       defaultValue={valorInicial ?? ""}
       placeholder={placeholder}
+      abrirAoMontar={abrirAoMontar}
       options={[
         ...(permiteVazio ? [{ value: "", label: "— Sem responsável —" }] : []),
         ...opcoes.map((usuario) => ({ value: usuario.id, label: usuario.nome })),

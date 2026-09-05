@@ -33,6 +33,10 @@ type Props = {
   variante?: "campo" | "sem-borda" | "pilula";
   pilulaClasse?: string;
   titulo?: string;
+  // Já nasce com a listinha aberta, sem precisar clicar primeiro — usado
+  // quando o campo só aparece na tela depois de uma ação (ex.: clicar em
+  // "Reativar"), e a pessoa provavelmente já vai escolher na hora.
+  abrirAoMontar?: boolean;
 };
 
 export function MenuSelect({
@@ -49,12 +53,13 @@ export function MenuSelect({
   variante = "campo",
   pilulaClasse,
   titulo,
+  abrirAoMontar = false,
 }: Props) {
   const controlado = value !== undefined;
   const [internoValor, setInternoValor] = useState(defaultValue ?? "");
   const valorAtual = controlado ? value! : internoValor;
 
-  const [aberto, setAberto] = useState(false);
+  const [aberto, setAberto] = useState(abrirAoMontar);
   const [busca, setBusca] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 

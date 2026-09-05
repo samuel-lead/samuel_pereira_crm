@@ -81,6 +81,18 @@ export function IconeCalendario(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconeReativar(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" {...props}>
+      <path
+        d="M3.5 12a8.5 8.5 0 1 0 2.7-6.2M3.5 12V6.5M3.5 12h5.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconeCheck(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" {...props}>

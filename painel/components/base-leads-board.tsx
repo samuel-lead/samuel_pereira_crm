@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { IconeWhatsapp, IconeInstagram } from "@/components/icons";
+import { IconeWhatsapp, IconeInstagram, IconeReativar } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
@@ -28,27 +28,28 @@ function BotaoReativar({
   souAdmin: boolean;
 }) {
   const [aberto, setAberto] = useState(false);
+  const [nivel, setNivel] = useState("");
   const [pendente, iniciarTransicao] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
 
   function aoConfirmar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formData = new FormData(evento.currentTarget);
-    const novoNivel = String(formData.get("nivel_ordem") ?? "");
     const novoResponsavelId = String(formData.get("responsavel_id") ?? "");
 
-    if (!novoNivel) {
+    if (!nivel) {
       setErro("Escolha pra qual nível reativar.");
       return;
     }
     setErro(null);
     iniciarTransicao(() => {
-      reativarLead(leadId, Number(novoNivel), souAdmin ? novoResponsavelId : undefined).then(
-        (erro) => {
-          setErro(erro);
-          if (!erro) setAberto(false);
+      reativarLead(leadId, Number(nivel), souAdmin ? novoResponsavelId : undefined).then((erro) => {
+        setErro(erro);
+        if (!erro) {
+          setAberto(false);
+          setNivel("");
         }
-      );
+      });
     });
   }
 
@@ -62,9 +63,10 @@ function BotaoReativar({
           e.stopPropagation();
           setAberto(true);
         }}
-        className="mt-2.5 w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 text-center text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-800"
+        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 py-2.5 text-sm font-bold text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
       >
-        ↩ Reativar
+        <IconeReativar className="h-4 w-4" />
+        Reativar
       </button>
     );
   }
@@ -76,18 +78,23 @@ function BotaoReativar({
       className="mt-2.5 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3"
     >
       <MenuSelect
-        name="nivel_ordem"
         titulo="Reativar pra qual nível"
         placeholder="Nível de Pré-vendas..."
         disabled={pendente}
+        value={nivel}
+        onChange={setNivel}
+        abrirAoMontar
         options={niveisReativacao.map((n) => ({ value: String(n.ordem), label: n.nome }))}
       />
-      {souAdmin && (
+      {/* Responsável só aparece depois de escolher o nível — Samuel pediu
+          essa revelação em etapas, uma coisa de cada vez. */}
+      {nivel && souAdmin && (
         <ResponsavelSelect
           usuarios={usuarios}
           funcaoFiltro="sdr"
           permiteVazio
           placeholder="Quem vai ser o responsável..."
+          abrirAoMontar
         />
       )}
       {erro && <p className="text-[11px] text-red-600">{erro}</p>}
