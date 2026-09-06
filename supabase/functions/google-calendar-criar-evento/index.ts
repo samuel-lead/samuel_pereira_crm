@@ -27,39 +27,6 @@ const ROTULOS_CAPACIDADE: Record<string, string> = {
   nao: "Não",
 };
 
-// Deixa o texto que a SDR digitou correndo (às vezes anotado rápido, sem
-// capricho) mais apresentável antes de mandar pro evento — o lead é
-// convidado e vê essa descrição. Mantém os fatos, só arruma a redação.
-// Se a chave não estiver configurada ou a chamada falhar, usa o texto
-// original em vez de travar o salvamento por causa disso.
-async function suavizarTexto(texto: string, apiKey: string): Promise<string> {
-  try {
-    const resposta = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 300,
-        system:
-          "Você reescreve a anotação rápida de um vendedor sobre um cliente (lead) — essa descrição vai aparecer num convite de agenda que o próprio cliente vai ler. Deixe o texto profissional e elegante, transmitindo o que foi dito, mas nunca de um jeito que soe como um julgamento, negativo ou constrangedor pro cliente. Mantenha exatamente os mesmos fatos e o mesmo idioma (português), sem inventar nada e sem adicionar comentário, saudação ou aspas. Responda só com o texto reescrito.",
-        messages: [{ role: "user", content: texto }],
-      }),
-    });
-
-    if (!resposta.ok) return texto;
-
-    const dados = await resposta.json();
-    const textoNovo = dados.content?.[0]?.text?.trim();
-    return textoNovo || texto;
-  } catch {
-    return texto;
-  }
-}
-
 async function obterAccessTokenValido(
   supabaseAdmin: ReturnType<typeof createClient>,
   orgId: string,
@@ -116,7 +83,6 @@ Deno.serve(async (req: Request) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
   const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
-  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
 
   if (!clientId || !clientSecret) {
     return json(500, { erro: "Google Calendar não configurado nas secrets" });
@@ -127,8 +93,10 @@ Deno.serve(async (req: Request) => {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: userData, error: erroUser } = await supabaseUsuario.auth.getUser();
-  if (erroUser || !userData.user) return json(401, { erro: "Não autenticado" });
+  // Não precisa checar o login aqui de novo: a função já está com
+  // verify_jwt ligado, então o Supabase só deixa chegar até aqui quem já
+  // tem um token válido — repetir a checagem só custava uma chamada de
+  // rede extra sem trazer segurança a mais.
 
   let corpo: { reuniaoId?: string };
   try {
@@ -147,11 +115,23 @@ Deno.serve(async (req: Request) => {
 
   if (erroReuniao || !reuniaoData) return json(404, { erro: "Reunião não encontrada" });
 
-  const { data: leadData } = await supabaseUsuario
-    .from("leads")
-    .select("nome, email, telefone_e164, criterio_problema, criterio_urgencia, criterio_capacidade")
-    .eq("id", reuniaoData.lead_id as string)
-    .single();
+  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+  // As três buscas abaixo não dependem uma da outra — rodar junto em vez
+  // de uma esperando a outra terminar é o que mais pesava no tempo de
+  // resposta do botão.
+  const [{ data: leadData }, { data: usuarios }, resultadoToken] = await Promise.all([
+    supabaseUsuario
+      .from("leads")
+      .select("nome, email, telefone_e164, criterio_problema, criterio_urgencia, criterio_capacidade")
+      .eq("id", reuniaoData.lead_id as string)
+      .single(),
+    supabaseUsuario
+      .from("usuarios")
+      .select("id, nome")
+      .in("id", [reuniaoData.usuario_id, reuniaoData.closer_id].filter(Boolean) as string[]),
+    obterAccessTokenValido(supabaseAdmin, reuniaoData.org_id as string, clientId, clientSecret),
+  ]);
 
   if (!leadData) return json(404, { erro: "Lead não encontrado" });
 
@@ -163,26 +143,13 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const { data: usuarios } = await supabaseUsuario
-    .from("usuarios")
-    .select("id, nome")
-    .in("id", [reuniaoData.usuario_id, reuniaoData.closer_id].filter(Boolean) as string[]);
+  if ("erro" in resultadoToken) return json(400, { erro: resultadoToken.erro });
 
   // Iniciais vêm de quem MARCOU essa reunião (a SDR), não do responsável
   // atual do lead — os dois podem ser pessoas diferentes (ex: SDR marca,
   // depois o lead passa pro closer como responsável).
   const nomeSdr = usuarios?.find((u) => u.id === reuniaoData.usuario_id)?.nome;
   const nomeCloser = usuarios?.find((u) => u.id === reuniaoData.closer_id)?.nome;
-
-  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
-  const resultadoToken = await obterAccessTokenValido(
-    supabaseAdmin,
-    reuniaoData.org_id as string,
-    clientId,
-    clientSecret
-  );
-  if ("erro" in resultadoToken) return json(400, { erro: resultadoToken.erro });
 
   const inicio = new Date(reuniaoData.agendada_para as string);
   const fim = new Date(inicio.getTime() + 90 * 60 * 1000);
@@ -195,13 +162,8 @@ Deno.serve(async (req: Request) => {
   if (nomeCloser) titulo += ` + ${nomeCloser}`;
   if (iniciais) titulo = `${iniciais} - ${titulo}`;
 
-  const perfilLead =
-    leadData.criterio_problema && anthropicKey
-      ? await suavizarTexto(leadData.criterio_problema as string, anthropicKey)
-      : leadData.criterio_problema;
-
   const descricao = [
-    perfilLead || null,
+    leadData.criterio_problema || null,
     `Urgência: ${ROTULOS_URGENCIA[leadData.criterio_urgencia as string] ?? "Ainda não sabe"}`,
     `Investimento: ${ROTULOS_CAPACIDADE[leadData.criterio_capacidade as string] ?? "Ainda não sabe"}`,
     leadData.telefone_e164 ? `Telefone: ${leadData.telefone_e164}` : null,
