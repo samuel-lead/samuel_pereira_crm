@@ -165,7 +165,7 @@ export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
         quemFaz: "voce",
         titulo: "Clicar em \"Conectar com Google\"",
         descricao:
-          "Um botão vai aparecer aqui nessa página quando a integração estiver pronta. Clicar nele abre a tela de login do próprio Google.",
+          "O botão está logo abaixo, nessa página. Clicar nele abre a tela de login do próprio Google.",
       },
       {
         numero: 2,
@@ -176,10 +176,10 @@ export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
       },
       {
         numero: 3,
-        quemFaz: "eu",
-        titulo: "Construir a sincronização",
+        quemFaz: "voce",
+        titulo: `Clicar em "Salvar na Google Agenda" quando marcar uma ${reuniao(publicoOrg)}`,
         descricao:
-          `Eu construo a criação/atualização automática do evento na sua agenda sempre que uma ${reuniao(publicoOrg)} for marcada, remarcada ou cancelada aqui no CRM.`,
+          `Depois de conectado, um botão aparece dentro do card do lead assim que a ${reuniao(publicoOrg)} tiver data marcada — um clique e cai direto na sua agenda.`,
       },
     ],
   },

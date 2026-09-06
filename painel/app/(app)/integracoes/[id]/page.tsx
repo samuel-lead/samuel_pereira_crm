@@ -6,10 +6,13 @@ import { usuarioAutenticado } from "@/lib/supabase/server";
 
 export default async function IntegracaoDetalhePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ conectado?: string; erro?: string }>;
 }) {
   const { id } = await params;
+  const { conectado, erro } = await searchParams;
   const { usuario } = await usuarioAutenticado();
   const integracao = buscarIntegracao(id, usuario!.publico_org);
 
@@ -18,6 +21,7 @@ export default async function IntegracaoDetalhePage({
   }
 
   const status = STATUS_LABEL[integracao.status];
+  const linkConectarGoogle = `https://hgloheptxqdjpwzgquku.supabase.co/functions/v1/google-calendar-iniciar?org_id=${usuario!.org_id}`;
 
   return (
     <>
@@ -61,6 +65,40 @@ export default async function IntegracaoDetalhePage({
           {integracao.infoConexao && (
             <div className="mt-5 rounded-md border border-green-200 bg-green-50 p-3">
               <p className="text-sm text-green-800">{integracao.infoConexao}</p>
+            </div>
+          )}
+
+          {conectado === "1" && (
+            <div className="mt-5 rounded-md border border-green-200 bg-green-50 p-3">
+              <p className="text-sm text-green-800">
+                ✓ Google Agenda conectada! Agora dá pra salvar uma reunião marcada
+                direto na agenda, pelo botão dentro do card do lead.
+              </p>
+            </div>
+          )}
+
+          {erro && (
+            <div className="mt-5 rounded-md border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-700">
+                Não deu pra conectar: {decodeURIComponent(erro)}
+              </p>
+            </div>
+          )}
+
+          {id === "google-calendar" && (
+            <div className="mt-5">
+              {usuario!.papel === "admin" ? (
+                <a
+                  href={linkConectarGoogle}
+                  className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                >
+                  Conectar com Google
+                </a>
+              ) : (
+                <p className="text-xs text-neutral-400">
+                  Só um admin pode conectar essa integração.
+                </p>
+              )}
             </div>
           )}
 

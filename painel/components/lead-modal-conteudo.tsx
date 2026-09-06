@@ -9,6 +9,7 @@ import { EditarVendaForm } from "@/components/editar-venda-form";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
+import { BotaoGoogleAgenda } from "@/components/botao-google-agenda";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
@@ -207,12 +208,15 @@ export function LeadModalConteudo({
 
       <div className="flex flex-col gap-4">
         {podeEditar && lead.nivel_ordem === NIVEL_REUNIAO_MARCADA && reuniaoAtiva && (
-          <ReagendarReuniaoForm
-            leadId={lead.id}
-            reuniaoId={reuniaoAtiva.id}
-            agendadaPara={reuniaoAtiva.agendada_para}
-            rotulo={Reuniao(publicoOrg)}
-          />
+          <>
+            <ReagendarReuniaoForm
+              leadId={lead.id}
+              reuniaoId={reuniaoAtiva.id}
+              agendadaPara={reuniaoAtiva.agendada_para}
+              rotulo={Reuniao(publicoOrg)}
+            />
+            <BotaoGoogleAgenda reuniaoId={reuniaoAtiva.id} />
+          </>
         )}
 
         {podeEditar && lead.status !== "vendido" && (

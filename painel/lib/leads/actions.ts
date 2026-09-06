@@ -1811,3 +1811,31 @@ export async function buscarDetalhesDoLead(
     },
   };
 }
+
+// Cria (ou atualiza, se já existir) o evento na Google Agenda conectada
+// da org — chamado pelo botão "Salvar no Google Agenda" no card do lead.
+// A lógica de verdade (trocar/renovar token, chamar a API do Google)
+// mora na Edge Function; aqui só repassa com o token de quem está
+// logado.
+export async function salvarReuniaoNoGoogleAgenda(
+  reuniaoId: string
+): Promise<{ erro: string | null; eventoUrl?: string }> {
+  const { supabase } = await contextoUsuario();
+
+  const { data, error } = await supabase.functions.invoke("google-calendar-criar-evento", {
+    body: { reuniaoId },
+  });
+
+  if (error) {
+    // O SDK do Supabase não devolve o corpo do erro direto — busca a
+    // mensagem que a função mandou, se tiver.
+    const corpo = await error.context?.json().catch(() => null);
+    return { erro: corpo?.erro ?? error.message };
+  }
+
+  if (data?.erro) {
+    return { erro: data.erro };
+  }
+
+  return { erro: null, eventoUrl: data?.eventoUrl };
+}
