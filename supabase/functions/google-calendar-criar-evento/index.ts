@@ -139,7 +139,7 @@ Deno.serve(async (req: Request) => {
   // ninguém pro evento, então nem cria.
   if (!leadData.email) {
     return json(400, {
-      erro: "Esse lead ainda não tem e-mail cadastrado — adicione o e-mail no card antes de salvar na Google Agenda.",
+      erro: "Esse lead ainda não tem e-mail cadastrado — adicione o e-mail no card antes de salvar no Google Agenda.",
     });
   }
 

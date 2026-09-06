@@ -47,11 +47,11 @@ export function BotaoGoogleAgenda({
             : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
         }`}
       >
-        {pendente ? "Salvando..." : salvo ? "✓ Salvo na Google Agenda" : "Salvar na Google Agenda"}
+        {pendente ? "Salvando..." : salvo ? "✓ Salvo no Google Agenda" : "Salvar no Google Agenda"}
       </button>
       {!temEmail && (
         <p className="text-xs font-medium text-red-600">
-          Só é possível salvar na Google Agenda se tiver o e-mail do cliente.
+          Só é possível salvar no Google Agenda se tiver o e-mail do cliente.
           Adicione o e-mail ao lado e salve pra liberar.
         </p>
       )}

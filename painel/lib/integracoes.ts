@@ -158,7 +158,7 @@ export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
     corIcone: "bg-blue-100 text-blue-700",
     letraIcone: "C",
     oQueFaz:
-      `Toda vez que uma ${reuniao(publicoOrg)} é marcada aqui no CRM (nível '${Reuniao(publicoOrg)} marcada'), o botão "Salvar na Google Agenda" no card do lead cria um evento com Google Meet, cor verde e o lead como convidado — precisa ter o e-mail do lead cadastrado.`,
+      `Toda vez que uma ${reuniao(publicoOrg)} é marcada aqui no CRM (nível '${Reuniao(publicoOrg)} marcada'), o botão "Salvar no Google Agenda" no card do lead cria um evento com Google Meet, cor verde e o lead como convidado — precisa ter o e-mail do lead cadastrado.`,
     comoConectar: [
       {
         numero: 1,
@@ -177,7 +177,7 @@ export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
       {
         numero: 3,
         quemFaz: "voce",
-        titulo: `Clicar em "Salvar na Google Agenda" quando marcar uma ${reuniao(publicoOrg)}`,
+        titulo: `Clicar em "Salvar no Google Agenda" quando marcar uma ${reuniao(publicoOrg)}`,
         descricao:
           `Depois de conectado, o botão aparece dentro do card do lead assim que a ${reuniao(publicoOrg)} tiver data marcada — mas só funciona se o lead já tiver e-mail cadastrado (é ele que entra como convidado do evento).`,
       },
