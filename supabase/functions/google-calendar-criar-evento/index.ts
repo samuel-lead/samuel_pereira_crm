@@ -162,9 +162,9 @@ Deno.serve(async (req: Request) => {
   if (iniciais) titulo = `${iniciais} - ${titulo}`;
 
   const descricao = [
-    leadData.criterio_problema ? `Perfil / dor: ${leadData.criterio_problema}` : null,
+    leadData.criterio_problema || null,
     `Urgência: ${ROTULOS_URGENCIA[leadData.criterio_urgencia as string] ?? "Ainda não sabe"}`,
-    `Consegue pagar: ${ROTULOS_CAPACIDADE[leadData.criterio_capacidade as string] ?? "Ainda não sabe"}`,
+    `Investimento: ${ROTULOS_CAPACIDADE[leadData.criterio_capacidade as string] ?? "Ainda não sabe"}`,
     leadData.telefone_e164 ? `Telefone: ${leadData.telefone_e164}` : null,
   ]
     .filter(Boolean)
