@@ -1,4 +1,4 @@
-// Chamada pelo botão "Salvar no Google Agenda" dentro do card do lead.
+// Chamada pelo botão "Salvar na Google Agenda" dentro do card do lead.
 // Usa o token do próprio usuário logado (verify_jwt ligado) pra ler a
 // reunião respeitando as regras normais de acesso, e um client
 // separado com service_role só pra mexer em google_calendar_conexoes
@@ -12,6 +12,20 @@ function json(status: number, body: unknown) {
     headers: { "Content-Type": "application/json" },
   });
 }
+
+const ROTULOS_URGENCIA: Record<string, string> = {
+  desconhecida: "Ainda não sabe",
+  alta: "Alta",
+  media: "Média",
+  baixa: "Baixa",
+};
+
+const ROTULOS_CAPACIDADE: Record<string, string> = {
+  desconhecida: "Ainda não sabe",
+  sim: "Sim",
+  parcial: "Parcial",
+  nao: "Não",
+};
 
 async function obterAccessTokenValido(
   supabaseAdmin: ReturnType<typeof createClient>,
@@ -93,7 +107,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: reuniaoData, error: erroReuniao } = await supabaseUsuario
     .from("reunioes")
-    .select("id, org_id, lead_id, agendada_para, google_event_id")
+    .select("id, org_id, lead_id, closer_id, agendada_para, google_event_id")
     .eq("id", corpo.reuniaoId)
     .single();
 
@@ -101,15 +115,27 @@ Deno.serve(async (req: Request) => {
 
   const { data: leadData } = await supabaseUsuario
     .from("leads")
-    .select("nome, telefone_e164")
+    .select("nome, email, telefone_e164, responsavel_id, criterio_problema, criterio_urgencia, criterio_capacidade")
     .eq("id", reuniaoData.lead_id as string)
     .single();
 
-  const { data: orgData } = await supabaseUsuario
-    .from("orgs")
-    .select("publico")
-    .eq("id", reuniaoData.org_id as string)
-    .single();
+  if (!leadData) return json(404, { erro: "Lead não encontrado" });
+
+  // Trava pedida pelo Samuel: sem e-mail do lead não dá pra convidar
+  // ninguém pro evento, então nem cria.
+  if (!leadData.email) {
+    return json(400, {
+      erro: "Esse lead ainda não tem e-mail cadastrado — adicione o e-mail no card antes de salvar na Google Agenda.",
+    });
+  }
+
+  const { data: usuarios } = await supabaseUsuario
+    .from("usuarios")
+    .select("id, nome")
+    .in("id", [leadData.responsavel_id, reuniaoData.closer_id].filter(Boolean) as string[]);
+
+  const nomeResponsavel = usuarios?.find((u) => u.id === leadData.responsavel_id)?.nome;
+  const nomeCloser = usuarios?.find((u) => u.id === reuniaoData.closer_id)?.nome;
 
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
@@ -123,25 +149,51 @@ Deno.serve(async (req: Request) => {
 
   const inicio = new Date(reuniaoData.agendada_para as string);
   const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
-  const nomeLead = leadData?.nome ?? "Lead";
-  const rotuloEncontro = orgData?.publico === "imobiliario" ? "Visita" : "Reunião";
 
-  const evento = {
-    summary: `${rotuloEncontro} com ${nomeLead}`,
-    description: [
-      "Criado automaticamente pelo Meu Vendedor.",
-      leadData?.telefone_e164 ? `Telefone: ${leadData.telefone_e164}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-    start: { dateTime: inicio.toISOString() },
-    end: { dateTime: fim.toISOString() },
-  };
+  // Iniciais do responsável (2 primeiras letras do primeiro nome, tipo
+  // "Julia" → "JU") + nome do lead + nome do closer, se tiver — formato
+  // que o Samuel pediu explicitamente.
+  const iniciais = nomeResponsavel ? nomeResponsavel.trim().slice(0, 2).toUpperCase() : "";
+  let titulo = leadData.nome;
+  if (nomeCloser) titulo += ` + ${nomeCloser}`;
+  if (iniciais) titulo = `${iniciais} - ${titulo}`;
+
+  const descricao = [
+    leadData.criterio_problema ? `Perfil / dor: ${leadData.criterio_problema}` : null,
+    `Urgência: ${ROTULOS_URGENCIA[leadData.criterio_urgencia as string] ?? "Ainda não sabe"}`,
+    `Consegue pagar: ${ROTULOS_CAPACIDADE[leadData.criterio_capacidade as string] ?? "Ainda não sabe"}`,
+    leadData.telefone_e164 ? `Telefone: ${leadData.telefone_e164}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const jaTemEvento = !!reuniaoData.google_event_id;
-  const urlEvento = jaTemEvento
+
+  const evento: Record<string, unknown> = {
+    summary: titulo,
+    description: descricao,
+    start: { dateTime: inicio.toISOString() },
+    end: { dateTime: fim.toISOString() },
+    attendees: [{ email: leadData.email }],
+    colorId: "10", // Basil — verde, pedido explicitamente
+  };
+
+  // Google Meet só entra na criação — o Google não deixa adicionar um
+  // conferenceData novo num PATCH que já tinha um antes sem repetir o
+  // mesmo conferenceId, então só pede no POST inicial.
+  if (!jaTemEvento) {
+    evento.conferenceData = {
+      createRequest: {
+        requestId: crypto.randomUUID(),
+        conferenceSolutionKey: { type: "hangoutsMeet" },
+      },
+    };
+  }
+
+  const urlBase = jaTemEvento
     ? `https://www.googleapis.com/calendar/v3/calendars/${resultadoToken.calendarId}/events/${reuniaoData.google_event_id}`
     : `https://www.googleapis.com/calendar/v3/calendars/${resultadoToken.calendarId}/events`;
+  const urlEvento = `${urlBase}?conferenceDataVersion=1&sendUpdates=all`;
 
   const respostaEvento = await fetch(urlEvento, {
     method: jaTemEvento ? "PATCH" : "POST",

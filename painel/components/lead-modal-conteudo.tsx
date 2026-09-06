@@ -215,7 +215,14 @@ export function LeadModalConteudo({
               agendadaPara={reuniaoAtiva.agendada_para}
               rotulo={Reuniao(publicoOrg)}
             />
-            <BotaoGoogleAgenda reuniaoId={reuniaoAtiva.id} />
+            {lead.email ? (
+              <BotaoGoogleAgenda reuniaoId={reuniaoAtiva.id} />
+            ) : (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Adicione o e-mail do lead (campo acima) pra poder salvar na
+                Google Agenda — é ele que entra como convidado do evento.
+              </p>
+            )}
           </>
         )}
 

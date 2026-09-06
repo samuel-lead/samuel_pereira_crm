@@ -3,10 +3,11 @@
 import { useState, useTransition } from "react";
 import { salvarReuniaoNoGoogleAgenda } from "@/lib/leads/actions";
 
-// Clica e já cai na Google Agenda de verdade — Samuel pediu que fosse um
-// clique só, sem passar por mais nada. Se a reunião já tinha sido salva
-// antes (reagendou, por exemplo), clicar de novo ATUALIZA o mesmo evento
-// em vez de criar um duplicado (ver google_event_id em reunioes).
+// Clica e já salva na Google Agenda de verdade, sem abrir nada — Samuel
+// pediu que o próprio botão mostrasse que salvou, sem trocar de tela. Se
+// a reunião já tinha sido salva antes (reagendou, por exemplo), clicar de
+// novo ATUALIZA o mesmo evento em vez de criar um duplicado (ver
+// google_event_id em reunioes).
 export function BotaoGoogleAgenda({ reuniaoId }: { reuniaoId: string }) {
   const [pendente, iniciarTransicao] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
@@ -21,9 +22,6 @@ export function BotaoGoogleAgenda({ reuniaoId }: { reuniaoId: string }) {
         return;
       }
       setSalvo(true);
-      if (resultado.eventoUrl) {
-        window.open(resultado.eventoUrl, "_blank", "noopener,noreferrer");
-      }
     });
   }
 
