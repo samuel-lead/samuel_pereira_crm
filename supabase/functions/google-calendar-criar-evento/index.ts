@@ -27,6 +27,39 @@ const ROTULOS_CAPACIDADE: Record<string, string> = {
   nao: "Não",
 };
 
+// Deixa o texto que a SDR digitou correndo (às vezes anotado rápido, sem
+// capricho) mais apresentável antes de mandar pro evento — o lead é
+// convidado e vê essa descrição. Mantém os fatos, só arruma a redação.
+// Se a chave não estiver configurada ou a chamada falhar, usa o texto
+// original em vez de travar o salvamento por causa disso.
+async function suavizarTexto(texto: string, apiKey: string): Promise<string> {
+  try {
+    const resposta = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 300,
+        system:
+          "Você reescreve a anotação rápida de um vendedor sobre um cliente (lead) — essa descrição vai aparecer num convite de agenda que o próprio cliente vai ler. Deixe o texto profissional e elegante, transmitindo o que foi dito, mas nunca de um jeito que soe como um julgamento, negativo ou constrangedor pro cliente. Mantenha exatamente os mesmos fatos e o mesmo idioma (português), sem inventar nada e sem adicionar comentário, saudação ou aspas. Responda só com o texto reescrito.",
+        messages: [{ role: "user", content: texto }],
+      }),
+    });
+
+    if (!resposta.ok) return texto;
+
+    const dados = await resposta.json();
+    const textoNovo = dados.content?.[0]?.text?.trim();
+    return textoNovo || texto;
+  } catch {
+    return texto;
+  }
+}
+
 async function obterAccessTokenValido(
   supabaseAdmin: ReturnType<typeof createClient>,
   orgId: string,
@@ -83,6 +116,7 @@ Deno.serve(async (req: Request) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
   const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
+  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
 
   if (!clientId || !clientSecret) {
     return json(500, { erro: "Google Calendar não configurado nas secrets" });
@@ -161,8 +195,13 @@ Deno.serve(async (req: Request) => {
   if (nomeCloser) titulo += ` + ${nomeCloser}`;
   if (iniciais) titulo = `${iniciais} - ${titulo}`;
 
+  const perfilLead =
+    leadData.criterio_problema && anthropicKey
+      ? await suavizarTexto(leadData.criterio_problema as string, anthropicKey)
+      : leadData.criterio_problema;
+
   const descricao = [
-    leadData.criterio_problema || null,
+    perfilLead || null,
     `Urgência: ${ROTULOS_URGENCIA[leadData.criterio_urgencia as string] ?? "Ainda não sabe"}`,
     `Investimento: ${ROTULOS_CAPACIDADE[leadData.criterio_capacidade as string] ?? "Ainda não sabe"}`,
     leadData.telefone_e164 ? `Telefone: ${leadData.telefone_e164}` : null,
