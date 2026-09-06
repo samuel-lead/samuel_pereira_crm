@@ -52,7 +52,7 @@ export function BotaoGoogleAgenda({
       {!temEmail && (
         <p className="text-xs font-medium text-red-600">
           Só é possível salvar na Google Agenda se tiver o e-mail do cliente.
-          Adicione o e-mail acima e salve pra liberar.
+          Adicione o e-mail ao lado e salve pra liberar.
         </p>
       )}
       {erro && <p className="text-xs text-red-600">{erro}</p>}
