@@ -203,6 +203,9 @@ Deno.serve(async (req: Request) => {
   }
 
   let respostaEvento: Response;
+  // deno-lint-ignore no-explicit-any
+  let dadosEvento: any;
+
   if (jaTemEvento) {
     const urlAtualizar = `https://www.googleapis.com/calendar/v3/calendars/${resultadoToken.calendarId}/events/${reuniaoData.google_event_id}?conferenceDataVersion=1&sendUpdates=all`;
     respostaEvento = await fetch(urlAtualizar, {
@@ -213,18 +216,25 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify(evento),
     });
+    dadosEvento = await respostaEvento.json();
 
-    // Se o evento antigo foi apagado direto na Google Agenda (fica com
-    // status "cancelled" ou some de vez), o PATCH falha com 404/410 —
-    // nesse caso cria um evento novo em vez de devolver erro pro usuário.
-    if (respostaEvento.status === 404 || respostaEvento.status === 410) {
+    // Se o evento antigo foi apagado direto na Google Agenda, o Google às
+    // vezes devolve 404/410, mas às vezes aceita o PATCH com 200 e só
+    // mantém o status "cancelled" (o evento continua invisível na agenda
+    // mesmo assim). Nos dois casos, cria um evento novo em vez de deixar
+    // essa atualização "fantasma" passar como sucesso.
+    const eventoMorto =
+      respostaEvento.status === 404 ||
+      respostaEvento.status === 410 ||
+      dadosEvento?.status === "cancelled";
+    if (eventoMorto) {
       respostaEvento = await criarEventoNovo();
+      dadosEvento = await respostaEvento.json();
     }
   } else {
     respostaEvento = await criarEventoNovo();
+    dadosEvento = await respostaEvento.json();
   }
-
-  const dadosEvento = await respostaEvento.json();
 
   if (!respostaEvento.ok) {
     return json(400, { erro: dadosEvento.error?.message ?? "Erro ao salvar evento no Google Agenda" });
