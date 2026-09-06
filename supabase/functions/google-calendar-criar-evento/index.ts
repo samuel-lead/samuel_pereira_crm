@@ -107,7 +107,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: reuniaoData, error: erroReuniao } = await supabaseUsuario
     .from("reunioes")
-    .select("id, org_id, lead_id, closer_id, agendada_para, google_event_id")
+    .select("id, org_id, lead_id, usuario_id, closer_id, agendada_para, google_event_id")
     .eq("id", corpo.reuniaoId)
     .single();
 
@@ -115,7 +115,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: leadData } = await supabaseUsuario
     .from("leads")
-    .select("nome, email, telefone_e164, responsavel_id, criterio_problema, criterio_urgencia, criterio_capacidade")
+    .select("nome, email, telefone_e164, criterio_problema, criterio_urgencia, criterio_capacidade")
     .eq("id", reuniaoData.lead_id as string)
     .single();
 
@@ -132,9 +132,12 @@ Deno.serve(async (req: Request) => {
   const { data: usuarios } = await supabaseUsuario
     .from("usuarios")
     .select("id, nome")
-    .in("id", [leadData.responsavel_id, reuniaoData.closer_id].filter(Boolean) as string[]);
+    .in("id", [reuniaoData.usuario_id, reuniaoData.closer_id].filter(Boolean) as string[]);
 
-  const nomeResponsavel = usuarios?.find((u) => u.id === leadData.responsavel_id)?.nome;
+  // Iniciais vêm de quem MARCOU essa reunião (a SDR), não do responsável
+  // atual do lead — os dois podem ser pessoas diferentes (ex: SDR marca,
+  // depois o lead passa pro closer como responsável).
+  const nomeSdr = usuarios?.find((u) => u.id === reuniaoData.usuario_id)?.nome;
   const nomeCloser = usuarios?.find((u) => u.id === reuniaoData.closer_id)?.nome;
 
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
@@ -150,10 +153,10 @@ Deno.serve(async (req: Request) => {
   const inicio = new Date(reuniaoData.agendada_para as string);
   const fim = new Date(inicio.getTime() + 90 * 60 * 1000);
 
-  // Iniciais do responsável (2 primeiras letras do primeiro nome, tipo
+  // Iniciais da SDR que marcou (2 primeiras letras do primeiro nome, tipo
   // "Julia" → "JU") + nome do lead + nome do closer, se tiver — formato
   // que o Samuel pediu explicitamente.
-  const iniciais = nomeResponsavel ? nomeResponsavel.trim().slice(0, 2).toUpperCase() : "";
+  const iniciais = nomeSdr ? nomeSdr.trim().slice(0, 2).toUpperCase() : "";
   let titulo = leadData.nome;
   if (nomeCloser) titulo += ` + ${nomeCloser}`;
   if (iniciais) titulo = `${iniciais} - ${titulo}`;
@@ -178,31 +181,48 @@ Deno.serve(async (req: Request) => {
     colorId: "10", // Basil — verde, pedido explicitamente
   };
 
-  // Google Meet só entra na criação — o Google não deixa adicionar um
-  // conferenceData novo num PATCH que já tinha um antes sem repetir o
-  // mesmo conferenceId, então só pede no POST inicial.
-  if (!jaTemEvento) {
+  async function criarEventoNovo() {
+    // Google Meet só entra na criação — o Google não deixa adicionar um
+    // conferenceData novo num PATCH que já tinha um antes sem repetir o
+    // mesmo conferenceId.
     evento.conferenceData = {
       createRequest: {
         requestId: crypto.randomUUID(),
         conferenceSolutionKey: { type: "hangoutsMeet" },
       },
     };
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${resultadoToken.calendarId}/events?conferenceDataVersion=1&sendUpdates=all`;
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resultadoToken.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(evento),
+    });
   }
 
-  const urlBase = jaTemEvento
-    ? `https://www.googleapis.com/calendar/v3/calendars/${resultadoToken.calendarId}/events/${reuniaoData.google_event_id}`
-    : `https://www.googleapis.com/calendar/v3/calendars/${resultadoToken.calendarId}/events`;
-  const urlEvento = `${urlBase}?conferenceDataVersion=1&sendUpdates=all`;
+  let respostaEvento: Response;
+  if (jaTemEvento) {
+    const urlAtualizar = `https://www.googleapis.com/calendar/v3/calendars/${resultadoToken.calendarId}/events/${reuniaoData.google_event_id}?conferenceDataVersion=1&sendUpdates=all`;
+    respostaEvento = await fetch(urlAtualizar, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${resultadoToken.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(evento),
+    });
 
-  const respostaEvento = await fetch(urlEvento, {
-    method: jaTemEvento ? "PATCH" : "POST",
-    headers: {
-      Authorization: `Bearer ${resultadoToken.accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(evento),
-  });
+    // Se o evento antigo foi apagado direto na Google Agenda (fica com
+    // status "cancelled" ou some de vez), o PATCH falha com 404/410 —
+    // nesse caso cria um evento novo em vez de devolver erro pro usuário.
+    if (respostaEvento.status === 404 || respostaEvento.status === 410) {
+      respostaEvento = await criarEventoNovo();
+    }
+  } else {
+    respostaEvento = await criarEventoNovo();
+  }
 
   const dadosEvento = await respostaEvento.json();
 
@@ -210,7 +230,7 @@ Deno.serve(async (req: Request) => {
     return json(400, { erro: dadosEvento.error?.message ?? "Erro ao salvar evento no Google Agenda" });
   }
 
-  if (!jaTemEvento) {
+  if (dadosEvento.id && dadosEvento.id !== reuniaoData.google_event_id) {
     await supabaseAdmin
       .from("reunioes")
       .update({ google_event_id: dadosEvento.id })
