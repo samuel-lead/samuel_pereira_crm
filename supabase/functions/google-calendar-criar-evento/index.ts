@@ -148,7 +148,7 @@ Deno.serve(async (req: Request) => {
   if ("erro" in resultadoToken) return json(400, { erro: resultadoToken.erro });
 
   const inicio = new Date(reuniaoData.agendada_para as string);
-  const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
+  const fim = new Date(inicio.getTime() + 90 * 60 * 1000);
 
   // Iniciais do responsável (2 primeiras letras do primeiro nome, tipo
   // "Julia" → "JU") + nome do lead + nome do closer, se tiver — formato

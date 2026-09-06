@@ -1376,7 +1376,7 @@ export async function reagendarReuniao(
   // outro dia (Samuel pediu que ficasse registrado).
   const { data: reuniaoAtual } = await supabase
     .from("reunioes")
-    .select("agendada_para")
+    .select("agendada_para, google_event_id")
     .eq("id", reuniaoId)
     .single();
 
@@ -1414,6 +1414,16 @@ export async function reagendarReuniao(
       ocorreu_em: new Date().toISOString(),
       origem: "declarado",
     });
+  }
+
+  // Se essa reunião já tinha sido salva na Google Agenda antes, atualiza
+  // o mesmo evento com o novo horário — sem isso, reagendar aqui dentro
+  // deixava a agenda do Google desatualizada até alguém lembrar de clicar
+  // em "Salvar" de novo. Falha aqui não deve travar o reagendamento.
+  if (reuniaoAtual?.google_event_id) {
+    await supabase.functions
+      .invoke("google-calendar-criar-evento", { body: { reuniaoId } })
+      .catch(() => null);
   }
 
   revalidatePath("/leads");
