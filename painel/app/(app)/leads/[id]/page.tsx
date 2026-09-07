@@ -14,6 +14,7 @@ import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
+import { AvatarLead } from "@/components/avatar-lead";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { Reuniao } from "@/lib/terminologia";
 
@@ -232,9 +233,16 @@ export default async function EditarLeadPage({
 
       <main className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex flex-col gap-4">
-          <p className="text-xs text-neutral-400">
-            Lead adicionado em {formatarData(leadTipado.declarado_em)}
-          </p>
+          <div className="flex items-center gap-3">
+            <AvatarLead
+              nome={leadTipado.nome}
+              fotoUrl={leadTipado.foto_url}
+              tamanho="h-16 w-16 text-xl"
+            />
+            <p className="text-xs text-neutral-400">
+              Lead adicionado em {formatarData(leadTipado.declarado_em)}
+            </p>
+          </div>
 
           {(nomeResponsavel || nomeSdrOriginal) && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">

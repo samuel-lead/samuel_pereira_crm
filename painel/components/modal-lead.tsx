@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { buscarDetalhesDoLead, type DetalhesLead } from "@/lib/leads/actions";
 import { ContextoLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { LeadModalConteudo } from "@/components/lead-modal-conteudo";
+import { AvatarLead } from "@/components/avatar-lead";
 import { lerLeadDoCache, salvarLeadNoCache } from "@/lib/leads/cache-lead";
 
 // Pop-up que abre por cima da tela atual ao clicar num lead, sem trocar
@@ -100,10 +101,17 @@ export function ModalLead({
             </div>
           ) : (
             <>
-              <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-xl border-b border-neutral-200 bg-white px-5 py-4 pr-14">
-                <h1 className="truncate text-lg font-bold text-neutral-900">
-                  {dados.lead.nome}
-                </h1>
+              <div className="sticky top-0 z-10 flex items-center gap-3 justify-between rounded-t-xl border-b border-neutral-200 bg-white px-5 py-4 pr-14">
+                <div className="flex min-w-0 items-center gap-3">
+                  <AvatarLead
+                    nome={dados.lead.nome}
+                    fotoUrl={dados.lead.foto_url}
+                    tamanho="h-14 w-14 text-lg"
+                  />
+                  <h1 className="truncate text-lg font-bold text-neutral-900">
+                    {dados.lead.nome}
+                  </h1>
+                </div>
               </div>
               <ContextoLeadModalAtivo.Provider
                 value={{ recarregar: carregar, fechar: aoFechar }}
