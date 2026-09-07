@@ -52,6 +52,7 @@ type Lead = {
   oportunidade_futura: boolean;
   motivo_base: string | null;
   motivo_base_detalhe: string | null;
+  motivo_repescagem_futura: string | null;
   status: string;
 };
 
@@ -187,16 +188,13 @@ function BlocoReativarLead({
           </div>
           <MenuSelect
             titulo={`Closer (quem vai fazer a ${reuniao(publicoOrg)})`}
-            placeholder="Ainda não definido"
+            placeholder="Selecionar Closer"
             disabled={pendente}
             value={closerId}
             onChange={setCloserId}
-            options={[
-              { value: "", label: "Ainda não definido" },
-              ...usuarios
-                .filter((u) => u.funcao === "closer")
-                .map((u) => ({ value: u.id, label: u.nome })),
-            ]}
+            options={usuarios
+              .filter((u) => u.funcao === "closer")
+              .map((u) => ({ value: u.id, label: u.nome }))}
           />
         </>
       )}
@@ -330,6 +328,9 @@ export function EditarLeadForm({
   const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
   const [motivoBaseSelecionado, setMotivoBaseSelecionado] = useState(lead.motivo_base ?? "");
+  const [motivoRepescagemFutura, setMotivoRepescagemFutura] = useState(
+    lead.motivo_repescagem_futura ?? ""
+  );
 
   // Campos controlados (não só defaultValue) — sem isso, quando o
   // "Salvar alterações" falha (ex.: faltou urgência), o React reseta
@@ -918,6 +919,26 @@ export function EditarLeadForm({
                   (perfil de cliente ideal), mas não está podendo investir nesse mês.
                 </span>
               </label>
+              {oportunidadeFutura && (
+                <div className="mt-2 space-y-1">
+                  <label
+                    className="text-xs font-medium text-green-800"
+                    htmlFor="motivo_repescagem_futura"
+                  >
+                    Por que ele está indo pra Repescagem futura?
+                  </label>
+                  <textarea
+                    id="motivo_repescagem_futura"
+                    name="motivo_repescagem_futura"
+                    rows={2}
+                    required
+                    value={motivoRepescagemFutura}
+                    onChange={(e) => setMotivoRepescagemFutura(e.target.value)}
+                    placeholder="Ex.: fechou o orçamento do mês, só decide em janeiro..."
+                    className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              )}
             </div>
           )}
 

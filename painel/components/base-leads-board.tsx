@@ -12,28 +12,37 @@ import { formatarTelefone, handleInstagram, linkInstagram } from "@/lib/texto";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
 import { reativarLead } from "@/lib/leads/actions";
+import { Reuniao } from "@/lib/terminologia";
+
+const NIVEL_REUNIAO_MARCADA = "4";
 
 // Botão de rodapé pra tirar o lead da Base sem abrir o card inteiro.
 // Clicar em "Reativar" abre um miniformulário com o nível de Pré-vendas
 // (só os "limpos", sem reunião pendente pra resolver primeiro) e, pra
-// admin, também quem vai ser o responsável.
+// admin, também quem vai ser o responsável. "Reunião marcada" também
+// aparece aqui, mas esse botão rápido não tem espaço pra pedir data e
+// closer — escolher essa opção abre o card inteiro do lead, direto na
+// tela de marcar reunião (mesmo caminho do botão "Agendar reunião").
 function BotaoReativar({
   leadId,
   niveisReativacao,
   numerosVisiveis,
   usuarios,
   souAdmin,
+  publicoOrg,
 }: {
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
   numerosVisiveis: Map<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin: boolean;
+  publicoOrg: string;
 }) {
   const [aberto, setAberto] = useState(false);
   const [nivel, setNivel] = useState("");
   const [pendente, iniciarTransicao] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
+  const abrirLead = useAbrirLeadModal();
 
   function aoConfirmar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -44,6 +53,14 @@ function BotaoReativar({
       setErro("Escolha pra qual nível reativar.");
       return;
     }
+
+    if (nivel === NIVEL_REUNIAO_MARCADA) {
+      setAberto(false);
+      setNivel("");
+      abrirLead({ leadId, marcarReuniao: true });
+      return;
+    }
+
     setErro(null);
     iniciarTransicao(() => {
       reativarLead(leadId, Number(nivel), souAdmin ? novoResponsavelId : undefined).then((erro) => {
@@ -87,10 +104,17 @@ function BotaoReativar({
         value={nivel}
         onChange={setNivel}
         abrirAoMontar
-        options={niveisReativacao.map((n) => ({
-          value: String(n.ordem),
-          label: rotuloNivel(n, numerosVisiveis.get(n.ordem)),
-        }))}
+        options={[
+          ...niveisReativacao.map((n) => ({
+            value: String(n.ordem),
+            label: rotuloNivel(n, numerosVisiveis.get(n.ordem)),
+          })),
+          {
+            value: NIVEL_REUNIAO_MARCADA,
+            label: `${Reuniao(publicoOrg)} marcada`,
+            indentado: true,
+          },
+        ]}
       />
       {/* Responsável só aparece depois de escolher o nível — Samuel pediu
           essa revelação em etapas, uma coisa de cada vez. */}
@@ -197,6 +221,7 @@ export function BaseLeadsBoard({
   numerosVisiveis,
   usuarios,
   souAdmin,
+  publicoOrg = "mentoria",
 }: {
   leadsPorMotivo: Record<MotivoBase, LeadBase[]>;
   nomePorUsuario: Map<string, string>;
@@ -204,6 +229,7 @@ export function BaseLeadsBoard({
   niveisReativacao: { ordem: number; nome: string }[];
   numerosVisiveis: Map<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
+  publicoOrg?: string;
   souAdmin: boolean;
 }) {
   const abrirLead = useAbrirLeadModal();
@@ -359,6 +385,7 @@ export function BaseLeadsBoard({
                       numerosVisiveis={numerosVisiveis}
                       usuarios={usuarios}
                       souAdmin={souAdmin}
+                      publicoOrg={publicoOrg}
                     />
                   </div>
                 ))

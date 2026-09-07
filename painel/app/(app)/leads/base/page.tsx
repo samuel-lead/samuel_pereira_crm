@@ -47,6 +47,7 @@ export default async function BasePage({
   const supabase = await createClient();
   const { usuario: usuarioAtual } = await usuarioAutenticado();
   const souAdmin = usuarioAtual?.papel === "admin";
+  const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
 
   let consulta = supabase
     .from("leads")
@@ -130,6 +131,7 @@ export default async function BasePage({
           numerosVisiveis={numerosVisiveis}
           usuarios={usuarios}
           souAdmin={souAdmin}
+          publicoOrg={publicoOrg}
         />
       </main>
     </>

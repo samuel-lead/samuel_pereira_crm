@@ -117,23 +117,28 @@ function formatarMoeda(valor: number) {
 // "Reativar" da Base (mesmo componente, mesma trava), só que aqui dentro
 // do rodapé do card do Kanban em vez do card da Base (Samuel pediu que
 // ficasse igual: sem "Agendar reunião", só Reativar).
+const NIVEL_REUNIAO_MARCADA_REATIVAR = "4";
+
 function BotaoReativarOportunidade({
   leadId,
   niveisReativacao,
   numerosVisiveis,
   usuarios,
   souAdmin,
+  publicoOrg,
 }: {
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
   numerosVisiveis: Map<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin: boolean;
+  publicoOrg: string;
 }) {
   const [aberto, setAberto] = useState(false);
   const [nivel, setNivel] = useState("");
   const [pendente, iniciarTransicao] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
+  const abrirLead = useAbrirLeadModal();
 
   function aoConfirmar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -144,6 +149,18 @@ function BotaoReativarOportunidade({
       setErro("Escolha pra qual nível reativar.");
       return;
     }
+
+    // "Reunião marcada" precisa de data (e closer) — esse botão rápido do
+    // card não tem espaço pra perguntar isso, então abre o card inteiro
+    // do lead direto na tela de marcar reunião (mesmo caminho do botão
+    // "Agendar reunião").
+    if (nivel === NIVEL_REUNIAO_MARCADA_REATIVAR) {
+      setAberto(false);
+      setNivel("");
+      abrirLead({ leadId, marcarReuniao: true });
+      return;
+    }
+
     setErro(null);
     iniciarTransicao(() => {
       reativarLead(leadId, Number(nivel), souAdmin ? novoResponsavelId : undefined).then((erro) => {
@@ -187,10 +204,17 @@ function BotaoReativarOportunidade({
         value={nivel}
         onChange={setNivel}
         abrirAoMontar
-        options={niveisReativacao.map((n) => ({
-          value: String(n.ordem),
-          label: rotuloNivel(n, numerosVisiveis.get(n.ordem)),
-        }))}
+        options={[
+          ...niveisReativacao.map((n) => ({
+            value: String(n.ordem),
+            label: rotuloNivel(n, numerosVisiveis.get(n.ordem)),
+          })),
+          {
+            value: NIVEL_REUNIAO_MARCADA_REATIVAR,
+            label: `${Reuniao(publicoOrg)} marcada`,
+            indentado: true,
+          },
+        ]}
       />
       {nivel && souAdmin && (
         <ResponsavelSelect
@@ -989,6 +1013,7 @@ export function KanbanBoard({
                             numerosVisiveis={numerosVisiveis}
                             usuarios={usuarios}
                             souAdmin={souAdmin}
+                            publicoOrg={publicoOrg}
                           />
                         ) : (
                           permitirMarcarReuniaoRapido &&

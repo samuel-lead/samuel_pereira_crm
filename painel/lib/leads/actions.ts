@@ -519,6 +519,8 @@ export async function atualizarLead(
   const closerId = String(formData.get("closer_id") ?? "").trim() || null;
   const motivoBaseForm = String(formData.get("motivo_base") ?? "").trim() || null;
   const motivoBaseDetalheForm = String(formData.get("motivo_base_detalhe") ?? "").trim() || null;
+  const motivoRepescagemFuturaForm =
+    String(formData.get("motivo_repescagem_futura") ?? "").trim() || null;
   const reuniaoAconteceuForm = String(formData.get("reuniao_aconteceu") ?? "").trim();
   const tevePropostaForm = String(formData.get("teve_proposta") ?? "").trim();
   const reuniaoAnteriorSumiuForm = String(formData.get("reuniao_anterior_sumiu") ?? "").trim();
@@ -581,6 +583,16 @@ export async function atualizarLead(
   // separar certo nas colunas de "por que não virou venda".
   if (nivelMudou && novoNivel === NIVEL_BASE && !motivoBaseForm) {
     return { erro: "Escolha o motivo pelo qual esse lead está indo pra Base." };
+  }
+
+  // Mesma ideia pra "Repescagem futura de ICP" — vale sempre que o lead
+  // está marcado assim (não só ao entrar), igual a trava dos critérios de
+  // qualificação, pra não ficar sem motivo depois de salvar de novo sem
+  // preencher.
+  if (oportunidadeFutura && !motivoRepescagemFuturaForm) {
+    return {
+      erro: "Escreva o motivo pelo qual esse lead está indo pra Repescagem futura de ICP.",
+    };
   }
 
   // "Desqualificado" exige dizer por quê — sem isso, a coluna vira um
@@ -1687,7 +1699,21 @@ export async function reativarLeadExcluido(leadId: string): Promise<string | nul
 
   const { error } = await supabase
     .from("leads")
-    .update({ arquivado_em: null, nivel_ordem: 0, entrou_nivel_em: new Date().toISOString() })
+    .update({
+      arquivado_em: null,
+      nivel_ordem: 0,
+      entrou_nivel_em: new Date().toISOString(),
+      // Se o lead foi excluído estando em Base ou Repescagem futura de
+      // ICP, esses marcadores ficavam esquecidos e o card continuava
+      // mostrando o widget de reativação errado por baixo do botão daqui
+      // (Samuel pegou isso ao vivo — lead reativado dos Excluídos foi
+      // parar em "Reunião marcada" sem querer). Limpa tudo pra garantir
+      // que vira mesmo um Novos Leads "limpo".
+      oportunidade_futura: false,
+      motivo_base: null,
+      motivo_base_detalhe: null,
+      motivo_repescagem_futura: null,
+    })
     .eq("id", leadId);
 
   if (error) {
@@ -1774,6 +1800,7 @@ export type DetalhesLead = {
     oportunidade_futura: boolean;
     motivo_base: string | null;
     motivo_base_detalhe: string | null;
+    motivo_repescagem_futura: string | null;
     proposta_valor: number | null;
     proposta_enviada_em: string | null;
     proposta_observacao: string | null;
@@ -1859,7 +1886,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em"
       )
       .eq("id", leadId)
       .single(),
