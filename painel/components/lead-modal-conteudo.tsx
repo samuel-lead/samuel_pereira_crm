@@ -10,6 +10,7 @@ import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
+import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
@@ -52,6 +53,7 @@ export function LeadModalConteudo({
   marcarReuniao,
   reuniaoAnteriorSumiu,
   abrirProposta,
+  travaSalvarPorCache,
 }: {
   dados: DetalhesLead;
   marcarReuniao?: boolean;
@@ -61,6 +63,11 @@ export function LeadModalConteudo({
   // — nos dois casos, rola até o card de Proposta e destaca, pra ninguém
   // esquecer de preencher (Samuel pediu essa trava).
   abrirProposta?: boolean;
+  // Pop-up abriu com dado de cache (hover antes de clicar) e a busca
+  // fresca por baixo dos panos ainda não confirmou — trava "Salvar
+  // alterações" até confirmar, senão dava pra reenviar um nível/estado
+  // velho sem querer (ver components/modal-lead.tsx).
+  travaSalvarPorCache?: boolean;
 }) {
   const [focarProposta, setFocarProposta] = useState(!!abrirProposta);
   const propostaRef = useRef<HTMLDivElement>(null);
@@ -203,6 +210,7 @@ export function LeadModalConteudo({
           reuniaoAtivaAgendadaPara={reuniaoAtiva?.agendada_para ?? null}
           reuniaoAtivaCloserId={reuniaoAtiva?.closer_id ?? null}
           googleCalendarConectado={googleCalendarConectado}
+          travaSalvarPorCache={travaSalvarPorCache}
           aoConfirmarTeveProposta={() => setFocarProposta(true)}
         />
       </div>
@@ -358,7 +366,11 @@ export function LeadModalConteudo({
           )}
         </div>
 
-        {podeEditar && lead.status !== "vendido" && (
+        {podeEditar && lead.arquivado_em && (
+          <ReativarLeadExcluidoButton leadId={lead.id} />
+        )}
+
+        {podeEditar && !lead.arquivado_em && lead.status !== "vendido" && (
           <ExcluirLeadButton leadId={lead.id} nome={lead.nome} />
         )}
       </div>

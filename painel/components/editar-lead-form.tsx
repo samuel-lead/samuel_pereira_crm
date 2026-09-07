@@ -189,6 +189,7 @@ export function EditarLeadForm({
   reuniaoAtivaAgendadaPara = null,
   reuniaoAtivaCloserId = null,
   googleCalendarConectado = false,
+  travaSalvarPorCache = false,
   aoConfirmarTeveProposta,
 }: {
   lead: Lead;
@@ -222,6 +223,9 @@ export function EditarLeadForm({
   // botão nunca promete salvar na agenda, mesmo com e-mail preenchido
   // (Samuel pediu: só aparece pra quem realmente conectou).
   googleCalendarConectado?: boolean;
+  // Pop-up abriu com dado de cache e a busca fresca ainda não confirmou
+  // — trava "Salvar alterações" até confirmar (ver modal-lead.tsx).
+  travaSalvarPorCache?: boolean;
   // Avisa o pop-up (lead-modal-conteudo.tsx) que a pessoa confirmou "teve
   // proposta" ao mover manualmente pra Follow/Oportunidades — o pop-up
   // rola até o card de Proposta e destaca, em vez de fechar sozinho.
@@ -414,16 +418,19 @@ export function EditarLeadForm({
     reuniaoAtivaAgendadaPara && new Date(reuniaoAtivaAgendadaPara) > new Date()
   );
 
-  // O que falta pra "Salvar alterações" também mandar pro Google Agenda
-  // no mesmo clique — só faz sentido perguntar isso com a reunião marcada
-  // (é quando o campo "Sobre o lead" aparece). Perfil, urgência e
-  // capacidade são obrigatórios pra salvar a reunião de qualquer jeito
-  // (trava do servidor, ver atualizarLead) — só o e-mail é opcional: sem
-  // ele o lead salva normal aqui no CRM, só não sincroniza com a agenda.
-  // E sem a empresa ter conectado o Google Calendar, a opção nem existe
-  // — nunca promete algo que não vai acontecer.
+  // Só faz sentido oferecer Google Agenda com a reunião MARCADA de
+  // verdade (tem data pra sincronizar) — diferente de "Sobre o lead"
+  // (mostrarSobreLead), que continua aparecendo em diante (Oportunidades,
+  // Base) pra dar pra rever/editar o perfil. Usar mostrarSobreLead aqui
+  // fazia o aviso de Google Agenda aparecer até em Oportunidades/Base,
+  // onde não tem reunião nenhuma pra salvar (Samuel pegou isso ao vivo).
+  // Perfil, urgência e capacidade são obrigatórios pra salvar a reunião
+  // de qualquer jeito (trava do servidor, ver atualizarLead) — só o
+  // e-mail é opcional. Sem a empresa ter conectado o Google Calendar, a
+  // opção nem existe — nunca promete algo que não vai acontecer.
+  const emReuniaoMarcada = nivelSelecionado === NIVEL_REUNIAO_MARCADA;
   const prontoParaAgenda =
-    mostrarSobreLead && googleCalendarConectado && !!emailAtual.trim();
+    emReuniaoMarcada && googleCalendarConectado && !!emailAtual.trim();
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
@@ -982,7 +989,7 @@ export function EditarLeadForm({
             </p>
           )}
 
-          {mostrarSobreLead && googleCalendarConectado && !prontoParaAgenda && (
+          {emReuniaoMarcada && googleCalendarConectado && !prontoParaAgenda && (
             <p className="destaque-proposta rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
               Falta o e-mail para salvar direto no Google Agenda também, por
               enquanto vai salvar só aqui no CRM. Você vai ter que adicionar
@@ -990,17 +997,25 @@ export function EditarLeadForm({
             </p>
           )}
 
+          {travaSalvarPorCache && (
+            <p className="text-xs text-neutral-400">
+              Confirmando dados mais recentes desse lead...
+            </p>
+          )}
+
           {podeEditar && (
             <button
               type="submit"
-              disabled={pendente}
+              disabled={pendente || travaSalvarPorCache}
               className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
             >
               {pendente
                 ? "Salvando..."
-                : prontoParaAgenda
-                  ? "Salvar alterações e no Google Agenda"
-                  : "Salvar alterações"}
+                : travaSalvarPorCache
+                  ? "Confirmando..."
+                  : prontoParaAgenda
+                    ? "Salvar alterações e no Google Agenda"
+                    : "Salvar alterações"}
             </button>
           )}
         </div>

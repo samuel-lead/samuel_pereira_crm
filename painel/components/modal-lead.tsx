@@ -47,6 +47,14 @@ export function ModalLead({
   // pra não apagar o que a pessoa estiver digitando.
   const [revisao, setRevisao] = useState(0);
   const vindoDoCacheRef = useRef(!!lerLeadDoCache(leadId));
+  // Enquanto isso for true, o formulário ainda pode estar mostrando o
+  // nível/"Repescagem futura" antigos do cache — trava o "Salvar
+  // alterações" até a busca por baixo dos panos confirmar (ver comentário
+  // grande acima sobre o remonte por "revisao"). Sem essa trava, clicar em
+  // salvar rápido demais (antes da resposta chegar) reenviava o estado
+  // velho e desmarcava a "Repescagem futura de ICP" sozinho — foi
+  // exatamente isso que aconteceu com um lead do Samuel.
+  const [confirmandoCache, setConfirmandoCache] = useState(() => !!lerLeadDoCache(leadId));
 
   const carregar = useCallback(async () => {
     const resultado = await buscarDetalhesDoLead(leadId);
@@ -58,6 +66,7 @@ export function ModalLead({
       vindoDoCacheRef.current = false;
       setRevisao((r) => r + 1);
     }
+    setConfirmandoCache(false);
   }, [leadId]);
 
   useEffect(() => {
@@ -122,6 +131,7 @@ export function ModalLead({
                   marcarReuniao={marcarReuniao}
                   reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
                   abrirProposta={abrirProposta}
+                  travaSalvarPorCache={confirmandoCache}
                 />
               </ContextoLeadModalAtivo.Provider>
             </>

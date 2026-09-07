@@ -1626,6 +1626,57 @@ export async function arquivarLead(
   redirect("/leads");
 }
 
+// Lead excluído não pode ser excluído de novo — o botão certo ali é
+// "Reativar", que manda ele direto pra Novos Leads (sem precisar
+// escolher nível, diferente da reativação de Base/Repescagem, porque
+// aqui a pessoa já tinha sido tirada do funil inteiro, não só pausada).
+export async function reativarLeadExcluido(leadId: string): Promise<string | null> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    return erroPermissao;
+  }
+
+  const { data: leadAtual, error: erroAtual } = await supabase
+    .from("leads")
+    .select("nivel_ordem")
+    .eq("id", leadId)
+    .single();
+
+  if (erroAtual || !leadAtual) {
+    return "Lead não encontrado";
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ arquivado_em: null, nivel_ordem: 0, entrou_nivel_em: new Date().toISOString() })
+    .eq("id", leadId);
+
+  if (error) {
+    return error.message;
+  }
+
+  const { error: erroHistorico } = await supabase.from("nivel_historico").insert({
+    org_id: usuario.org_id,
+    lead_id: leadId,
+    de_ordem: leadAtual.nivel_ordem,
+    para_ordem: 0,
+    motivo: "Reativado de Excluídos",
+    automatico: false,
+    usuario_id: usuario.id,
+  });
+
+  if (erroHistorico) {
+    return erroHistorico.message;
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/leads/excluidos");
+  revalidatePath(`/leads/${leadId}`);
+  return null;
+}
+
 // Lead sem responsável (ex.: chegou de uma campanha, sem dono definido)
 // pode ser "pego" por qualquer usuário com acesso ao Funil.
 export async function reivindicarLead(
@@ -1691,6 +1742,7 @@ export type DetalhesLead = {
     proposta_observacao: string | null;
     proximo_follow_em: string | null;
     dia_follow: number | null;
+    arquivado_em: string | null;
   };
   niveis: NivelResumo[];
   interacoes: {
@@ -1770,7 +1822,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em"
       )
       .eq("id", leadId)
       .single(),

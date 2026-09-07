@@ -11,6 +11,7 @@ import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
+import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
@@ -49,6 +50,7 @@ type Lead = {
   proposta_observacao: string | null;
   proximo_follow_em: string | null;
   dia_follow: number | null;
+  arquivado_em: string | null;
 };
 
 type Interacao = {
@@ -142,7 +144,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em"
       )
       .eq("id", id)
       .single(),
@@ -516,7 +518,11 @@ export default async function EditarLeadPage({
             )}
           </div>
 
-          {podeEditar && leadTipado.status !== "vendido" && (
+          {podeEditar && leadTipado.arquivado_em && (
+            <ReativarLeadExcluidoButton leadId={leadTipado.id} />
+          )}
+
+          {podeEditar && !leadTipado.arquivado_em && leadTipado.status !== "vendido" && (
             <ExcluirLeadButton leadId={leadTipado.id} nome={leadTipado.nome} />
           )}
         </div>
