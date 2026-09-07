@@ -225,6 +225,15 @@ export function LeadModalConteudo({
           />
         )}
 
+        {lead.oportunidade_futura && lead.motivo_repescagem_futura && (
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-green-800">
+              Repescagem futura de ICP
+            </h2>
+            <p className="mt-1 text-sm text-green-700">{lead.motivo_repescagem_futura}</p>
+          </div>
+        )}
+
         {podeEditar && lead.status !== "vendido" && (
           <ProximoContatoForm leadId={lead.id} proximoContatoEm={lead.proximo_follow_em} />
         )}
