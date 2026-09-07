@@ -129,7 +129,7 @@ Deno.serve(async (req: Request) => {
     supabaseUsuario
       .from("usuarios")
       .select("id, nome")
-      .in("id", [reuniaoData.usuario_id, reuniaoData.closer_id].filter(Boolean) as string[]),
+      .in("id", [reuniaoData.closer_id].filter(Boolean) as string[]),
     obterAccessTokenValido(supabaseAdmin, reuniaoData.org_id as string, clientId, clientSecret),
   ]);
 
@@ -145,22 +145,15 @@ Deno.serve(async (req: Request) => {
 
   if ("erro" in resultadoToken) return json(400, { erro: resultadoToken.erro });
 
-  // Iniciais vêm de quem MARCOU essa reunião (a SDR), não do responsável
-  // atual do lead — os dois podem ser pessoas diferentes (ex: SDR marca,
-  // depois o lead passa pro closer como responsável).
-  const nomeSdr = usuarios?.find((u) => u.id === reuniaoData.usuario_id)?.nome;
   const nomeCloser = usuarios?.find((u) => u.id === reuniaoData.closer_id)?.nome;
 
   const inicio = new Date(reuniaoData.agendada_para as string);
   const fim = new Date(inicio.getTime() + 90 * 60 * 1000);
 
-  // Iniciais da SDR que marcou (2 primeiras letras do primeiro nome, tipo
-  // "Julia" → "JU") + nome do lead + nome do closer, se tiver — formato
-  // que o Samuel pediu explicitamente.
-  const iniciais = nomeSdr ? nomeSdr.trim().slice(0, 2).toUpperCase() : "";
+  // Só nome do lead + nome do closer, se tiver — sem inicial de SDR
+  // (Samuel pediu pra tirar).
   let titulo = leadData.nome;
   if (nomeCloser) titulo += ` + ${nomeCloser}`;
-  if (iniciais) titulo = `${iniciais} - ${titulo}`;
 
   const descricao = [
     leadData.criterio_problema || null,
@@ -180,6 +173,14 @@ Deno.serve(async (req: Request) => {
     end: { dateTime: fim.toISOString() },
     attendees: [{ email: leadData.email }],
     colorId: "10", // Basil — verde, pedido explicitamente
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: "popup", minutes: 60 },
+        { method: "popup", minutes: 30 },
+        { method: "popup", minutes: 5 },
+      ],
+    },
   };
 
   async function criarEventoNovo() {
