@@ -984,7 +984,7 @@ export function EditarLeadForm({
 
           {mostrarSobreLead && googleCalendarConectado && !prontoParaAgenda && (
             <p className="destaque-proposta rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              Falta o e-mail para salvar direto na Google Agenda também, por
+              Falta o e-mail para salvar direto no Google Agenda também, por
               enquanto vai salvar só aqui no CRM. Você vai ter que adicionar
               no Google Agenda de forma manual se não preencher o e-mail.
             </p>
