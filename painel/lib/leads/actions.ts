@@ -778,6 +778,7 @@ export async function atualizarLead(
       criterio_capacidade: criterioCapacidade,
       nivel_ordem: novoNivel,
       oportunidade_futura: oportunidadeFutura,
+      motivo_repescagem_futura: oportunidadeFutura ? motivoRepescagemFuturaForm : null,
       motivo_base: motivoBase,
       ...(motivoBase === "desqualificado" ? { motivo_base_detalhe: motivoBaseDetalhe } : {}),
       // Quando a reunião realizada tem Closer definido, o responsável
@@ -899,7 +900,11 @@ export async function moverLeadNivel(
   // isso num miniformulário próprio, sem abrir o card inteiro (mesma
   // trava obrigatória de atualizarLead).
   motivoBase?: string,
-  motivoBaseDetalhe?: string
+  motivoBaseDetalhe?: string,
+  // Só usado indo pra "Repescagem futura de ICP" — mesma trava obrigatória
+  // de atualizarLead, coletada antes de arrastar (ver perguntarTexto em
+  // kanban-board.tsx), já que o card não abre nesse fluxo.
+  motivoRepescagemFutura?: string
 ): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -973,6 +978,14 @@ export async function moverLeadNivel(
     return 'Descreva por que esse lead está desqualificado antes de mover pra "Base".';
   }
 
+  // Igual atualizarLead: ninguém move pra "Repescagem futura de ICP" sem
+  // dizer o motivo — sem essa trava dava pra arrastar o card sem querer
+  // e ficar sem registro nenhum do porquê (foi o que aconteceu com o
+  // Jackson Trindade, Samuel pegou isso ao vivo).
+  if (querFutura && !motivoRepescagemFutura) {
+    return "Escreva o motivo pelo qual esse lead está indo pra Repescagem futura de ICP.";
+  }
+
   const { erro: erroReuniao, transferirParaCloserId } = await sincronizarReuniao(supabase, {
     orgId: usuario.org_id,
     usuarioId: usuario.id,
@@ -993,6 +1006,7 @@ export async function moverLeadNivel(
     .update({
       nivel_ordem: nivelReal,
       oportunidade_futura: querFutura,
+      motivo_repescagem_futura: querFutura ? motivoRepescagemFutura : null,
       entrou_nivel_em: new Date().toISOString(),
       ...(nivelReal === NIVEL_BASE
         ? { motivo_base: motivoBase, motivo_base_detalhe: motivoBaseDetalhe ?? null }

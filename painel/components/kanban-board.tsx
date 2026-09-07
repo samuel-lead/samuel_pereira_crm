@@ -140,6 +140,21 @@ function BotaoReativarOportunidade({
   const [erro, setErro] = useState<string | null>(null);
   const abrirLead = useAbrirLeadModal();
 
+  // "Reunião marcada" precisa de data (e closer) — esse botão rápido do
+  // card não tem espaço pra perguntar isso, então já abre o card inteiro
+  // do lead direto na tela de marcar reunião assim que a pessoa escolhe
+  // essa opção (mesmo caminho do botão "Agendar reunião"). Não espera
+  // "Confirmar" — o sub-seletor de Responsável nem faz sentido aqui.
+  function aoMudarNivel(valor: string) {
+    if (valor === NIVEL_REUNIAO_MARCADA_REATIVAR) {
+      setAberto(false);
+      setNivel("");
+      abrirLead({ leadId, marcarReuniao: true });
+      return;
+    }
+    setNivel(valor);
+  }
+
   function aoConfirmar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formData = new FormData(evento.currentTarget);
@@ -147,17 +162,6 @@ function BotaoReativarOportunidade({
 
     if (!nivel) {
       setErro("Escolha pra qual nível reativar.");
-      return;
-    }
-
-    // "Reunião marcada" precisa de data (e closer) — esse botão rápido do
-    // card não tem espaço pra perguntar isso, então abre o card inteiro
-    // do lead direto na tela de marcar reunião (mesmo caminho do botão
-    // "Agendar reunião").
-    if (nivel === NIVEL_REUNIAO_MARCADA_REATIVAR) {
-      setAberto(false);
-      setNivel("");
-      abrirLead({ leadId, marcarReuniao: true });
       return;
     }
 
@@ -202,7 +206,7 @@ function BotaoReativarOportunidade({
         placeholder="Nível de Pré-vendas..."
         disabled={pendente}
         value={nivel}
-        onChange={setNivel}
+        onChange={aoMudarNivel}
         abrirAoMontar
         options={[
           ...niveisReativacao.map((n) => ({
@@ -554,7 +558,7 @@ export function KanbanBoard({
   const [, iniciarTransicao] = useTransition();
   const nomePorUsuario = new Map(usuarios.map((u) => [u.id, u.nome]));
   const fotoPorUsuario = new Map(usuarios.map((u) => [u.id, u.foto_url ?? null]));
-  const { perguntar, modal: modalConfirmacao } = useConfirmacaoTravaTela();
+  const { perguntar, perguntarTexto, modal: modalConfirmacao } = useConfirmacaoTravaTela();
   const idRoladoRef = useRef<string | null>(null);
 
   // Busca achou um lead só: rola a tela sozinha até a coluna dele, senão a
@@ -650,6 +654,22 @@ export function KanbanBoard({
       return;
     }
 
+    // "Repescagem futura de ICP" sempre pede o motivo, venha o lead de
+    // onde vier — mesma trava obrigatória de atualizarLead. Sem isso dava
+    // pra arrastar o card sem querer e ficar sem registro nenhum do
+    // porquê (foi o que aconteceu com o Jackson Trindade). Perguntado por
+    // último, depois de "aconteceu?"/"teve proposta?" quando essas duas
+    // também entram no caminho (Samuel pediu essa ordem).
+    async function perguntarMotivoRepescagem(): Promise<string | undefined> {
+      if (ordem !== ORDEM_OPORTUNIDADE_FUTURA) return undefined;
+      const motivo = await perguntarTexto(
+        "Por que esse lead está indo pra Repescagem futura de ICP?",
+        "Ex.: fechou o orçamento do mês, só decide em janeiro...",
+        "Confirmar"
+      );
+      return motivo ?? undefined;
+    }
+
     // Saindo de "Reunião marcada" pra "Follow após reunião" ou
     // "Oportunidades": só faz sentido se a reunião realmente aconteceu.
     // Pergunta na hora com um aviso que trava a tela (igual "Excluir
@@ -668,8 +688,19 @@ export function KanbanBoard({
       // (Samuel pediu essa trava). "Sim" abre o card já rolado até a
       // Proposta, pra pessoa preencher na hora.
       const tevepProposta = await perguntar(`Essa ${reuniao(publicoOrg)} teve proposta?`);
+      const motivoRepescagemFutura = await perguntarMotivoRepescagem();
+      if (ordem === ORDEM_OPORTUNIDADE_FUTURA && !motivoRepescagemFutura) return;
       iniciarTransicao(() => {
-        moverLeadNivel(leadId, ordem, undefined, true, tevepProposta).then((erro) => {
+        moverLeadNivel(
+          leadId,
+          ordem,
+          undefined,
+          true,
+          tevepProposta,
+          undefined,
+          undefined,
+          motivoRepescagemFutura
+        ).then((erro) => {
           if (erro) alert(erro);
           // Abre com "sim" mesmo se o servidor recusou o movimento por
           // falta de proposta registrada — é exatamente onde a pessoa
@@ -680,8 +711,22 @@ export function KanbanBoard({
       return;
     }
 
+    // Chegando na Repescagem futura de um lugar que não é "Reunião
+    // marcada" (não passa pelas perguntas acima) — só o motivo mesmo.
+    const motivoRepescagemFutura = await perguntarMotivoRepescagem();
+    if (ordem === ORDEM_OPORTUNIDADE_FUTURA && !motivoRepescagemFutura) return;
+
     iniciarTransicao(() => {
-      moverLeadNivel(leadId, ordem).then((erro) => {
+      moverLeadNivel(
+        leadId,
+        ordem,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        motivoRepescagemFutura
+      ).then((erro) => {
         if (erro) alert(erro);
       });
     });

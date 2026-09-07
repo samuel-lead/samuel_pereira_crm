@@ -44,6 +44,20 @@ function BotaoReativar({
   const [erro, setErro] = useState<string | null>(null);
   const abrirLead = useAbrirLeadModal();
 
+  // "Reunião marcada" abre o card na hora de escolher, sem passar pelo
+  // resto do miniformulário (Responsável não faz sentido nesse caminho —
+  // Samuel achou confuso pedir isso antes de abrir o card, que já tem
+  // esse campo lá dentro).
+  function aoMudarNivel(valor: string) {
+    if (valor === NIVEL_REUNIAO_MARCADA) {
+      setAberto(false);
+      setNivel("");
+      abrirLead({ leadId, marcarReuniao: true });
+      return;
+    }
+    setNivel(valor);
+  }
+
   function aoConfirmar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formData = new FormData(evento.currentTarget);
@@ -51,13 +65,6 @@ function BotaoReativar({
 
     if (!nivel) {
       setErro("Escolha pra qual nível reativar.");
-      return;
-    }
-
-    if (nivel === NIVEL_REUNIAO_MARCADA) {
-      setAberto(false);
-      setNivel("");
-      abrirLead({ leadId, marcarReuniao: true });
       return;
     }
 
@@ -102,7 +109,7 @@ function BotaoReativar({
         placeholder="Nível de Pré-vendas..."
         disabled={pendente}
         value={nivel}
-        onChange={setNivel}
+        onChange={aoMudarNivel}
         abrirAoMontar
         options={[
           ...niveisReativacao.map((n) => ({
