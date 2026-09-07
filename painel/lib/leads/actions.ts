@@ -831,6 +831,31 @@ export async function atualizarLead(
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);
 
+  // Samuel pediu pra unir os dois botões: assim que os 4 dados que o
+  // Google Agenda precisa (e-mail + os 3 critérios) estão preenchidos e o
+  // lead está em "Reunião marcada", "Salvar alterações" já salva no
+  // Google Agenda também, sem precisar de um segundo clique separado.
+  // Best-effort — se a Google Agenda falhar aqui, não trava o salvamento
+  // do lead (que já foi feito com sucesso).
+  if (
+    novoNivel === NIVEL_REUNIAO_MARCADA &&
+    email &&
+    criterioProblema &&
+    criterioUrgencia !== "desconhecida" &&
+    criterioCapacidade !== "desconhecida"
+  ) {
+    const { data: reuniaoAtiva } = await supabase
+      .from("reunioes")
+      .select("id")
+      .eq("lead_id", leadId)
+      .eq("status", "marcada")
+      .maybeSingle();
+
+    if (reuniaoAtiva) {
+      await salvarReuniaoNoGoogleAgenda(reuniaoAtiva.id).catch(() => null);
+    }
+  }
+
   if (!redirecionar) {
     return { erro: null };
   }

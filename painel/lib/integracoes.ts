@@ -158,7 +158,7 @@ export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
     corIcone: "bg-blue-100 text-blue-700",
     letraIcone: "C",
     oQueFaz:
-      `Toda vez que uma ${reuniao(publicoOrg)} é marcada aqui no CRM (nível '${Reuniao(publicoOrg)} marcada'), o botão "Salvar no Google Agenda" no card do lead cria um evento com Google Meet, cor verde e o lead como convidado — precisa ter o e-mail do lead cadastrado.`,
+      `Quando uma ${reuniao(publicoOrg)} é marcada aqui no CRM (nível '${Reuniao(publicoOrg)} marcada') e o card já tem e-mail + perfil do lead + urgência + capacidade de investimento preenchidos, clicar em "Salvar alterações" já cria o evento na Google Agenda também — com Google Meet, cor verde e o lead como convidado.`,
     comoConectar: [
       {
         numero: 1,
@@ -177,9 +177,9 @@ export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
       {
         numero: 3,
         quemFaz: "voce",
-        titulo: `Clicar em "Salvar no Google Agenda" quando marcar uma ${reuniao(publicoOrg)}`,
+        titulo: `Preencher e-mail e os 3 critérios ao marcar uma ${reuniao(publicoOrg)}`,
         descricao:
-          `Depois de conectado, o botão aparece dentro do card do lead assim que a ${reuniao(publicoOrg)} tiver data marcada — mas só funciona se o lead já tiver e-mail cadastrado (é ele que entra como convidado do evento).`,
+          `Depois de conectado, assim que o card tiver e-mail do lead + perfil + urgência + capacidade de investimento preenchidos, o botão muda pra "Salvar alterações e no Google Agenda" — um clique só salva os dois. Sem e-mail, o lead é salvo normalmente aqui no CRM, só não sincroniza sozinho com a agenda.`,
       },
     ],
   },

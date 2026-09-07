@@ -270,6 +270,15 @@ export function EditarLeadForm({
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
   const [motivoBaseSelecionado, setMotivoBaseSelecionado] = useState(lead.motivo_base ?? "");
 
+  // Rastreia esses 4 campos ao vivo (sem esperar salvar) só pra saber se
+  // já dá pra também salvar no Google Agenda no mesmo clique — Samuel
+  // pediu um botão só em vez de "Salvar alterações" e depois abrir de
+  // novo pra achar o botão do Google Agenda.
+  const [emailAtual, setEmailAtual] = useState(lead.email ?? "");
+  const [criterioProblemaAtual, setCriterioProblemaAtual] = useState(lead.criterio_problema ?? "");
+  const [criterioUrgenciaAtual, setCriterioUrgenciaAtual] = useState(lead.criterio_urgencia);
+  const [criterioCapacidadeAtual, setCriterioCapacidadeAtual] = useState(lead.criterio_capacidade);
+
   // "Oportunidades futuras" não é um nível de verdade no banco — é o nível
   // 7 (Leads para fim do mês) + essa marcação. Mas o SDR quer escolher ela
   // direto no menu Nível, sem precisar primeiro escolher outro nível e
@@ -396,6 +405,21 @@ export function EditarLeadForm({
     reuniaoAtivaAgendadaPara && new Date(reuniaoAtivaAgendadaPara) > new Date()
   );
 
+  // O que falta pra "Salvar alterações" também mandar pro Google Agenda
+  // no mesmo clique — só faz sentido perguntar isso com a reunião marcada
+  // (é quando o campo "Sobre o lead" aparece). Às vezes o lead não passa
+  // o e-mail, e não tem problema: o lead continua sendo salvo aqui no
+  // CRM normalmente, só não sincroniza sozinho com a agenda.
+  const itensFaltandoParaAgenda = mostrarSobreLead
+    ? [
+        !emailAtual.trim() && "e-mail",
+        !criterioProblemaAtual.trim() && "perfil do lead",
+        criterioUrgenciaAtual === "desconhecida" && "urgência",
+        criterioCapacidadeAtual === "desconhecida" && "capacidade de investimento",
+      ].filter((item): item is string => Boolean(item))
+    : [];
+  const prontoParaAgenda = mostrarSobreLead && itensFaltandoParaAgenda.length === 0;
+
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
       <form action={acaoFormulario} className="space-y-4">
@@ -434,6 +458,7 @@ export function EditarLeadForm({
             name="email"
             type="email"
             defaultValue={lead.email ?? ""}
+            onChange={(e) => setEmailAtual(e.target.value)}
             className={campoClasse}
           />
         </div>
@@ -893,6 +918,7 @@ export function EditarLeadForm({
                 name="criterio_problema"
                 rows={4}
                 defaultValue={lead.criterio_problema ?? ""}
+                onChange={(e) => setCriterioProblemaAtual(e.target.value)}
                 className={`${campoClasse} bg-white`}
               />
             </div>
@@ -905,6 +931,7 @@ export function EditarLeadForm({
                 id="criterio_urgencia"
                 name="criterio_urgencia"
                 defaultValue={lead.criterio_urgencia}
+                onChange={setCriterioUrgenciaAtual}
                 buscar={false}
                 options={[
                   { value: "desconhecida", label: "Ainda não sei" },
@@ -923,6 +950,7 @@ export function EditarLeadForm({
                 id="criterio_capacidade"
                 name="criterio_capacidade"
                 defaultValue={lead.criterio_capacidade}
+                onChange={setCriterioCapacidadeAtual}
                 buscar={false}
                 options={[
                   { value: "desconhecida", label: "Ainda não sei" },
@@ -949,13 +977,26 @@ export function EditarLeadForm({
             </p>
           )}
 
+          {mostrarSobreLead && !prontoParaAgenda && (
+            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Falta {itensFaltandoParaAgenda.join(", ")} pra salvar direto na
+              Google Agenda também — por enquanto vai salvar só aqui no CRM
+              (sem problema, o lead é salvo normalmente; só não sincroniza
+              sozinho com a agenda).
+            </p>
+          )}
+
           {podeEditar && (
             <button
               type="submit"
               disabled={pendente}
               className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
             >
-              {pendente ? "Salvando..." : "Salvar alterações"}
+              {pendente
+                ? "Salvando..."
+                : prontoParaAgenda
+                  ? "Salvar alterações e no Google Agenda"
+                  : "Salvar alterações"}
             </button>
           )}
         </div>
