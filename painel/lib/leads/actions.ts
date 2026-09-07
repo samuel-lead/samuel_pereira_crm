@@ -557,10 +557,14 @@ export async function atualizarLead(
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
 
-  // Nenhuma reunião pode ser marcada sem os 3 critérios de qualificação
-  // preenchidos (regra do CLAUDE.md) — checa só quando o lead está
-  // entrando em "Reunião marcada" agora, não em quem já estava lá.
-  if (nivelMudou && novoNivel === NIVEL_REUNIAO_MARCADA) {
+  // Nenhuma reunião pode ficar marcada sem os 3 critérios de qualificação
+  // preenchidos (regra do CLAUDE.md) — vale sempre que o nível FINAL é
+  // "Reunião marcada", não só na hora de entrar nele. Sem isso, um lead
+  // que já estava marcado conseguia salvar de novo com o perfil vazio
+  // (Samuel pegou isso ao vivo). Só o e-mail pode ficar faltando — esse
+  // não trava o salvamento, só impede a sincronização com o Google
+  // Agenda (ver mais abaixo).
+  if (novoNivel === NIVEL_REUNIAO_MARCADA) {
     const faltando: string[] = [];
     if (!criterioProblema) faltando.push("o perfil do lead");
     if (criterioUrgencia === "desconhecida") faltando.push("se tem urgência");
@@ -831,19 +835,15 @@ export async function atualizarLead(
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);
 
-  // Samuel pediu pra unir os dois botões: assim que os 4 dados que o
-  // Google Agenda precisa (e-mail + os 3 critérios) estão preenchidos e o
-  // lead está em "Reunião marcada", "Salvar alterações" já salva no
-  // Google Agenda também, sem precisar de um segundo clique separado.
-  // Best-effort — se a Google Agenda falhar aqui, não trava o salvamento
-  // do lead (que já foi feito com sucesso).
-  if (
-    novoNivel === NIVEL_REUNIAO_MARCADA &&
-    email &&
-    criterioProblema &&
-    criterioUrgencia !== "desconhecida" &&
-    criterioCapacidade !== "desconhecida"
-  ) {
+  // Samuel pediu pra unir os dois botões: assim que o lead está em
+  // "Reunião marcada" com e-mail preenchido, "Salvar alterações" já
+  // salva no Google Agenda também, sem precisar de um segundo clique
+  // separado. Os 3 critérios não precisam ser checados de novo aqui —
+  // a trava lá em cima já garante que estão preenchidos sempre que o
+  // nível é "Reunião marcada"; só o e-mail é opcional. Best-effort — se
+  // a Google Agenda falhar aqui, não trava o salvamento do lead (que já
+  // foi feito com sucesso).
+  if (novoNivel === NIVEL_REUNIAO_MARCADA && email) {
     const { data: reuniaoAtiva } = await supabase
       .from("reunioes")
       .select("id")

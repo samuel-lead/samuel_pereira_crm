@@ -270,14 +270,13 @@ export function EditarLeadForm({
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
   const [motivoBaseSelecionado, setMotivoBaseSelecionado] = useState(lead.motivo_base ?? "");
 
-  // Rastreia esses 4 campos ao vivo (sem esperar salvar) só pra saber se
-  // já dá pra também salvar no Google Agenda no mesmo clique — Samuel
-  // pediu um botão só em vez de "Salvar alterações" e depois abrir de
-  // novo pra achar o botão do Google Agenda.
+  // Rastreia o e-mail ao vivo (sem esperar salvar) só pra saber se já dá
+  // pra também salvar no Google Agenda no mesmo clique — Samuel pediu um
+  // botão só em vez de "Salvar alterações" e depois abrir de novo pra
+  // achar o botão do Google Agenda. Perfil/urgência/capacidade não
+  // precisam de rastreio ao vivo — são obrigatórios pra salvar de
+  // qualquer jeito (trava do servidor), então já estão garantidos.
   const [emailAtual, setEmailAtual] = useState(lead.email ?? "");
-  const [criterioProblemaAtual, setCriterioProblemaAtual] = useState(lead.criterio_problema ?? "");
-  const [criterioUrgenciaAtual, setCriterioUrgenciaAtual] = useState(lead.criterio_urgencia);
-  const [criterioCapacidadeAtual, setCriterioCapacidadeAtual] = useState(lead.criterio_capacidade);
 
   // "Oportunidades futuras" não é um nível de verdade no banco — é o nível
   // 7 (Leads para fim do mês) + essa marcação. Mas o SDR quer escolher ela
@@ -407,18 +406,11 @@ export function EditarLeadForm({
 
   // O que falta pra "Salvar alterações" também mandar pro Google Agenda
   // no mesmo clique — só faz sentido perguntar isso com a reunião marcada
-  // (é quando o campo "Sobre o lead" aparece). Às vezes o lead não passa
-  // o e-mail, e não tem problema: o lead continua sendo salvo aqui no
-  // CRM normalmente, só não sincroniza sozinho com a agenda.
-  const itensFaltandoParaAgenda = mostrarSobreLead
-    ? [
-        !emailAtual.trim() && "e-mail",
-        !criterioProblemaAtual.trim() && "perfil do lead",
-        criterioUrgenciaAtual === "desconhecida" && "urgência",
-        criterioCapacidadeAtual === "desconhecida" && "capacidade de investimento",
-      ].filter((item): item is string => Boolean(item))
-    : [];
-  const prontoParaAgenda = mostrarSobreLead && itensFaltandoParaAgenda.length === 0;
+  // (é quando o campo "Sobre o lead" aparece). Perfil, urgência e
+  // capacidade são obrigatórios pra salvar a reunião de qualquer jeito
+  // (trava do servidor, ver atualizarLead) — só o e-mail é opcional: sem
+  // ele o lead salva normal aqui no CRM, só não sincroniza com a agenda.
+  const prontoParaAgenda = mostrarSobreLead && !!emailAtual.trim();
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
@@ -918,7 +910,6 @@ export function EditarLeadForm({
                 name="criterio_problema"
                 rows={4}
                 defaultValue={lead.criterio_problema ?? ""}
-                onChange={(e) => setCriterioProblemaAtual(e.target.value)}
                 className={`${campoClasse} bg-white`}
               />
             </div>
@@ -931,7 +922,6 @@ export function EditarLeadForm({
                 id="criterio_urgencia"
                 name="criterio_urgencia"
                 defaultValue={lead.criterio_urgencia}
-                onChange={setCriterioUrgenciaAtual}
                 buscar={false}
                 options={[
                   { value: "desconhecida", label: "Ainda não sei" },
@@ -950,7 +940,6 @@ export function EditarLeadForm({
                 id="criterio_capacidade"
                 name="criterio_capacidade"
                 defaultValue={lead.criterio_capacidade}
-                onChange={setCriterioCapacidadeAtual}
                 buscar={false}
                 options={[
                   { value: "desconhecida", label: "Ainda não sei" },
@@ -979,10 +968,9 @@ export function EditarLeadForm({
 
           {mostrarSobreLead && !prontoParaAgenda && (
             <p className="destaque-proposta rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              Falta {itensFaltandoParaAgenda.join(", ")} pra salvar direto na
-              Google Agenda também, por enquanto vai salvar só aqui no CRM.
-              Vai ter que adicionar no Google Agenda de forma manual se não
-              preencher o que falta.
+              Falta o e-mail pra salvar direto na Google Agenda também, por
+              enquanto vai salvar só aqui no CRM. Vai ter que adicionar no
+              Google Agenda de forma manual se não preencher o que falta.
             </p>
           )}
 
