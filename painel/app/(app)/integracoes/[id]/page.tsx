@@ -29,6 +29,19 @@ export default async function IntegracaoDetalhePage({
     const { data: conectadoDeVerdade } = await supabase.rpc("google_calendar_esta_conectado");
     status = STATUS_LABEL[conectadoDeVerdade === true ? "conectado" : "nao_conectado"];
   }
+
+  // Cota compartilhada (5.000/mês, entre TODAS as empresas do CRM) — só
+  // faz sentido mostrar aqui, não dá pra saber isso sem consultar.
+  let usoInstagram: number | null = null;
+  if (id === "foto-instagram") {
+    const supabase = await createClient();
+    const { data } = await supabase.rpc("instagram_foto_uso_do_mes");
+    usoInstagram = data ?? 0;
+  }
+  const COTA_MENSAL_INSTAGRAM = 5000;
+  const percentualUsoInstagram =
+    usoInstagram !== null ? Math.round((usoInstagram / COTA_MENSAL_INSTAGRAM) * 100) : 0;
+
   const linkConectarGoogle = `https://hgloheptxqdjpwzgquku.supabase.co/functions/v1/google-calendar-iniciar?org_id=${usuario!.org_id}`;
 
   return (
@@ -73,6 +86,28 @@ export default async function IntegracaoDetalhePage({
           {integracao.infoConexao && (
             <div className="mt-5 rounded-md border border-green-200 bg-green-50 p-3">
               <p className="text-sm text-green-800">{integracao.infoConexao}</p>
+            </div>
+          )}
+
+          {usoInstagram !== null && (
+            <div
+              className={`mt-5 rounded-md border p-3 ${
+                percentualUsoInstagram >= 80
+                  ? "border-amber-200 bg-amber-50"
+                  : "border-neutral-200 bg-neutral-50"
+              }`}
+            >
+              <p
+                className={`text-sm ${
+                  percentualUsoInstagram >= 80 ? "text-amber-800" : "text-neutral-700"
+                }`}
+              >
+                Uso este mês: <strong>{usoInstagram} de {COTA_MENSAL_INSTAGRAM}</strong> buscas de
+                foto ({percentualUsoInstagram}%) — cota compartilhada entre você e todos os
+                clientes que usam o CRM.
+                {percentualUsoInstagram >= 80 &&
+                  " Já está chegando perto do limite gratuito do mês."}
+              </p>
             </div>
           )}
 

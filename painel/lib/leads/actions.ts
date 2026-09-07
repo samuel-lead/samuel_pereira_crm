@@ -532,7 +532,7 @@ export async function atualizarLead(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id, motivo_base, proposta_valor")
+    .select("nivel_ordem, responsavel_id, motivo_base, proposta_valor, instagram, foto_url")
     .eq("id", leadId)
     .single();
 
@@ -854,6 +854,14 @@ export async function atualizarLead(
     if (reuniaoAtiva) {
       await salvarReuniaoNoGoogleAgenda(reuniaoAtiva.id).catch(() => null);
     }
+  }
+
+  // Busca a foto do Instagram automaticamente quando o @ é cadastrado ou
+  // muda — só dispara de novo se realmente mudou, ou se o lead ainda não
+  // tem foto nenhuma (evita gastar cota da API à toa em todo salvamento).
+  // Best-effort — se a busca falhar, não afeta o salvamento do lead.
+  if (instagram && (instagram !== leadAtual.instagram || !leadAtual.foto_url)) {
+    await buscarFotoInstagram(leadId).catch(() => null);
   }
 
   if (!redirecionar) {
@@ -1881,4 +1889,30 @@ export async function salvarReuniaoNoGoogleAgenda(
   }
 
   return { erro: null, eventoUrl: data?.eventoUrl };
+}
+
+// Busca a foto de perfil pública do Instagram do lead (API paga via
+// RapidAPI) e guarda uma cópia no Storage — chamada automaticamente por
+// atualizarLead quando o @ é cadastrado ou muda. A lógica de verdade
+// mora na Edge Function; aqui só repassa com o token de quem está
+// logado.
+export async function buscarFotoInstagram(
+  leadId: string
+): Promise<{ erro: string | null; fotoUrl?: string }> {
+  const { supabase } = await contextoUsuario();
+
+  const { data, error } = await supabase.functions.invoke("buscar-foto-instagram", {
+    body: { leadId },
+  });
+
+  if (error) {
+    const corpo = await error.context?.json().catch(() => null);
+    return { erro: corpo?.erro ?? error.message };
+  }
+
+  if (data?.erro) {
+    return { erro: data.erro };
+  }
+
+  return { erro: null, fotoUrl: data?.fotoUrl };
 }

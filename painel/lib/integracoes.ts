@@ -187,6 +187,17 @@ export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
     ],
   },
   {
+    id: "foto-instagram",
+    nome: "Foto automática do Instagram",
+    descricaoCurta:
+      "Busca a foto de perfil do lead sozinho, a partir do @ do Instagram cadastrado.",
+    status: "conectado",
+    corIcone: "bg-pink-100 text-pink-700",
+    letraIcone: "I",
+    oQueFaz:
+      "Quando o Instagram do lead é cadastrado (ou muda), o CRM busca a foto de perfil pública automaticamente numa API paga (RapidAPI) e já mostra no card — sem precisar fazer upload manual. É uma chave só, compartilhada entre você e todos os clientes que usam o CRM — o plano gratuito cobre 5.000 buscas por mês, somadas entre todo mundo.",
+  },
+  {
     id: "google-sheets",
     nome: "Google Sheets",
     descricaoCurta: "Importa uma leva de leads direto de uma planilha.",
