@@ -72,32 +72,54 @@ function BlocoReativarLead({
   numerosVisiveis,
   usuarios,
   souAdmin,
+  publicoOrg,
 }: {
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
   numerosVisiveis: Record<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin: boolean;
+  publicoOrg: string;
 }) {
   const [aberto, setAberto] = useState(false);
   const [nivel, setNivel] = useState("");
   const [responsavelId, setResponsavelId] = useState("");
+  const [agendadaPara, setAgendadaPara] = useState("");
+  const [closerId, setCloserId] = useState("");
   const [pendente, iniciarTransicao] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
+  const vaiParaReuniaoMarcada = nivel === NIVEL_REUNIAO_MARCADA;
+  const modalAtivo = useLeadModalAtivo();
 
   function aoConfirmar() {
     if (!nivel) {
       setErro("Escolha pra qual nível reativar.");
       return;
     }
+    if (vaiParaReuniaoMarcada && !agendadaPara) {
+      setErro(`Informe a data e hora da ${reuniao(publicoOrg)}.`);
+      return;
+    }
     setErro(null);
     iniciarTransicao(() => {
-      reativarLead(leadId, Number(nivel), souAdmin ? responsavelId : undefined).then((erro) => {
+      reativarLead(
+        leadId,
+        Number(nivel),
+        souAdmin ? responsavelId : undefined,
+        vaiParaReuniaoMarcada ? agendadaPara : undefined,
+        vaiParaReuniaoMarcada ? closerId : undefined
+      ).then((erro) => {
         setErro(erro);
         if (!erro) {
           setAberto(false);
           setNivel("");
           setResponsavelId("");
+          setAgendadaPara("");
+          setCloserId("");
+          // Sem isso o card ficava com o nível/dado velho na tela (sem
+          // reunião ativa, sem opção de Google Agenda) até reabrir —
+          // reativar pra "Reunião marcada" precisa refletir na hora.
+          modalAtivo?.recarregar();
         }
       });
     });
@@ -147,6 +169,36 @@ function BlocoReativarLead({
               .map((u) => ({ value: u.id, label: u.nome })),
           ]}
         />
+      )}
+      {vaiParaReuniaoMarcada && (
+        <>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-700">
+              Data e hora da {reuniao(publicoOrg)}
+            </label>
+            <input
+              type="datetime-local"
+              disabled={pendente}
+              value={agendadaPara}
+              onChange={(e) => setAgendadaPara(e.target.value)}
+              onClick={abrirSeletorDeData}
+              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <MenuSelect
+            titulo={`Closer (quem vai fazer a ${reuniao(publicoOrg)})`}
+            placeholder="Ainda não definido"
+            disabled={pendente}
+            value={closerId}
+            onChange={setCloserId}
+            options={[
+              { value: "", label: "Ainda não definido" },
+              ...usuarios
+                .filter((u) => u.funcao === "closer")
+                .map((u) => ({ value: u.id, label: u.nome })),
+            ]}
+          />
+        </>
       )}
       {erro && <p className="text-[11px] text-red-600">{erro}</p>}
       <div className="flex gap-1.5">
@@ -349,7 +401,13 @@ export function EditarLeadForm({
   // dois casos (Samuel pediu explicitamente que a Repescagem futura
   // ficasse igual à Base).
   const estaNaBase = String(lead.nivel_ordem) === NIVEL_BASE || lead.oportunidade_futura;
-  const niveisReativacao = niveis.filter((n) => NIVEIS_REATIVACAO.includes(n.ordem));
+  // Aqui dentro do card (diferente do botão rápido do Kanban/Base, que usa
+  // NIVEIS_REATIVACAO sem "Reunião marcada" porque não tem como perguntar
+  // data/closer num espaço tão pequeno) dá pra reativar direto pra
+  // "Reunião marcada" — o card tem espaço pra pedir data e closer.
+  const niveisReativacao = niveis.filter(
+    (n) => NIVEIS_REATIVACAO.includes(n.ordem) || n.ordem === Number(NIVEL_REUNIAO_MARCADA)
+  );
 
   // Mesmas travas de painel/lib/leads/actions.ts (sincronizarReuniao), só
   // que aplicadas aqui pra desabilitar a opção no menu em vez de deixar
@@ -547,6 +605,7 @@ export function EditarLeadForm({
               numerosVisiveis={numerosVisiveis}
               usuarios={usuarios}
               souAdmin={souAdmin}
+              publicoOrg={publicoOrg}
             />
           </>
         ) : (

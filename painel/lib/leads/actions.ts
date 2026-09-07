@@ -1030,17 +1030,26 @@ export async function reativarLead(
   // Só admin escolhe o responsável na reativação — mesma regra de sempre
   // (ver ResponsavelSelect em editar-lead-form.tsx). Pra quem não é
   // admin, esse valor é ignorado e o responsável não muda.
-  novoResponsavelId?: string | null
+  novoResponsavelId?: string | null,
+  // Só usados quando novoNivel é "Reunião marcada" — reativar direto pra
+  // lá exige data (a reunião nasce junto, ver sincronizarReuniao). Só o
+  // botão de dentro do card oferece essa opção (o botão rápido do
+  // Kanban/Base não tem espaço pra perguntar isso).
+  agendadaPara?: string,
+  closerId?: string | null
 ): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
-  if (!NIVEIS_REATIVACAO.includes(novoNivel)) {
+  const reativandoParaReuniao = novoNivel === NIVEL_REUNIAO_MARCADA;
+  if (!NIVEIS_REATIVACAO.includes(novoNivel) && !reativandoParaReuniao) {
     return "Nível inválido pra reativação.";
   }
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id, oportunidade_futura")
+    .select(
+      "nivel_ordem, responsavel_id, oportunidade_futura, criterio_problema, criterio_urgencia, criterio_capacidade"
+    )
     .eq("id", leadId)
     .single();
 
@@ -1054,6 +1063,34 @@ export async function reativarLead(
     !(await souCloserAtivo(supabase, leadId, usuario.id))
   ) {
     return ERRO_SEM_PERMISSAO;
+  }
+
+  // Nenhuma reunião pode ficar marcada sem os 3 critérios preenchidos
+  // (mesma trava de atualizarLead) — reativar pulando essa checagem
+  // deixaria entrar em "Reunião marcada" sem perfil/urgência/capacidade.
+  if (reativandoParaReuniao) {
+    const faltando: string[] = [];
+    if (!leadAtual.criterio_problema) faltando.push("o perfil do lead");
+    if (leadAtual.criterio_urgencia === "desconhecida") faltando.push("se tem urgência");
+    if (leadAtual.criterio_capacidade === "desconhecida") faltando.push("se consegue pagar");
+    if (faltando.length > 0) {
+      return `Antes de reativar pra ${reuniao(usuario.publico_org)} marcada, preencha no card: ${faltando.join(", ")}.`;
+    }
+
+    const resultadoSincronizacao = await sincronizarReuniao(supabase, {
+      orgId: usuario.org_id,
+      usuarioId: usuario.id,
+      leadId,
+      deOrdem: leadAtual.nivel_ordem,
+      paraOrdem: novoNivel,
+      agendadaPara,
+      marcadaEm: new Date().toISOString(),
+      closerId,
+      publicoOrg: usuario.publico_org,
+    });
+    if (resultadoSincronizacao.erro) {
+      return resultadoSincronizacao.erro;
+    }
   }
 
   // Reativar de "Repescagem futura de ICP" usa o mesmo botão e a mesma
