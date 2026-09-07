@@ -856,13 +856,10 @@ export async function atualizarLead(
     }
   }
 
-  // Busca a foto do Instagram automaticamente quando o @ é cadastrado ou
-  // muda — só dispara de novo se realmente mudou, ou se o lead ainda não
-  // tem foto nenhuma (evita gastar cota da API à toa em todo salvamento).
-  // Best-effort — se a busca falhar, não afeta o salvamento do lead.
-  if (instagram && (instagram !== leadAtual.instagram || !leadAtual.foto_url)) {
-    await buscarFotoInstagram(leadId).catch(() => null);
-  }
+  // Busca automática de foto do Instagram DESATIVADA — a API gratuita
+  // (RapidAPI) se mostrou instável demais em teste real (falhava até pra
+  // contas que já tinham funcionado antes). A função buscarFotoInstagram
+  // continua existindo, só não é mais chamada automaticamente aqui.
 
   if (!redirecionar) {
     return { erro: null };
