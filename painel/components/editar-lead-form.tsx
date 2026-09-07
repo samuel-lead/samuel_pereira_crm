@@ -188,6 +188,7 @@ export function EditarLeadForm({
   jaTeveReuniao = true,
   reuniaoAtivaAgendadaPara = null,
   reuniaoAtivaCloserId = null,
+  googleCalendarConectado = false,
   aoConfirmarTeveProposta,
 }: {
   lead: Lead;
@@ -217,6 +218,10 @@ export function EditarLeadForm({
   // seletor de closer quando o lead já está em "Reunião marcada" (ver
   // bloco logo abaixo de vaiEntrarEmReuniaoMarcada).
   reuniaoAtivaCloserId?: string | null;
+  // Se a EMPRESA (org) já conectou o Google Calendar — sem isso, o
+  // botão nunca promete salvar na agenda, mesmo com e-mail preenchido
+  // (Samuel pediu: só aparece pra quem realmente conectou).
+  googleCalendarConectado?: boolean;
   // Avisa o pop-up (lead-modal-conteudo.tsx) que a pessoa confirmou "teve
   // proposta" ao mover manualmente pra Follow/Oportunidades — o pop-up
   // rola até o card de Proposta e destaca, em vez de fechar sozinho.
@@ -270,13 +275,18 @@ export function EditarLeadForm({
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
   const [motivoBaseSelecionado, setMotivoBaseSelecionado] = useState(lead.motivo_base ?? "");
 
-  // Rastreia o e-mail ao vivo (sem esperar salvar) só pra saber se já dá
-  // pra também salvar no Google Agenda no mesmo clique — Samuel pediu um
-  // botão só em vez de "Salvar alterações" e depois abrir de novo pra
-  // achar o botão do Google Agenda. Perfil/urgência/capacidade não
-  // precisam de rastreio ao vivo — são obrigatórios pra salvar de
-  // qualquer jeito (trava do servidor), então já estão garantidos.
+  // Campos controlados (não só defaultValue) — sem isso, quando o
+  // "Salvar alterações" falha (ex.: faltou urgência), o React reseta
+  // esses campos pro valor original depois da tentativa, apagando o que
+  // a pessoa tinha acabado de digitar (Samuel pegou isso ao vivo com o
+  // perfil do lead sumindo). email também precisa ser controlado, senão
+  // o texto do botão ("...e no Google Agenda") pode ficar desincronizado
+  // do que está realmente escrito no campo depois de uma tentativa que
+  // falhou.
   const [emailAtual, setEmailAtual] = useState(lead.email ?? "");
+  const [criterioProblemaAtual, setCriterioProblemaAtual] = useState(lead.criterio_problema ?? "");
+  const [criterioUrgenciaAtual, setCriterioUrgenciaAtual] = useState(lead.criterio_urgencia);
+  const [criterioCapacidadeAtual, setCriterioCapacidadeAtual] = useState(lead.criterio_capacidade);
 
   // "Oportunidades futuras" não é um nível de verdade no banco — é o nível
   // 7 (Leads para fim do mês) + essa marcação. Mas o SDR quer escolher ela
@@ -410,7 +420,10 @@ export function EditarLeadForm({
   // capacidade são obrigatórios pra salvar a reunião de qualquer jeito
   // (trava do servidor, ver atualizarLead) — só o e-mail é opcional: sem
   // ele o lead salva normal aqui no CRM, só não sincroniza com a agenda.
-  const prontoParaAgenda = mostrarSobreLead && !!emailAtual.trim();
+  // E sem a empresa ter conectado o Google Calendar, a opção nem existe
+  // — nunca promete algo que não vai acontecer.
+  const prontoParaAgenda =
+    mostrarSobreLead && googleCalendarConectado && !!emailAtual.trim();
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
@@ -449,7 +462,7 @@ export function EditarLeadForm({
             id="email"
             name="email"
             type="email"
-            defaultValue={lead.email ?? ""}
+            value={emailAtual}
             onChange={(e) => setEmailAtual(e.target.value)}
             className={campoClasse}
           />
@@ -909,7 +922,8 @@ export function EditarLeadForm({
                 id="criterio_problema"
                 name="criterio_problema"
                 rows={4}
-                defaultValue={lead.criterio_problema ?? ""}
+                value={criterioProblemaAtual}
+                onChange={(e) => setCriterioProblemaAtual(e.target.value)}
                 className={`${campoClasse} bg-white`}
               />
             </div>
@@ -921,7 +935,8 @@ export function EditarLeadForm({
               <MenuSelect
                 id="criterio_urgencia"
                 name="criterio_urgencia"
-                defaultValue={lead.criterio_urgencia}
+                value={criterioUrgenciaAtual}
+                onChange={setCriterioUrgenciaAtual}
                 buscar={false}
                 options={[
                   { value: "desconhecida", label: "Ainda não sei" },
@@ -939,7 +954,8 @@ export function EditarLeadForm({
               <MenuSelect
                 id="criterio_capacidade"
                 name="criterio_capacidade"
-                defaultValue={lead.criterio_capacidade}
+                value={criterioCapacidadeAtual}
+                onChange={setCriterioCapacidadeAtual}
                 buscar={false}
                 options={[
                   { value: "desconhecida", label: "Ainda não sei" },
@@ -966,7 +982,7 @@ export function EditarLeadForm({
             </p>
           )}
 
-          {mostrarSobreLead && !prontoParaAgenda && (
+          {mostrarSobreLead && googleCalendarConectado && !prontoParaAgenda && (
             <p className="destaque-proposta rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
               Falta o e-mail pra salvar direto na Google Agenda também, por
               enquanto vai salvar só aqui no CRM. Vai ter que adicionar no

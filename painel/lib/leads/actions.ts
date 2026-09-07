@@ -1733,6 +1733,10 @@ export type DetalhesLead = {
     prioridade: boolean | null;
     atuacao: string | null;
   } | null;
+  // Se a EMPRESA (org) já conectou o Google Calendar — controla se
+  // "Salvar alterações" pode também prometer salvar na agenda (ver
+  // components/editar-lead-form.tsx).
+  googleCalendarConectado: boolean;
 };
 
 // Igual aos dados que app/(app)/leads/[id]/page.tsx busca pra montar a
@@ -1756,6 +1760,7 @@ export async function buscarDetalhesDoLead(
     { data: origensData },
     { data: produtosData },
     { data: iscaRespostaData },
+    { data: googleCalendarConectadoData },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -1789,12 +1794,14 @@ export async function buscarDetalhesDoLead(
       .select("tempo_mercado, maior_desafio, prioridade, atuacao")
       .eq("lead_id", leadId)
       .maybeSingle(),
+    supabase.rpc("google_calendar_esta_conectado"),
   ]);
 
   if (!lead) {
     return { erro: "Lead não encontrado", dados: null };
   }
 
+  const googleCalendarConectado = googleCalendarConectadoData === true;
   const niveis = (niveisData ?? []) as NivelResumo[];
   const interacoes = interacoesData ?? [];
   const reunioes = reunioesData ?? [];
@@ -1843,6 +1850,7 @@ export async function buscarDetalhesDoLead(
       reuniaoAnteriorPendente,
       numerosVisiveis,
       iscaResposta: iscaRespostaData ?? null,
+      googleCalendarConectado,
     },
   };
 }

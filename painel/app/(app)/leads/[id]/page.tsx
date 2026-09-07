@@ -136,6 +136,7 @@ export default async function EditarLeadPage({
     { data: origensData },
     { data: produtosData },
     { data: iscaRespostaData },
+    { data: googleCalendarConectadoData },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -169,7 +170,10 @@ export default async function EditarLeadPage({
       .select("tempo_mercado, maior_desafio, prioridade, atuacao")
       .eq("lead_id", id)
       .maybeSingle(),
+    supabase.rpc("google_calendar_esta_conectado"),
   ]);
+
+  const googleCalendarConectado = googleCalendarConectadoData === true;
 
   if (!lead) {
     notFound();
@@ -328,6 +332,7 @@ export default async function EditarLeadPage({
             jaTeveReuniao={reunioes.length > 0}
             reuniaoAtivaAgendadaPara={reuniaoAtiva?.agendada_para ?? null}
             reuniaoAtivaCloserId={reuniaoAtiva?.closer_id ?? null}
+            googleCalendarConectado={googleCalendarConectado}
           />
         </div>
 

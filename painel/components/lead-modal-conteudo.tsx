@@ -98,6 +98,7 @@ export function LeadModalConteudo({
     reuniaoAnteriorPendente,
     numerosVisiveis,
     iscaResposta,
+    googleCalendarConectado,
   } = dados;
 
   const nomePorOrdem = new Map(niveis.map((n) => [n.ordem, n.nome]));
@@ -201,6 +202,7 @@ export function LeadModalConteudo({
           jaTeveReuniao={reunioes.length > 0}
           reuniaoAtivaAgendadaPara={reuniaoAtiva?.agendada_para ?? null}
           reuniaoAtivaCloserId={reuniaoAtiva?.closer_id ?? null}
+          googleCalendarConectado={googleCalendarConectado}
           aoConfirmarTeveProposta={() => setFocarProposta(true)}
         />
       </div>

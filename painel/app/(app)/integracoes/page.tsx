@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { integracoes, STATUS_LABEL } from "@/lib/integracoes";
-import { usuarioAutenticado } from "@/lib/supabase/server";
+import { usuarioAutenticado, createClient } from "@/lib/supabase/server";
 
 export default async function IntegracoesPage() {
   const { usuario } = await usuarioAutenticado();
+
+  // Google Calendar é "conectado" ou não por empresa — a lista abaixo
+  // descreve o desenho de cada integração, mas essa aqui precisa do
+  // estado real dessa org específica.
+  const supabase = await createClient();
+  const { data: googleConectado } = await supabase.rpc("google_calendar_esta_conectado");
 
   return (
     <>
@@ -18,7 +24,10 @@ export default async function IntegracoesPage() {
 
         <div className="space-y-3">
           {integracoes(usuario!.publico_org).map((integracao) => {
-            const status = STATUS_LABEL[integracao.status];
+            const status =
+              integracao.id === "google-calendar"
+                ? STATUS_LABEL[googleConectado === true ? "conectado" : "nao_conectado"]
+                : STATUS_LABEL[integracao.status];
             return (
               <Link
                 key={integracao.id}

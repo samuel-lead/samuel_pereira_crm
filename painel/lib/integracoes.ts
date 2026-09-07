@@ -154,7 +154,10 @@ export function integracoes(publicoOrg: string = "mentoria"): Integracao[] {
     nome: "Google Calendar",
     descricaoCurta:
       `Sincroniza as ${reunioes(publicoOrg)} marcadas no CRM com a agenda de verdade.`,
-    status: "conectado",
+    // Valor "padrão" — cada empresa conecta a própria conta Google, então
+    // as páginas de Integrações sempre sobrescrevem isso com o estado
+    // real daquela org (ver google_calendar_esta_conectado no banco).
+    status: "nao_conectado",
     corIcone: "bg-blue-100 text-blue-700",
     letraIcone: "C",
     oQueFaz:

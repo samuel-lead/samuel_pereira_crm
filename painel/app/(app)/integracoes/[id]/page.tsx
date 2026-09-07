@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { BotaoVoltar } from "@/components/botao-voltar";
 import { buscarIntegracao, STATUS_LABEL } from "@/lib/integracoes";
-import { usuarioAutenticado } from "@/lib/supabase/server";
+import { usuarioAutenticado, createClient } from "@/lib/supabase/server";
 
 export default async function IntegracaoDetalhePage({
   params,
@@ -20,7 +20,15 @@ export default async function IntegracaoDetalhePage({
     notFound();
   }
 
-  const status = STATUS_LABEL[integracao.status];
+  // Status "conectado" é fixo na lista (é o desenho da integração), mas
+  // pro Google Calendar isso varia por empresa — cada uma conecta a
+  // própria conta. Sobrescreve com o estado real dessa org específica.
+  let status = STATUS_LABEL[integracao.status];
+  if (id === "google-calendar") {
+    const supabase = await createClient();
+    const { data: conectadoDeVerdade } = await supabase.rpc("google_calendar_esta_conectado");
+    status = STATUS_LABEL[conectadoDeVerdade === true ? "conectado" : "nao_conectado"];
+  }
   const linkConectarGoogle = `https://hgloheptxqdjpwzgquku.supabase.co/functions/v1/google-calendar-iniciar?org_id=${usuario!.org_id}`;
 
   return (
