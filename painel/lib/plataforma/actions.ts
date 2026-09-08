@@ -50,6 +50,18 @@ export async function criarCliente(
 
 export async function alternarStatusOrg(orgId: string, statusAtual: string) {
   const supabase = await createClient();
+
+  const { data: usuario } = await supabase.auth.getUser();
+  const { data: proprioUsuario } = await supabase
+    .from("usuarios")
+    .select("org_id")
+    .eq("id", usuario.user?.id ?? "")
+    .single();
+
+  if (proprioUsuario?.org_id === orgId) {
+    throw new Error("Não dá pra suspender a própria empresa.");
+  }
+
   const novoStatus = statusAtual === "ativo" ? "suspenso" : "ativo";
 
   const { error } = await supabase.from("orgs").update({ status: novoStatus }).eq("id", orgId);
