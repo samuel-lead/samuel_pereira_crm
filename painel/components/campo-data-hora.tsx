@@ -53,6 +53,50 @@ function inicioDoMes(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 
+// Hora e minuto do calendário: dá pra digitar direto (como o resto do
+// campo) OU clicar nas setinhas — maiores que a setinha minúscula nativa
+// do <input type="number">, que era difícil de acertar o clique (Samuel
+// pediu especificamente pra aumentar essas setas).
+function SeletorNumero({
+  valor,
+  onIncrementar,
+  onDecrementar,
+  onDigitar,
+}: {
+  valor: string;
+  onIncrementar: () => void;
+  onDecrementar: () => void;
+  onDigitar: (texto: string) => void;
+}) {
+  return (
+    <div className="flex h-11 items-stretch overflow-hidden rounded-md border border-neutral-300">
+      <input
+        type="text"
+        inputMode="numeric"
+        value={valor}
+        onChange={(e) => onDigitar(e.target.value.replace(/\D/g, "").slice(0, 2))}
+        className="w-11 border-none px-1 text-center text-base outline-none"
+      />
+      <div className="flex flex-col border-l border-neutral-300">
+        <button
+          type="button"
+          onClick={onIncrementar}
+          className="flex h-1/2 w-9 items-center justify-center border-b border-neutral-300 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 active:bg-neutral-200"
+        >
+          <IconeChevronBaixo className="h-5 w-5 rotate-180" />
+        </button>
+        <button
+          type="button"
+          onClick={onDecrementar}
+          className="flex h-1/2 w-9 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 active:bg-neutral-200"
+        >
+          <IconeChevronBaixo className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Calendário feito do zero (não o nativo do navegador) — o nativo trava o
 // teclado assim que abre automaticamente com qualquer clique (só dá pra
 // digitar OU usar o calendário, nunca os dois juntos). Aqui as duas coisas
@@ -273,24 +317,20 @@ export function CampoDataHora({
             })}
           </div>
 
-          <div className="mt-3 flex items-center justify-center gap-1.5 border-t border-neutral-100 pt-3">
+          <div className="mt-3 flex items-center justify-center gap-2 border-t border-neutral-100 pt-3">
             <span className="text-xs font-medium text-neutral-500">Horário</span>
-            <input
-              type="number"
-              min={0}
-              max={23}
-              value={hora}
-              onChange={(e) => aoMudarHorario(pad(Number(e.target.value || 0) % 24), minuto || "00")}
-              className="w-14 rounded-md border border-neutral-300 px-2 py-1 text-center text-sm outline-none focus:border-blue-500"
+            <SeletorNumero
+              valor={hora}
+              onIncrementar={() => aoMudarHorario(pad((Number(hora || 0) + 1) % 24), minuto || "00")}
+              onDecrementar={() => aoMudarHorario(pad((Number(hora || 0) + 23) % 24), minuto || "00")}
+              onDigitar={(texto) => aoMudarHorario(pad(Number(texto || 0) % 24), minuto || "00")}
             />
-            <span className="text-neutral-400">:</span>
-            <input
-              type="number"
-              min={0}
-              max={59}
-              value={minuto}
-              onChange={(e) => aoMudarHorario(hora || "00", pad(Number(e.target.value || 0) % 60))}
-              className="w-14 rounded-md border border-neutral-300 px-2 py-1 text-center text-sm outline-none focus:border-blue-500"
+            <span className="text-lg font-semibold text-neutral-400">:</span>
+            <SeletorNumero
+              valor={minuto}
+              onIncrementar={() => aoMudarHorario(hora || "00", pad((Number(minuto || 0) + 1) % 60))}
+              onDecrementar={() => aoMudarHorario(hora || "00", pad((Number(minuto || 0) + 59) % 60))}
+              onDigitar={(texto) => aoMudarHorario(hora || "00", pad(Number(texto || 0) % 60))}
             />
           </div>
 
