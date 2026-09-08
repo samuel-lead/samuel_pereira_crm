@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { atualizarLead, reativarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
+import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import {
   rotuloNivel,
@@ -28,19 +29,6 @@ function agoraParaInputLocal() {
   const agora = new Date();
   const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 16);
-}
-
-// Enquanto o calendário está aberto, o navegador captura o teclado pra
-// navegar nos dias — dá pra abrir automático em QUALQUER clique OU dar pra
-// digitar, nunca os dois ao mesmo tempo. Por isso só abre clicando bem no
-// iconezinho da borda direita do campo; clicar no resto (em cima dos
-// números de dia/mês/ano/hora) só posiciona o cursor, sem abrir nada por
-// cima, pra dar pra digitar a data direto pelo teclado (08, etc.).
-function abrirSeletorDeData(e: React.MouseEvent<HTMLInputElement>) {
-  const campo = e.currentTarget;
-  if (e.nativeEvent.offsetX > campo.clientWidth - 28) {
-    campo.showPicker?.();
-  }
 }
 
 type Lead = {
@@ -201,12 +189,10 @@ function BlocoReativarLead({
             <label className="text-xs font-medium text-neutral-700">
               Data e hora da {reuniao(publicoOrg)}
             </label>
-            <input
-              type="datetime-local"
+            <CampoDataHora
               disabled={pendente}
               value={agendadaPara}
-              onChange={(e) => setAgendadaPara(e.target.value)}
-              onClick={abrirSeletorDeData}
+              onChange={setAgendadaPara}
               className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
@@ -719,13 +705,11 @@ export function EditarLeadForm({
                 <label className="text-sm font-medium text-green-800" htmlFor="marcada_em">
                   Data em que foi marcada
                 </label>
-                <input
+                <CampoDataHora
                   id="marcada_em"
                   name="marcada_em"
-                  type="datetime-local"
                   required
                   defaultValue={agoraParaInputLocal()}
-                  onClick={abrirSeletorDeData}
                   className={`${campoClasse} bg-white`}
                 />
                 <p className="text-xs text-green-700">
@@ -738,12 +722,10 @@ export function EditarLeadForm({
                 <label className="text-sm font-medium text-green-800" htmlFor="reuniao_data">
                   Data e hora da {reuniao(publicoOrg)}
                 </label>
-                <input
+                <CampoDataHora
                   id="reuniao_data"
                   name="reuniao_data"
-                  type="datetime-local"
                   required
-                  onClick={abrirSeletorDeData}
                   className={`${campoClasse} bg-white`}
                 />
               </div>

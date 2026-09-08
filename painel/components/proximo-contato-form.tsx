@@ -6,18 +6,7 @@ import {
   cancelarProximoContato,
 } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
-
-// Enquanto o calendário está aberto, o navegador captura o teclado pra
-// navegar nos dias — dá pra abrir automático em QUALQUER clique OU dar pra
-// digitar, nunca os dois ao mesmo tempo. Por isso só abre clicando bem no
-// iconezinho da borda direita do campo; clicar no resto só posiciona o
-// cursor, sem abrir nada por cima, pra dar pra digitar a data direto.
-function abrirSeletorDeData(e: React.MouseEvent<HTMLInputElement>) {
-  const campo = e.currentTarget;
-  if (e.nativeEvent.offsetX > campo.clientWidth - 28) {
-    campo.showPicker?.();
-  }
-}
+import { CampoDataHora } from "@/components/campo-data-hora";
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -95,11 +84,9 @@ export function ProximoContatoForm({
       )}
 
       <form onSubmit={aoSubmeter} className="space-y-2">
-        <input
-          type="datetime-local"
+        <CampoDataHora
           name="proximo_follow_em"
           required
-          onClick={abrirSeletorDeData}
           className="w-full rounded-md border border-teal-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
 

@@ -24,6 +24,7 @@ import {
   IconeReativar,
 } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
+import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { Reuniao, reuniao } from "@/lib/terminologia";
@@ -102,18 +103,6 @@ function formatarDataHora(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-// Enquanto o calendário está aberto, o navegador captura o teclado pra
-// navegar nos dias — dá pra abrir automático em QUALQUER clique OU dar pra
-// digitar, nunca os dois ao mesmo tempo. Por isso só abre clicando bem no
-// iconezinho da borda direita do campo; clicar no resto só posiciona o
-// cursor, sem abrir nada por cima, pra dar pra digitar a data direto.
-function abrirSeletorDeData(e: React.MouseEvent<HTMLInputElement>) {
-  const campo = e.currentTarget;
-  if (e.nativeEvent.offsetX > campo.clientWidth - 28) {
-    campo.showPicker?.();
-  }
 }
 
 function diasSemAtividade(ultimaAtividadeEm?: string) {
@@ -310,12 +299,10 @@ function BotaoProximoContatoRapido({ leadId }: { leadId: string }) {
       onSubmit={aoConfirmar}
       className="mt-2.5 space-y-2 rounded-lg border border-teal-200 bg-teal-50 p-3"
     >
-      <input
-        type="datetime-local"
+      <CampoDataHora
         name="proximo_follow_em"
         required
         autoFocus
-        onClick={abrirSeletorDeData}
         className="w-full rounded-md border border-teal-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
       />
       {erro && <p className="text-[11px] text-red-600">{erro}</p>}
