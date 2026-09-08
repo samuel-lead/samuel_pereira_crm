@@ -91,29 +91,29 @@ function SeletorNumero({
   }
 
   return (
-    <div className="flex h-11 items-stretch overflow-hidden rounded-md border border-neutral-300">
+    <div className="flex h-11 items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm ring-1 ring-black/[0.02] transition focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
       <input
         type="text"
         inputMode="numeric"
         value={textoLocal}
         onChange={aoDigitar}
         onBlur={aoSairDoCampo}
-        className="w-11 border-none px-1 text-center text-base outline-none"
+        className="w-11 border-none bg-transparent px-1 text-center text-base font-semibold text-neutral-800 outline-none"
       />
-      <div className="flex flex-col border-l border-neutral-300">
+      <div className="flex flex-col border-l border-neutral-200 bg-gradient-to-b from-neutral-50 to-neutral-100/60">
         <button
           type="button"
           onClick={onIncrementar}
-          className="flex h-1/2 w-9 items-center justify-center border-b border-neutral-300 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 active:bg-neutral-200"
+          className="flex h-1/2 w-9 items-center justify-center border-b border-neutral-200 text-neutral-400 transition hover:bg-blue-50 hover:text-blue-600 active:bg-blue-100"
         >
-          <IconeChevronBaixo className="h-5 w-5 rotate-180" />
+          <IconeChevronBaixo className="h-4 w-4 rotate-180" />
         </button>
         <button
           type="button"
           onClick={onDecrementar}
-          className="flex h-1/2 w-9 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 active:bg-neutral-200"
+          className="flex h-1/2 w-9 items-center justify-center text-neutral-400 transition hover:bg-blue-50 hover:text-blue-600 active:bg-blue-100"
         >
-          <IconeChevronBaixo className="h-5 w-5" />
+          <IconeChevronBaixo className="h-4 w-4" />
         </button>
       </div>
     </div>
@@ -292,7 +292,7 @@ export function CampoDataHora({
             <button
               type="button"
               onClick={() => setMesExibido(new Date(mesExibido.getFullYear(), mesExibido.getMonth() - 1, 1))}
-              className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition hover:bg-blue-50 hover:text-blue-600 active:bg-blue-100"
             >
               <IconeChevronBaixo className="h-4 w-4 rotate-90" />
             </button>
@@ -302,7 +302,7 @@ export function CampoDataHora({
             <button
               type="button"
               onClick={() => setMesExibido(new Date(mesExibido.getFullYear(), mesExibido.getMonth() + 1, 1))}
-              className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition hover:bg-blue-50 hover:text-blue-600 active:bg-blue-100"
             >
               <IconeChevronBaixo className="h-4 w-4 -rotate-90" />
             </button>
@@ -330,7 +330,7 @@ export function CampoDataHora({
                   onClick={() => escolherDia(dia)}
                   className={`rounded-lg py-2 text-sm transition disabled:cursor-not-allowed disabled:text-neutral-300 ${
                     selecionado
-                      ? "bg-blue-600 font-semibold text-white"
+                      ? "bg-gradient-to-b from-blue-500 to-blue-600 font-semibold text-white shadow-sm shadow-blue-200"
                       : "text-neutral-700 hover:bg-blue-50"
                   }`}
                 >
@@ -360,7 +360,7 @@ export function CampoDataHora({
           <button
             type="button"
             onClick={() => setAberto(false)}
-            className="mt-3 w-full rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+            className="mt-3 w-full rounded-lg bg-gradient-to-b from-blue-500 to-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-blue-200 transition hover:from-blue-600 hover:to-blue-700"
           >
             Pronto
           </button>
