@@ -98,6 +98,17 @@ function BlocoReativarLead({
   const [erro, setErro] = useState<string | null>(null);
   const vaiParaReuniaoMarcada = nivel === NIVEL_REUNIAO_MARCADA;
   const modalAtivo = useLeadModalAtivo();
+  const blocoRef = useRef<HTMLDivElement>(null);
+
+  // Veio pré-selecionado do atalho rápido de fora do card — sem isso o
+  // bloco abria já preenchido, mas escondido lá embaixo do card, e a
+  // pessoa tinha que descer a rolagem pra achar (Samuel pegou isso ao
+  // vivo, comparando com o "Agendar reunião" normal, que já rola até lá).
+  useEffect(() => {
+    if (preSelecionarReuniao) {
+      blocoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [preSelecionarReuniao]);
 
   function aoConfirmar() {
     if (!nivel) {
@@ -149,7 +160,7 @@ function BlocoReativarLead({
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+    <div ref={blocoRef} className="scroll-mt-28 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
       <MenuSelect
         titulo="Reativar pra qual nível"
         placeholder="Nível de Pré-vendas..."
