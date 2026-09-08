@@ -73,10 +73,7 @@ export function PerformanceSdr({
                   {formatarMoeda(linha.faturamento)}
                 </td>
                 <td className="px-3 py-2 text-center">
-                  {/* Closer não faz check-in diário de prospecção/ligação —
-                      esse relatório não faz sentido pra ele, mesmo quando é
-                      admin e aparece nessa tabela (Samuel pediu). */}
-                  {linha.funcao !== "closer" && (
+                  {linha.podeCopiarRelatorio && (
                     <CopiarRelatorioButton
                       periodoLabel={periodo}
                       callsMarcadas={linha.reunioesMarcadas}
