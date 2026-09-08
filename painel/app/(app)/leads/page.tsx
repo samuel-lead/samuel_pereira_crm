@@ -477,12 +477,9 @@ export default async function LeadsPage({
                   label="Ligações hoje"
                   value={ligacoesHoje}
                   sub={
-                    <>
-                      {souAdmin && <span className="block">Time todo</span>}
-                      <span className="block">
-                        {ligacoesAtendidasHoje ?? 0} atendida{(ligacoesAtendidasHoje ?? 0) === 1 ? "" : "s"} · {ligacoesNaoAtendidasHoje ?? 0} não atendida{(ligacoesNaoAtendidasHoje ?? 0) === 1 ? "" : "s"}
-                      </span>
-                    </>
+                    <span className="block">
+                      {ligacoesAtendidasHoje ?? 0} atendida{(ligacoesAtendidasHoje ?? 0) === 1 ? "" : "s"} · {ligacoesNaoAtendidasHoje ?? 0} não atendida{(ligacoesNaoAtendidasHoje ?? 0) === 1 ? "" : "s"}
+                    </span>
                   }
                 />
               )}
