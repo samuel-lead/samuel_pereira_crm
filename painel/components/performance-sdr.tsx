@@ -51,7 +51,7 @@ export function PerformanceSdr({
               <th className="w-28 px-3 py-2 text-center font-medium">No-show</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Vendas</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Taxa de venda</th>
-              <th className="w-28 px-3 py-2 text-center font-medium">Receita</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">Faturamento</th>
               {dataRelatorio && (
                 <th className="w-24 px-3 py-2 text-center font-medium">Relatório</th>
               )}
@@ -80,7 +80,7 @@ export function PerformanceSdr({
                   {formatarPercentual(linha.taxaVenda)}
                 </td>
                 <td className="px-3 py-2 text-center tabular-nums font-medium text-green-700">
-                  {formatarMoeda(linha.receita)}
+                  {formatarMoeda(linha.faturamento)}
                 </td>
                 {dataRelatorio && (
                   <td className="px-3 py-2 text-center">
