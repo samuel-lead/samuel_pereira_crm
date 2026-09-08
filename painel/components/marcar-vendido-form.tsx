@@ -42,7 +42,7 @@ function CampoMoeda({
 
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-green-800">
+      <label className="mb-1 block text-sm font-medium text-green-800">
         {label}
       </label>
       <input
@@ -93,7 +93,7 @@ export function MarcarVendidoForm({
       </p>
       <form action={acaoFormulario} className="space-y-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-green-800" htmlFor="vendido_em">
+          <label className="mb-1 block text-sm font-medium text-green-800" htmlFor="vendido_em">
             Data da venda
           </label>
           <input
@@ -122,7 +122,7 @@ export function MarcarVendidoForm({
           placeholder="Deixe em branco se o pagamento ainda não caiu"
         />
         <div>
-          <label className="mb-1 block text-xs font-medium text-green-800">
+          <label className="mb-1 block text-sm font-medium text-green-800">
             Produto <span className="text-red-500">*</span>
           </label>
           <ProdutoSelect produtos={produtos} />
