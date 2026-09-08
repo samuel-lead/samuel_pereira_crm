@@ -919,7 +919,9 @@ export function KanbanBoard({
                             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
                             {lead.reativado_origem === "repescagem_icp"
                               ? "Repescagem de ICP"
-                              : "Reativado da Base"}
+                              : lead.reativado_origem === "excluidos"
+                                ? "Lead excluído reativado"
+                                : "Reativado da Base"}
                           </span>
                         )}
 

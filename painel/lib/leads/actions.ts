@@ -1727,6 +1727,12 @@ export async function reativarLeadExcluido(leadId: string): Promise<string | nul
       motivo_base: null,
       motivo_base_detalhe: null,
       motivo_repescagem_futura: null,
+      // Mesmo selo já usado pra "Reativado da Base"/"Repescagem de ICP"
+      // (ver kanban-board.tsx) — fica marcado pra sempre no card, pra
+      // quem for trabalhar o lead saber que ele já tinha sido excluído
+      // antes (Samuel pediu essa tag explícita).
+      reativado_da_base_em: new Date().toISOString(),
+      reativado_origem: "excluidos",
     })
     .eq("id", leadId);
 
