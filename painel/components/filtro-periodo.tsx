@@ -174,6 +174,7 @@ export function FiltroPeriodo({
               type="date"
               value={de}
               onChange={(e) => setDe(e.target.value)}
+              onClick={(e) => e.currentTarget.showPicker?.()}
               required
               className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
             />
@@ -188,6 +189,7 @@ export function FiltroPeriodo({
               type="date"
               value={ate}
               onChange={(e) => setAte(e.target.value)}
+              onClick={(e) => e.currentTarget.showPicker?.()}
               required
               className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none focus:ring-0"
             />
