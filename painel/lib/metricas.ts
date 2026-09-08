@@ -716,7 +716,7 @@ export async function calcularNegociacoesAbertas(
   return { quantidade, valor };
 }
 
-export type MetricasUsuario = Metricas & { usuarioId: string; nome: string };
+export type MetricasUsuario = Metricas & { usuarioId: string; nome: string; funcao: string | null };
 
 // Performance individual de cada usuário da org no período — pra comparar
 // SDRs lado a lado (só admin vê essa visão). Admin sempre entra aqui mesmo
@@ -731,7 +731,7 @@ export async function calcularMetricasPorUsuario(
 ): Promise<MetricasUsuario[]> {
   const { data: usuarios } = await supabase
     .from("usuarios")
-    .select("id, nome")
+    .select("id, nome, funcao")
     .eq("org_id", orgId)
     .or("funcao.eq.sdr,papel.eq.admin")
     .order("nome");
@@ -741,7 +741,7 @@ export async function calcularMetricasPorUsuario(
   return Promise.all(
     lista.map(async (usuario) => {
       const metricas = await calcularMetricas(supabase, usuario.id, inicio, fim, opcoes);
-      return { ...metricas, usuarioId: usuario.id, nome: usuario.nome };
+      return { ...metricas, usuarioId: usuario.id, nome: usuario.nome, funcao: usuario.funcao };
     })
   );
 }
