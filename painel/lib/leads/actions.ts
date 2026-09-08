@@ -1228,7 +1228,7 @@ export async function marcarVendido(
   // coisa, pra não deixar o lead marcado como vendido com um erro no meio).
   const { data: reuniaoAtiva } = await supabase
     .from("reunioes")
-    .select("id, agendada_para")
+    .select("id, agendada_para, closer_id")
     .eq("lead_id", leadId)
     .order("marcada_em", { ascending: false })
     .limit(1)
@@ -1266,6 +1266,19 @@ export async function marcarVendido(
       .from("reunioes")
       .update({ status: "realizada", resultado: "vendeu", valor })
       .eq("id", reuniaoAtiva.id);
+
+    // Reunião com Closer definido = o lead passa a ser 100% do Closer que
+    // fechou, igual já acontece ao mover pelo Kanban (ver sincronizarReuniao)
+    // — sem isso, vender direto de "Reunião marcada" deixava a venda
+    // atribuída a quem quer que estivesse como responsável antes (o SDR
+    // que marcou, não o Closer que realizou), bagunçando a métrica de
+    // quem vendeu de verdade (foi o que aconteceu com o Lino/Elizabeth).
+    if (reuniaoAtiva.closer_id) {
+      await supabase.rpc("transferir_lead_para_closer", {
+        p_lead_id: leadId,
+        p_closer_id: reuniaoAtiva.closer_id,
+      });
+    }
   }
 
   revalidatePath("/leads");
