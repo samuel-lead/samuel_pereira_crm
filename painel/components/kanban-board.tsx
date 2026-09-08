@@ -867,7 +867,7 @@ export function KanbanBoard({
                               : undefined
                             : "Você só visualiza — não é seu lead"
                         }
-                        className={`kanban-card group rounded-xl border-x border-b border-t-[3px] bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg ${
+                        className={`kanban-card group rounded-xl border-x border-b border-t-[3px] bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg has-[.botao-agendar-reuniao:hover]:translate-y-0 has-[.botao-agendar-reuniao:hover]:shadow-sm ${
                           atrasado ? "border-t-red-400" : "border-t-neutral-200"
                         } border-neutral-200 ${
                           arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"
@@ -1069,7 +1069,7 @@ export function KanbanBoard({
                                 e.stopPropagation();
                                 abrirParaMarcarReuniao(lead.id, lead.temReuniaoAnteriorPendente ?? false);
                               }}
-                              className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 py-2 text-center text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-800"
+                              className="botao-agendar-reuniao -mx-3.5 -mb-3.5 mt-2.5 flex w-[calc(100%+1.75rem)] items-center justify-center gap-1.5 rounded-b-xl border-t border-neutral-200 bg-neutral-50 py-3 text-center text-xs font-semibold text-neutral-600 transition hover:bg-blue-600 hover:text-white"
                             >
                               <IconeCalendario className="h-3.5 w-3.5" />
                               {lead.nivel_ordem === NIVEL_NO_SHOW || lead.nivel_ordem === NIVEL_REAGENDAMENTO
