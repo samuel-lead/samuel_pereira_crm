@@ -14,16 +14,13 @@ export function LeadsPorOrigem({
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <div className="mb-1 flex items-baseline justify-between">
+      <div className="mb-4 flex items-baseline justify-between">
         <h2 className="text-sm font-semibold text-neutral-800">{titulo}</h2>
         <span className="text-sm font-bold text-neutral-800">
           {mediaPorDia.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} leads/dia
           em média · {total} lead{total === 1 ? "" : "s"} no total
         </span>
       </div>
-      <p className="mb-4 text-xs text-neutral-500">
-        De onde vieram os leads — todos, não só quem virou venda.
-      </p>
 
       {dados.length === 0 ? (
         <p className="rounded-md border border-dashed border-neutral-300 px-3 py-6 text-center text-xs text-neutral-400">
