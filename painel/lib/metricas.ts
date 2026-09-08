@@ -214,25 +214,35 @@ export async function calcularMetricas(
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
+    // Venda entra pro SDR que MARCOU a reunião (reunioes.usuario_id), não
+    // pra quem é o responsável atual do lead — esse depois da venda vira o
+    // Closer (transferir_lead_para_closer), e o Closer não faz reunião
+    // nenhuma pro papel de SDR. resultado='vendeu' é gravado só na reunião
+    // exata que virou venda (marcarVendido), então identifica sem ambiguidade
+    // mesmo que o lead tenha tido reunião reagendada com outro SDR antes.
     supabase
-      .from("leads")
-      .select("receita_venda, valor_venda, proposta_valor")
-      .eq("responsavel_id", usuarioId)
-      .eq("status", "vendido")
-      .is("arquivado_em", null)
-      .gte("vendido_em", inicioISO)
-      .lt("vendido_em", fimISO),
+      .from("reunioes")
+      .select("leads!inner(receita_venda, valor_venda, proposta_valor, status, vendido_em, arquivado_em)")
+      .eq("usuario_id", usuarioId)
+      .eq("resultado", "vendeu")
+      .eq("leads.status", "vendido")
+      .is("leads.arquivado_em", null)
+      .gte("leads.vendido_em", inicioISO)
+      .lt("leads.vendido_em", fimISO),
   ]);
 
   // Receita/faturamento contam TODA venda, não pode sumir do relatório por
   // falta de burocracia. Taxa de venda é diferente — mede quantas reuniões
   // com pitch de verdade viraram venda (ver reunioesComPitch abaixo).
-  const vendas = vendasData?.length ?? 0;
-  const receita = (vendasData ?? []).reduce(
+  const vendasDoSdr = (vendasData ?? []).map(
+    (r) => r.leads as unknown as { receita_venda: number | null; valor_venda: number | null }
+  );
+  const vendas = vendasDoSdr.length;
+  const receita = vendasDoSdr.reduce(
     (soma, l) => soma + Number(l.receita_venda ?? 0),
     0
   );
-  const faturamento = (vendasData ?? []).reduce(
+  const faturamento = vendasDoSdr.reduce(
     (soma, l) => soma + Number(l.valor_venda ?? 0),
     0
   );
