@@ -385,7 +385,7 @@ export default async function DashboardPage({
           <div className="space-y-4">
             <LeadsRecentes leads={leadsRecentes} leadsUltimaHora={leadsUltimaHora ?? 0} />
             <LeadsPorOrigem
-              titulo={`Origem dos leads — ${periodoResolvido.titulo.toLowerCase()}`}
+              titulo={`Origens dos leads — ${periodoResolvido.titulo.toLowerCase()}`}
               dados={leadsPorOrigem}
               diasUteis={metricas.diasUteis}
             />

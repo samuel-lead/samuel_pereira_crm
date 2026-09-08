@@ -16,7 +16,7 @@ export function LeadsPorOrigem({
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-baseline justify-between">
         <h2 className="text-lg font-bold text-neutral-800">{titulo}</h2>
-        <span className="text-sm font-bold text-neutral-800">
+        <span className="text-lg font-bold text-neutral-800">
           {mediaPorDia.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} leads/dia
           em média · {total} lead{total === 1 ? "" : "s"} no total
         </span>
