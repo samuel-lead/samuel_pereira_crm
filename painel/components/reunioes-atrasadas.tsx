@@ -31,8 +31,8 @@ export type ReuniaoAtrasada = {
 
 const ROTULO_STATUS: Record<StatusReuniaoAtrasada, { texto: string; classe: string }> = {
   marcada: { texto: "Atrasada", classe: "bg-[#fee2e2] text-[#b91c1c]" },
-  nao_compareceu: { texto: "No-show", classe: "bg-neutral-200 text-neutral-700" },
-  cancelada: { texto: "Precisa reagendar", classe: "bg-amber-100 text-amber-700" },
+  nao_compareceu: { texto: "No-show", classe: "bg-[#e5e5e5] text-[#404040]" },
+  cancelada: { texto: "Precisa reagendar", classe: "bg-[#fef3c7] text-[#b45309]" },
 };
 
 export function ReunioesAtrasadas({
