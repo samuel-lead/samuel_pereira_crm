@@ -4,11 +4,16 @@ import { useState, useTransition } from "react";
 import { reagendarReuniao } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
-// Clicar em qualquer ponto do campo já abre o seletor — e mesmo assim
-// continua dando pra digitar a data direto pelo teclado, as duas formas
-// convivem juntas sem conflito nenhum.
+// Enquanto o calendário está aberto, o navegador captura o teclado pra
+// navegar nos dias — dá pra abrir automático em QUALQUER clique OU dar pra
+// digitar, nunca os dois ao mesmo tempo. Por isso só abre clicando bem no
+// iconezinho da borda direita do campo; clicar no resto só posiciona o
+// cursor, sem abrir nada por cima, pra dar pra digitar a data direto.
 function abrirSeletorDeData(e: React.MouseEvent<HTMLInputElement>) {
-  e.currentTarget.showPicker?.();
+  const campo = e.currentTarget;
+  if (e.nativeEvent.offsetX > campo.clientWidth - 28) {
+    campo.showPicker?.();
+  }
 }
 
 function formatarData(iso: string) {
