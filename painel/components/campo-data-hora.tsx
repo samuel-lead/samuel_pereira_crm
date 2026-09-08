@@ -68,13 +68,36 @@ function SeletorNumero({
   onDecrementar: () => void;
   onDigitar: (texto: string) => void;
 }) {
+  // Guarda o que a pessoa está digitando à parte do valor "oficial" (que
+  // vem sempre com 2 dígitos, tipo "01") — sem isso, digitar só o "1" já
+  // virava "01" na hora, atropelando o resto do número antes dela terminar
+  // de digitar (Samuel pegou isso ao vivo: "digito um número e aparece o
+  // zero e não deixa digitar mais"). Só confirma pro campo pai quando
+  // completar 2 dígitos ou quando sair do campo.
+  const [textoLocal, setTextoLocal] = useState(valor);
+  useEffect(() => {
+    setTextoLocal(valor);
+  }, [valor]);
+
+  function aoDigitar(e: React.ChangeEvent<HTMLInputElement>) {
+    const digitos = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setTextoLocal(digitos);
+    if (digitos.length === 2) onDigitar(digitos);
+  }
+
+  function aoSairDoCampo() {
+    if (textoLocal) onDigitar(textoLocal);
+    else setTextoLocal(valor);
+  }
+
   return (
     <div className="flex h-11 items-stretch overflow-hidden rounded-md border border-neutral-300">
       <input
         type="text"
         inputMode="numeric"
-        value={valor}
-        onChange={(e) => onDigitar(e.target.value.replace(/\D/g, "").slice(0, 2))}
+        value={textoLocal}
+        onChange={aoDigitar}
+        onBlur={aoSairDoCampo}
         className="w-11 border-none px-1 text-center text-base outline-none"
       />
       <div className="flex flex-col border-l border-neutral-300">
