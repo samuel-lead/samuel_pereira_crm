@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { usuarioAutenticado } from "@/lib/supabase/server";
 import { ProvedorLeadModal } from "@/components/provedor-lead-modal";
+import { Sdr } from "@/lib/terminologia";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { usuario } = await usuarioAutenticado();
@@ -25,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     cargo = isAdmin
       ? "Admin"
       : usuario?.funcao === "sdr"
-        ? "SDR"
+        ? Sdr(publicoOrg)
         : usuario?.funcao === "closer"
           ? "Closer"
           : "Membro";

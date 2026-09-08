@@ -6,6 +6,7 @@ import { AvatarUsuario } from "@/components/avatar-usuario";
 import { MinhaFuncaoSelect } from "@/components/minha-funcao-select";
 import { FuncaoUsuarioSelect } from "@/components/funcao-usuario-select";
 import { TornarAdminButton } from "@/components/tornar-admin-button";
+import { Sdr } from "@/lib/terminologia";
 
 type UsuarioLinha = {
   id: string;
@@ -19,10 +20,9 @@ type UsuarioLinha = {
   dono: boolean;
 };
 
-const FUNCAO_LABEL: Record<string, string> = {
-  sdr: "SDR",
-  closer: "Closer",
-};
+function funcaoLabel(funcao: string, publicoOrg: string) {
+  return funcao === "sdr" ? Sdr(publicoOrg) : funcao === "closer" ? "Closer" : funcao;
+}
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -36,6 +36,7 @@ export default async function UsuariosPage() {
   ]);
   const usuarios = (data ?? []) as UsuarioLinha[];
   const souSuperAdmin = usuarioAtual?.super_admin === true;
+  const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
 
   return (
     <>
@@ -93,17 +94,18 @@ export default async function UsuariosPage() {
                       {usuario.papel === "admin" ? "Administrador" : "Membro"}
                     </span>
                     {usuario.id === user?.id && usuario.papel === "admin" ? (
-                      <MinhaFuncaoSelect funcaoAtual={usuario.funcao} />
+                      <MinhaFuncaoSelect funcaoAtual={usuario.funcao} publicoOrg={publicoOrg} />
                     ) : usuario.papel === "membro" ? (
                       <FuncaoUsuarioSelect
                         usuarioId={usuario.id}
                         papelAtual={usuario.papel}
                         paginasAtuais={usuario.paginas_permitidas}
                         funcaoAtual={usuario.funcao}
+                        publicoOrg={publicoOrg}
                       />
                     ) : usuario.funcao ? (
                       <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700">
-                        {FUNCAO_LABEL[usuario.funcao] ?? usuario.funcao}
+                        {funcaoLabel(usuario.funcao, publicoOrg)}
                       </span>
                     ) : (
                       <span

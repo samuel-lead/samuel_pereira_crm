@@ -14,7 +14,7 @@ import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
-import { Reuniao } from "@/lib/terminologia";
+import { Reuniao, Sdr } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -130,7 +130,7 @@ export function LeadModalConteudo({
             </p>
             {nomeSdrOriginal && (
               <p>
-                <span className="text-neutral-500">SDR responsável: </span>
+                <span className="text-neutral-500">{Sdr(publicoOrg)} responsável: </span>
                 <span className="font-medium text-neutral-800">{nomeSdrOriginal}</span>
               </p>
             )}

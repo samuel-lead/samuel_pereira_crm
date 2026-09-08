@@ -3,8 +3,15 @@
 import { useState, useTransition } from "react";
 import { atualizarPropriaFuncao } from "@/lib/usuarios/actions";
 import { MenuSelect } from "@/components/menu-select";
+import { Sdr } from "@/lib/terminologia";
 
-export function MinhaFuncaoSelect({ funcaoAtual }: { funcaoAtual: string | null }) {
+export function MinhaFuncaoSelect({
+  funcaoAtual,
+  publicoOrg = "mentoria",
+}: {
+  funcaoAtual: string | null;
+  publicoOrg?: string;
+}) {
   const [pendente, iniciarTransicao] = useTransition();
   const [valor, setValor] = useState(funcaoAtual ?? "");
 
@@ -26,7 +33,7 @@ export function MinhaFuncaoSelect({ funcaoAtual }: { funcaoAtual: string | null 
       onChange={aoMudar}
       options={[
         { value: "", label: "Todas as funções" },
-        { value: "sdr", label: "SDR" },
+        { value: "sdr", label: Sdr(publicoOrg) },
         { value: "closer", label: "Closer" },
       ]}
     />

@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { criarUsuario, type EstadoFormulario } from "@/lib/usuarios/actions";
 import { paginasParaPublico } from "@/lib/paginas-permitidas";
 import { MenuSelect } from "@/components/menu-select";
+import { Sdr } from "@/lib/terminologia";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 const campoClasse =
@@ -64,7 +65,7 @@ export function NovoUsuarioForm({ publicoOrg = "mentoria" }: { publicoOrg?: stri
           defaultValue=""
           options={[
             { value: "", label: "— Não definida —" },
-            { value: "sdr", label: "SDR" },
+            { value: "sdr", label: Sdr(publicoOrg) },
             { value: "closer", label: "Closer" },
           ]}
         />

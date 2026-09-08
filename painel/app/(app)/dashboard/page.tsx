@@ -34,7 +34,7 @@ import { numerarNiveis } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, Sdr } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -384,7 +384,7 @@ export default async function DashboardPage({
             Visão geral da equipe
           </h2>
           <div className="space-y-4">
-            <LeadsRecentes leads={leadsRecentes} leadsUltimaHora={leadsUltimaHora ?? 0} />
+            <LeadsRecentes leads={leadsRecentes} leadsUltimaHora={leadsUltimaHora ?? 0} publicoOrg={publicoOrg} />
             <LeadsPorOrigem
               titulo={`Origens dos leads — ${periodoResolvido.titulo.toLowerCase()}`}
               dados={leadsPorOrigem}
@@ -395,7 +395,7 @@ export default async function DashboardPage({
               <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
             </div>
             <PerformanceSdr
-              titulo={`Performance por SDR — ${periodoResolvido.titulo.toLowerCase()}`}
+              titulo={`Performance por ${Sdr(publicoOrg)} — ${periodoResolvido.titulo.toLowerCase()}`}
               dados={performancePeriodoSdr}
               periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
               publicoOrg={publicoOrg}

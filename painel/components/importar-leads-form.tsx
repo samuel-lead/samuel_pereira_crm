@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { importarLeads, type ResultadoImportacao } from "@/lib/leads/actions";
+import { sdr } from "@/lib/terminologia";
 
 const estadoInicial: ResultadoImportacao = {
   erro: null,
@@ -96,7 +97,7 @@ function csvParaLista(textoCsv: string) {
     .join("\n");
 }
 
-export function ImportarLeadsForm() {
+export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: string }) {
   const [estado, acaoFormulario, pendente] = useActionState(importarLeads, estadoInicial);
   const [texto, setTexto] = useState("");
   const [arquivoNome, setArquivoNome] = useState<string | null>(null);
@@ -162,7 +163,7 @@ export function ImportarLeadsForm() {
         <p className="mt-1 text-xs text-neutral-500">
           Arraste uma planilha CSV, ou cole a lista à mão — um lead por
           linha. Cada um entra direto na coluna &quot;Leads&quot;, sem
-          responsável, pronto pro SDR pegar e começar a abordar.
+          responsável, pronto pro {sdr(publicoOrg)} pegar e começar a abordar.
         </p>
       </div>
 
@@ -219,7 +220,7 @@ export function ImportarLeadsForm() {
           <p className="text-xs text-neutral-400">
             Formato: nome e telefone separados por vírgula (ou cole direto de
             uma planilha — funciona igual). Telefone é opcional, mas sem ele
-            o SDR não consegue ligar. Confere a lista antes de importar — dá
+            o {sdr(publicoOrg)} não consegue ligar. Confere a lista antes de importar — dá
             pra editar direto aqui se algo vier errado.
           </p>
         </div>

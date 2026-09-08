@@ -36,3 +36,23 @@ export function Calls(publicoOrg: string) {
 export function calls(publicoOrg: string) {
   return ehImobiliario(publicoOrg) ? "visitas" : "calls";
 }
+
+// Imobiliário não fala "SDR" — quem faz esse papel (qualifica e agenda
+// visita) é chamado de "Corretor" no mercado de imóveis. Não confundir com
+// o valor interno `usuarios.funcao = 'sdr'`, que continua igual no banco
+// pros dois públicos — só o texto que aparece pra pessoa muda.
+export function Sdr(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "Corretor" : "SDR";
+}
+
+export function sdr(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "corretor" : "SDR";
+}
+
+export function Sdrs(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "Corretores" : "SDRs";
+}
+
+export function sdrs(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "corretores" : "SDRs";
+}

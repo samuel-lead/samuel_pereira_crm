@@ -17,7 +17,7 @@ import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
-import { Reuniao } from "@/lib/terminologia";
+import { Reuniao, Sdr } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
@@ -260,7 +260,7 @@ export default async function EditarLeadPage({
               </p>
               {nomeSdrOriginal && (
                 <p>
-                  <span className="text-neutral-500">SDR responsável: </span>
+                  <span className="text-neutral-500">{Sdr(publicoOrg)} responsável: </span>
                   <span className="font-medium text-neutral-800">{nomeSdrOriginal}</span>
                 </p>
               )}

@@ -1,7 +1,7 @@
 import { LinkLead } from "@/components/link-lead";
 import { AvatarLead } from "@/components/avatar-lead";
 import { IconeCalendario } from "@/components/icons";
-import { Reunioes, reuniao } from "@/lib/terminologia";
+import { Reunioes, reuniao, Sdr, sdr } from "@/lib/terminologia";
 
 function formatarData(iso: string) {
   const data = new Date(iso);
@@ -80,10 +80,10 @@ export function ReunioesAtrasadas({
                       <p className="truncate text-[11px] text-[#737373]">
                         {item.nomeSdr ? (
                           <>
-                            SDR: <span className="font-medium text-[#404040]">{item.nomeSdr}</span>
+                            {Sdr(publicoOrg)}: <span className="font-medium text-[#404040]">{item.nomeSdr}</span>
                           </>
                         ) : (
-                          "sem SDR"
+                          `sem ${sdr(publicoOrg)}`
                         )}
                       </p>
                       {item.nomeCloser && (

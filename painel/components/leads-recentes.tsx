@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LinkLead } from "@/components/link-lead";
 import { AvatarLead } from "@/components/avatar-lead";
 import { IconeTag } from "@/components/icons";
+import { Sdr, sdr } from "@/lib/terminologia";
 
 function formatarEntrada(iso: string) {
   const data = new Date(iso);
@@ -55,9 +56,11 @@ const SELO_QUALIFICACAO: Record<NivelQualificacao, { texto: string; classe: stri
 export function LeadsRecentes({
   leads,
   leadsUltimaHora,
+  publicoOrg = "mentoria",
 }: {
   leads: LeadRecente[];
   leadsUltimaHora: number;
+  publicoOrg?: string;
 }) {
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -106,10 +109,10 @@ export function LeadsRecentes({
                 <span className="shrink-0 text-[11px] text-neutral-500">
                   {lead.nomeResponsavel ? (
                     <>
-                      SDR: <span className="font-medium text-neutral-700">{lead.nomeResponsavel}</span>
+                      {Sdr(publicoOrg)}: <span className="font-medium text-neutral-700">{lead.nomeResponsavel}</span>
                     </>
                   ) : (
-                    "sem SDR"
+                    `sem ${sdr(publicoOrg)}`
                   )}
                 </span>
                 <span className="shrink-0 rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-700">

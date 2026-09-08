@@ -1,7 +1,7 @@
 import { LinkLead } from "@/components/link-lead";
 import { AvatarLead } from "@/components/avatar-lead";
 import { IconeCalendario } from "@/components/icons";
-import { Reuniao, Reunioes, reuniao } from "@/lib/terminologia";
+import { Reuniao, Reunioes, reuniao, Sdr } from "@/lib/terminologia";
 
 function formatarHorario(iso: string) {
   const data = new Date(iso);
@@ -88,7 +88,7 @@ export function ProximasReunioes({
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
                     {item.nomeSdr && (
                       <p className="truncate text-[11px] text-[#737373]">
-                        SDR: <span className="font-medium text-[#404040]">{item.nomeSdr}</span>
+                        {Sdr(publicoOrg)}: <span className="font-medium text-[#404040]">{item.nomeSdr}</span>
                       </p>
                     )}
                     {item.nomeCloser && (

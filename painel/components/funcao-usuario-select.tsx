@@ -3,17 +3,20 @@
 import { useState, useTransition } from "react";
 import { atualizarFuncaoDoUsuario } from "@/lib/usuarios/actions";
 import { MenuSelect } from "@/components/menu-select";
+import { Sdr } from "@/lib/terminologia";
 
 export function FuncaoUsuarioSelect({
   usuarioId,
   papelAtual,
   paginasAtuais,
   funcaoAtual,
+  publicoOrg = "mentoria",
 }: {
   usuarioId: string;
   papelAtual: string;
   paginasAtuais: string[];
   funcaoAtual: string | null;
+  publicoOrg?: string;
 }) {
   const [pendente, iniciarTransicao] = useTransition();
   const [valor, setValor] = useState(funcaoAtual ?? "");
@@ -39,7 +42,7 @@ export function FuncaoUsuarioSelect({
       onChange={aoMudar}
       options={[
         { value: "", label: "— Sem função —" },
-        { value: "sdr", label: "SDR" },
+        { value: "sdr", label: Sdr(publicoOrg) },
         { value: "closer", label: "Closer" },
       ]}
     />

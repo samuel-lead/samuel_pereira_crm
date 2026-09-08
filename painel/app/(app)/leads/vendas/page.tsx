@@ -8,6 +8,7 @@ import { IconeMoeda } from "@/components/icons";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
+import { Sdr } from "@/lib/terminologia";
 
 type LeadVendido = {
   id: string;
@@ -44,7 +45,8 @@ export default async function VendasPage({
     ate: ateFiltro,
   } = await searchParams;
   const supabase = await createClient();
-  await usuarioAutenticado();
+  const { usuario } = await usuarioAutenticado();
+  const publicoOrg = usuario?.publico_org ?? "mentoria";
 
   const agora = new Date();
   // Sem nenhum filtro escolhido, cai no mês atual — não faz sentido abrir
@@ -186,7 +188,7 @@ export default async function VendasPage({
                 <th className="px-4 py-3 font-medium">Produto</th>
                 <th className="px-4 py-3 font-medium">Valor da venda</th>
                 <th className="px-4 py-3 font-medium">Receita</th>
-                <th className="px-4 py-3 font-medium">SDR</th>
+                <th className="px-4 py-3 font-medium">{Sdr(publicoOrg)}</th>
                 <th className="px-4 py-3 font-medium">Closer</th>
                 <th className="px-4 py-3 font-medium">Vendido em</th>
               </tr>

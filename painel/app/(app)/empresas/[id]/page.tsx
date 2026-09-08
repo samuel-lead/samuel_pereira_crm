@@ -6,6 +6,7 @@ import { AlternarStatusOrgButton } from "@/components/alternar-status-org-button
 import { RedefinirSenhaOrgButton } from "@/components/redefinir-senha-org-button";
 import { AlterarEmailOrgButton } from "@/components/alterar-email-org-button";
 import { CopiarLinkLoginButton } from "@/components/copiar-link-login-button";
+import { Sdr } from "@/lib/terminologia";
 
 type Org = {
   id: string;
@@ -116,7 +117,7 @@ export default async function DetalheEmpresaPage({
                   </div>
                   <div className="flex shrink-0 gap-1.5">
                     <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
-                      {u.papel === "admin" ? "Admin" : u.funcao === "sdr" ? "SDR" : u.funcao === "closer" ? "Closer" : "Membro"}
+                      {u.papel === "admin" ? "Admin" : u.funcao === "sdr" ? Sdr(org.publico) : u.funcao === "closer" ? "Closer" : "Membro"}
                     </span>
                   </div>
                 </div>
