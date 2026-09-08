@@ -209,6 +209,7 @@ export default async function DashboardPage({
         .from("leads")
         .select("id, nome, foto_url")
         .in("id", idsLeadsReunioes)
+        .is("arquivado_em", null)
     : { data: [] as { id: string; nome: string; foto_url: string | null }[] };
 
   const metas = metasData as MetasConfig | null;
