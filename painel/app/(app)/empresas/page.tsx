@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { AlternarStatusOrgButton } from "@/components/alternar-status-org-button";
-import { RedefinirSenhaOrgButton } from "@/components/redefinir-senha-org-button";
 
 type OrgLinha = {
   id: string;
@@ -40,7 +39,8 @@ export default async function EmpresasPage() {
       <main className="max-w-3xl px-6 py-6">
         <p className="mb-4 text-sm text-neutral-500">
           Cada empresa é um cliente seu usando esse CRM, com os próprios
-          leads e usuários — totalmente separado dos outros.
+          leads e usuários — totalmente separado dos outros. Clique numa
+          pra ver os dados de quem trabalha lá.
         </p>
 
         <div className="space-y-3">
@@ -52,9 +52,9 @@ export default async function EmpresasPage() {
             empresas.map((empresa) => (
               <div
                 key={empresa.id}
-                className="flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+                className="flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="min-w-0">
+                <Link href={`/empresas/${empresa.id}`} className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium text-neutral-900">{empresa.nome}</span>
                     <span
@@ -83,20 +83,15 @@ export default async function EmpresasPage() {
                   <p className="text-xs text-neutral-400">
                     Desde {formatarData(empresa.criado_em)}
                   </p>
-                </div>
+                </Link>
 
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <div className="flex shrink-0 items-center gap-2">
                   <AlternarStatusOrgButton
                     orgId={empresa.id}
                     status={empresa.status}
                     nome={empresa.nome}
                   />
-                  {empresa.admin_email && (
-                    <RedefinirSenhaOrgButton
-                      orgId={empresa.id}
-                      nome={empresa.admin_nome ?? empresa.nome}
-                    />
-                  )}
+                  <span className="text-neutral-300">›</span>
                 </div>
               </div>
             ))

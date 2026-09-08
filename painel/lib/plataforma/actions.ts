@@ -90,3 +90,34 @@ export async function redefinirSenhaOrg(orgId: string, novaSenha: string) {
     throw new Error(mensagem);
   }
 }
+
+// Usado quando o cliente perde acesso ao e-mail cadastrado — troca pra um
+// novo, direto, sem precisar de confirmação por link (mesmo desenho de
+// redefinirSenhaOrg acima).
+export async function alterarEmailOrg(orgId: string, novoEmail: string) {
+  const supabase = await createClient();
+
+  if (!novoEmail.trim() || !novoEmail.includes("@")) {
+    throw new Error("Informe um e-mail válido");
+  }
+
+  const { error } = await supabase.functions.invoke("alterar-email-org", {
+    body: { org_id: orgId, novo_email: novoEmail.trim() },
+  });
+
+  if (error) {
+    let mensagem = error.message ?? "Não deu pra alterar o e-mail";
+    const contexto = (error as { context?: Response }).context;
+    if (contexto instanceof Response) {
+      try {
+        const corpo = (await contexto.clone().json()) as { erro?: string };
+        if (corpo?.erro) mensagem = corpo.erro;
+      } catch {
+        // resposta sem corpo JSON, mantém a mensagem padrão
+      }
+    }
+    throw new Error(mensagem);
+  }
+
+  revalidatePath("/empresas");
+}
