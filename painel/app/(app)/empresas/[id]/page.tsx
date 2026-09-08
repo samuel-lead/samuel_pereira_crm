@@ -5,6 +5,7 @@ import { BotaoVoltar } from "@/components/botao-voltar";
 import { AlternarStatusOrgButton } from "@/components/alternar-status-org-button";
 import { RedefinirSenhaOrgButton } from "@/components/redefinir-senha-org-button";
 import { AlterarEmailOrgButton } from "@/components/alterar-email-org-button";
+import { CopiarLinkLoginButton } from "@/components/copiar-link-login-button";
 
 type Org = {
   id: string;
@@ -85,6 +86,7 @@ export default async function DetalheEmpresaPage({
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <CopiarLinkLoginButton />
             <AlternarStatusOrgButton orgId={org.id} status={org.status} nome={org.nome} />
             {admin && (
               <>

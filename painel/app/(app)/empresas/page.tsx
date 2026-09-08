@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { AlternarStatusOrgButton } from "@/components/alternar-status-org-button";
+import { CopiarLinkLoginButton } from "@/components/copiar-link-login-button";
 
 type OrgLinha = {
   id: string;
@@ -86,6 +87,7 @@ export default async function EmpresasPage() {
                 </Link>
 
                 <div className="flex shrink-0 items-center gap-2">
+                  <CopiarLinkLoginButton />
                   <AlternarStatusOrgButton
                     orgId={empresa.id}
                     status={empresa.status}
