@@ -90,7 +90,7 @@ function BotaoReativar({
           e.stopPropagation();
           setAberto(true);
         }}
-        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 py-2.5 text-sm font-bold text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
+        className="botao-reativar -mx-3.5 -mb-3.5 mt-2.5 flex w-[calc(100%+1.75rem)] items-center justify-center gap-2 rounded-b-xl border-t border-neutral-200 bg-neutral-50 py-3 text-sm font-bold text-neutral-700 transition hover:bg-blue-600 hover:text-white"
       >
         <IconeReativar className="h-4 w-4" />
         Reativar
@@ -301,7 +301,7 @@ export function BaseLeadsBoard({
                       if (e.key === "Enter") abrirLead(lead.id);
                     }}
                     onMouseEnter={() => prefetchLead(lead.id)}
-                    className="kanban-card group block cursor-pointer rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg"
+                    className="kanban-card group block cursor-pointer rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg has-[.botao-reativar:hover]:translate-y-0 has-[.botao-reativar:hover]:shadow-sm"
                   >
                     <div className="flex items-start gap-2.5">
                       <AvatarLead
