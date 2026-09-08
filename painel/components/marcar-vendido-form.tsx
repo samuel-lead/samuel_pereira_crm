@@ -121,6 +121,12 @@ export function MarcarVendidoForm({
           label="Receita recebida (R$)"
           placeholder="Deixe em branco se o pagamento ainda não caiu"
         />
+        <div>
+          <label className="mb-1 block text-xs font-medium text-green-800">
+            Produto <span className="text-red-500">*</span>
+          </label>
+          <ProdutoSelect produtos={produtos} />
+        </div>
         {estado.erro && (
           <p className="text-sm text-red-600">{estado.erro}</p>
         )}
@@ -131,13 +137,6 @@ export function MarcarVendidoForm({
         >
           {pendente ? "Salvando..." : "Marcar como vendido"}
         </button>
-
-        <div>
-          <label className="mb-1 block text-xs font-medium text-green-800">
-            Produto
-          </label>
-          <ProdutoSelect produtos={produtos} />
-        </div>
       </form>
     </div>
   );

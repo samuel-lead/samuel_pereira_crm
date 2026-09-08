@@ -1223,6 +1223,10 @@ export async function marcarVendido(
 
   const produto = String(formData.get("produto") ?? "").trim() || null;
 
+  if (!produto) {
+    return { erro: "Selecione o produto vendido antes de salvar." };
+  }
+
   // Busca a reunião ANTES de gravar a venda — se a data dela ainda não
   // chegou, é sinal de data errada (bloqueia antes de mexer em qualquer
   // coisa, pra não deixar o lead marcado como vendido com um erro no meio).
