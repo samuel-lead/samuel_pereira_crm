@@ -30,10 +30,16 @@ export function LeadsPorOrigem({
         <div className="space-y-2">
           {dados.map((linha) => {
             const pct = total > 0 ? Math.round((linha.quantidade / total) * 100) : 0;
+            const mediaPorDiaCanal = diasUteis > 0 ? linha.quantidade / diasUteis : 0;
             return (
               <div key={linha.origem}>
                 <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="font-medium text-neutral-700">{linha.origem}</span>
+                  <span className="flex items-baseline gap-1.5">
+                    <span className="font-medium text-neutral-700">{linha.origem}</span>
+                    <span className="text-[10px] text-neutral-400">
+                      {mediaPorDiaCanal.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} leads/dia em média
+                    </span>
+                  </span>
                   <span className="font-semibold text-neutral-900">{linha.quantidade}</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
