@@ -1618,6 +1618,7 @@ export async function registrarLigacao(leadId: string, atendida: boolean) {
     tipo: "ligacao",
     canal: "manual",
     conteudo: atendida ? "Ligação atendida" : "Ligação não atendida",
+    atendida,
     ocorreu_em: new Date().toISOString(),
     origem: "declarado",
   });

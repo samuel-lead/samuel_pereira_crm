@@ -136,6 +136,28 @@ export default async function LeadsPage({
         .lt("ocorreu_em", amanha.toISOString())
     : null;
 
+  const consultaLigacoesAtendidasHoje = user
+    ? supabase
+        .from("interacoes")
+        .select("id", { count: "exact", head: true })
+        .eq("tipo", "ligacao")
+        .eq("atendida", true)
+        .is("excluido_em", null)
+        .gte("ocorreu_em", inicioHoje.toISOString())
+        .lt("ocorreu_em", amanha.toISOString())
+    : null;
+
+  const consultaLigacoesNaoAtendidasHoje = user
+    ? supabase
+        .from("interacoes")
+        .select("id", { count: "exact", head: true })
+        .eq("tipo", "ligacao")
+        .eq("atendida", false)
+        .is("excluido_em", null)
+        .gte("ocorreu_em", inicioHoje.toISOString())
+        .lt("ocorreu_em", amanha.toISOString())
+    : null;
+
   const consultaCallsMarcadasHoje = user
     ? supabase
         .from("reunioes")
@@ -216,6 +238,8 @@ export default async function LeadsPage({
 
   const [
     { count: ligacoesHoje },
+    { count: ligacoesAtendidasHoje },
+    { count: ligacoesNaoAtendidasHoje },
     { count: callsMarcadasHoje },
     { count: reagendamentosHoje },
     { count: callsRealizadasHoje },
@@ -228,6 +252,8 @@ export default async function LeadsPage({
     { data: todasReunioesData },
   ] = await Promise.all([
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
+    consultaLigacoesAtendidasHoje ? filtrarPorEscopo(consultaLigacoesAtendidasHoje) : { count: null },
+    consultaLigacoesNaoAtendidasHoje ? filtrarPorEscopo(consultaLigacoesNaoAtendidasHoje) : { count: null },
     consultaCallsMarcadasHoje ? filtrarPorEscopo(consultaCallsMarcadasHoje) : { count: null },
     consultaReagendamentosHoje ? filtrarPorEscopo(consultaReagendamentosHoje) : { count: null },
     consultaCallsRealizadasHoje ? filtrarPorEscopo(consultaCallsRealizadasHoje) : { count: null },
@@ -450,7 +476,14 @@ export default async function LeadsPage({
                 <StatCell
                   label="Ligações hoje"
                   value={ligacoesHoje}
-                  sub={souAdmin ? "Time todo" : undefined}
+                  sub={
+                    <>
+                      {souAdmin && <span className="block">Time todo</span>}
+                      <span className="block">
+                        {ligacoesAtendidasHoje ?? 0} atendida{(ligacoesAtendidasHoje ?? 0) === 1 ? "" : "s"} · {ligacoesNaoAtendidasHoje ?? 0} não atendida{(ligacoesNaoAtendidasHoje ?? 0) === 1 ? "" : "s"}
+                      </span>
+                    </>
+                  }
                 />
               )}
               {callsMarcadasHoje !== null && (
