@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { AlternarStatusOrgButton } from "@/components/alternar-status-org-button";
+import { RedefinirSenhaOrgButton } from "@/components/redefinir-senha-org-button";
 
 type OrgLinha = {
   id: string;
@@ -84,11 +85,19 @@ export default async function EmpresasPage() {
                   </p>
                 </div>
 
-                <AlternarStatusOrgButton
-                  orgId={empresa.id}
-                  status={empresa.status}
-                  nome={empresa.nome}
-                />
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <AlternarStatusOrgButton
+                    orgId={empresa.id}
+                    status={empresa.status}
+                    nome={empresa.nome}
+                  />
+                  {empresa.admin_email && (
+                    <RedefinirSenhaOrgButton
+                      orgId={empresa.id}
+                      nome={empresa.admin_nome ?? empresa.nome}
+                    />
+                  )}
+                </div>
               </div>
             ))
           )}

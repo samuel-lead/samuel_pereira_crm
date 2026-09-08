@@ -60,3 +60,33 @@ export async function alternarStatusOrg(orgId: string, statusAtual: string) {
 
   revalidatePath("/empresas");
 }
+
+// A senha não fica salva em nenhum lugar de um jeito que dê pra "ver" de
+// novo (só um hash irreversível) — em vez de recuperar a antiga, troca por
+// uma nova escolhida agora. Mesmo desenho de criarCliente/criar-usuario:
+// a senha nova é digitada aqui dentro do CRM, nunca sai daqui.
+export async function redefinirSenhaOrg(orgId: string, novaSenha: string) {
+  const supabase = await createClient();
+
+  if (novaSenha.length < 6) {
+    throw new Error("A nova senha precisa ter pelo menos 6 caracteres");
+  }
+
+  const { error } = await supabase.functions.invoke("redefinir-senha-org", {
+    body: { org_id: orgId, nova_senha: novaSenha },
+  });
+
+  if (error) {
+    let mensagem = error.message ?? "Não deu pra redefinir a senha";
+    const contexto = (error as { context?: Response }).context;
+    if (contexto instanceof Response) {
+      try {
+        const corpo = (await contexto.clone().json()) as { erro?: string };
+        if (corpo?.erro) mensagem = corpo.erro;
+      } catch {
+        // resposta sem corpo JSON, mantém a mensagem padrão
+      }
+    }
+    throw new Error(mensagem);
+  }
+}

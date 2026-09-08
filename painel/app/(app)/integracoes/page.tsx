@@ -12,6 +12,24 @@ export default async function IntegracoesPage() {
   const supabase = await createClient();
   const { data: googleConectado } = await supabase.rpc("google_calendar_esta_conectado");
 
+  // Z-API (WhatsApp) é uma coisa só, compartilhada pela plataforma inteira
+  // (instância A/B configurada nas Secrets do Supabase) — não é por
+  // empresa. Antes esse status ficava fixo em "Conectado" no código, sem
+  // checar nada de verdade (Samuel pegou isso ao vivo: aparecia conectado
+  // mesmo sem ninguém ter configurado). Reaproveita a mesma checagem que
+  // já existia (verificar-zapi) — se não der pra chamar (não-admin, etc.),
+  // assume não conectado, que é o mais seguro.
+  let whatsappConectado = false;
+  try {
+    const { data: verificacao } = await supabase.functions.invoke<{
+      instancias: { configurado: boolean; conectado?: boolean }[];
+    }>("verificar-zapi");
+    whatsappConectado =
+      verificacao?.instancias?.some((i) => i.configurado && i.conectado === true) ?? false;
+  } catch {
+    whatsappConectado = false;
+  }
+
   return (
     <>
       <PageHeader titulo="Integrações" />
