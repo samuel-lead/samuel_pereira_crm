@@ -46,7 +46,7 @@ export function AppShell({
 
       <Sidebar {...sidebarProps} abertoMobile={menuAberto} onFecharMobile={() => setMenuAberto(false)} />
 
-      <div className="min-w-0 flex-1 overflow-y-auto pt-14 md:pt-0">{children}</div>
+      <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden pt-14 md:pt-0">{children}</div>
     </div>
   );
 }
