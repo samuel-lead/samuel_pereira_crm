@@ -81,7 +81,6 @@ export default async function DashboardPage({
     metricasAnteriores,
     vendasPorCanal,
     vendasPorProduto,
-    performanceDiaSdr,
     performancePeriodoSdr,
     leadsPorOrigem,
     resumoAnoEvolucao,
@@ -96,9 +95,9 @@ export default async function DashboardPage({
     { data: leadsAtrasadosData },
     { data: usuariosData },
   ] = await Promise.all([
-    // Só o SDR usa isso — o admin já tem seu próprio dia na tabela
-    // "Performance do dia por SDR" (com o mesmo botão de copiar). Isso é
-    // sempre HOJE, independente do filtro do painel (é um check-in diário).
+    // Só o SDR usa isso — o admin já vê todo mundo na tabela "Performance
+    // por SDR" (com o mesmo botão de copiar). Isso é sempre HOJE,
+    // independente do filtro do painel (é um check-in diário).
     souAdmin
       ? Promise.resolve(null)
       : calcularMetricas(supabase, usuario!.id, inicioHoje, amanha, {
@@ -115,9 +114,6 @@ export default async function DashboardPage({
     calcularMetricasOrg(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
     calcularVendasPorCanal(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     calcularVendasPorProduto(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
-    calcularMetricasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha, {
-      apenasDeclaradosNoPeriodo: true,
-    }),
     // "Leads Novos" da tabela também precisa ser estrito, mesmo motivo do
     // card acima — sem isso, a coluna mostrava o número largo (com
     // carry-forward) embaixo de um título que promete "novos".
@@ -304,7 +300,7 @@ export default async function DashboardPage({
               </p>
             </div>
             <CopiarRelatorioButton
-              data={agora}
+              periodoLabel={formatarDataCurta(agora)}
               callsMarcadas={metricasHoje.reunioesMarcadas}
               callsReagendadas={metricasHoje.reunioesReagendadas}
               ligacoesFeitas={metricasHoje.ligacoes}
@@ -397,13 +393,6 @@ export default async function DashboardPage({
               <VendasPorCanal dados={vendasPorCanal} periodo={periodoResolvido.titulo} />
               <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
             </div>
-            <PerformanceSdr
-              titulo="Performance do dia por SDR"
-              dados={performanceDiaSdr}
-              periodo={`Hoje, ${formatarDataCurta(agora)}.`}
-              dataRelatorio={agora}
-              publicoOrg={publicoOrg}
-            />
             <PerformanceSdr
               titulo={`Performance por SDR — ${periodoResolvido.titulo.toLowerCase()}`}
               dados={performancePeriodoSdr}

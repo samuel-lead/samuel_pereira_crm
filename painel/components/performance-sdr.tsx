@@ -19,25 +19,17 @@ export function PerformanceSdr({
   titulo = "Performance da semana por SDR",
   dados,
   periodo,
-  dataRelatorio,
   publicoOrg = "mentoria",
 }: {
   titulo?: string;
   dados: MetricasUsuario[];
-  periodo?: string;
-  // Só a tabela do DIA recebe isso — mostra a coluna com o botão "Copiar"
-  // pro SDR mandar o relatório dele no WhatsApp. Não faz sentido na tabela
-  // da semana (relatório é sempre do dia).
-  dataRelatorio?: Date;
+  periodo: string;
   publicoOrg?: string;
 }) {
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <h2 className="mb-1 text-sm font-semibold text-neutral-800">{titulo}</h2>
-      <p className="mb-4 text-xs text-neutral-500">
-        Comparação entre todo o time.
-        {periodo && <> {periodo}</>}
-      </p>
+      <p className="mb-4 text-xs text-neutral-500">Comparação entre todo o time. {periodo}</p>
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] table-fixed text-left text-sm">
@@ -52,9 +44,7 @@ export function PerformanceSdr({
               <th className="w-28 px-3 py-2 text-center font-medium">Vendas</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Taxa de venda</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Faturamento</th>
-              {dataRelatorio && (
-                <th className="w-24 px-3 py-2 text-center font-medium">Relatório</th>
-              )}
+              <th className="w-24 px-3 py-2 text-center font-medium">Relatório</th>
             </tr>
           </thead>
           <tbody>
@@ -82,17 +72,15 @@ export function PerformanceSdr({
                 <td className="px-3 py-2 text-center tabular-nums font-medium text-green-700">
                   {formatarMoeda(linha.faturamento)}
                 </td>
-                {dataRelatorio && (
-                  <td className="px-3 py-2 text-center">
-                    <CopiarRelatorioButton
-                      data={dataRelatorio}
-                      callsMarcadas={linha.reunioesMarcadas}
-                      callsReagendadas={linha.reunioesReagendadas}
-                      ligacoesFeitas={linha.ligacoes}
-                      publicoOrg={publicoOrg}
-                    />
-                  </td>
-                )}
+                <td className="px-3 py-2 text-center">
+                  <CopiarRelatorioButton
+                    periodoLabel={periodo}
+                    callsMarcadas={linha.reunioesMarcadas}
+                    callsReagendadas={linha.reunioesReagendadas}
+                    ligacoesFeitas={linha.ligacoes}
+                    publicoOrg={publicoOrg}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>

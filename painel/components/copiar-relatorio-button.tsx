@@ -3,23 +3,15 @@
 import { useState } from "react";
 import { Calls } from "@/lib/terminologia";
 
-function formatarPeriodo(data: Date) {
-  return data.toLocaleDateString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    day: "2-digit",
-    month: "2-digit",
-  });
-}
-
 function montarRelatorio(
-  data: Date,
+  periodoLabel: string,
   callsMarcadas: number,
   callsReagendadas: number,
   ligacoesFeitas: number,
   publicoOrg: string
 ) {
   return [
-    `🗓️Período: ${formatarPeriodo(data)}`,
+    `🗓️Período: ${periodoLabel}`,
     "",
     `➡ ${Calls(publicoOrg)} marcadas: ${callsMarcadas}`,
     `➡ ${Calls(publicoOrg)} reagendadas: ${callsReagendadas}`,
@@ -30,13 +22,13 @@ function montarRelatorio(
 }
 
 export function CopiarRelatorioButton({
-  data,
+  periodoLabel,
   callsMarcadas,
   callsReagendadas,
   ligacoesFeitas,
   publicoOrg = "mentoria",
 }: {
-  data: Date;
+  periodoLabel: string;
   callsMarcadas: number;
   callsReagendadas: number;
   ligacoesFeitas: number;
@@ -45,7 +37,7 @@ export function CopiarRelatorioButton({
   const [copiado, setCopiado] = useState(false);
 
   function aoClicar() {
-    const texto = montarRelatorio(data, callsMarcadas, callsReagendadas, ligacoesFeitas, publicoOrg);
+    const texto = montarRelatorio(periodoLabel, callsMarcadas, callsReagendadas, ligacoesFeitas, publicoOrg);
     navigator.clipboard?.writeText(texto).catch(() => {});
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
