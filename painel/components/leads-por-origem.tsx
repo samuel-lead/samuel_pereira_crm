@@ -32,9 +32,9 @@ export function LeadsPorOrigem({
             const pct = total > 0 ? Math.round((linha.quantidade / total) * 100) : 0;
             return (
               <div key={linha.origem}>
-                <div className="mb-1.5 flex items-center justify-between text-base">
-                  <span className="font-medium text-neutral-700">{linha.origem}</span>
-                  <span className="font-semibold text-neutral-900">{linha.quantidade}</span>
+                <div className="mb-1.5 flex items-center justify-between text-lg">
+                  <span className="font-semibold text-neutral-700">{linha.origem}</span>
+                  <span className="font-bold text-neutral-900">{linha.quantidade}</span>
                 </div>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-neutral-100">
                   <div
