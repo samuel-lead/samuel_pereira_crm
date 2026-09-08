@@ -30,16 +30,16 @@ export function LeadsPorOrigem({
           Nenhum lead nesse período ainda.
         </p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {dados.map((linha) => {
             const pct = total > 0 ? Math.round((linha.quantidade / total) * 100) : 0;
             return (
               <div key={linha.origem}>
-                <div className="mb-1 flex items-center justify-between text-sm">
+                <div className="mb-1.5 flex items-center justify-between text-base">
                   <span className="font-medium text-neutral-700">{linha.origem}</span>
                   <span className="font-semibold text-neutral-900">{linha.quantidade}</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
+                <div className="h-3 w-full overflow-hidden rounded-full bg-neutral-100">
                   <div
                     className="h-full rounded-full bg-sky-500"
                     style={{ width: `${pct}%` }}
