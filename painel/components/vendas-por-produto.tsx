@@ -8,13 +8,13 @@ function formatarMoeda(valor: number) {
   });
 }
 
-export function VendasPorProduto({ dados }: { dados: VendaPorProduto[] }) {
+export function VendasPorProduto({ dados, periodo }: { dados: VendaPorProduto[]; periodo: string }) {
   const total = dados.reduce((soma, d) => soma + d.faturamento, 0);
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <h2 className="mb-1 text-sm font-semibold text-neutral-800">
-        Produtos mais vendidos no mês
+        Produtos mais vendidos — {periodo.toLowerCase()}
       </h2>
       <p className="mb-4 text-xs text-neutral-500">
         Cada produto vendido, com quantas vezes aconteceu e quanto faturou.
@@ -22,7 +22,7 @@ export function VendasPorProduto({ dados }: { dados: VendaPorProduto[] }) {
 
       {dados.length === 0 ? (
         <p className="rounded-md border border-dashed border-neutral-300 px-3 py-6 text-center text-xs text-neutral-400">
-          Nenhuma venda no mês ainda.
+          Nenhuma venda nesse período ainda.
         </p>
       ) : (
         <div className="space-y-2">

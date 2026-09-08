@@ -394,8 +394,8 @@ export default async function DashboardPage({
               diasUteis={metricas.diasUteis}
             />
             <div className="grid gap-4 lg:grid-cols-2">
-              <VendasPorCanal dados={vendasPorCanal} />
-              <VendasPorProduto dados={vendasPorProduto} />
+              <VendasPorCanal dados={vendasPorCanal} periodo={periodoResolvido.titulo} />
+              <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
             </div>
             <PerformanceSdr
               titulo="Performance do dia por SDR"
