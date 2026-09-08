@@ -7,6 +7,17 @@ import {
 } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
+// O iconezinho de calendário fica encostado na borda direita do campo — só
+// abre o seletor clicando nele. Clicar no resto do campo só posiciona o
+// cursor, sem abrir o seletor por cima, pra dar pra digitar a data direto
+// pelo teclado também (Samuel pediu as duas formas juntas).
+function abrirSeletorDeData(e: React.MouseEvent<HTMLInputElement>) {
+  const campo = e.currentTarget;
+  if (e.nativeEvent.offsetX > campo.clientWidth - 28) {
+    campo.showPicker?.();
+  }
+}
+
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit",
@@ -87,7 +98,7 @@ export function ProximoContatoForm({
           type="datetime-local"
           name="proximo_follow_em"
           required
-          onClick={(e) => e.currentTarget.showPicker?.()}
+          onClick={abrirSeletorDeData}
           className="w-full rounded-md border border-teal-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
 

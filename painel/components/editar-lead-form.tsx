@@ -30,11 +30,17 @@ function agoraParaInputLocal() {
   return local.toISOString().slice(0, 16);
 }
 
-// Sem isso, só clicar no iconezinho de calendário no canto do campo abre o
-// seletor — clicar em qualquer outro lugar do campo só posiciona o cursor
-// pra digitar. Clicar em qualquer ponto do campo já abre o seletor.
+// O iconezinho de calendário fica encostado na borda direita do campo — só
+// abre o seletor clicando nele. Clicar no resto do campo (em cima dos
+// números de dia/mês/ano/hora) só posiciona o cursor, sem abrir o seletor
+// por cima — assim dá pra digitar a data direto pelo teclado (08, etc.) sem
+// o calendário atrapalhar. As duas formas ficam disponíveis (Samuel pediu
+// as duas: continuar podendo clicar no calendário E poder digitar).
 function abrirSeletorDeData(e: React.MouseEvent<HTMLInputElement>) {
-  e.currentTarget.showPicker?.();
+  const campo = e.currentTarget;
+  if (e.nativeEvent.offsetX > campo.clientWidth - 28) {
+    campo.showPicker?.();
+  }
 }
 
 type Lead = {
