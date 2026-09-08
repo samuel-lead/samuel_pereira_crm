@@ -197,7 +197,7 @@ export function MetaReceitaWidget({
           </p>
         </div>
       </div>
-      <div className="relative h-3 w-full">
+      <div className="relative mt-6 h-3 w-full">
         <div className="h-full w-full overflow-hidden rounded-full bg-neutral-100">
           <div
             className={`h-full rounded-full transition-all ${
