@@ -74,6 +74,12 @@ function BlocoReativarLead({
   usuarios,
   souAdmin,
   publicoOrg,
+  // Veio do atalho rápido "Reativar" de fora do card (Base ou Repescagem
+  // futura de ICP), onde a pessoa já escolheu "Reunião marcada" antes
+  // mesmo do card abrir — precisa nascer aberto e com o nível já
+  // selecionado, senão o card abre "cru" e ela tem que refazer os
+  // cliques todos de novo (Samuel pegou isso ao vivo).
+  preSelecionarReuniao = false,
 }: {
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
@@ -81,9 +87,10 @@ function BlocoReativarLead({
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   souAdmin: boolean;
   publicoOrg: string;
+  preSelecionarReuniao?: boolean;
 }) {
-  const [aberto, setAberto] = useState(false);
-  const [nivel, setNivel] = useState("");
+  const [aberto, setAberto] = useState(preSelecionarReuniao);
+  const [nivel, setNivel] = useState(preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : "");
   const [responsavelId, setResponsavelId] = useState("");
   const [agendadaPara, setAgendadaPara] = useState("");
   const [closerId, setCloserId] = useState("");
@@ -607,6 +614,7 @@ export function EditarLeadForm({
               usuarios={usuarios}
               souAdmin={souAdmin}
               publicoOrg={publicoOrg}
+              preSelecionarReuniao={preSelecionarReuniao}
             />
           </>
         ) : (
