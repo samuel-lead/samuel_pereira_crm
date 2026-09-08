@@ -365,8 +365,6 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <LeadsRecentes leads={leadsRecentes} leadsUltimaHora={leadsUltimaHora ?? 0} />
-
         <div className="grid gap-4 lg:grid-cols-2">
           <ReunioesAtrasadas reunioes={reunioesAtrasadas} publicoOrg={publicoOrg} />
           <ProximasReunioes
@@ -389,6 +387,7 @@ export default async function DashboardPage({
             Visão geral da equipe
           </h2>
           <div className="space-y-4">
+            <LeadsRecentes leads={leadsRecentes} leadsUltimaHora={leadsUltimaHora ?? 0} />
             <LeadsPorOrigem
               titulo={`Origem dos leads — ${periodoResolvido.titulo.toLowerCase()}`}
               dados={leadsPorOrigem}
