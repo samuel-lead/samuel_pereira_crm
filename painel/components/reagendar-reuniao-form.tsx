@@ -4,15 +4,11 @@ import { useState, useTransition } from "react";
 import { reagendarReuniao } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
-// O iconezinho de calendário fica encostado na borda direita do campo — só
-// abre o seletor clicando nele. Clicar no resto do campo só posiciona o
-// cursor, sem abrir o seletor por cima, pra dar pra digitar a data direto
-// pelo teclado também (Samuel pediu as duas formas juntas).
+// Clicar em qualquer ponto do campo já abre o seletor — e mesmo assim
+// continua dando pra digitar a data direto pelo teclado, as duas formas
+// convivem juntas sem conflito nenhum.
 function abrirSeletorDeData(e: React.MouseEvent<HTMLInputElement>) {
-  const campo = e.currentTarget;
-  if (e.nativeEvent.offsetX > campo.clientWidth - 28) {
-    campo.showPicker?.();
-  }
+  e.currentTarget.showPicker?.();
 }
 
 function formatarData(iso: string) {
