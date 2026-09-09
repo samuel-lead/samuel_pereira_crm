@@ -14,11 +14,12 @@ import Link from "next/link";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import { removerAcento } from "@/lib/texto";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
-import { RepescagemFutura } from "@/lib/terminologia";
+import { RepescagemFutura, ehImobiliario } from "@/lib/terminologia";
 import {
   buscarMetaReceitaMes,
   buscarUltimaVenda,
   calcularReceitaOrg,
+  calcularFaturamentoOrg,
   calcularVendasHoje,
   inicioDoMes,
 } from "@/lib/metricas";
@@ -170,7 +171,9 @@ export default async function VendasPage({
   ] = await Promise.all([
       orgId
         ? Promise.all([
-            calcularReceitaOrg(supabase, orgId, inicioMes, amanha),
+            ehImobiliario(publicoOrg)
+              ? calcularFaturamentoOrg(supabase, orgId, inicioMes, amanha)
+              : calcularReceitaOrg(supabase, orgId, inicioMes, amanha),
             buscarMetaReceitaMes(supabase, orgId, inicioMes.getUTCFullYear(), inicioMes.getUTCMonth() + 1),
             calcularVendasHoje(supabase, orgId, inicioHoje, amanha),
             buscarUltimaVenda(supabase, orgId),
@@ -383,6 +386,7 @@ export default async function VendasPage({
                 metaReceita={metaReceita}
                 receitaAtual={receitaOrgMes}
                 podeEditar={souAdmin}
+                publicoOrg={publicoOrg}
               />
             )}
           </div>

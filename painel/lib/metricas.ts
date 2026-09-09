@@ -700,6 +700,29 @@ export async function calcularReceitaOrg(
   return (data ?? []).reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
 }
 
+// Mesma coisa que calcularReceitaOrg, mas somando valor_venda (VGV) em vez
+// de receita_venda (dinheiro que já caiu) — usada pra Meta do mês no
+// imobiliário, onde a meta é de VGV, não de receita (Samuel pediu essa
+// troca: lá não faz sentido acompanhar quanto já entrou de dinheiro, e sim
+// o valor total vendido).
+export async function calcularFaturamentoOrg(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<number> {
+  const { data } = await supabase
+    .from("leads")
+    .select("valor_venda")
+    .eq("org_id", orgId)
+    .eq("status", "vendido")
+    .is("arquivado_em", null)
+    .gte("vendido_em", inicio.toISOString())
+    .lt("vendido_em", fim.toISOString());
+
+  return (data ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+}
+
 export type NegociacoesAbertas = {
   quantidade: number;
   valor: number;

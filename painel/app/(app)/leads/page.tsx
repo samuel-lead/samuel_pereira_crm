@@ -16,11 +16,12 @@ import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 import {
   buscarMetaReceitaMes,
   calcularReceitaOrg,
+  calcularFaturamentoOrg,
   calcularVendasHoje,
   inicioDoMes,
 } from "@/lib/metricas";
 import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
-import { Calls } from "@/lib/terminologia";
+import { Calls, ehImobiliario } from "@/lib/terminologia";
 import { removerAcento } from "@/lib/texto";
 
 type LeadResumo = {
@@ -260,7 +261,9 @@ export default async function LeadsPage({
     consultaNoShowHoje ? filtrarPorEscopo(consultaNoShowHoje) : { count: null },
     orgId
       ? Promise.all([
-          calcularReceitaOrg(supabase, orgId, inicioMes, amanha),
+          ehImobiliario(publicoOrg)
+            ? calcularFaturamentoOrg(supabase, orgId, inicioMes, amanha)
+            : calcularReceitaOrg(supabase, orgId, inicioMes, amanha),
           buscarMetaReceitaMes(supabase, orgId, inicioMes.getUTCFullYear(), inicioMes.getUTCMonth() + 1),
         ])
       : Promise.resolve([null, null] as const),
@@ -520,6 +523,7 @@ export default async function LeadsPage({
                 metaReceita={metaReceita}
                 receitaAtual={receitaOrgMes}
                 podeEditar={souAdmin}
+                publicoOrg={publicoOrg}
               />
             )}
           </div>

@@ -23,6 +23,7 @@ import {
   calcularLeadsPorOrigem,
   calcularResumoAno,
   calcularReceitaOrg,
+  calcularFaturamentoOrg,
   calcularNegociacoesAbertas,
   buscarMetaReceitaMes,
   inicioDoMes,
@@ -34,7 +35,7 @@ import { numerarNiveis } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes, Sdr } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -124,8 +125,12 @@ export default async function DashboardPage({
       apenasDeclaradosNoPeriodo: true,
     }),
     calcularResumoAno(supabase, usuario!.org_id, anoEvolucaoResolvido),
-    // Meta de receita é sempre do mês civil corrente — não depende do filtro.
-    calcularReceitaOrg(supabase, usuario!.org_id, inicioMesAtual, amanha),
+    // Meta de receita é sempre do mês civil corrente — não depende do
+    // filtro. Imobiliário acompanha VGV (valor_venda), não receita
+    // (dinheiro recebido) — Samuel pediu essa troca.
+    ehImobiliario(usuario!.publico_org)
+      ? calcularFaturamentoOrg(supabase, usuario!.org_id, inicioMesAtual, amanha)
+      : calcularReceitaOrg(supabase, usuario!.org_id, inicioMesAtual, amanha),
     buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMesAtual.getUTCFullYear(), inicioMesAtual.getUTCMonth() + 1),
     calcularNegociacoesAbertas(supabase, usuario!.org_id),
     supabase
@@ -314,6 +319,7 @@ export default async function DashboardPage({
           metaReceita={metaReceita}
           receitaAtual={receitaOrgMes}
           podeEditar={souAdmin}
+          publicoOrg={publicoOrg}
         />
 
         <div className="sticky top-0 z-10 -mx-6 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)]">

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { definirMetaReceita, type EstadoMeta } from "@/lib/metas/actions";
 import { IconeLapis } from "@/components/icons";
+import { Faturamento, ehImobiliario } from "@/lib/terminologia";
 
 const estadoInicial: EstadoMeta = { erro: null };
 
@@ -24,14 +25,18 @@ export function MetaReceitaWidget({
   receitaAtual,
   compacta = false,
   podeEditar = false,
+  publicoOrg = "mentoria",
 }: {
   metaReceita: number | null;
   receitaAtual: number;
   compacta?: boolean;
   podeEditar?: boolean;
+  publicoOrg?: string;
 }) {
   const [estado, acaoFormulario] = useActionState(definirMetaReceita, estadoInicial);
   const [editando, setEditando] = useState(podeEditar && metaReceita === null);
+  const rotuloMeta = `Meta de ${ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "receita"} do mês`;
+  const rotuloValorAtual = ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "Recebido";
 
   useEffect(() => {
     if (estado !== estadoInicial && !estado.erro) {
@@ -49,7 +54,7 @@ export function MetaReceitaWidget({
     }
     return (
       <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-1 text-sm font-semibold text-neutral-800">Meta de receita do mês</h2>
+        <h2 className="mb-1 text-sm font-semibold text-neutral-800">{rotuloMeta}</h2>
         <p className="text-sm text-neutral-500">Ainda não foi definida pelo administrador.</p>
       </div>
     );
@@ -115,7 +120,8 @@ export function MetaReceitaWidget({
         <div className="mb-2 flex items-center gap-2">
           <span className="text-lg">🔔</span>
           <h2 className="text-sm font-bold text-amber-900">
-            O mês de {nomeDoMesAtual()} virou — defina a meta de receita
+            O mês de {nomeDoMesAtual()} virou — defina a meta de{" "}
+            {ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "receita"} do mês
           </h2>
         </div>
         <p className="mb-3 text-sm text-amber-800">
@@ -135,7 +141,7 @@ export function MetaReceitaWidget({
     const conteudo = (
       <div className="min-w-[128px] px-3 py-2 pr-6 text-left">
         <p className="flex items-center gap-1 text-[10px] leading-tight text-neutral-500">
-          <span>🎯</span> Meta de receita do mês
+          <span>🎯</span> {rotuloMeta}
         </p>
         <p className="mt-0.5 text-base font-bold leading-tight text-neutral-900">{formatarMoeda(meta)}</p>
         <p className={`mt-0.5 text-[10px] font-medium leading-tight ${bateu ? "text-green-600" : "text-green-700"}`}>
@@ -168,7 +174,7 @@ export function MetaReceitaWidget({
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-neutral-800">Meta de receita do mês</h2>
+        <h2 className="text-sm font-semibold text-neutral-800">{rotuloMeta}</h2>
         {podeEditar && (
           <button
             type="button"
@@ -182,7 +188,7 @@ export function MetaReceitaWidget({
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-            Recebido
+            {rotuloValorAtual}
           </p>
           <p className="text-4xl font-black tracking-tight text-neutral-900 tabular-nums">
             {formatarMoeda(receitaAtual)}
