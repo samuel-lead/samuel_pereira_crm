@@ -14,6 +14,7 @@ import Link from "next/link";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import { removerAcento } from "@/lib/texto";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
+import { RepescagemFutura } from "@/lib/terminologia";
 import {
   buscarMetaReceitaMes,
   buscarUltimaVenda,
@@ -135,17 +136,17 @@ export default async function VendasPage({
     new Set((origensData ?? []).map((lead) => lead.origem as string))
   ).sort();
 
+  const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
   const todosNiveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const niveis = [
     ...todosNiveis.filter((nivel) => NIVEIS_VENDAS.includes(nivel.ordem)),
-    NIVEL_OPORTUNIDADE_FUTURA,
+    { ...NIVEL_OPORTUNIDADE_FUTURA, nome: RepescagemFutura(publicoOrg) },
   ];
   const niveisReativacao = todosNiveis.filter((nivel) => NIVEIS_REATIVACAO.includes(nivel.ordem));
   const leads = (leadsData ?? []) as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
-  const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
 
   const leadsComProposta = leads.filter((lead) => lead.proposta_valor != null);
   const totalPropostas = leadsComProposta.reduce(

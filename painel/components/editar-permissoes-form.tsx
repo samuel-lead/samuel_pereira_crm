@@ -30,21 +30,29 @@ export function EditarPermissoesForm({
 
   return (
     <form action={acaoFormulario} className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-neutral-700" htmlFor="funcao">
-          Função
-        </label>
-        <MenuSelect
-          id="funcao"
-          name="funcao"
-          defaultValue={funcaoAtual ?? ""}
-          options={[
-            { value: "", label: "— Não definida —" },
-            { value: "sdr", label: Sdr(publicoOrg) },
-            ...(ehImobiliario(publicoOrg) ? [] : [{ value: "closer", label: "Closer" }]),
-          ]}
-        />
-      </div>
+      {ehImobiliario(publicoOrg) ? (
+        // Mesma ideia do Novo usuário: no imobiliário não tem uma "função"
+        // separada do acesso — Corretor/Gerente é a mesma escolha (mais
+        // embaixo). Só mantém funcao="sdr" gravado, pra continuar podendo
+        // escolher a pessoa como "quem vai fazer a visita".
+        <input type="hidden" name="funcao" value="sdr" />
+      ) : (
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-neutral-700" htmlFor="funcao">
+            Função
+          </label>
+          <MenuSelect
+            id="funcao"
+            name="funcao"
+            defaultValue={funcaoAtual ?? ""}
+            options={[
+              { value: "", label: "— Não definida —" },
+              { value: "sdr", label: Sdr(publicoOrg) },
+              { value: "closer", label: "Closer" },
+            ]}
+          />
+        </div>
+      )}
 
       <fieldset className="space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
@@ -59,7 +67,9 @@ export function EditarPermissoesForm({
             checked={papel === "admin"}
             onChange={() => setPapel("admin")}
           />
-          Administrador — acessa tudo, inclusive Usuários e Configurações
+          {ehImobiliario(publicoOrg)
+            ? "Gerente — acessa tudo, inclusive Usuários e Configurações"
+            : "Administrador — acessa tudo, inclusive Usuários e Configurações"}
         </label>
         <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input
@@ -69,7 +79,9 @@ export function EditarPermissoesForm({
             checked={papel === "membro"}
             onChange={() => setPapel("membro")}
           />
-          Membro — só acessa as páginas escolhidas abaixo
+          {ehImobiliario(publicoOrg)
+            ? "Corretor — só acessa as páginas escolhidas abaixo"
+            : "Membro — só acessa as páginas escolhidas abaixo"}
         </label>
       </fieldset>
 

@@ -27,7 +27,7 @@ import { AvatarLead } from "@/components/avatar-lead";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
-import { Reuniao, reuniao } from "@/lib/terminologia";
+import { Reuniao, reuniao, RepescagemFutura } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
@@ -339,6 +339,7 @@ function SeletorMoverParaMobile({
   todosNiveis,
   numerosVisiveis,
   moverPara,
+  publicoOrg = "mentoria",
 }: {
   lead: LeadResumo;
   todosNiveis: NivelResumo[];
@@ -349,6 +350,7 @@ function SeletorMoverParaMobile({
     ordem: number,
     temReuniaoPendente: boolean
   ) => void;
+  publicoOrg?: string;
 }) {
   const [escolhendoMotivoBase, setEscolhendoMotivoBase] = useState(false);
   const [motivoBase, setMotivoBase] = useState("");
@@ -488,7 +490,7 @@ function SeletorMoverParaMobile({
             : [];
           opcoes.push(
             <option key="futura" value={ORDEM_OPORTUNIDADE_FUTURA}>
-              ↳ Repescagem futura de ICP
+              ↳ {RepescagemFutura(publicoOrg)}
             </option>
           );
           return opcoes;
@@ -662,7 +664,7 @@ export function KanbanBoard({
     async function perguntarMotivoRepescagem(): Promise<string | undefined> {
       if (ordem !== ORDEM_OPORTUNIDADE_FUTURA) return undefined;
       const motivo = await perguntarTexto(
-        "Por que esse lead está indo pra Repescagem futura de ICP?",
+        `Por que esse lead está indo pra ${RepescagemFutura(publicoOrg)}?`,
         "Ex.: fechou o orçamento do mês, só decide em janeiro...",
         "Confirmar"
       );
@@ -1048,6 +1050,7 @@ export function KanbanBoard({
                               todosNiveis={todosNiveis ?? niveis}
                               numerosVisiveis={numerosVisiveis}
                               moverPara={moverPara}
+                              publicoOrg={publicoOrg}
                             />
                           </div>
                         )}

@@ -67,3 +67,9 @@ export function Faturamento(publicoOrg: string) {
 export function faturamento(publicoOrg: string) {
   return ehImobiliario(publicoOrg) ? "VGV" : "faturamento";
 }
+
+// "Repescagem futura de ICP" é jargão de vendas que corretor não usa —
+// pediu pra ficar "Oportunidades futuras", mais simples de entender.
+export function RepescagemFutura(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "Oportunidades futuras" : "Repescagem futura de ICP";
+}

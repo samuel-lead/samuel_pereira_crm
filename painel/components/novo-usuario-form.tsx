@@ -55,21 +55,29 @@ export function NovoUsuarioForm({ publicoOrg = "mentoria" }: { publicoOrg?: stri
         </p>
       </div>
 
-      <div className="space-y-1">
-        <label className={labelClasse} htmlFor="funcao">
-          Função
-        </label>
-        <MenuSelect
-          id="funcao"
-          name="funcao"
-          defaultValue=""
-          options={[
-            { value: "", label: "— Não definida —" },
-            { value: "sdr", label: Sdr(publicoOrg) },
-            ...(ehImobiliario(publicoOrg) ? [] : [{ value: "closer", label: "Closer" }]),
-          ]}
-        />
-      </div>
+      {ehImobiliario(publicoOrg) ? (
+        // Imobiliário não separa "função comercial" de "tipo de acesso" —
+        // é tudo a mesma escolha (Corretor/Gerente, mais embaixo). Só
+        // grava funcao="sdr" por baixo dos panos, pra continuar podendo
+        // escolher a pessoa como "quem vai fazer a visita".
+        <input type="hidden" name="funcao" value="sdr" />
+      ) : (
+        <div className="space-y-1">
+          <label className={labelClasse} htmlFor="funcao">
+            Função
+          </label>
+          <MenuSelect
+            id="funcao"
+            name="funcao"
+            defaultValue=""
+            options={[
+              { value: "", label: "— Não definida —" },
+              { value: "sdr", label: Sdr(publicoOrg) },
+              { value: "closer", label: "Closer" },
+            ]}
+          />
+        </div>
+      )}
 
       <div className="space-y-1">
         <label className={labelClasse} htmlFor="senha">
@@ -102,7 +110,9 @@ export function NovoUsuarioForm({ publicoOrg = "mentoria" }: { publicoOrg?: stri
             checked={papel === "admin"}
             onChange={() => setPapel("admin")}
           />
-          Administrador — acessa tudo, inclusive Usuários e Configurações
+          {ehImobiliario(publicoOrg)
+            ? "Gerente — acessa tudo, inclusive Usuários e Configurações"
+            : "Administrador — acessa tudo, inclusive Usuários e Configurações"}
         </label>
         <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input
@@ -112,7 +122,9 @@ export function NovoUsuarioForm({ publicoOrg = "mentoria" }: { publicoOrg?: stri
             checked={papel === "membro"}
             onChange={() => setPapel("membro")}
           />
-          Membro — só acessa as páginas escolhidas abaixo
+          {ehImobiliario(publicoOrg)
+            ? "Corretor — só acessa as páginas escolhidas abaixo"
+            : "Membro — só acessa as páginas escolhidas abaixo"}
         </label>
       </fieldset>
 

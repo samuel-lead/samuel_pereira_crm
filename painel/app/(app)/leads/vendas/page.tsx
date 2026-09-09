@@ -8,7 +8,7 @@ import { IconeMoeda } from "@/components/icons";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
-import { Sdr, Faturamento } from "@/lib/terminologia";
+import { Sdr, Faturamento, ehImobiliario } from "@/lib/terminologia";
 
 type LeadVendido = {
   id: string;
@@ -189,14 +189,16 @@ export default async function VendasPage({
                 <th className="px-4 py-3 font-medium">Valor da venda</th>
                 <th className="px-4 py-3 font-medium">Receita</th>
                 <th className="px-4 py-3 font-medium">{Sdr(publicoOrg)}</th>
-                <th className="px-4 py-3 font-medium">Closer</th>
+                {!ehImobiliario(publicoOrg) && (
+                  <th className="px-4 py-3 font-medium">Closer</th>
+                )}
                 <th className="px-4 py-3 font-medium">Vendido em</th>
               </tr>
             </thead>
             <tbody>
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-sm text-neutral-400">
+                  <td colSpan={ehImobiliario(publicoOrg) ? 8 : 9} className="px-4 py-10 text-center text-sm text-neutral-400">
                     Nenhum cliente encontrado
                   </td>
                 </tr>
@@ -235,9 +237,11 @@ export default async function VendasPage({
                     <td className="px-4 py-3 text-neutral-600">
                       {sdrPorLead.has(lead.id) ? nomePorUsuario.get(sdrPorLead.get(lead.id)!) ?? "—" : "—"}
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">
-                      {lead.responsavel_id ? nomePorUsuario.get(lead.responsavel_id) ?? "—" : "—"}
-                    </td>
+                    {!ehImobiliario(publicoOrg) && (
+                      <td className="px-4 py-3 text-neutral-600">
+                        {lead.responsavel_id ? nomePorUsuario.get(lead.responsavel_id) ?? "—" : "—"}
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-neutral-600">{formatarData(lead.vendido_em)}</td>
                   </tr>
                 ))

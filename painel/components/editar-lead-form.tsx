@@ -13,7 +13,7 @@ import {
   nivelDeveApareceNoMenu,
   type NivelResumo,
 } from "@/lib/niveis";
-import { reuniao, Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
+import { reuniao, Reuniao, Sdr, ehImobiliario, RepescagemFutura } from "@/lib/terminologia";
 import { IconeCalendario, IconeReativar } from "@/components/icons";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
@@ -672,7 +672,7 @@ export function EditarLeadForm({
                     if (String(nivel.ordem) !== NIVEL_OPORTUNIDADES) return [opcao];
                     const futura = {
                       value: OPCAO_OPORTUNIDADE_FUTURA,
-                      label: "Repescagem futura de ICP",
+                      label: RepescagemFutura(publicoOrg),
                       disabled: !nivelPermitido(NIVEL_OPORTUNIDADES, true),
                       indentado: true,
                     };
@@ -935,8 +935,17 @@ export function EditarLeadForm({
                   className="mt-0.5"
                 />
                 <span>
-                  Repescagem futura de ICP — fez a {reuniao(publicoOrg)}, é ICP qualificado
-                  (perfil de cliente ideal), mas não está podendo investir nesse mês.
+                  {ehImobiliario(publicoOrg) ? (
+                    <>
+                      {RepescagemFutura(publicoOrg)} — fez a {reuniao(publicoOrg)}, é um bom
+                      perfil de comprador, mas não está podendo investir nesse mês.
+                    </>
+                  ) : (
+                    <>
+                      {RepescagemFutura(publicoOrg)} — fez a {reuniao(publicoOrg)}, é ICP qualificado
+                      (perfil de cliente ideal), mas não está podendo investir nesse mês.
+                    </>
+                  )}
                 </span>
               </label>
               {oportunidadeFutura && (
@@ -945,7 +954,7 @@ export function EditarLeadForm({
                     className="text-xs font-medium text-green-800"
                     htmlFor="motivo_repescagem_futura"
                   >
-                    Por que ele está indo pra Repescagem futura?
+                    Por que ele está indo pra {RepescagemFutura(publicoOrg)}?
                   </label>
                   <textarea
                     id="motivo_repescagem_futura"

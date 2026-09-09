@@ -6,7 +6,7 @@ import { AvatarUsuario } from "@/components/avatar-usuario";
 import { MinhaFuncaoSelect } from "@/components/minha-funcao-select";
 import { FuncaoUsuarioSelect } from "@/components/funcao-usuario-select";
 import { TornarAdminButton } from "@/components/tornar-admin-button";
-import { Sdr } from "@/lib/terminologia";
+import { Sdr, ehImobiliario } from "@/lib/terminologia";
 
 type UsuarioLinha = {
   id: string;
@@ -91,9 +91,16 @@ export default async function UsuariosPage() {
                           : "bg-sky-100 text-sky-700"
                       }`}
                     >
-                      {usuario.papel === "admin" ? "Administrador" : "Membro"}
+                      {usuario.papel === "admin"
+                        ? ehImobiliario(publicoOrg)
+                          ? "Gerente"
+                          : "Administrador"
+                        : ehImobiliario(publicoOrg)
+                          ? "Corretor"
+                          : "Membro"}
                     </span>
-                    {usuario.id === user?.id && usuario.papel === "admin" ? (
+                    {ehImobiliario(publicoOrg) ? null : usuario.id === user?.id &&
+                      usuario.papel === "admin" ? (
                       <MinhaFuncaoSelect funcaoAtual={usuario.funcao} publicoOrg={publicoOrg} />
                     ) : usuario.papel === "membro" ? (
                       <FuncaoUsuarioSelect
