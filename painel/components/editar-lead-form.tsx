@@ -13,7 +13,7 @@ import {
   nivelDeveApareceNoMenu,
   type NivelResumo,
 } from "@/lib/niveis";
-import { reuniao, Reuniao } from "@/lib/terminologia";
+import { reuniao, Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
 import { IconeCalendario, IconeReativar } from "@/components/icons";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
@@ -24,6 +24,19 @@ const NIVEL_FOLLOW_POS_REUNIAO = "7";
 const NIVEL_OPORTUNIDADES = "8";
 const NIVEL_BASE = "9";
 const OPCAO_OPORTUNIDADE_FUTURA = "oportunidade_futura";
+
+// Imobiliário não separa SDR de Closer — o mesmo Corretor qualifica e faz
+// a visita, não existe "passar o bastão" pra outra pessoa fechar. Por isso
+// quem pode ser escolhido pra "fazer a reunião/visita" muda: mentoria
+// escolhe entre quem é Closer, imobiliário escolhe entre quem é Corretor
+// (mesmo valor de banco "sdr", só o rótulo troca).
+function funcaoDeQuemFaz(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "sdr" : "closer";
+}
+
+function rotuloDeQuemFaz(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? Sdr(publicoOrg) : "Closer";
+}
 
 function agoraParaInputLocal() {
   const agora = new Date();
@@ -197,13 +210,13 @@ function BlocoReativarLead({
             />
           </div>
           <MenuSelect
-            titulo={`Closer (quem vai fazer a ${reuniao(publicoOrg)})`}
-            placeholder="Selecionar Closer"
+            titulo={`${rotuloDeQuemFaz(publicoOrg)} (quem vai fazer a ${reuniao(publicoOrg)})`}
+            placeholder={`Selecionar ${rotuloDeQuemFaz(publicoOrg)}`}
             disabled={pendente}
             value={closerId}
             onChange={setCloserId}
             options={usuarios
-              .filter((u) => u.funcao === "closer")
+              .filter((u) => u.funcao === funcaoDeQuemFaz(publicoOrg))
               .map((u) => ({ value: u.id, label: u.nome }))}
           />
         </>
@@ -732,13 +745,13 @@ export function EditarLeadForm({
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="closer_id">
-                  Closer (quem vai fazer a {reuniao(publicoOrg)})
+                  {rotuloDeQuemFaz(publicoOrg)} (quem vai fazer a {reuniao(publicoOrg)})
                 </label>
                 <ResponsavelSelect
                   usuarios={usuarios}
                   name="closer_id"
                   placeholder="Ainda não definido"
-                  funcaoFiltro="closer"
+                  funcaoFiltro={funcaoDeQuemFaz(publicoOrg)}
                 />
               </div>
 
@@ -800,14 +813,14 @@ export function EditarLeadForm({
             String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA && (
               <div className="mt-2 space-y-1 rounded-md border border-green-200 bg-green-50 p-3">
                 <label className="text-sm font-medium text-green-800" htmlFor="closer_id">
-                  Closer (quem vai fazer a {reuniao(publicoOrg)})
+                  {rotuloDeQuemFaz(publicoOrg)} (quem vai fazer a {reuniao(publicoOrg)})
                 </label>
                 <ResponsavelSelect
                   usuarios={usuarios}
                   valorInicial={reuniaoAtivaCloserId}
                   name="closer_id"
                   placeholder="Ainda não definido"
-                  funcaoFiltro="closer"
+                  funcaoFiltro={funcaoDeQuemFaz(publicoOrg)}
                 />
               </div>
             )}
@@ -977,7 +990,11 @@ export function EditarLeadForm({
                     required
                     rows={3}
                     defaultValue={lead.motivo_base_detalhe ?? ""}
-                    placeholder="Ex.: não tem equipe de vendas hoje, só corretor autônomo — não é o perfil da mentoria agora."
+                    placeholder={
+                      ehImobiliario(publicoOrg)
+                        ? "Ex.: só queria saber o preço por curiosidade, sem orçamento pra comprar agora — não é o perfil do imóvel."
+                        : "Ex.: não tem equipe de vendas hoje, só corretor autônomo — não é o perfil da mentoria agora."
+                    }
                     className={campoClasse}
                   />
                 </div>

@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { atualizarPermissoes, type EstadoFormulario } from "@/lib/usuarios/actions";
 import { paginasParaPublico } from "@/lib/paginas-permitidas";
 import { MenuSelect } from "@/components/menu-select";
-import { Sdr } from "@/lib/terminologia";
+import { Sdr, ehImobiliario } from "@/lib/terminologia";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -41,7 +41,7 @@ export function EditarPermissoesForm({
           options={[
             { value: "", label: "— Não definida —" },
             { value: "sdr", label: Sdr(publicoOrg) },
-            { value: "closer", label: "Closer" },
+            ...(ehImobiliario(publicoOrg) ? [] : [{ value: "closer", label: "Closer" }]),
           ]}
         />
       </div>

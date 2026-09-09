@@ -1,6 +1,6 @@
 import type { MetricasUsuario } from "@/lib/metricas";
 import { CopiarRelatorioButton } from "@/components/copiar-relatorio-button";
-import { Calls, Sdr } from "@/lib/terminologia";
+import { Calls, Sdr, Faturamento } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", {
@@ -44,7 +44,7 @@ export function PerformanceSdr({
               <th className="w-28 px-3 py-2 text-center font-medium">No-show</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Vendas</th>
               <th className="w-28 px-3 py-2 text-center font-medium">Taxa de venda</th>
-              <th className="w-28 px-3 py-2 text-center font-medium">Faturamento</th>
+              <th className="w-28 px-3 py-2 text-center font-medium">{Faturamento(publicoOrg)}</th>
               <th className="w-24 px-3 py-2 text-center font-medium">Relatório</th>
             </tr>
           </thead>

@@ -503,6 +503,7 @@ export default async function LeadsPage({
                   vendas={vendasHoje.vendas}
                   faturamento={vendasHoje.faturamento}
                   receita={vendasHoje.receita}
+                  publicoOrg={publicoOrg}
                 />
               )}
               {reagendamentosHoje !== null && reagendamentosHoje > 0 && (

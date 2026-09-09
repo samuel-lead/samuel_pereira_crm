@@ -1,3 +1,5 @@
+import { faturamento as rotuloFaturamento } from "@/lib/terminologia";
+
 // Sem centavos aqui — é um resumo rápido, não a tela de editar o valor da
 // venda. "R$ 27.000,03" só polui a leitura sem fazer diferença nenhuma.
 function formatarMoeda(valor: number) {
@@ -16,11 +18,13 @@ export function CartaoVendas({
   vendas,
   faturamento,
   receita,
+  publicoOrg = "mentoria",
 }: {
   label: string;
   vendas: number;
   faturamento: number;
   receita: number;
+  publicoOrg?: string;
 }) {
   const ticketMedio = vendas > 0 ? faturamento / vendas : 0;
 
@@ -31,7 +35,7 @@ export function CartaoVendas({
         <span className="text-base font-bold leading-tight text-neutral-900">{vendas}</span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[10px] leading-tight text-neutral-400">
-            {formatarMoeda(faturamento)} faturamento
+            {formatarMoeda(faturamento)} {rotuloFaturamento(publicoOrg)}
           </p>
           <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
             {formatarMoeda(receita)} receita

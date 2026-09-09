@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { atualizarPropriaFuncao } from "@/lib/usuarios/actions";
 import { MenuSelect } from "@/components/menu-select";
-import { Sdr } from "@/lib/terminologia";
+import { Sdr, ehImobiliario } from "@/lib/terminologia";
 
 export function MinhaFuncaoSelect({
   funcaoAtual,
@@ -34,7 +34,7 @@ export function MinhaFuncaoSelect({
       options={[
         { value: "", label: "Todas as funções" },
         { value: "sdr", label: Sdr(publicoOrg) },
-        { value: "closer", label: "Closer" },
+        ...(ehImobiliario(publicoOrg) ? [] : [{ value: "closer", label: "Closer" }]),
       ]}
     />
   );

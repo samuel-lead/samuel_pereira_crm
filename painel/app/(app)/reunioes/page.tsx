@@ -354,6 +354,7 @@ export default async function VendasPage({
                   vendas={vendasHoje.vendas}
                   faturamento={vendasHoje.faturamento}
                   receita={vendasHoje.receita}
+                  publicoOrg={publicoOrg}
                 />
               )}
               {vendasMes !== null && (
@@ -362,6 +363,7 @@ export default async function VendasPage({
                   vendas={vendasMes.vendas}
                   faturamento={vendasMes.faturamento}
                   receita={vendasMes.receita}
+                  publicoOrg={publicoOrg}
                 />
               )}
               <StatCell

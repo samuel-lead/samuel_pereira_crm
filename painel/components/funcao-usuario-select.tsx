@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { atualizarFuncaoDoUsuario } from "@/lib/usuarios/actions";
 import { MenuSelect } from "@/components/menu-select";
-import { Sdr } from "@/lib/terminologia";
+import { Sdr, ehImobiliario } from "@/lib/terminologia";
 
 export function FuncaoUsuarioSelect({
   usuarioId,
@@ -43,7 +43,7 @@ export function FuncaoUsuarioSelect({
       options={[
         { value: "", label: "— Sem função —" },
         { value: "sdr", label: Sdr(publicoOrg) },
-        { value: "closer", label: "Closer" },
+        ...(ehImobiliario(publicoOrg) ? [] : [{ value: "closer", label: "Closer" }]),
       ]}
     />
   );

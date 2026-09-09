@@ -164,7 +164,7 @@ export default async function ConfiguracoesPage() {
                 Lista que aparece ao marcar uma venda. Renomear um produto
                 atualiza todos os leads que já usam ele.
               </p>
-              <ProdutosConfig produtos={produtos} />
+              <ProdutosConfig produtos={produtos} publicoOrg={usuario!.publico_org} />
             </div>
           )}
         </div>

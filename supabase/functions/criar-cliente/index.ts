@@ -226,7 +226,9 @@ Deno.serve(async (req: Request) => {
     org_id: novaOrg.id,
     usuario_id: novoAuth.user.id,
     piso_leads_dia: 15,
-    piso_reunioes_dia: 3,
+    // Imobiliário não tem cadência diária de visita — o piso é um número
+    // fixo por semana (4), não por dia útil (Samuel definiu essa régua).
+    piso_reunioes_dia: publico === "imobiliario" ? 4 : 3,
     taxa_agendamento_min: 0.1,
     taxa_comparecimento_min: 0.8,
     taxa_venda_min: 0.4,

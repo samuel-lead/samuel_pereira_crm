@@ -56,3 +56,14 @@ export function Sdrs(publicoOrg: string) {
 export function sdrs(publicoOrg: string) {
   return ehImobiliario(publicoOrg) ? "corretores" : "SDRs";
 }
+
+// Imobiliário usa o termo do mercado, "VGV" (Valor Geral de Vendas), no
+// lugar de "Faturamento" — é sempre maiúsculo (sigla), tanto no meio quanto
+// no início de frase.
+export function Faturamento(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "VGV" : "Faturamento";
+}
+
+export function faturamento(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "VGV" : "faturamento";
+}

@@ -8,7 +8,7 @@ import { IconeMoeda } from "@/components/icons";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
-import { Sdr } from "@/lib/terminologia";
+import { Sdr, Faturamento } from "@/lib/terminologia";
 
 type LeadVendido = {
   id: string;
@@ -174,7 +174,7 @@ export default async function VendasPage({
             {leads.length > 0 && ` · ticket médio ${formatarMoeda(ticketMedio)}`}
           </p>
           <p className="relative mt-1 text-xs text-green-200/80">
-            Faturamento: {formatarMoeda(totalFaturamento)}
+            {Faturamento(publicoOrg)}: {formatarMoeda(totalFaturamento)}
           </p>
         </div>
 

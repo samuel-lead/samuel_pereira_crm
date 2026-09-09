@@ -8,7 +8,7 @@ import {
   IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Reunioes, Calls } from "@/lib/terminologia";
+import { Reunioes, Calls, Faturamento, ehImobiliario } from "@/lib/terminologia";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -216,7 +216,14 @@ export function SecaoPeriodo({
   leadsNovos?: number;
 }) {
   const pisoLeads = metas.piso_leads_dia * metricas.diasUteis;
-  const pisoReunioes = metas.piso_reunioes_dia * metricas.diasUteis;
+  // Imobiliário não tem cadência diária de visita — o piso é sempre por
+  // semana (fixo, ex.: 4), não por dia útil. Pra período menor que uma
+  // semana (ex.: "Hoje"), mostra o piso proporcional: divide pelos ~5 dias
+  // úteis de uma semana e multiplica pelos dias úteis já passados no
+  // período (Samuel pediu essa conta: "4 ÷ dias úteis da semana").
+  const pisoReunioes = ehImobiliario(publicoOrg)
+    ? Math.round(metas.piso_reunioes_dia * (metricas.diasUteis / 5) * 10) / 10
+    : metas.piso_reunioes_dia * metricas.diasUteis;
   const leadsNovosValor = leadsNovos ?? metricas.leadsTrabalhados;
   // Segunda leitura da mesma taxa, olhando só reunião de lead que TAMBÉM
   // entrou nesse período (não é toda reunião marcada — isso incluiria
@@ -257,7 +264,7 @@ export function SecaoPeriodo({
             ` · ticket médio ${formatarMoeda(metricas.ticketMedio)}`}
         </p>
         <p className="relative mt-1 text-xs text-green-200/80">
-          Faturamento: {formatarMoeda(metricas.faturamento)}
+          {Faturamento(publicoOrg)}: {formatarMoeda(metricas.faturamento)}
         </p>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Metricas, NegociacoesAbertas } from "@/lib/metricas";
-import { Reunioes } from "@/lib/terminologia";
+import { Reunioes, Faturamento } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", {
@@ -44,11 +44,11 @@ function montarRelatorio(
     `➡ Taxa de comparecimento: ${formatarPercentual(metricas.taxaComparecimento)}`,
     `➡ Taxa de no-show: ${formatarPercentual(taxaNoShow)}`,
     `➡ Taxa de conversão em vendas: ${formatarPercentual(metricas.taxaVenda)}`,
-    `➡ Faturamento que virou caixa: ${formatarPercentual(faturamentoVirouCaixa)}`,
+    `➡ ${Faturamento(publicoOrg)} que virou caixa: ${formatarPercentual(faturamentoVirouCaixa)}`,
     "",
     "💰 Fechamento",
     `➡ Receita: ${formatarMoeda(metricas.receita)}`,
-    `➡ Faturamento: ${formatarMoeda(metricas.faturamento)}`,
+    `➡ ${Faturamento(publicoOrg)}: ${formatarMoeda(metricas.faturamento)}`,
     `➡ Ticket médio: ${metricas.ticketMedio !== null ? formatarMoeda(metricas.ticketMedio) : "—"}`,
     `➡ Negociações em aberto: ${negociacoes.quantidade}`,
     `➡ Valor em negociação: ${formatarMoeda(negociacoes.valor)}`,

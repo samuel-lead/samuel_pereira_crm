@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeX } from "@/components/icons";
+import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeX } from "@/components/icons";
 
 type ItemMenu = {
   href: string;
@@ -24,8 +24,6 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/reunioes", label: "Vendas", Icone: IconeMoeda, pagina: "reunioes" },
       { href: "/leads/vendas", label: "Clientes", Icone: IconeClientePagante, pagina: "funil" },
       { href: "/leads/base", label: "Base de leads", Icone: IconeAlvo, pagina: "funil" },
-      { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
-      { href: "/cartas-contempladas", label: "Cartas contempladas", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
     ],
   },
   {
@@ -33,6 +31,8 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
     itens: [
       { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
       { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
+      { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
+      { href: "/cartas-contempladas", label: "Cartas contempladas", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
       { href: "/bonus-sdr", label: "Bônus SDR", Icone: IconeEstrela, pagina: "admin" },
     ],
   },
@@ -40,7 +40,6 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
     titulo: "Admin",
     itens: [
       { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios, pagina: "admin" },
-      { href: "/iscas", label: "Captura de leads", Icone: IconeIma, pagina: "admin" },
       { href: "/leads/excluidos", label: "Excluídos", Icone: IconeLixeira, pagina: "admin" },
       { href: "/configuracoes", label: "Configurações", Icone: IconeConfig, pagina: "admin" },
     ],

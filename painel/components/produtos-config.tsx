@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { criarProduto, renomearProduto, excluirProduto, type EstadoProduto } from "@/lib/configuracoes/actions";
+import { ehImobiliario } from "@/lib/terminologia";
 
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
@@ -122,7 +123,13 @@ function LinhaProduto({ produto }: { produto: { id: string; nome: string } }) {
   );
 }
 
-export function ProdutosConfig({ produtos }: { produtos: { id: string; nome: string }[] }) {
+export function ProdutosConfig({
+  produtos,
+  publicoOrg = "mentoria",
+}: {
+  produtos: { id: string; nome: string }[];
+  publicoOrg?: string;
+}) {
   const [estado, acaoFormulario, pendente] = useActionState(criarProduto, estadoInicial);
   const [adicionado, setAdicionado] = useState(false);
   const enviandoRef = useRef(false);
@@ -153,7 +160,7 @@ export function ProdutosConfig({ produtos }: { produtos: { id: string; nome: str
       <form action={acaoFormulario} className="flex items-center gap-2 border-t border-neutral-100 pt-3">
         <input
           name="nome"
-          placeholder="Novo produto (ex.: Mentoria VIP)"
+          placeholder={`Novo produto (ex.: ${ehImobiliario(publicoOrg) ? "Imóvel X" : "Mentoria VIP"})`}
           className={campoClasse}
         />
         <button
