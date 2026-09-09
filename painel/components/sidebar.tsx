@@ -18,6 +18,14 @@ type ItemMenu = {
 
 const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
   {
+    // Sem título — fica isolado, em destaque, antes do resto do menu
+    // (Samuel pediu pra virar a primeira coisa que a pessoa vê).
+    titulo: "",
+    itens: [
+      { href: "/dashboard", label: "Visão geral", Icone: IconeMetricas, pagina: "metricas" },
+    ],
+  },
+  {
     titulo: "Funil",
     itens: [
       { href: "/leads", label: "Pré-vendas", Icone: IconeFunil, pagina: "funil" },
@@ -29,7 +37,6 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
   {
     titulo: "Gestão",
     itens: [
-      { href: "/dashboard", label: "Métricas", Icone: IconeMetricas, pagina: "metricas" },
       { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
       { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
       { href: "/cartas-contempladas", label: "Cartas contempladas", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
@@ -136,9 +143,9 @@ export function Sidebar({
       )}
 
       <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3">
-        {gruposVisiveis.map((grupo) => (
-          <div key={grupo.titulo} className="space-y-1">
-            {!colapsado && (
+        {gruposVisiveis.map((grupo, indiceGrupo) => (
+          <div key={grupo.titulo || indiceGrupo} className="space-y-1">
+            {!colapsado && grupo.titulo && (
               <p className="px-3 text-xs font-bold uppercase tracking-wider text-slate-400">
                 {grupo.titulo}
               </p>
