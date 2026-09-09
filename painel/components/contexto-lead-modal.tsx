@@ -11,6 +11,12 @@ export type ParametrosAbrirLead = {
   // aconteceu E teve proposta, pra não deixar passar batido sem
   // registrar (ver moverPara em kanban-board.tsx).
   abrirProposta?: boolean;
+  // Nível que a pessoa JÁ tinha escolhido arrastando o card, mas o
+  // servidor recusou (ex.: disse que teve proposta, mas o valor ainda não
+  // estava registrado) — o card abre com esse nível já selecionado, pra
+  // "Salvar alterações" (depois de registrar a proposta) completar o
+  // movimento que ela já tinha pedido, sem precisar arrastar de novo.
+  nivelPretendido?: number;
 };
 
 // Função que qualquer tela (Kanban, Lista de leads, Atividades, Reuniões,

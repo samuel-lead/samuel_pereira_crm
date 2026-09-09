@@ -255,6 +255,7 @@ export function EditarLeadForm({
   souAdmin = true,
   podeEditar = true,
   preSelecionarReuniao = false,
+  nivelPretendido,
   reuniaoAnteriorPendente = false,
   reuniaoAnteriorSumiuPredefinido,
   publicoOrg = "mentoria",
@@ -273,6 +274,12 @@ export function EditarLeadForm({
   souAdmin?: boolean;
   podeEditar?: boolean;
   preSelecionarReuniao?: boolean;
+  // Card abriu sozinho porque o Kanban recusou o movimento (proposta não
+  // registrada) — o nível que a pessoa tinha pedido já vem selecionado
+  // aqui, pra "Salvar alterações" completar o movimento junto com a
+  // proposta, sem precisar arrastar de novo (Samuel pegou isso ao vivo:
+  // "preciso salvar duas vezes").
+  nivelPretendido?: number;
   publicoOrg?: string;
   // Existe uma reunião anterior ainda "marcada" com a data já passada —
   // precisa perguntar se a pessoa sumiu ou avisou antes de remarcar.
@@ -335,7 +342,11 @@ export function EditarLeadForm({
   }, [pendente, estado]);
 
   const [nivelSelecionado, setNivelSelecionado] = useState(
-    preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : String(lead.nivel_ordem)
+    preSelecionarReuniao
+      ? NIVEL_REUNIAO_MARCADA
+      : nivelPretendido !== undefined
+        ? String(nivelPretendido)
+        : String(lead.nivel_ordem)
   );
 
   // Rola até o campo de data sempre que a pessoa entra em "vai marcar

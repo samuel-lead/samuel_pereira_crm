@@ -706,7 +706,17 @@ export function KanbanBoard({
           // Abre com "sim" mesmo se o servidor recusou o movimento por
           // falta de proposta registrada — é exatamente onde a pessoa
           // precisa ir preencher pra poder tentar mover de novo depois.
-          if (tevepProposta) abrirLead({ leadId, abrirProposta: true });
+          // Manda junto o nível que ela já tinha escolhido, pra abrir com
+          // ele pré-selecionado — sem isso "Salvar alterações" reenviava
+          // "Reunião marcada" de novo, dando a impressão de precisar
+          // salvar duas vezes (Samuel pegou isso ao vivo).
+          if (tevepProposta) {
+            abrirLead({
+              leadId,
+              abrirProposta: true,
+              nivelPretendido: ordem === ORDEM_OPORTUNIDADE_FUTURA ? NIVEL_REUNIAO_FEITA : ordem,
+            });
+          }
         });
       });
       return;

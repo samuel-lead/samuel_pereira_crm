@@ -53,6 +53,7 @@ export function LeadModalConteudo({
   marcarReuniao,
   reuniaoAnteriorSumiu,
   abrirProposta,
+  nivelPretendido,
   travaSalvarPorCache,
 }: {
   dados: DetalhesLead;
@@ -63,6 +64,10 @@ export function LeadModalConteudo({
   // — nos dois casos, rola até o card de Proposta e destaca, pra ninguém
   // esquecer de preencher (Samuel pediu essa trava).
   abrirProposta?: boolean;
+  // Nível que a pessoa já tinha escolhido no Kanban, mas o movimento foi
+  // recusado por falta de proposta registrada — abre o formulário já com
+  // esse nível selecionado (ver contexto-lead-modal.tsx).
+  nivelPretendido?: number;
   // Pop-up abriu com dado de cache (hover antes de clicar) e a busca
   // fresca por baixo dos panos ainda não confirmou — trava "Salvar
   // alterações" até confirmar, senão dava pra reenviar um nível/estado
@@ -203,6 +208,7 @@ export function LeadModalConteudo({
           souAdmin={souAdmin}
           podeEditar={podeEditar}
           preSelecionarReuniao={!!marcarReuniao}
+          nivelPretendido={nivelPretendido}
           reuniaoAnteriorPendente={reuniaoAnteriorPendente}
           reuniaoAnteriorSumiuPredefinido={reuniaoAnteriorSumiu}
           publicoOrg={publicoOrg}

@@ -17,12 +17,14 @@ export function ModalLead({
   marcarReuniao,
   reuniaoAnteriorSumiu,
   abrirProposta,
+  nivelPretendido,
   aoFechar,
 }: {
   leadId: string;
   marcarReuniao?: boolean;
   reuniaoAnteriorSumiu?: "sim" | "nao";
   abrirProposta?: boolean;
+  nivelPretendido?: number;
   aoFechar: () => void;
 }) {
   // Se a pessoa passou o mouse no card antes de clicar, os dados já
@@ -131,6 +133,7 @@ export function ModalLead({
                   marcarReuniao={marcarReuniao}
                   reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
                   abrirProposta={abrirProposta}
+                  nivelPretendido={nivelPretendido}
                   travaSalvarPorCache={confirmandoCache}
                 />
               </ContextoLeadModalAtivo.Provider>
