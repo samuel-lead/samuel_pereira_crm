@@ -939,10 +939,14 @@ export async function moverLeadNivel(
   // No Show e Reagendamento só existem se teve reunião marcada antes —
   // mesma trava de atualizarLead, pra não deixar arrastar o card direto de
   // qualquer coluna e ficar sem reunião pra sincronizar (Samuel pediu essa
-  // regra pro No Show, e ela vale igualzinho pro Reagendamento).
+  // regra pro No Show, e ela vale igualzinho pro Reagendamento). Ir de um
+  // pro outro diretamente (No Show ⇄ Reagendamento) é permitido — o lead
+  // já veio de "Reunião marcada" antes, só corrigindo qual dos dois é.
   if (
     (nivelReal === NIVEL_NO_SHOW || nivelReal === NIVEL_REAGENDAMENTO) &&
-    leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA
+    leadAtual.nivel_ordem !== NIVEL_REUNIAO_MARCADA &&
+    leadAtual.nivel_ordem !== NIVEL_NO_SHOW &&
+    leadAtual.nivel_ordem !== NIVEL_REAGENDAMENTO
   ) {
     const nomeNivel = nivelReal === NIVEL_NO_SHOW ? "No-show" : "Precisa reagendar";
     return `Só dá pra marcar "${nomeNivel}" a partir de "${Reuniao(usuario.publico_org)} marcada" — esse lead nunca teve uma marcada.`;

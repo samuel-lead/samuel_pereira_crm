@@ -221,8 +221,16 @@ export function nivelDeveApareceNoMenu(
   // não só depois da reunião.
   if (ordemDestino <= 3 && ordemDestino < nivelAtual) return false;
 
-  // No-show/Reagendamento só fazem sentido saindo de "Reunião marcada".
-  if ((ordemDestino === 5 || ordemDestino === 6) && nivelAtual !== 4) {
+  // No-show/Reagendamento só fazem sentido saindo de "Reunião marcada" —
+  // ou de um pro outro diretamente (Samuel pediu essa transição livre:
+  // marcou como No-show por engano, quer virar Precisa reagendar sem ter
+  // que voltar pra Reunião marcada no meio do caminho).
+  if (
+    (ordemDestino === 5 || ordemDestino === 6) &&
+    nivelAtual !== 4 &&
+    nivelAtual !== 5 &&
+    nivelAtual !== 6
+  ) {
     return false;
   }
 
