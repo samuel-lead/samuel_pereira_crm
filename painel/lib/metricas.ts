@@ -196,13 +196,17 @@ export async function calcularMetricas(
       .or("proposta_valor.not.is.null,status.eq.vendido", { foreignTable: "leads" })
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
-    // Propostas de verdade enviadas no período (independe de reunião ou
-    // nível — o lead pode até já ter ido pra Base ou Oportunidade futura).
+    // Propostas de verdade enviadas no período — só conta quem está AGORA
+    // em Follow após reunião (7) ou Oportunidades pro fim do mês (8, sem
+    // ser a Repescagem futura de ICP). Lead que foi pra Repescagem futura
+    // não entra nessa conta (Samuel pediu essa exceção explicitamente).
     supabase
       .from("leads")
       .select("id", { count: "exact", head: true })
       .eq("responsavel_id", usuarioId)
       .is("arquivado_em", null)
+      .in("nivel_ordem", [7, 8])
+      .eq("oportunidade_futura", false)
       .not("proposta_enviada_em", "is", null)
       .gte("proposta_enviada_em", inicioISO)
       .lt("proposta_enviada_em", fimISO),
@@ -397,13 +401,17 @@ export async function calcularMetricasOrg(
       .or("proposta_valor.not.is.null,status.eq.vendido", { foreignTable: "leads" })
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
-    // Propostas de verdade enviadas no período (independe de reunião ou
-    // nível — o lead pode até já ter ido pra Base ou Oportunidade futura).
+    // Propostas de verdade enviadas no período — só conta quem está AGORA
+    // em Follow após reunião (7) ou Oportunidades pro fim do mês (8, sem
+    // ser a Repescagem futura de ICP). Lead que foi pra Repescagem futura
+    // não entra nessa conta (Samuel pediu essa exceção explicitamente).
     supabase
       .from("leads")
       .select("id", { count: "exact", head: true })
       .eq("org_id", orgId)
       .is("arquivado_em", null)
+      .in("nivel_ordem", [7, 8])
+      .eq("oportunidade_futura", false)
       .not("proposta_enviada_em", "is", null)
       .gte("proposta_enviada_em", inicioISO)
       .lt("proposta_enviada_em", fimISO),
