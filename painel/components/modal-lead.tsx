@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { buscarDetalhesDoLead, type DetalhesLead } from "@/lib/leads/actions";
 import { ContextoLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { LeadModalConteudo } from "@/components/lead-modal-conteudo";
+import { LeadPainelImobiliario } from "@/components/lead-painel-imobiliario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { lerLeadDoCache, salvarLeadNoCache } from "@/lib/leads/cache-lead";
+import { ehImobiliario } from "@/lib/terminologia";
 
 // Pop-up que abre por cima da tela atual ao clicar num lead, sem trocar
 // de rota — não usa nenhuma técnica de rota do Next.js (foi exatamente
@@ -83,13 +85,28 @@ export function ModalLead({
     return () => document.removeEventListener("keydown", aoTeclar);
   }, [aoFechar]);
 
+  // Imobiliário pediu um painel lateral (cópia do CRM 100Bug), deslizando
+  // da direita, em vez do pop-up centralizado — mentoria continua com o
+  // pop-up de sempre, sem nenhuma mudança. Só decide depois que "dados"
+  // chega (ou já veio do cache) — enquanto carrega do zero, cai no
+  // centralizado por padrão.
+  const painelLateral = dados ? ehImobiliario(dados.publicoOrg) : false;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10 sm:pt-16"
+      className={
+        painelLateral
+          ? "fixed inset-0 z-50 flex justify-end bg-black/50"
+          : "fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10 sm:pt-16"
+      }
       onClick={aoFechar}
     >
       <div
-        className="relative w-full max-w-5xl rounded-xl bg-[#f4f5f7] shadow-2xl"
+        className={
+          painelLateral
+            ? "relative flex h-full w-full max-w-xl flex-col bg-[#f4f5f7] shadow-2xl"
+            : "relative w-full max-w-5xl rounded-xl bg-[#f4f5f7] shadow-2xl"
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -101,7 +118,13 @@ export function ModalLead({
           ✕
         </button>
 
-        <div className="max-h-[85vh] overflow-y-auto rounded-xl">
+        <div
+          className={
+            painelLateral
+              ? "flex h-full min-h-0 flex-col"
+              : "max-h-[85vh] overflow-y-auto rounded-xl"
+          }
+        >
           {carregando ? (
             <div className="flex h-64 items-center justify-center text-sm text-neutral-400">
               Carregando...
@@ -112,7 +135,11 @@ export function ModalLead({
             </div>
           ) : (
             <>
-              <div className="sticky top-0 z-10 flex items-center gap-3 justify-between rounded-t-xl border-b border-neutral-200 bg-white px-5 py-4 pr-14">
+              <div
+                className={`flex shrink-0 items-center gap-3 justify-between border-b border-neutral-200 bg-white px-5 py-4 pr-14 ${
+                  painelLateral ? "" : "sticky top-0 z-10 rounded-t-xl"
+                }`}
+              >
                 <div className="flex min-w-0 items-center gap-3">
                   <AvatarLead
                     nome={dados.lead.nome}
@@ -127,15 +154,27 @@ export function ModalLead({
               <ContextoLeadModalAtivo.Provider
                 value={{ recarregar: carregar, fechar: aoFechar }}
               >
-                <LeadModalConteudo
-                  key={revisao}
-                  dados={dados}
-                  marcarReuniao={marcarReuniao}
-                  reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
-                  abrirProposta={abrirProposta}
-                  nivelPretendido={nivelPretendido}
-                  travaSalvarPorCache={confirmandoCache}
-                />
+                {painelLateral ? (
+                  <LeadPainelImobiliario
+                    key={revisao}
+                    dados={dados}
+                    marcarReuniao={marcarReuniao}
+                    reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
+                    abrirProposta={abrirProposta}
+                    nivelPretendido={nivelPretendido}
+                    travaSalvarPorCache={confirmandoCache}
+                  />
+                ) : (
+                  <LeadModalConteudo
+                    key={revisao}
+                    dados={dados}
+                    marcarReuniao={marcarReuniao}
+                    reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
+                    abrirProposta={abrirProposta}
+                    nivelPretendido={nivelPretendido}
+                    travaSalvarPorCache={confirmandoCache}
+                  />
+                )}
               </ContextoLeadModalAtivo.Provider>
             </>
           )}
