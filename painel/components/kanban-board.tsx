@@ -527,6 +527,7 @@ export function KanbanBoard({
   niveisReativacao = [],
   permitirProximoContatoRapido = false,
   todosNiveis,
+  mostrarDiasNaFase = false,
 }: {
   niveis: NivelResumo[];
   leadsPorNivel: Record<number, LeadResumo[]>;
@@ -565,6 +566,11 @@ export function KanbanBoard({
   // continuação do Pré-vendas), a numeração "Nível X" precisa vir calculada
   // com base em TODOS os níveis, senão recomeça do 1 dentro do recorte.
   numerosVisiveis?: Map<number, number>;
+  // "Xd nesta fase" no card — Samuel pediu isso pro Pré-vendas de TODOS os
+  // públicos (não só imobiliário, onde nasceu copiando o card do 100Bug).
+  // Cada quadro decide se mostra (ver app/(app)/leads/page.tsx e
+  // app/(app)/reunioes/page.tsx).
+  mostrarDiasNaFase?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const abrirLead = useAbrirLeadModal();
@@ -985,7 +991,7 @@ export function KanbanBoard({
                               {lead.imovel.titulo}
                             </p>
                           )}
-                          {ehImobiliario(publicoOrg) && (
+                          {mostrarDiasNaFase && (
                             <p className="flex items-center gap-1.5 text-[13px] text-neutral-500">
                               <IconeAtividade className="h-3 w-3 shrink-0" />
                               {diasNaFase(lead.entrou_nivel_em)}d nesta fase

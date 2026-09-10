@@ -435,6 +435,7 @@ export default async function VendasPage({
             mostrarValor
             numerosVisiveis={numerosVisiveis}
             publicoOrg={publicoOrg}
+            mostrarDiasNaFase={ehImobiliario(publicoOrg)}
           />
         )}
       </main>

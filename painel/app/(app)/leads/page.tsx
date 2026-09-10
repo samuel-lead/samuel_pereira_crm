@@ -569,6 +569,7 @@ export default async function LeadsPage({
             publicoOrg={publicoOrg}
             permitirMarcarReuniaoRapido
             permitirProximoContatoRapido
+            mostrarDiasNaFase
           />
         )}
       </main>
