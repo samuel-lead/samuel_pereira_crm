@@ -99,6 +99,7 @@ export function LeadModalConteudo({
     usuarios,
     origens,
     produtos,
+    imoveis,
     souAdmin,
     publicoOrg,
     podeEditar,
@@ -205,6 +206,7 @@ export function LeadModalConteudo({
           numerosVisiveis={numerosVisiveis}
           usuarios={usuarios}
           origens={origens}
+          imoveis={imoveis}
           souAdmin={souAdmin}
           podeEditar={podeEditar}
           preSelecionarReuniao={!!marcarReuniao}

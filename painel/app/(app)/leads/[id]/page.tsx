@@ -52,6 +52,7 @@ type Lead = {
   proximo_follow_em: string | null;
   dia_follow: number | null;
   arquivado_em: string | null;
+  imovel_id: string | null;
 };
 
 type Interacao = {
@@ -139,13 +140,14 @@ export default async function EditarLeadPage({
     { data: usuariosData },
     { data: origensData },
     { data: produtosData },
+    { data: imoveisData },
     { data: iscaRespostaData },
     { data: googleCalendarConectadoData },
   ] = await Promise.all([
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id"
       )
       .eq("id", id)
       .single(),
@@ -170,6 +172,11 @@ export default async function EditarLeadPage({
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
     supabase
+      .from("imoveis")
+      .select("id, titulo, bairro, cidade")
+      .is("arquivado_em", null)
+      .order("titulo"),
+    supabase
       .from("isca_respostas")
       .select("tempo_mercado, maior_desafio, prioridade, atuacao")
       .eq("lead_id", id)
@@ -192,6 +199,7 @@ export default async function EditarLeadPage({
   const usuarios = usuariosData ?? [];
   const origens = origensData ?? [];
   const produtos = (produtosData ?? []).map((p) => p.nome);
+  const imoveis = imoveisData ?? [];
   const souAdmin = usuarioAtual?.papel === "admin";
   const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
   const souCloserAtivo = reunioes.some(
@@ -330,6 +338,7 @@ export default async function EditarLeadPage({
             numerosVisiveis={numerosVisiveis}
             usuarios={usuarios}
             origens={origens}
+            imoveis={imoveis}
             souAdmin={souAdmin}
             podeEditar={podeEditar}
             preSelecionarReuniao={marcarReuniao === "1"}

@@ -504,6 +504,7 @@ export async function atualizarLead(
   const email = String(formData.get("email") ?? "").trim() || null;
   const instagram = String(formData.get("instagram") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
+  const imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
   const quemIndicou = String(formData.get("quem_indicou") ?? "").trim();
   const criterioProblema =
     String(formData.get("criterio_problema") ?? "").trim() || null;
@@ -773,6 +774,7 @@ export async function atualizarLead(
       email,
       instagram,
       origem,
+      imovel_id: imovelId,
       criterio_problema: criterioProblema,
       criterio_urgencia: criterioUrgencia,
       criterio_capacidade: criterioCapacidade,
@@ -1849,6 +1851,7 @@ export type DetalhesLead = {
     proximo_follow_em: string | null;
     dia_follow: number | null;
     arquivado_em: string | null;
+    imovel_id: string | null;
   };
   niveis: NivelResumo[];
   interacoes: {
@@ -1880,6 +1883,8 @@ export type DetalhesLead = {
   usuarios: { id: string; nome: string; funcao: string | null; foto_url: string | null }[];
   origens: { id: string; nome: string }[];
   produtos: string[];
+  // Só relevante no imobiliário — lista pro seletor "Imóvel de interesse".
+  imoveis: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
   souAdmin: boolean;
   publicoOrg: string;
   podeEditar: boolean;
@@ -1922,13 +1927,14 @@ export async function buscarDetalhesDoLead(
     { data: usuariosData },
     { data: origensData },
     { data: produtosData },
+    { data: imoveisData },
     { data: iscaRespostaData },
     { data: googleCalendarConectadoData },
   ] = await Promise.all([
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id"
       )
       .eq("id", leadId)
       .single(),
@@ -1952,6 +1958,11 @@ export async function buscarDetalhesDoLead(
     supabase.from("usuarios").select("id, nome, funcao, foto_url").order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
+    supabase
+      .from("imoveis")
+      .select("id, titulo, bairro, cidade")
+      .is("arquivado_em", null)
+      .order("titulo"),
     supabase
       .from("isca_respostas")
       .select("tempo_mercado, maior_desafio, prioridade, atuacao")
@@ -2002,6 +2013,7 @@ export async function buscarDetalhesDoLead(
       usuarios,
       origens,
       produtos,
+      imoveis: imoveisData ?? [],
       souAdmin,
       publicoOrg: usuario.publico_org,
       podeEditar,

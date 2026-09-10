@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { atualizarLead, reativarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
+import { ImovelSelect } from "@/components/imovel-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
@@ -61,6 +62,7 @@ type Lead = {
   motivo_base_detalhe: string | null;
   motivo_repescagem_futura: string | null;
   status: string;
+  imovel_id: string | null;
 };
 
 const campoClasse =
@@ -251,6 +253,7 @@ export function EditarLeadForm({
   niveis,
   numerosVisiveis,
   usuarios,
+  imoveis = [],
   origens,
   souAdmin = true,
   podeEditar = true,
@@ -271,6 +274,10 @@ export function EditarLeadForm({
   numerosVisiveis: Record<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null }[];
   origens: { id: string; nome: string }[];
+  // Só usado no público imobiliário — pra vincular "esse lead quer esse
+  // imóvel" (ver components/imovel-select.tsx). Mentoria nem chama com
+  // isso preenchido.
+  imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
   souAdmin?: boolean;
   podeEditar?: boolean;
   preSelecionarReuniao?: boolean;
@@ -589,6 +596,13 @@ export function EditarLeadForm({
             onChange={setOrigemAtual}
           />
         </div>
+
+        {ehImobiliario(publicoOrg) && (
+          <div className="space-y-1">
+            <label className={labelClasse}>Imóvel de interesse</label>
+            <ImovelSelect imoveis={imoveis} valorInicial={lead.imovel_id} />
+          </div>
+        )}
 
         {ehIndicacao && (
           <div className="space-y-1">
