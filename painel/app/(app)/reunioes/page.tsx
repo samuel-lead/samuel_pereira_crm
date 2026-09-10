@@ -72,6 +72,8 @@ type LeadResumo = {
   reuniao_agendada_para?: string | null;
   isca_respostas: { nivel_qualificacao: string | null }[] | null;
   jaTeveReuniao?: boolean;
+  // Só existe no público imobiliário — vem do leads.imovel_id.
+  imovel: { titulo: string; foto_url: string | null } | null;
 };
 
 export default async function VendasPage({
@@ -98,7 +100,7 @@ export default async function VendasPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, reativado_da_base_em, reativado_origem, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao)"
+      "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, reativado_da_base_em, reativado_origem, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
     )
     .is("arquivado_em", null)
     .neq("status", "vendido")
@@ -145,7 +147,7 @@ export default async function VendasPage({
     { ...NIVEL_OPORTUNIDADE_FUTURA, nome: RepescagemFutura(publicoOrg) },
   ];
   const niveisReativacao = todosNiveis.filter((nivel) => NIVEIS_REATIVACAO.includes(nivel.ordem));
-  const leads = (leadsData ?? []) as LeadResumo[];
+  const leads = (leadsData ?? []) as unknown as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
 

@@ -22,12 +22,13 @@ import {
   IconeTag,
   IconeCalendario,
   IconeReativar,
+  IconeCasa,
 } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
-import { Reuniao, reuniao, RepescagemFutura } from "@/lib/terminologia";
+import { Reuniao, reuniao, RepescagemFutura, ehImobiliario } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
@@ -49,6 +50,7 @@ type LeadResumo = {
   nivel_ordem: number;
   responsavel_id: string | null;
   declarado_em?: string;
+  entrou_nivel_em?: string;
   ultima_atividade_em?: string;
   valor_venda?: number | null;
   receita_venda?: number | null;
@@ -74,6 +76,10 @@ type LeadResumo = {
   // usado só pelo "Mover para..." do celular, pra aplicar exatamente a
   // mesma trava do menu Nível dentro do card (ver nivelDeveApareceNoMenu).
   jaTeveReuniao?: boolean;
+  // Só existe no público imobiliário — imóvel vinculado ao lead (ver
+  // components/imovel-select.tsx). Cópia do card do CRM 100Bug, pedido do
+  // Samuel: foto do imóvel no card do Kanban.
+  imovel?: { titulo: string; foto_url: string | null } | null;
 };
 
 const SELO_QUALIFICACAO: Record<string, { texto: string; classe: string }> = {
@@ -108,6 +114,14 @@ function formatarDataHora(iso: string) {
 function diasSemAtividade(ultimaAtividadeEm?: string) {
   if (!ultimaAtividadeEm) return 0;
   return diasUteisDesde(ultimaAtividadeEm);
+}
+
+// "Dias na fase" (cópia do card do CRM 100Bug) — diferente de "dias sem
+// atividade": conta desde que o lead ENTROU nessa coluna, mesmo que
+// alguém tenha mexido nele ontem. Só mostrado no imobiliário.
+function diasNaFase(entrouNivelEm?: string) {
+  if (!entrouNivelEm) return 0;
+  return diasUteisDesde(entrouNivelEm);
 }
 
 function formatarMoeda(valor: number) {
@@ -884,6 +898,16 @@ export function KanbanBoard({
                           arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"
                         }`}
                       >
+                        {ehImobiliario(publicoOrg) && lead.imovel?.foto_url && (
+                          <div className="-mx-3.5 -mt-3.5 mb-2.5 h-24 w-[calc(100%+1.75rem)] overflow-hidden rounded-t-xl bg-neutral-100">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={lead.imovel.foto_url}
+                              alt={lead.imovel.titulo}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        )}
                         <div className="mb-2 space-y-1.5">
                           <div className="flex items-center gap-2.5">
                             <AvatarLead
@@ -953,6 +977,18 @@ export function KanbanBoard({
                             <p className="flex items-start gap-1.5 text-[13px] text-neutral-500">
                               <IconeTag className="mt-0.5 h-3 w-3 shrink-0" />
                               Origem: {lead.origem}
+                            </p>
+                          )}
+                          {ehImobiliario(publicoOrg) && lead.imovel && (
+                            <p className="flex items-start gap-1.5 truncate text-[13px] text-neutral-500">
+                              <IconeCasa className="mt-0.5 h-3 w-3 shrink-0" />
+                              {lead.imovel.titulo}
+                            </p>
+                          )}
+                          {ehImobiliario(publicoOrg) && (
+                            <p className="flex items-center gap-1.5 text-[13px] text-neutral-500">
+                              <IconeAtividade className="h-3 w-3 shrink-0" />
+                              {diasNaFase(lead.entrou_nivel_em)}d nesta fase
                             </p>
                           )}
                           {lead.responsavel_id && nomePorUsuario.get(lead.responsavel_id) && (
