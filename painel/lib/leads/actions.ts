@@ -657,8 +657,17 @@ export async function atualizarLead(
   // reunião de verdade em algum momento — sem essa trava dava pra pular
   // direto de "Novos Leads" pra lá (Samuel pegou isso ao vivo, testando).
   // Mesma trava do menu (ver nivelDeveApareceNoMenu em lib/niveis.ts),
-  // agora no servidor pra não dar pra burlar.
-  if (nivelMudou && (novoNivel === NIVEL_FOLLOW_POS_REUNIAO || novoNivel === NIVEL_REUNIAO_FEITA)) {
+  // agora no servidor pra não dar pra burlar. EXCETO "Repescagem futura de
+  // ICP" (oportunidadeFutura) — essa sempre pode, de qualquer nível, sem
+  // reunião nenhuma (ver comentário em ORDEM_OPORTUNIDADE_FUTURA,
+  // lib/niveis.ts) — o servidor não tinha essa exceção (só o menu tinha),
+  // por isso travava mesmo o menu deixando escolher (Samuel pegou isso ao
+  // vivo com o lead "Norton").
+  if (
+    nivelMudou &&
+    (novoNivel === NIVEL_FOLLOW_POS_REUNIAO ||
+      (novoNivel === NIVEL_REUNIAO_FEITA && !oportunidadeFutura))
+  ) {
     const { count: totalReunioes } = await supabase
       .from("reunioes")
       .select("id", { count: "exact", head: true })
