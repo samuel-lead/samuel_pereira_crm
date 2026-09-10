@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeX } from "@/components/icons";
+import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeX } from "@/components/icons";
 
 type ItemMenu = {
   href: string;
@@ -14,6 +14,7 @@ type ItemMenu = {
   Icone: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
   pagina: string;
   somenteImobiliario?: boolean;
+  somenteMentoria?: boolean;
 };
 
 const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
@@ -47,6 +48,7 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
     titulo: "Admin",
     itens: [
       { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios, pagina: "admin" },
+      { href: "/iscas", label: "Captura de leads", Icone: IconeIma, pagina: "admin", somenteMentoria: true },
       { href: "/leads/excluidos", label: "Excluídos", Icone: IconeLixeira, pagina: "admin" },
       { href: "/configuracoes", label: "Configurações", Icone: IconeConfig, pagina: "admin" },
     ],
@@ -82,6 +84,7 @@ export function Sidebar({
       // Imóveis é exclusivo do público imobiliário — vale pra admin
       // também, diferente do resto (que admin sempre vê tudo).
       if (item.somenteImobiliario && publicoOrg !== "imobiliario") return false;
+      if (item.somenteMentoria && publicoOrg === "imobiliario") return false;
       // Bônus SDR não existe no imobiliário — vale pra admin também.
       if (item.href === "/bonus-sdr" && publicoOrg === "imobiliario") return false;
       if (isAdmin) return true;
