@@ -103,6 +103,55 @@ export async function atualizarImovel(
   return { erro: null };
 }
 
+export type EstadoFoto = { erro: string | null };
+
+const TAMANHO_MAXIMO_FOTO = 4 * 1024 * 1024;
+
+export async function atualizarFotoImovel(
+  imovelId: string,
+  _estadoAnterior: EstadoFoto,
+  formData: FormData
+): Promise<EstadoFoto> {
+  const { supabase } = await contextoUsuario();
+  const arquivo = formData.get("foto");
+
+  if (!(arquivo instanceof File) || arquivo.size === 0) {
+    return { erro: "Escolha uma imagem" };
+  }
+
+  if (!arquivo.type.startsWith("image/")) {
+    return { erro: "O arquivo precisa ser uma imagem" };
+  }
+
+  if (arquivo.size > TAMANHO_MAXIMO_FOTO) {
+    return { erro: "Imagem muito grande (máximo 4MB)" };
+  }
+
+  const { error: erroUpload } = await supabase.storage
+    .from("fotos-imoveis")
+    .upload(imovelId, arquivo, { upsert: true, contentType: arquivo.type });
+
+  if (erroUpload) {
+    return { erro: erroUpload.message };
+  }
+
+  const { data: urlData } = supabase.storage.from("fotos-imoveis").getPublicUrl(imovelId);
+  const fotoUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+
+  const { error: erroUpdate } = await supabase
+    .from("imoveis")
+    .update({ foto_url: fotoUrl })
+    .eq("id", imovelId);
+
+  if (erroUpdate) {
+    return { erro: erroUpdate.message };
+  }
+
+  revalidatePath("/imoveis");
+  revalidatePath(`/imoveis/${imovelId}`);
+  return { erro: null };
+}
+
 export async function arquivarImovel(
   imovelId: string,
   _estadoAnterior: EstadoFormulario,
