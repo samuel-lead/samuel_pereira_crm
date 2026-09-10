@@ -13,6 +13,13 @@ function json(status: number, body: unknown) {
   });
 }
 
+// Só a própria empresa do Samuel (não os clientes que usam o CRM) —
+// ele pediu pra entrar como convidado extra em toda reunião salva na
+// Google Agenda, pra acompanhar de longe. Fixo aqui de propósito: é uma
+// preferência pessoal dele, não algo configurável por cliente.
+const ORG_ID_SAMUEL = "a26cfaff-8e96-4300-87c2-8fc527ef755c";
+const EMAIL_SAMUEL = "samuuelpereiradasilva@gmail.com";
+
 const ROTULOS_URGENCIA: Record<string, string> = {
   desconhecida: "Ainda não sabe",
   alta: "Alta",
@@ -166,12 +173,17 @@ Deno.serve(async (req: Request) => {
 
   const jaTemEvento = !!reuniaoData.google_event_id;
 
+  const attendees = [{ email: leadData.email as string }];
+  if (reuniaoData.org_id === ORG_ID_SAMUEL) {
+    attendees.push({ email: EMAIL_SAMUEL });
+  }
+
   const evento: Record<string, unknown> = {
     summary: titulo,
     description: descricao,
     start: { dateTime: inicio.toISOString() },
     end: { dateTime: fim.toISOString() },
-    attendees: [{ email: leadData.email }],
+    attendees,
     colorId: "10", // Basil — verde, pedido explicitamente
     reminders: {
       useDefault: false,
