@@ -149,7 +149,12 @@ export default async function VendasPage({
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];
 
-  const leadsComProposta = leads.filter((lead) => lead.proposta_valor != null);
+  const leadsComProposta = leads.filter(
+    (lead) =>
+      lead.proposta_valor != null &&
+      (lead.nivel_ordem === 7 || lead.nivel_ordem === 8) &&
+      !lead.oportunidade_futura
+  );
   const totalPropostas = leadsComProposta.reduce(
     (soma, lead) => soma + Number(lead.proposta_valor),
     0
