@@ -17,7 +17,7 @@ import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
-import { Reuniao, Sdr, RepescagemFutura } from "@/lib/terminologia";
+import { Reuniao, Sdr } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
@@ -362,7 +362,7 @@ export default async function EditarLeadPage({
           {leadTipado.oportunidade_futura && leadTipado.motivo_repescagem_futura && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
               <h2 className="text-sm font-semibold text-green-800">
-                {RepescagemFutura(publicoOrg)}
+                Motivo de vim para repescagem
               </h2>
               <p className="mt-1 text-sm text-green-700">
                 {leadTipado.motivo_repescagem_futura}
