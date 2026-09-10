@@ -743,12 +743,18 @@ export async function calcularNegociacoesAbertas(
   supabase: SupabaseServerClient,
   orgId: string
 ): Promise<NegociacoesAbertas> {
+  // Mesma regra de "propostas" em calcularMetricas: só conta quem está
+  // em Follow após reunião (7) ou Oportunidades pro fim do mês (8, sem
+  // ser a Repescagem futura de ICP) — lead em Repescagem futura não
+  // entra (Samuel pediu essa mesma exceção aqui também).
   const { data } = await supabase
     .from("leads")
     .select("proposta_valor")
     .eq("org_id", orgId)
     .eq("status", "ativo")
     .is("arquivado_em", null)
+    .in("nivel_ordem", [7, 8])
+    .eq("oportunidade_futura", false)
     .not("proposta_valor", "is", null);
 
   const quantidade = data?.length ?? 0;
