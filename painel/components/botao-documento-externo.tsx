@@ -30,11 +30,18 @@ export function BotaoDocumentoExterno({
   // "botao" = botão de linha só, no mesmo estilo dos outros botões do
   // card do lead (Registrar ligação, etc.).
   variante = "botao",
+  // Quando passado, mostra esse conteúdo digitado direto (fonte e
+  // espaçamento sob controle) em vez do Google Doc embutido num iframe —
+  // o zoom via CSS do iframe nunca ficou legível o bastante (Samuel
+  // pediu pra trazer nativo). "url" continua servindo pro link "Abrir no
+  // Google Docs", pra quem quiser editar a fonte original.
+  conteudo,
 }: {
   url: string;
   label: string;
   Icone: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
   variante?: "cartao" | "botao";
+  conteudo?: React.ReactNode;
 }) {
   const [aberto, setAberto] = useState(false);
   const [largura, setLargura] = useState(LARGURA_PADRAO);
@@ -131,18 +138,21 @@ export function BotaoDocumentoExterno({
               </button>
             </div>
           </div>
-          {/* Dá pra dar zoom no conteúdo de um iframe de outro site (mesmo
-              sem acesso ao HTML de dentro): desenha ele menor (75% do
-              espaço) e depois estica com escala 1.33x — o texto sai bem
-              maior, mais fácil de ler numa ligação (Samuel pediu). */}
-          <div className="min-h-0 flex-1 overflow-hidden pl-2">
-            <iframe
-              src={urlPreviewGoogleDocs(url)}
-              title={label}
-              className="h-[75%] w-[75%] origin-top-left border-0"
-              style={{ transform: "scale(1.3333)" }}
-            />
-          </div>
+          {conteudo ? (
+            <div className="min-h-0 flex-1 overflow-y-auto">{conteudo}</div>
+          ) : (
+            // Dá pra dar zoom no conteúdo de um iframe de outro site
+            // (mesmo sem acesso ao HTML de dentro): desenha ele menor
+            // (75% do espaço) e depois estica com escala 1.33x.
+            <div className="min-h-0 flex-1 overflow-hidden pl-2">
+              <iframe
+                src={urlPreviewGoogleDocs(url)}
+                title={label}
+                className="h-[75%] w-[75%] origin-top-left border-0"
+                style={{ transform: "scale(1.3333)" }}
+              />
+            </div>
+          )}
         </div>
       )}
     </>

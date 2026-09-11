@@ -15,6 +15,7 @@ import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
+import { RoteiroPreQualificacao } from "@/components/roteiro-pre-qualificacao";
 import { IconeTelefone } from "@/components/icons";
 import { SCRIPT_PRE_QUALIFICACAO } from "@/lib/scripts-sdr";
 import { Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
@@ -315,6 +316,7 @@ export function LeadModalConteudo({
             url={SCRIPT_PRE_QUALIFICACAO.url}
             label={SCRIPT_PRE_QUALIFICACAO.label}
             Icone={IconeTelefone}
+            conteudo={<RoteiroPreQualificacao />}
           />
         )}
 
