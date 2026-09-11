@@ -6,6 +6,7 @@ import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { AvatarLead } from "@/components/avatar-lead";
 import { IconeMoeda } from "@/components/icons";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
+import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
 import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
 import { Sdr, Faturamento, ehImobiliario } from "@/lib/terminologia";
@@ -25,11 +26,6 @@ type LeadVendido = {
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatarData(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
 export default async function VendasPage({
@@ -246,7 +242,15 @@ export default async function VendasPage({
                         {lead.responsavel_id ? nomePorUsuario.get(lead.responsavel_id) ?? "—" : "—"}
                       </td>
                     )}
-                    <td className="px-4 py-3 text-neutral-600">{formatarData(lead.vendido_em)}</td>
+                    <td className="px-4 py-3 text-neutral-600">
+                      <EditarDataVendaInline
+                        leadId={lead.id}
+                        vendidoEm={lead.vendido_em}
+                        valorVenda={lead.valor_venda}
+                        receitaVenda={lead.receita_venda}
+                        produto={lead.produto}
+                      />
+                    </td>
                   </tr>
                 ))
               )}

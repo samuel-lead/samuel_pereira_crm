@@ -42,6 +42,14 @@ export function RegistrarNotaForm({ leadId }: { leadId: string }) {
         rows={3}
         placeholder="Ex.: liguei, ficou de ver a agenda e responder amanhã..."
         className={campoClasse}
+        // Ctrl/Cmd+Enter envia sem precisar pegar o mouse — quem registra
+        // nota toda hora durante ligação agradece.
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            formRef.current?.requestSubmit();
+          }
+        }}
       />
 
       {estado.erro && <p className="text-xs text-red-600">{estado.erro}</p>}
