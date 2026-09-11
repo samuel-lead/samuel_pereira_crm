@@ -51,7 +51,7 @@ const ATIVIDADES = [
     id: "follow_niveis_1_2",
     hora: "15:30–17:00",
     titulo: "Follow com níveis 1 e 2",
-    desc: "Sequência de mensagens curtas pra reengajar.",
+    desc: "Sequência de mensagens curtas para reengajar e ligações.",
     Icone: IconeAtividade,
   },
   {
