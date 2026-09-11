@@ -45,7 +45,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const resposta = await fetch(
-      `https://api.z-api.io/instances/${instancia}/token/${token}/contacts/check-whatsapp?phone=${telefone}`,
+      `https://api.z-api.io/instances/${instancia}/token/${token}/phone-exists/${telefone}`,
       { headers: clientToken ? { "Client-Token": clientToken } : {} }
     );
 
