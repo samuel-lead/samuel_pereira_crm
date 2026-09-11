@@ -17,10 +17,12 @@ const SCRIPTS = [
   {
     label: "Pré-qualificação para marcar call",
     url: "https://docs.google.com/document/d/1EVwYLEpFFWh94NYClZ3qZSkRGvA4Zdl4Ek1xbhT3jtw/edit?usp=sharing",
+    Icone: IconeCarta,
   },
   {
     label: "Script de ligação",
     url: "https://docs.google.com/document/d/1s1tB7gidMTPBFCRCwT4Ys78jcK-x4m_9l28ccYpmnFI/edit?usp=sharing",
+    Icone: IconeTelefone,
   },
 ];
 
@@ -196,7 +198,7 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
               className="flex w-full items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3.5 text-left transition hover:border-blue-300 hover:shadow-md"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <IconeCarta className="h-4 w-4" />
+                <script.Icone className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1 whitespace-nowrap text-[13px] font-semibold text-neutral-800">
                 {script.label}
