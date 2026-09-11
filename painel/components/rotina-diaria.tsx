@@ -44,7 +44,7 @@ const ATIVIDADES = [
     id: "prospeccao",
     hora: "11:00–15:30",
     titulo: "Prospecção",
-    desc: "Mínimo 80 abordagens no Instagram, meta de 20 leads novos.",
+    desc: "Mínimo 80 abordagens por dia no Instagram.",
     Icone: IconeInstagram,
   },
   {
