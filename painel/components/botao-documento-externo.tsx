@@ -131,11 +131,18 @@ export function BotaoDocumentoExterno({
               </button>
             </div>
           </div>
-          <iframe
-            src={urlPreviewGoogleDocs(url)}
-            title={label}
-            className="min-h-0 flex-1 border-0 pl-2"
-          />
+          {/* Dá pra dar zoom no conteúdo de um iframe de outro site (mesmo
+              sem acesso ao HTML de dentro): desenha ele menor (75% do
+              espaço) e depois estica com escala 1.33x — o texto sai bem
+              maior, mais fácil de ler numa ligação (Samuel pediu). */}
+          <div className="min-h-0 flex-1 overflow-hidden pl-2">
+            <iframe
+              src={urlPreviewGoogleDocs(url)}
+              title={label}
+              className="h-[75%] w-[75%] origin-top-left border-0"
+              style={{ transform: "scale(1.3333)" }}
+            />
+          </div>
         </div>
       )}
     </>
