@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { IconeX } from "@/components/icons";
+import { usePainelDocumento } from "@/components/contexto-painel-documento";
 
 // Google Docs só embeda via /preview (o link de /edit recusa rodar num
 // iframe) — extrai o ID do documento de qualquer formato de link e monta
@@ -29,13 +30,24 @@ export function BotaoDocumentoExterno({
   variante?: "cartao" | "botao";
 }) {
   const [aberto, setAberto] = useState(false);
+  const painelDocumento = usePainelDocumento();
+
+  function abrir() {
+    setAberto(true);
+    painelDocumento?.setDocumentoAberto(true);
+  }
+
+  function fechar() {
+    setAberto(false);
+    painelDocumento?.setDocumentoAberto(false);
+  }
 
   return (
     <>
       {variante === "cartao" ? (
         <button
           type="button"
-          onClick={() => setAberto(true)}
+          onClick={abrir}
           className="flex w-full items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3.5 text-left transition hover:border-blue-300 hover:shadow-md"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
@@ -48,7 +60,7 @@ export function BotaoDocumentoExterno({
       ) : (
         <button
           type="button"
-          onClick={() => setAberto(true)}
+          onClick={abrir}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
         >
           <Icone className="h-4 w-4 shrink-0" />
@@ -75,7 +87,7 @@ export function BotaoDocumentoExterno({
               </a>
               <button
                 type="button"
-                onClick={() => setAberto(false)}
+                onClick={fechar}
                 aria-label="Fechar"
                 className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
               >

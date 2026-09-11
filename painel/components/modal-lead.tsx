@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buscarDetalhesDoLead, type DetalhesLead } from "@/lib/leads/actions";
 import { ContextoLeadModalAtivo } from "@/components/contexto-lead-modal";
+import { ContextoPainelDocumento } from "@/components/contexto-painel-documento";
 import { LeadModalConteudo } from "@/components/lead-modal-conteudo";
 import { LeadPainelImobiliario } from "@/components/lead-painel-imobiliario";
 import { AvatarLead } from "@/components/avatar-lead";
@@ -59,6 +60,11 @@ export function ModalLead({
   // velho e desmarcava a "Repescagem futura de ICP" sozinho — foi
   // exatamente isso que aconteceu com um lead do Samuel.
   const [confirmandoCache, setConfirmandoCache] = useState(() => !!lerLeadDoCache(leadId));
+  // Quando um script (Google Doc) abre do lado direito, o modal precisa
+  // se deslocar pra esquerda — senão o painel do documento cobre parte
+  // do card, escondendo campos que a pessoa ainda precisa preencher
+  // (Samuel pegou isso ao vivo, na "Pré-qualificação para marcar call").
+  const [documentoAberto, setDocumentoAberto] = useState(false);
 
   const carregar = useCallback(async () => {
     const resultado = await buscarDetalhesDoLead(leadId);
@@ -97,7 +103,9 @@ export function ModalLead({
       className={
         painelLateral
           ? "fixed inset-0 z-50 flex justify-end bg-black/50"
-          : "fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10 sm:pt-16"
+          : `fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10 transition-[padding] sm:pt-16 ${
+              documentoAberto ? "xl:pr-[48rem]" : ""
+            }`
       }
       onClick={aoFechar}
     >
@@ -154,27 +162,29 @@ export function ModalLead({
               <ContextoLeadModalAtivo.Provider
                 value={{ recarregar: carregar, fechar: aoFechar }}
               >
-                {painelLateral ? (
-                  <LeadPainelImobiliario
-                    key={revisao}
-                    dados={dados}
-                    marcarReuniao={marcarReuniao}
-                    reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
-                    abrirProposta={abrirProposta}
-                    nivelPretendido={nivelPretendido}
-                    travaSalvarPorCache={confirmandoCache}
-                  />
-                ) : (
-                  <LeadModalConteudo
-                    key={revisao}
-                    dados={dados}
-                    marcarReuniao={marcarReuniao}
-                    reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
-                    abrirProposta={abrirProposta}
-                    nivelPretendido={nivelPretendido}
-                    travaSalvarPorCache={confirmandoCache}
-                  />
-                )}
+                <ContextoPainelDocumento.Provider value={{ setDocumentoAberto }}>
+                  {painelLateral ? (
+                    <LeadPainelImobiliario
+                      key={revisao}
+                      dados={dados}
+                      marcarReuniao={marcarReuniao}
+                      reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
+                      abrirProposta={abrirProposta}
+                      nivelPretendido={nivelPretendido}
+                      travaSalvarPorCache={confirmandoCache}
+                    />
+                  ) : (
+                    <LeadModalConteudo
+                      key={revisao}
+                      dados={dados}
+                      marcarReuniao={marcarReuniao}
+                      reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
+                      abrirProposta={abrirProposta}
+                      nivelPretendido={nivelPretendido}
+                      travaSalvarPorCache={confirmandoCache}
+                    />
+                  )}
+                </ContextoPainelDocumento.Provider>
               </ContextoLeadModalAtivo.Provider>
             </>
           )}
