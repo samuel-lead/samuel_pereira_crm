@@ -130,7 +130,7 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_240px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="space-y-4">
           <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
             <div
@@ -184,16 +184,23 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Roteiros
+          </p>
           {SCRIPTS.map((script) => (
             <button
               key={script.url}
               type="button"
               onClick={() => setDocAberto(script)}
-              className="flex w-full items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-3 text-left text-[13px] font-medium text-neutral-700 transition hover:border-blue-300 hover:shadow-sm"
+              className="flex w-full items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3.5 text-left transition hover:border-blue-300 hover:shadow-md"
             >
-              <IconeCarta className="h-4 w-4 shrink-0 text-neutral-400" />
-              {script.label}
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <IconeCarta className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1 whitespace-nowrap text-[13px] font-semibold text-neutral-800">
+                {script.label}
+              </span>
             </button>
           ))}
         </div>
