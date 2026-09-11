@@ -7,9 +7,10 @@ import { RotinaDiaria } from "@/components/rotina-diaria";
 export default async function RotinaPage() {
   const { usuario } = await usuarioAutenticado();
 
-  // Só SDR do público mentoria (mesma trava de acesso que o middleware já
-  // aplica, repetida aqui pra ninguém cair aqui digitando a URL direto).
-  if (!usuario || usuario.publico_org === "imobiliario" || usuario.funcao !== "sdr") {
+  // Só existe pro público mentoria (o imobiliário não separa SDR de
+  // Closer, não tem essa rotina) — mesma trava de acesso que o middleware
+  // já aplica, repetida aqui pra ninguém cair aqui digitando a URL direto.
+  if (!usuario || usuario.publico_org === "imobiliario") {
     redirect("/leads");
   }
 

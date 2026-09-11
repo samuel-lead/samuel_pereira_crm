@@ -171,23 +171,15 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // "Minha rotina" é só pro SDR — Samuel foi explícito que nem admin
-    // deve ver essa aqui (diferente de Bônus SDR, que admin confere
-    // normalmente). É o checklist pessoal de quem trabalha a rotina.
-    if (ehPaginaDeRotina && usuario?.funcao !== "sdr") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/leads";
-      return NextResponse.redirect(url);
-    }
-
     const pagina = paginaDaRota(pathname);
 
     if (pagina) {
       const ehAdmin = usuario?.papel === "admin";
-      // Bônus SDR não é liberado por checkbox de permissão — é automático
-      // pra quem tem função SDR, mesmo sem ser admin. Closer não entra.
+      // Bônus SDR e "Minha rotina" não são liberados por checkbox de
+      // permissão — são automáticos pra quem tem função SDR, mesmo sem
+      // ser admin (admin sempre vê os dois também). Closer não vê nenhum.
       const ehBonusSdr = pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/");
-      const podeVerBonusSdr = ehBonusSdr && usuario?.funcao === "sdr";
+      const podeVerBonusSdr = (ehBonusSdr || ehPaginaDeRotina) && usuario?.funcao === "sdr";
 
       if (!ehAdmin && !ehSuperAdmin && !podeVerBonusSdr) {
         const paginasPermitidas: string[] = usuario?.paginas_permitidas ?? [];

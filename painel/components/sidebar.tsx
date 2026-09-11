@@ -88,13 +88,11 @@ export function Sidebar({
       if (item.somenteMentoria && publicoOrg === "imobiliario") return false;
       // Bônus SDR não existe no imobiliário — vale pra admin também.
       if (item.href === "/bonus-sdr" && publicoOrg === "imobiliario") return false;
-      // "Minha rotina" é só pro SDR — Samuel pediu que nem admin visse
-      // essa (diferente do Bônus SDR, que admin confere normalmente).
-      if (item.href === "/rotina" && funcao !== "sdr") return false;
       if (isAdmin) return true;
-      // Bônus SDR é automático pra quem tem função SDR, não depende das
-      // páginas liberadas manualmente — Closer não vê essa página.
-      if (item.href === "/bonus-sdr") return funcao === "sdr";
+      // Bônus SDR e "Minha rotina" são automáticos pra quem tem função
+      // SDR, não dependem das páginas liberadas manualmente — Closer não
+      // vê nenhuma das duas.
+      if (item.href === "/bonus-sdr" || item.href === "/rotina") return funcao === "sdr";
       return item.pagina !== "admin" && paginasPermitidas.includes(item.pagina);
     }),
   })).filter((grupo) => grupo.itens.length > 0);
