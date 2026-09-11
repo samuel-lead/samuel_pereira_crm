@@ -54,8 +54,18 @@ export function BotaoDocumentoExterno({
   const redimensionandoRef = useRef(false);
 
   function abrir() {
+    // Quando esse botão está dividindo a tela com outra coisa (aoMudarEstado
+    // passado — hoje só o card do lead usa isso), já abre ocupando metade
+    // da janela, em vez de começar estreito — Samuel pediu pra já entrar
+    // dividido, e só depois a pessoa ajusta arrastando se quiser outro
+    // tamanho. Nos outros usos (ex.: "Minha rotina"), mantém a largura
+    // padrão de sempre.
+    const larguraInicial = aoMudarEstado
+      ? Math.min(LARGURA_MAXIMA, Math.max(LARGURA_MINIMA, Math.round(window.innerWidth / 2) - 48))
+      : largura;
+    setLargura(larguraInicial);
     setAberto(true);
-    aoMudarEstado?.({ aberto: true, largura });
+    aoMudarEstado?.({ aberto: true, largura: larguraInicial });
   }
 
   function fechar() {
