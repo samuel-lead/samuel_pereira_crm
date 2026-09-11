@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { IconeX } from "@/components/icons";
 
 // Google Docs só embeda via /preview (o link de /edit recusa rodar num
@@ -11,11 +11,17 @@ function urlPreviewGoogleDocs(url: string) {
   return id ? `https://docs.google.com/document/d/${id}/preview` : url;
 }
 
+const LARGURA_PADRAO = 400;
+const LARGURA_MINIMA = 320;
+const LARGURA_MAXIMA = 1000;
+
 // Botão que abre um Google Doc num popupzinho flutuando do lado direito,
 // por cima de tudo — usado tanto em "Minha rotina" quanto no card do lead
 // (Samuel pediu pra dar pro SDR ver o script sem sair da tela enquanto
 // liga). Não mexe no tamanho nem posição do que já está aberto atrás —
-// só flutua por cima, com margem da borda da tela.
+// só flutua por cima, com margem da borda da tela. Tem uma alça na borda
+// esquerda pra Samuel redimensionar do jeito que quiser (pediu isso
+// depois de ver o tamanho fixo não servir em toda tela).
 export function BotaoDocumentoExterno({
   url,
   label,
@@ -31,6 +37,34 @@ export function BotaoDocumentoExterno({
   variante?: "cartao" | "botao";
 }) {
   const [aberto, setAberto] = useState(false);
+  const [largura, setLargura] = useState(LARGURA_PADRAO);
+  const redimensionandoRef = useRef(false);
+
+  function aoComecarRedimensionar(e: React.PointerEvent) {
+    e.preventDefault();
+    redimensionandoRef.current = true;
+    const larguraInicial = largura;
+    const xInicial = e.clientX;
+
+    function aoMover(evento: PointerEvent) {
+      if (!redimensionandoRef.current) return;
+      // Alça fica na borda esquerda — arrastar pra esquerda aumenta,
+      // pra direita diminui (o popup cresce/encolhe pela esquerda,
+      // porque o lado direito fica fixo na borda da tela).
+      const delta = xInicial - evento.clientX;
+      const nova = Math.min(LARGURA_MAXIMA, Math.max(LARGURA_MINIMA, larguraInicial + delta));
+      setLargura(nova);
+    }
+
+    function aoSoltar() {
+      redimensionandoRef.current = false;
+      window.removeEventListener("pointermove", aoMover);
+      window.removeEventListener("pointerup", aoSoltar);
+    }
+
+    window.addEventListener("pointermove", aoMover);
+    window.addEventListener("pointerup", aoSoltar);
+  }
 
   return (
     <>
@@ -64,8 +98,19 @@ export function BotaoDocumentoExterno({
         // já está aberto, não um painel que disputa espaço com ele. A
         // pessoa continua digitando no card do lead atrás enquanto lê o
         // documento. Só fecha clicando em "Fechar", nunca clicando fora.
-        <div className="fixed bottom-6 right-6 top-6 z-[60] flex w-[calc(100%-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 sm:w-[400px]">
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3">
+        <div
+          className="fixed bottom-6 right-6 top-6 z-[60] flex max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10"
+          style={{ width: largura }}
+        >
+          <div
+            onPointerDown={aoComecarRedimensionar}
+            title="Arraste pra redimensionar"
+            className="group absolute bottom-0 left-0 top-0 z-10 flex w-2.5 cursor-ew-resize items-center justify-center"
+          >
+            <span className="h-10 w-1 rounded-full bg-neutral-200 transition group-hover:bg-blue-400" />
+          </div>
+
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 py-3 pl-6 pr-4">
             <h2 className="min-w-0 truncate text-sm font-bold text-neutral-900">{label}</h2>
             <div className="flex shrink-0 items-center gap-2">
               <a
@@ -89,7 +134,7 @@ export function BotaoDocumentoExterno({
           <iframe
             src={urlPreviewGoogleDocs(url)}
             title={label}
-            className="min-h-0 flex-1 border-0"
+            className="min-h-0 flex-1 border-0 pl-2"
           />
         </div>
       )}
