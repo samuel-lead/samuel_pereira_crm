@@ -7,6 +7,7 @@
 node_modules/
 
 # next.js (painel)
+.next/
 painel/.next/
 painel/out/
 painel/next-env.d.ts
