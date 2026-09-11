@@ -15,6 +15,9 @@ type ItemMenu = {
   pagina: string;
   somenteImobiliario?: boolean;
   somenteMentoria?: boolean;
+  // Link externo (ex.: Google Doc) — abre em aba nova em vez de navegar
+  // dentro do CRM.
+  externo?: boolean;
 };
 
 const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
@@ -39,6 +42,14 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
     titulo: "Gestão",
     itens: [
       { href: "/rotina", label: "Minha rotina", Icone: IconeCalendario, pagina: "admin", somenteMentoria: true },
+      {
+        href: "https://docs.google.com/document/d/1EVwYLEpFFWh94NYClZ3qZSkRGvA4Zdl4Ek1xbhT3jtw/edit?usp=sharing",
+        label: "Roteiro de qualificação",
+        Icone: IconeCarta,
+        pagina: "admin",
+        somenteMentoria: true,
+        externo: true,
+      },
       { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
       { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
       { href: "/cartas-contempladas", label: "Cartas contempladas", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
@@ -89,10 +100,12 @@ export function Sidebar({
       // Bônus SDR não existe no imobiliário — vale pra admin também.
       if (item.href === "/bonus-sdr" && publicoOrg === "imobiliario") return false;
       if (isAdmin) return true;
-      // Bônus SDR e "Minha rotina" são automáticos pra quem tem função
-      // SDR, não dependem das páginas liberadas manualmente — Closer não
-      // vê nenhuma das duas.
-      if (item.href === "/bonus-sdr" || item.href === "/rotina") return funcao === "sdr";
+      // Bônus SDR, "Minha rotina" e "Roteiro de qualificação" são
+      // automáticos pra quem tem função SDR, não dependem das páginas
+      // liberadas manualmente — Closer não vê nenhum dos três.
+      if (item.href === "/bonus-sdr" || item.href === "/rotina" || item.externo) {
+        return funcao === "sdr";
+      }
       return item.pagina !== "admin" && paginasPermitidas.includes(item.pagina);
     }),
   })).filter((grupo) => grupo.itens.length > 0);
@@ -155,21 +168,39 @@ export function Sidebar({
                 {grupo.titulo}
               </p>
             )}
-            {grupo.itens.map(({ href, label, Icone }) => {
+            {grupo.itens.map(({ href, label, Icone, externo }) => {
               const ativo = pathname === href;
+              const classeItem = `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                colapsado ? "justify-center" : ""
+              } ${
+                ativo
+                  ? "bg-[#2563eb] text-white shadow-sm"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`;
+
+              if (externo) {
+                return (
+                  <a
+                    key={href}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={colapsado ? label : undefined}
+                    className={classeItem}
+                  >
+                    <Icone className="h-4 w-4 shrink-0" />
+                    {!colapsado && label}
+                  </a>
+                );
+              }
+
               return (
                 <Link
                   key={href}
                   href={href}
                   onClick={onFecharMobile}
                   title={colapsado ? label : undefined}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    colapsado ? "justify-center" : ""
-                  } ${
-                    ativo
-                      ? "bg-[#2563eb] text-white shadow-sm"
-                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                  }`}
+                  className={classeItem}
                 >
                   <Icone className="h-4 w-4 shrink-0" />
                   {!colapsado && label}
