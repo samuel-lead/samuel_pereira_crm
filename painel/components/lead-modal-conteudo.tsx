@@ -58,6 +58,7 @@ export function LeadModalConteudo({
   abrirProposta,
   nivelPretendido,
   travaSalvarPorCache,
+  documentoAberto,
 }: {
   dados: DetalhesLead;
   marcarReuniao?: boolean;
@@ -76,6 +77,12 @@ export function LeadModalConteudo({
   // alterações" até confirmar, senão dava pra reenviar um nível/estado
   // velho sem querer (ver components/modal-lead.tsx).
   travaSalvarPorCache?: boolean;
+  // Um documento (script) está aberto do lado, e o popup ficou mais
+  // estreito (ver modal-lead.tsx) — força coluna única aqui dentro.
+  // Sem isso, o grid tentava duas colunas do mesmo jeito (a marcação
+  // "lg:" olha pra largura da TELA, não do popup), e o conteúdo
+  // transbordava um em cima do outro (Samuel pegou isso ao vivo).
+  documentoAberto?: boolean;
 }) {
   const [focarProposta, setFocarProposta] = useState(!!abrirProposta);
   const propostaRef = useRef<HTMLDivElement>(null);
@@ -121,7 +128,11 @@ export function LeadModalConteudo({
   const nomePorOrdem = new Map(niveis.map((n) => [n.ordem, n.nome]));
 
   return (
-    <div className="grid gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div
+      className={`grid gap-5 px-5 py-5 ${
+        documentoAberto ? "" : "lg:grid-cols-[minmax(0,1fr)_320px]"
+      }`}
+    >
       <div className="flex flex-col gap-4">
         <p className="text-xs text-neutral-400">
           Lead adicionado em {formatarData(lead.declarado_em)}

@@ -184,6 +184,7 @@ export function ModalLead({
                       abrirProposta={abrirProposta}
                       nivelPretendido={nivelPretendido}
                       travaSalvarPorCache={confirmandoCache}
+                      documentoAberto={documentoAberto}
                     />
                   )}
                 </ContextoPainelDocumento.Provider>
