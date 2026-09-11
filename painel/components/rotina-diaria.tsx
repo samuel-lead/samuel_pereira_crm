@@ -116,7 +116,7 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
   const percentual = Math.round((feitas / total) * 100);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-6 py-8">
+    <div className="mx-auto max-w-5xl space-y-4 px-6 py-8">
       <div className="flex items-baseline justify-between">
         <div>
           <h1 className="text-xl font-bold text-neutral-900">Minha rotina</h1>
@@ -130,69 +130,73 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
         </div>
       </div>
 
-      <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
-        <div
-          className="h-full rounded-full bg-blue-600 transition-all"
-          style={{ width: `${percentual}%` }}
-        />
-      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_240px]">
+        <div className="space-y-4">
+          <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
+            <div
+              className="h-full rounded-full bg-blue-600 transition-all"
+              style={{ width: `${percentual}%` }}
+            />
+          </div>
 
-      <div className="flex flex-wrap gap-2">
-        {SCRIPTS.map((script) => (
-          <button
-            key={script.url}
-            type="button"
-            onClick={() => setDocAberto(script)}
-            className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-[13px] font-medium text-neutral-700 transition hover:border-blue-300 hover:shadow-sm"
-          >
-            <IconeCarta className="h-4 w-4 shrink-0 text-neutral-400" />
-            {script.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-2">
-        {ATIVIDADES.map((atividade) => {
-          const feita = concluidas.has(atividade.id);
-          return (
-            <button
-              key={atividade.id}
-              type="button"
-              onClick={() => alternar(atividade.id)}
-              className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
-                feita
-                  ? "border-neutral-200 bg-neutral-50"
-                  : "border-neutral-200 bg-white hover:border-blue-300 hover:shadow-sm"
-              }`}
-            >
-              <span
-                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                  feita ? "border-blue-600 bg-blue-600" : "border-neutral-300"
-                }`}
-              >
-                {feita && <IconeCheck className="h-3 w-3 text-white" />}
-              </span>
-
-              <div className={`min-w-0 flex-1 ${feita ? "opacity-50" : ""}`}>
-                <div className="flex flex-wrap items-center gap-2">
+          <div className="space-y-3">
+            {ATIVIDADES.map((atividade) => {
+              const feita = concluidas.has(atividade.id);
+              return (
+                <button
+                  key={atividade.id}
+                  type="button"
+                  onClick={() => alternar(atividade.id)}
+                  className={`flex w-full items-start gap-4 rounded-xl border p-4 text-left transition ${
+                    feita
+                      ? "border-neutral-200 bg-neutral-50"
+                      : "border-neutral-200 bg-white hover:border-blue-300 hover:shadow-sm"
+                  }`}
+                >
                   <span
-                    className={`text-sm font-semibold text-neutral-900 ${
-                      feita ? "line-through" : ""
+                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+                      feita ? "border-blue-600 bg-blue-600" : "border-neutral-300"
                     }`}
                   >
-                    {atividade.titulo}
+                    {feita && <IconeCheck className="h-3.5 w-3.5 text-white" />}
                   </span>
-                  <span className="rounded bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-500">
-                    {atividade.hora}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[13px] text-neutral-500">{atividade.desc}</p>
-              </div>
 
-              <atividade.Icone className="mt-0.5 h-4 w-4 shrink-0 text-neutral-300" />
+                  <div className={`min-w-0 flex-1 ${feita ? "opacity-50" : ""}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`text-base font-semibold text-neutral-900 ${
+                          feita ? "line-through" : ""
+                        }`}
+                      >
+                        {atividade.titulo}
+                      </span>
+                      <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
+                        {atividade.hora}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-neutral-500">{atividade.desc}</p>
+                  </div>
+
+                  <atividade.Icone className="mt-0.5 h-5 w-5 shrink-0 text-neutral-300" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {SCRIPTS.map((script) => (
+            <button
+              key={script.url}
+              type="button"
+              onClick={() => setDocAberto(script)}
+              className="flex w-full items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-3 text-left text-[13px] font-medium text-neutral-700 transition hover:border-blue-300 hover:shadow-sm"
+            >
+              <IconeCarta className="h-4 w-4 shrink-0 text-neutral-400" />
+              {script.label}
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
       {docAberto && (
