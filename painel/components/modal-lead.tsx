@@ -114,7 +114,7 @@ export function ModalLead({
           painelLateral
             ? "relative flex h-full w-full max-w-xl flex-col bg-[#f4f5f7] shadow-2xl"
             : `relative w-full rounded-xl bg-[#f4f5f7] shadow-2xl transition-[max-width] ${
-                documentoAberto ? "lg:max-w-[46vw]" : "max-w-5xl"
+                documentoAberto ? "lg:max-w-[47.5rem]" : "max-w-5xl"
               }`
         }
         onClick={(e) => e.stopPropagation()}
@@ -184,7 +184,6 @@ export function ModalLead({
                       abrirProposta={abrirProposta}
                       nivelPretendido={nivelPretendido}
                       travaSalvarPorCache={confirmandoCache}
-                      documentoAberto={documentoAberto}
                     />
                   )}
                 </ContextoPainelDocumento.Provider>
