@@ -113,7 +113,9 @@ export function ModalLead({
         className={
           painelLateral
             ? "relative flex h-full w-full max-w-xl flex-col bg-[#f4f5f7] shadow-2xl"
-            : "relative w-full max-w-5xl rounded-xl bg-[#f4f5f7] shadow-2xl"
+            : `relative w-full rounded-xl bg-[#f4f5f7] shadow-2xl transition-[max-width] ${
+                documentoAberto ? "max-w-2xl" : "max-w-5xl"
+              }`
         }
         onClick={(e) => e.stopPropagation()}
       >
