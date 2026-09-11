@@ -15,10 +15,18 @@ type ItemMenu = {
   pagina: string;
   somenteImobiliario?: boolean;
   somenteMentoria?: boolean;
-  // Link externo (ex.: Google Doc) — abre em aba nova em vez de navegar
-  // dentro do CRM.
+  // Link externo (ex.: Google Doc) — abre embutido num painel lateral
+  // dentro do próprio CRM, não navega nem abre aba nova.
   externo?: boolean;
 };
+
+// Google Docs só embeda via /preview (o link de /edit recusa rodar num
+// iframe) — extrai o ID do documento de qualquer formato de link que o
+// Samuel colar (edit, view, etc.) e monta a URL certa.
+function urlPreviewGoogleDocs(url: string) {
+  const id = url.match(/\/document\/d\/([^/]+)/)?.[1];
+  return id ? `https://docs.google.com/document/d/${id}/preview` : url;
+}
 
 const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
   {
@@ -90,6 +98,7 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const [colapsado, setColapsado] = useState(false);
+  const [docAberto, setDocAberto] = useState<{ url: string; label: string } | null>(null);
   const gruposVisiveis = GRUPOS.map((grupo) => ({
     ...grupo,
     itens: grupo.itens.filter((item) => {
@@ -111,6 +120,7 @@ export function Sidebar({
   })).filter((grupo) => grupo.itens.length > 0);
 
   return (
+    <>
     <aside
       className={`fixed inset-y-0 left-0 z-40 flex h-full shrink-0 flex-col rounded-r-2xl bg-slate-900 shadow-lg shadow-slate-900/10 transition-all duration-200 md:static md:rounded-2xl md:transition-none ${
         abertoMobile ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -180,17 +190,16 @@ export function Sidebar({
 
               if (externo) {
                 return (
-                  <a
+                  <button
                     key={href}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    type="button"
+                    onClick={() => setDocAberto({ url: href, label })}
                     title={colapsado ? label : undefined}
-                    className={classeItem}
+                    className={`w-full ${classeItem}`}
                   >
                     <Icone className="h-4 w-4 shrink-0" />
                     {!colapsado && label}
-                  </a>
+                  </button>
                 );
               }
 
@@ -244,5 +253,45 @@ export function Sidebar({
         <LogoutButton compacto={colapsado} escuro />
       </div>
     </aside>
+
+    {docAberto && (
+      <div
+        className="fixed inset-0 z-50 flex justify-end bg-black/50"
+        onClick={() => setDocAberto(null)}
+      >
+        <div
+          className="flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4">
+            <h2 className="truncate text-base font-bold text-neutral-900">{docAberto.label}</h2>
+            <div className="flex shrink-0 items-center gap-3">
+              <a
+                href={docAberto.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-blue-600 hover:underline"
+              >
+                Abrir no Google Docs
+              </a>
+              <button
+                type="button"
+                onClick={() => setDocAberto(null)}
+                aria-label="Fechar"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+              >
+                <IconeX className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <iframe
+            src={urlPreviewGoogleDocs(docAberto.url)}
+            title={docAberto.label}
+            className="min-h-0 flex-1 border-0"
+          />
+        </div>
+      </div>
+    )}
+    </>
   );
 }

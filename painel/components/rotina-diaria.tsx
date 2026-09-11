@@ -15,7 +15,7 @@ const ATIVIDADES = [
   {
     id: "confirmar_reunioes",
     hora: "09:00–09:30",
-    titulo: "Confirmar reuniões do dia",
+    titulo: "Confirmar reuniões do dia e reagendar reuniões dos dias anteriores",
     desc: "Reagendar as que não confirmaram e resolver o no-show de ontem.",
     Icone: IconeCalendario,
   },
