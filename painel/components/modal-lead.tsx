@@ -104,7 +104,7 @@ export function ModalLead({
         painelLateral
           ? "fixed inset-0 z-50 flex justify-end bg-black/50"
           : `fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10 transition-[padding] sm:pt-16 ${
-              documentoAberto ? "lg:pr-[48rem]" : ""
+              documentoAberto ? "lg:pr-[50vw]" : ""
             }`
       }
       onClick={aoFechar}
@@ -114,7 +114,7 @@ export function ModalLead({
           painelLateral
             ? "relative flex h-full w-full max-w-xl flex-col bg-[#f4f5f7] shadow-2xl"
             : `relative w-full rounded-xl bg-[#f4f5f7] shadow-2xl transition-[max-width] ${
-                documentoAberto ? "max-w-md" : "max-w-5xl"
+                documentoAberto ? "lg:max-w-[46vw]" : "max-w-5xl"
               }`
         }
         onClick={(e) => e.stopPropagation()}
