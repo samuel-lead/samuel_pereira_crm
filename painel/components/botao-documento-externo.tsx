@@ -15,13 +15,13 @@ const LARGURA_PADRAO = 400;
 const LARGURA_MINIMA = 320;
 const LARGURA_MAXIMA = 1000;
 
-// Botão que abre um Google Doc num popupzinho flutuando do lado direito,
-// por cima de tudo — usado tanto em "Minha rotina" quanto no card do lead
+// Botão que abre um Google Doc num painel flutuando do lado direito, por
+// cima de tudo — usado tanto em "Minha rotina" quanto no card do lead
 // (Samuel pediu pra dar pro SDR ver o script sem sair da tela enquanto
-// liga). Não mexe no tamanho nem posição do que já está aberto atrás —
-// só flutua por cima, com margem da borda da tela. Tem uma alça na borda
-// esquerda pra Samuel redimensionar do jeito que quiser (pediu isso
-// depois de ver o tamanho fixo não servir em toda tela).
+// liga). Tem uma alça na borda esquerda pra redimensionar do jeito que
+// quiser. No card do lead, o popup avisa a largura pra fora (aoMudarEstado)
+// pra quem estiver de olho — o modal-lead.tsx usa isso pra encolher o
+// próprio card e dividir a tela sem sobrepor.
 export function BotaoDocumentoExterno({
   url,
   label,
@@ -36,16 +36,32 @@ export function BotaoDocumentoExterno({
   // pediu pra trazer nativo). "url" continua servindo pro link "Abrir no
   // Google Docs", pra quem quiser editar a fonte original.
   conteudo,
+  // Avisa quem estiver usando esse botão sempre que abre, fecha ou
+  // redimensiona o popup — usado pelo card do lead pra encolher o próprio
+  // popup dele e dividir a tela sem sobrepor (ver components/modal-lead.tsx).
+  // Opcional: sem isso o botão funciona sozinho, do jeito de sempre.
+  aoMudarEstado,
 }: {
   url: string;
   label: string;
   Icone: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
   variante?: "cartao" | "botao";
   conteudo?: React.ReactNode;
+  aoMudarEstado?: (estado: { aberto: boolean; largura: number }) => void;
 }) {
   const [aberto, setAberto] = useState(false);
   const [largura, setLargura] = useState(LARGURA_PADRAO);
   const redimensionandoRef = useRef(false);
+
+  function abrir() {
+    setAberto(true);
+    aoMudarEstado?.({ aberto: true, largura });
+  }
+
+  function fechar() {
+    setAberto(false);
+    aoMudarEstado?.({ aberto: false, largura });
+  }
 
   function aoComecarRedimensionar(e: React.PointerEvent) {
     e.preventDefault();
@@ -61,6 +77,7 @@ export function BotaoDocumentoExterno({
       const delta = xInicial - evento.clientX;
       const nova = Math.min(LARGURA_MAXIMA, Math.max(LARGURA_MINIMA, larguraInicial + delta));
       setLargura(nova);
+      aoMudarEstado?.({ aberto: true, largura: nova });
     }
 
     function aoSoltar() {
@@ -78,7 +95,7 @@ export function BotaoDocumentoExterno({
       {variante === "cartao" ? (
         <button
           type="button"
-          onClick={() => setAberto(true)}
+          onClick={abrir}
           className="flex w-full items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3.5 text-left transition hover:border-blue-300 hover:shadow-md"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
@@ -91,7 +108,7 @@ export function BotaoDocumentoExterno({
       ) : (
         <button
           type="button"
-          onClick={() => setAberto(true)}
+          onClick={abrir}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
         >
           <Icone className="h-4 w-4 shrink-0" />
@@ -130,7 +147,7 @@ export function BotaoDocumentoExterno({
               </a>
               <button
                 type="button"
-                onClick={() => setAberto(false)}
+                onClick={fechar}
                 className="flex items-center gap-1.5 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-700"
               >
                 <IconeX className="h-4 w-4" />

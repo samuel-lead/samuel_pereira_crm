@@ -58,6 +58,8 @@ export function LeadModalConteudo({
   abrirProposta,
   nivelPretendido,
   travaSalvarPorCache,
+  documentoAberto,
+  aoMudarEstadoDocumento,
 }: {
   dados: DetalhesLead;
   marcarReuniao?: boolean;
@@ -76,6 +78,13 @@ export function LeadModalConteudo({
   // alterações" até confirmar, senão dava pra reenviar um nível/estado
   // velho sem querer (ver components/modal-lead.tsx).
   travaSalvarPorCache?: boolean;
+  // Script de pré-qualificação está aberto do lado — força a coluna única
+  // aqui (em vez do grid de 2 colunas), porque o card fica mais estreito
+  // pra dividir a tela com o popup e o breakpoint do Tailwind olha pra
+  // largura da JANELA, não do card (foi exatamente isso que espremia tudo
+  // antes). Ver components/modal-lead.tsx.
+  documentoAberto?: boolean;
+  aoMudarEstadoDocumento?: (estado: { aberto: boolean; largura: number }) => void;
 }) {
   const [focarProposta, setFocarProposta] = useState(!!abrirProposta);
   const propostaRef = useRef<HTMLDivElement>(null);
@@ -121,7 +130,11 @@ export function LeadModalConteudo({
   const nomePorOrdem = new Map(niveis.map((n) => [n.ordem, n.nome]));
 
   return (
-    <div className="grid gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div
+      className={`grid gap-5 px-5 py-5 ${
+        documentoAberto ? "" : "lg:grid-cols-[minmax(0,1fr)_320px]"
+      }`}
+    >
       <div className="flex flex-col gap-4">
         <p className="text-xs text-neutral-400">
           Lead adicionado em {formatarData(lead.declarado_em)}
@@ -315,6 +328,7 @@ export function LeadModalConteudo({
             url={SCRIPT_PRE_QUALIFICACAO.url}
             label={SCRIPT_PRE_QUALIFICACAO.label}
             Icone={IconeTelefone}
+            aoMudarEstado={aoMudarEstadoDocumento}
           />
         )}
 

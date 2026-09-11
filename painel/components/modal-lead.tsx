@@ -60,6 +60,15 @@ export function ModalLead({
   // exatamente isso que aconteceu com um lead do Samuel.
   const [confirmandoCache, setConfirmandoCache] = useState(() => !!lerLeadDoCache(leadId));
 
+  // Quando o SDR abre o script de pré-qualificação (mentoria), o card do
+  // lead encolhe pra esquerda e divide a tela com o popup do script, em
+  // vez de ficar por baixo dele — Samuel pediu de volta esse layout depois
+  // de testar o popup flutuando por cima. As duas larguras vêm de um único
+  // lugar (o próprio popup, via aoMudarEstadoDocumento) pra nunca ficarem
+  // dessincronizadas: aqui só se usa o valor, não se recalcula ele.
+  const [documentoAberto, setDocumentoAberto] = useState(false);
+  const [larguraDocumento, setLarguraDocumento] = useState(400);
+
   const carregar = useCallback(async () => {
     const resultado = await buscarDetalhesDoLead(leadId);
     setDados(resultado.dados);
@@ -105,7 +114,12 @@ export function ModalLead({
         className={
           painelLateral
             ? "relative flex h-full w-full max-w-xl flex-col bg-[#f4f5f7] shadow-2xl"
-            : "relative w-full max-w-5xl rounded-xl bg-[#f4f5f7] shadow-2xl"
+            : documentoAberto
+              ? "fixed inset-y-6 left-6 flex flex-col overflow-hidden rounded-xl bg-[#f4f5f7] shadow-2xl"
+              : "relative w-full max-w-5xl rounded-xl bg-[#f4f5f7] shadow-2xl"
+        }
+        style={
+          !painelLateral && documentoAberto ? { right: larguraDocumento + 48 } : undefined
         }
         onClick={(e) => e.stopPropagation()}
       >
@@ -120,7 +134,7 @@ export function ModalLead({
 
         <div
           className={
-            painelLateral
+            painelLateral || documentoAberto
               ? "flex h-full min-h-0 flex-col"
               : "max-h-[85vh] overflow-y-auto rounded-xl"
           }
@@ -165,15 +179,22 @@ export function ModalLead({
                     travaSalvarPorCache={confirmandoCache}
                   />
                 ) : (
-                  <LeadModalConteudo
-                    key={revisao}
-                    dados={dados}
-                    marcarReuniao={marcarReuniao}
-                    reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
-                    abrirProposta={abrirProposta}
-                    nivelPretendido={nivelPretendido}
-                    travaSalvarPorCache={confirmandoCache}
-                  />
+                  <div className={documentoAberto ? "min-h-0 flex-1 overflow-y-auto" : undefined}>
+                    <LeadModalConteudo
+                      key={revisao}
+                      dados={dados}
+                      marcarReuniao={marcarReuniao}
+                      reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
+                      abrirProposta={abrirProposta}
+                      nivelPretendido={nivelPretendido}
+                      travaSalvarPorCache={confirmandoCache}
+                      documentoAberto={documentoAberto}
+                      aoMudarEstadoDocumento={(estado) => {
+                        setDocumentoAberto(estado.aberto);
+                        setLarguraDocumento(estado.largura);
+                      }}
+                    />
+                  </div>
                 )}
               </ContextoLeadModalAtivo.Provider>
             </>
