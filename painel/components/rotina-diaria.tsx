@@ -2,8 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { alternarAtividadeRotina } from "@/lib/rotina/actions";
-import { SCRIPT_PRE_QUALIFICACAO, SCRIPT_LIGACAO } from "@/lib/scripts-sdr";
-import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
 import {
   IconeCalendario,
   IconeAtividade,
@@ -11,13 +9,7 @@ import {
   IconeInstagram,
   IconeAlvo,
   IconeCheck,
-  IconeCarta,
 } from "@/components/icons";
-
-const SCRIPTS = [
-  { ...SCRIPT_PRE_QUALIFICACAO, Icone: IconeCarta },
-  { ...SCRIPT_LIGACAO, Icone: IconeTelefone },
-];
 
 const ATIVIDADES = [
   {
@@ -102,7 +94,7 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
   const percentual = Math.round((feitas / total) * 100);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4 px-6 py-8">
+    <div className="mx-auto max-w-2xl space-y-4 px-6 py-8">
       <div className="flex items-baseline justify-between">
         <div>
           <h1 className="text-xl font-bold text-neutral-900">Minha rotina</h1>
@@ -116,74 +108,55 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="space-y-4">
-          <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
-            <div
-              className="h-full rounded-full bg-blue-600 transition-all"
-              style={{ width: `${percentual}%` }}
-            />
-          </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
+        <div
+          className="h-full rounded-full bg-blue-600 transition-all"
+          style={{ width: `${percentual}%` }}
+        />
+      </div>
 
-          <div className="space-y-3">
-            {ATIVIDADES.map((atividade) => {
-              const feita = concluidas.has(atividade.id);
-              return (
-                <button
-                  key={atividade.id}
-                  type="button"
-                  onClick={() => alternar(atividade.id)}
-                  className={`flex w-full items-start gap-4 rounded-xl border p-4 text-left transition ${
-                    feita
-                      ? "border-neutral-200 bg-neutral-50"
-                      : "border-neutral-200 bg-white hover:border-blue-300 hover:shadow-sm"
-                  }`}
-                >
+      <div className="space-y-3">
+        {ATIVIDADES.map((atividade) => {
+          const feita = concluidas.has(atividade.id);
+          return (
+            <button
+              key={atividade.id}
+              type="button"
+              onClick={() => alternar(atividade.id)}
+              className={`flex w-full items-start gap-4 rounded-xl border p-4 text-left transition ${
+                feita
+                  ? "border-neutral-200 bg-neutral-50"
+                  : "border-neutral-200 bg-white hover:border-blue-300 hover:shadow-sm"
+              }`}
+            >
+              <span
+                className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+                  feita ? "border-blue-600 bg-blue-600" : "border-neutral-300"
+                }`}
+              >
+                {feita && <IconeCheck className="h-3.5 w-3.5 text-white" />}
+              </span>
+
+              <div className={`min-w-0 flex-1 ${feita ? "opacity-50" : ""}`}>
+                <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
-                      feita ? "border-blue-600 bg-blue-600" : "border-neutral-300"
+                    className={`text-base font-semibold text-neutral-900 ${
+                      feita ? "line-through" : ""
                     }`}
                   >
-                    {feita && <IconeCheck className="h-3.5 w-3.5 text-white" />}
+                    {atividade.titulo}
                   </span>
+                  <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
+                    {atividade.hora}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-neutral-500">{atividade.desc}</p>
+              </div>
 
-                  <div className={`min-w-0 flex-1 ${feita ? "opacity-50" : ""}`}>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`text-base font-semibold text-neutral-900 ${
-                          feita ? "line-through" : ""
-                        }`}
-                      >
-                        {atividade.titulo}
-                      </span>
-                      <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
-                        {atividade.hora}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-neutral-500">{atividade.desc}</p>
-                  </div>
-
-                  <atividade.Icone className="mt-0.5 h-5 w-5 shrink-0 text-neutral-300" />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-            Roteiros
-          </p>
-          {SCRIPTS.map((script) => (
-            <BotaoDocumentoExterno
-              key={script.url}
-              url={script.url}
-              label={script.label}
-              Icone={script.Icone}
-              variante="cartao"
-            />
-          ))}
-        </div>
+              <atividade.Icone className="mt-0.5 h-5 w-5 shrink-0 text-neutral-300" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );

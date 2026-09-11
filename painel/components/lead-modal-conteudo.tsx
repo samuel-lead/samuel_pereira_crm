@@ -16,7 +16,7 @@ import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
 import { IconeTelefone } from "@/components/icons";
-import { SCRIPT_LIGACAO } from "@/lib/scripts-sdr";
+import { SCRIPT_PRE_QUALIFICACAO } from "@/lib/scripts-sdr";
 import { Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
@@ -308,15 +308,15 @@ export function LeadModalConteudo({
           )
         )}
 
+        {podeEditar && <RegistrarLigacaoButton leadId={lead.id} />}
+
         {podeEditar && !ehImobiliario(publicoOrg) && (souAdmin || souSdr) && (
           <BotaoDocumentoExterno
-            url={SCRIPT_LIGACAO.url}
-            label={SCRIPT_LIGACAO.label}
+            url={SCRIPT_PRE_QUALIFICACAO.url}
+            label={SCRIPT_PRE_QUALIFICACAO.label}
             Icone={IconeTelefone}
           />
         )}
-
-        {podeEditar && <RegistrarLigacaoButton leadId={lead.id} />}
 
         {podeEditar && (
           <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
