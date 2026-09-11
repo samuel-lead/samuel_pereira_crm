@@ -704,7 +704,12 @@ export async function atualizarLead(
   // "Não" cancela o movimento inteiro — o lead continua em "Reunião
   // marcada" (mesma regra do drag-and-drop no Kanban); só "Sim" deixa
   // seguir. Sem isso a taxa de comparecimento contava reunião que nunca
-  // rolou.
+  // rolou. EXCETO Repescagem futura de ICP (oportunidadeFutura) — pode ir
+  // pra lá mesmo com "Não" (mesma exceção de sempre: não exige reunião
+  // nenhuma). A reunião em si ainda fica registrada como não realizada
+  // (ver sincronizarReuniao logo abaixo, que lê reuniaoAconteceuForm), só
+  // não trava o lead de mudar de nível. Samuel pegou isso ao vivo: reunião
+  // marcada, não aconteceu, e não dava pra mandar pra Repescagem futura.
   if (
     nivelMudou &&
     leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA &&
@@ -713,7 +718,7 @@ export async function atualizarLead(
     if (reuniaoAconteceuForm !== "sim" && reuniaoAconteceuForm !== "nao") {
       return { erro: `Confirme se essa ${reuniao(usuario.publico_org)} realmente aconteceu.` };
     }
-    if (reuniaoAconteceuForm === "nao") {
+    if (reuniaoAconteceuForm === "nao" && !oportunidadeFutura) {
       return {
         erro: `Como a ${reuniao(usuario.publico_org)} não aconteceu, o lead continua em "${Reuniao(usuario.publico_org)} marcada". Mova pra "No-show" ou "Precisa reagendar" se for o caso.`,
       };

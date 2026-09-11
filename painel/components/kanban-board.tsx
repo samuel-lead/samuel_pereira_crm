@@ -696,6 +696,9 @@ export function KanbanBoard({
     // Pergunta na hora com um aviso que trava a tela (igual "Excluir
     // lead") — "Não" cancela o movimento inteiro (o lead continua em
     // "Reunião marcada", nada é salvo); só "Sim" deixa o card avançar.
+    // EXCETO Repescagem futura de ICP — essa pode ir mesmo com "Não" (mesma
+    // exceção de sempre: não exige reunião). Samuel pegou isso ao vivo:
+    // reunião marcada, não aconteceu, e o card recusava ir pra lá.
     if (
       nivelOrigem === NIVEL_REUNIAO_MARCADA &&
       (ordem === NIVEL_FOLLOW_POS_REUNIAO ||
@@ -703,12 +706,15 @@ export function KanbanBoard({
         ordem === ORDEM_OPORTUNIDADE_FUTURA)
     ) {
       const aconteceu = await perguntar(`Essa ${reuniao(publicoOrg)} realmente aconteceu?`);
-      if (!aconteceu) return;
+      if (!aconteceu && ordem !== ORDEM_OPORTUNIDADE_FUTURA) return;
       // Pergunta separada, só depois de confirmar que aconteceu — pra não
       // deixar passar batido um lead que teve proposta e ninguém registrou
       // (Samuel pediu essa trava). "Sim" abre o card já rolado até a
-      // Proposta, pra pessoa preencher na hora.
-      const tevepProposta = await perguntar(`Essa ${reuniao(publicoOrg)} teve proposta?`);
+      // Proposta, pra pessoa preencher na hora. Sem reunião, nem faz
+      // sentido perguntar se teve proposta.
+      const tevepProposta = aconteceu
+        ? await perguntar(`Essa ${reuniao(publicoOrg)} teve proposta?`)
+        : false;
       const motivoRepescagemFutura = await perguntarMotivoRepescagem();
       if (ordem === ORDEM_OPORTUNIDADE_FUTURA && !motivoRepescagemFutura) return;
       iniciarTransicao(() => {
@@ -716,7 +722,7 @@ export function KanbanBoard({
           leadId,
           ordem,
           undefined,
-          true,
+          aconteceu,
           tevepProposta,
           undefined,
           undefined,

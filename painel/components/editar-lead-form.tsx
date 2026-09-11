@@ -894,6 +894,12 @@ export function EditarLeadForm({
                   })}
                   ) — confira se a data está certa.
                 </p>
+              ) : oportunidadeFutura ? (
+                <p className="text-xs text-amber-700">
+                  Marcando &quot;Não&quot;, a reunião fica registrada como não realizada — mas o
+                  lead ainda pode ir pra {RepescagemFutura(publicoOrg)} (marque a opção logo
+                  abaixo).
+                </p>
               ) : (
                 <p className="text-xs text-amber-700">
                   Se marcar &quot;Não&quot;, o lead continua em &quot;{Reuniao(publicoOrg)} marcada&quot;
