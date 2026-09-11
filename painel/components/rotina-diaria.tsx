@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { alternarAtividadeRotina } from "@/lib/rotina/actions";
+import { SCRIPT_PRE_QUALIFICACAO, SCRIPT_LIGACAO } from "@/lib/scripts-sdr";
+import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
 import {
   IconeCalendario,
   IconeAtividade,
@@ -10,29 +12,12 @@ import {
   IconeAlvo,
   IconeCheck,
   IconeCarta,
-  IconeX,
 } from "@/components/icons";
 
 const SCRIPTS = [
-  {
-    label: "Pré-qualificação para marcar call",
-    url: "https://docs.google.com/document/d/1EVwYLEpFFWh94NYClZ3qZSkRGvA4Zdl4Ek1xbhT3jtw/edit?usp=sharing",
-    Icone: IconeCarta,
-  },
-  {
-    label: "Script de ligação",
-    url: "https://docs.google.com/document/d/1s1tB7gidMTPBFCRCwT4Ys78jcK-x4m_9l28ccYpmnFI/edit?usp=sharing",
-    Icone: IconeTelefone,
-  },
+  { ...SCRIPT_PRE_QUALIFICACAO, Icone: IconeCarta },
+  { ...SCRIPT_LIGACAO, Icone: IconeTelefone },
 ];
-
-// Google Docs só embeda via /preview (o link de /edit recusa rodar num
-// iframe) — extrai o ID do documento de qualquer formato de link que o
-// Samuel colar (edit, view, etc.) e monta a URL certa.
-function urlPreviewGoogleDocs(url: string) {
-  const id = url.match(/\/document\/d\/([^/]+)/)?.[1];
-  return id ? `https://docs.google.com/document/d/${id}/preview` : url;
-}
 
 const ATIVIDADES = [
   {
@@ -98,7 +83,6 @@ function dataDeHojeFormatada() {
 export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: string[] }) {
   const [concluidas, setConcluidas] = useState(new Set(concluidasIniciais));
   const [, iniciarTransicao] = useTransition();
-  const [docAberto, setDocAberto] = useState<{ url: string; label: string } | null>(null);
 
   function alternar(id: string) {
     const novaConcluida = !concluidas.has(id);
@@ -191,61 +175,16 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
             Roteiros
           </p>
           {SCRIPTS.map((script) => (
-            <button
+            <BotaoDocumentoExterno
               key={script.url}
-              type="button"
-              onClick={() => setDocAberto(script)}
-              className="flex w-full items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3.5 text-left transition hover:border-blue-300 hover:shadow-md"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <script.Icone className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1 whitespace-nowrap text-[13px] font-semibold text-neutral-800">
-                {script.label}
-              </span>
-            </button>
+              url={script.url}
+              label={script.label}
+              Icone={script.Icone}
+              variante="cartao"
+            />
           ))}
         </div>
       </div>
-
-      {docAberto && (
-        <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/50"
-          onClick={() => setDocAberto(null)}
-        >
-          <div
-            className="flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4">
-              <h2 className="truncate text-base font-bold text-neutral-900">{docAberto.label}</h2>
-              <div className="flex shrink-0 items-center gap-3">
-                <a
-                  href={docAberto.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-medium text-blue-600 hover:underline"
-                >
-                  Abrir no Google Docs
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setDocAberto(null)}
-                  aria-label="Fechar"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
-                >
-                  <IconeX className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <iframe
-              src={urlPreviewGoogleDocs(docAberto.url)}
-              title={docAberto.label}
-              className="min-h-0 flex-1 border-0"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

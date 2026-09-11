@@ -39,7 +39,7 @@ async function contextoUsuario() {
 
   const { data: usuario, error } = await supabase
     .from("usuarios")
-    .select("id, org_id, papel, orgs(publico)")
+    .select("id, org_id, papel, funcao, orgs(publico)")
     .eq("id", user.id)
     .single();
 
@@ -1900,6 +1900,10 @@ export type DetalhesLead = {
   // Só relevante no imobiliário — lista pro seletor "Imóvel de interesse".
   imoveis: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
   souAdmin: boolean;
+  // Só pra mostrar o botão de "Script de ligação"/"Pré-qualificação" no
+  // card — esses roteiros são coisa de SDR, não de Closer nem admin sem
+  // função (ver components/botao-documento-externo.tsx).
+  souSdr: boolean;
   publicoOrg: string;
   podeEditar: boolean;
   podeReivindicar: boolean;
@@ -1998,6 +2002,7 @@ export async function buscarDetalhesDoLead(
   const origens = origensData ?? [];
   const produtos = (produtosData ?? []).map((p) => p.nome);
   const souAdmin = usuario.papel === "admin";
+  const souSdr = usuario.funcao === "sdr";
   const souCloser = await souCloserAtivo(supabase, leadId, usuario.id);
   const reuniaoAtiva = reunioes.find((r) => r.status === "marcada") ?? null;
   const reuniaoAnteriorPendente = reunioes.some(
@@ -2029,6 +2034,7 @@ export async function buscarDetalhesDoLead(
       produtos,
       imoveis: imoveisData ?? [],
       souAdmin,
+      souSdr,
       publicoOrg: usuario.publico_org,
       podeEditar,
       podeReivindicar,

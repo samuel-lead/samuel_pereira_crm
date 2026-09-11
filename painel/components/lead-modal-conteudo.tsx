@@ -14,7 +14,10 @@ import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
-import { Reuniao, Sdr } from "@/lib/terminologia";
+import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
+import { IconeTelefone } from "@/components/icons";
+import { SCRIPT_LIGACAO } from "@/lib/scripts-sdr";
+import { Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -101,6 +104,7 @@ export function LeadModalConteudo({
     produtos,
     imoveis,
     souAdmin,
+    souSdr,
     publicoOrg,
     podeEditar,
     podeReivindicar,
@@ -302,6 +306,14 @@ export function LeadModalConteudo({
               />
             </div>
           )
+        )}
+
+        {podeEditar && !ehImobiliario(publicoOrg) && (souAdmin || souSdr) && (
+          <BotaoDocumentoExterno
+            url={SCRIPT_LIGACAO.url}
+            label={SCRIPT_LIGACAO.label}
+            Icone={IconeTelefone}
+          />
         )}
 
         {podeEditar && <RegistrarLigacaoButton leadId={lead.id} />}
