@@ -72,26 +72,28 @@ export function BotaoDocumentoExterno({
         // Sem overlay/fundo escuro cobrindo a tela de propósito — a
         // pessoa precisa continuar digitando no card do lead (atrás,
         // à esquerda) enquanto está numa ligação com o script aberto do
-        // lado. Só fecha clicando no X aqui em cima, nunca clicando fora.
-        <div className="fixed inset-y-0 right-0 z-[60] flex w-full max-w-3xl flex-col bg-white shadow-2xl">
-          <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4">
-            <h2 className="truncate text-base font-bold text-neutral-900">{label}</h2>
-            <div className="flex shrink-0 items-center gap-3">
+        // lado. Só fecha clicando no botão "Fechar" aqui em cima, nunca
+        // clicando fora — largura menor (28rem) pra caber ao lado do
+        // card do lead sem espremer tudo (Samuel pegou isso ao vivo).
+        <div className="fixed inset-y-0 right-0 z-[60] flex w-full max-w-md flex-col bg-white shadow-2xl">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3">
+            <h2 className="min-w-0 truncate text-sm font-bold text-neutral-900">{label}</h2>
+            <div className="flex shrink-0 items-center gap-2">
               <a
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-medium text-blue-600 hover:underline"
+                className="hidden text-xs font-medium text-blue-600 hover:underline sm:inline"
               >
                 Abrir no Google Docs
               </a>
               <button
                 type="button"
                 onClick={fechar}
-                aria-label="Fechar"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+                className="flex items-center gap-1.5 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-700"
               >
                 <IconeX className="h-4 w-4" />
+                Fechar
               </button>
             </div>
           </div>
