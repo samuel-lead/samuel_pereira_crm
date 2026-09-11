@@ -73,9 +73,10 @@ export function BotaoDocumentoExterno({
         // pessoa precisa continuar digitando no card do lead (atrás,
         // à esquerda) enquanto está numa ligação com o script aberto do
         // lado. Só fecha clicando no botão "Fechar" aqui em cima, nunca
-        // clicando fora — largura menor (28rem) pra caber ao lado do
-        // card do lead sem espremer tudo (Samuel pegou isso ao vivo).
-        <div className="fixed inset-y-0 right-0 z-[60] flex w-full max-w-md flex-col bg-white shadow-2xl">
+        // clicando fora — largura grande (48rem) pra ler o documento
+        // confortável; o popup do lead encolhe pra abrir espaço (ver
+        // modal-lead.tsx), em vez do documento ficar pequeno.
+        <div className="fixed inset-y-0 right-0 z-[60] flex w-full max-w-3xl flex-col bg-white shadow-2xl">
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3">
             <h2 className="min-w-0 truncate text-sm font-bold text-neutral-900">{label}</h2>
             <div className="flex shrink-0 items-center gap-2">
