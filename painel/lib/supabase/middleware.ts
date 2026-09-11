@@ -21,6 +21,7 @@ function paginaDaRota(pathname: string): string | null {
   if (pathname === "/iscas" || pathname.startsWith("/iscas/")) return "admin";
   if (pathname === "/configuracoes" || pathname.startsWith("/configuracoes/")) return "admin";
   if (pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/")) return "admin";
+  if (pathname === "/rotina" || pathname.startsWith("/rotina/")) return "admin";
   if (pathname === "/integracoes" || pathname.startsWith("/integracoes/")) return "admin";
   if (pathname === "/imoveis" || pathname.startsWith("/imoveis/")) return "imoveis";
   if (pathname === "/cartas-contempladas" || pathname.startsWith("/cartas-contempladas/")) return "cartas_contempladas";
@@ -160,9 +161,20 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Bônus SDR é o oposto: não existe no imobiliário, essa mecânica é só
-    // de mentoria/serviço.
+    // de mentoria/serviço. "Minha rotina" (checklist diário) segue a mesma
+    // regra — imobiliário não separa SDR de Closer.
     const ehPaginaDeBonusSdr = pathname === "/bonus-sdr" || pathname.startsWith("/bonus-sdr/");
-    if (ehPaginaDeBonusSdr && publicoOrg === "imobiliario") {
+    const ehPaginaDeRotina = pathname === "/rotina" || pathname.startsWith("/rotina/");
+    if ((ehPaginaDeBonusSdr || ehPaginaDeRotina) && publicoOrg === "imobiliario") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/leads";
+      return NextResponse.redirect(url);
+    }
+
+    // "Minha rotina" é só pro SDR — Samuel foi explícito que nem admin
+    // deve ver essa aqui (diferente de Bônus SDR, que admin confere
+    // normalmente). É o checklist pessoal de quem trabalha a rotina.
+    if (ehPaginaDeRotina && usuario?.funcao !== "sdr") {
       const url = request.nextUrl.clone();
       url.pathname = "/leads";
       return NextResponse.redirect(url);

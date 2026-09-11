@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeX } from "@/components/icons";
+import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeCalendario, IconeX } from "@/components/icons";
 
 type ItemMenu = {
   href: string;
@@ -42,6 +42,7 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
       { href: "/cartas-contempladas", label: "Cartas contempladas", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
       { href: "/bonus-sdr", label: "Bônus SDR", Icone: IconeEstrela, pagina: "admin" },
+      { href: "/rotina", label: "Minha rotina", Icone: IconeCalendario, pagina: "admin", somenteMentoria: true },
     ],
   },
   {
@@ -87,6 +88,9 @@ export function Sidebar({
       if (item.somenteMentoria && publicoOrg === "imobiliario") return false;
       // Bônus SDR não existe no imobiliário — vale pra admin também.
       if (item.href === "/bonus-sdr" && publicoOrg === "imobiliario") return false;
+      // "Minha rotina" é só pro SDR — Samuel pediu que nem admin visse
+      // essa (diferente do Bônus SDR, que admin confere normalmente).
+      if (item.href === "/rotina" && funcao !== "sdr") return false;
       if (isAdmin) return true;
       // Bônus SDR é automático pra quem tem função SDR, não depende das
       // páginas liberadas manualmente — Closer não vê essa página.
