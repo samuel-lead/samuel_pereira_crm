@@ -9,6 +9,12 @@ const FUSO_BRASIL_MS = 3 * 60 * 60 * 1000; // UTC-3, sem horário de verão
 
 export type Metricas = {
   leadsTrabalhados: number;
+  // Igual a leadsTrabalhados, mas sem o carry-forward de lead de período
+  // anterior que só teve reunião agora — é o que "Leads novos" (cartão e
+  // tabela) precisa mostrar. Vem de graça da mesma consulta, pra não
+  // repetir a chamada inteira de novo só com uma opção diferente (isso
+  // dobrava as consultas da página de Métricas à toa).
+  leadsTrabalhadosDeclarados: number;
   ligacoes: number;
   reunioesMarcadas: number;
   // Das reuniões marcadas no período, quantas são de lead que TAMBÉM
@@ -264,6 +270,7 @@ export async function calcularMetricas(
 
   return {
     leadsTrabalhados: leads,
+    leadsTrabalhadosDeclarados: (leadsDeclarados ?? []).length,
     ligacoes: ligacoes ?? 0,
     reunioesMarcadas: marcadas,
     reunioesMarcadasLeadNovo: reunioesMarcadasLeadNovo ?? 0,
@@ -456,6 +463,7 @@ export async function calcularMetricasOrg(
 
   return {
     leadsTrabalhados: leads,
+    leadsTrabalhadosDeclarados: (leadsDeclarados ?? []).length,
     ligacoes: ligacoes ?? 0,
     reunioesMarcadas: marcadas,
     reunioesMarcadasLeadNovo: reunioesMarcadasLeadNovo ?? 0,
