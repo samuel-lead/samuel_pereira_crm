@@ -2,6 +2,31 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { User } from "@supabase/supabase-js";
 
+// Cacheia o resultado da consulta em "usuarios" (papel, páginas permitidas,
+// etc.) num cookie por até 30s, pra navegação rápida entre páginas não
+// pagar uma segunda ida ao banco a cada clique — só a checagem de login
+// (getUser) continua rodando toda vez, essa não dá pra pular. Seguro
+// porque essa consulta aqui é só pra decidir PRA ONDE redirecionar (UX);
+// quem protege os dados de verdade é a RLS no Postgres, que roda em cima
+// da sessão real a cada consulta, não desse cache. Pior caso: uma
+// permissão mudou agora mesmo e o middleware só percebe até 30s depois —
+// aceitável, e nunca dá acesso a dado que a RLS não deixaria de qualquer
+// forma.
+const CACHE_USUARIO_COOKIE = "mv_usuario_cache";
+const CACHE_USUARIO_TTL_MS = 30_000;
+
+type UsuarioCacheado = {
+  org_id: string | null;
+  nome: string | null;
+  papel: string | null;
+  funcao: string | null;
+  paginas_permitidas: string[];
+  foto_url: string | null;
+  super_admin: boolean;
+  status_org: string | undefined;
+  publico_org: string | undefined;
+};
+
 const ROTA_DA_PAGINA: Record<string, string> = {
   funil: "/leads",
   atividades: "/atividades",
@@ -113,19 +138,74 @@ export async function updateSession(request: NextRequest) {
     pathname !== "/sem-acesso" &&
     pathname !== "/conta-suspensa"
   ) {
-    const { data: usuario } = await supabase
-      .from("usuarios")
-      .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico)")
-      .eq("id", user.id)
-      .single();
+    let usuarioCache: UsuarioCacheado | null = null;
+    const cookieCache = request.cookies.get(CACHE_USUARIO_COOKIE)?.value;
+    if (cookieCache) {
+      try {
+        const parsed = JSON.parse(cookieCache) as { uid: string; t: number; d: UsuarioCacheado };
+        if (parsed.uid === user.id && Date.now() - parsed.t < CACHE_USUARIO_TTL_MS) {
+          usuarioCache = parsed.d;
+        }
+      } catch {
+        usuarioCache = null;
+      }
+    }
+
+    let usuario: {
+      org_id: string | null;
+      nome: string | null;
+      papel: string | null;
+      funcao: string | null;
+      paginas_permitidas: string[] | null;
+      foto_url: string | null;
+      super_admin: boolean | null;
+    } | null = null;
+    let statusOrg: string | undefined;
+    let publicoOrg: string | undefined;
+
+    if (usuarioCache) {
+      usuario = usuarioCache;
+      statusOrg = usuarioCache.status_org;
+      publicoOrg = usuarioCache.publico_org;
+    } else {
+      const { data: usuarioDoBanco } = await supabase
+        .from("usuarios")
+        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico)")
+        .eq("id", user.id)
+        .single();
+
+      usuario = usuarioDoBanco;
+      const orgInfo = usuarioDoBanco?.orgs as
+        | { status?: string; publico?: string }
+        | { status?: string; publico?: string }[]
+        | null;
+      statusOrg = Array.isArray(orgInfo) ? orgInfo[0]?.status : orgInfo?.status;
+      publicoOrg = Array.isArray(orgInfo) ? orgInfo[0]?.publico : orgInfo?.publico;
+
+      if (usuarioDoBanco) {
+        supabaseResponse.cookies.set(
+          CACHE_USUARIO_COOKIE,
+          JSON.stringify({
+            uid: user.id,
+            t: Date.now(),
+            d: {
+              org_id: usuarioDoBanco.org_id,
+              nome: usuarioDoBanco.nome,
+              papel: usuarioDoBanco.papel,
+              funcao: usuarioDoBanco.funcao,
+              paginas_permitidas: usuarioDoBanco.paginas_permitidas,
+              foto_url: usuarioDoBanco.foto_url,
+              super_admin: usuarioDoBanco.super_admin,
+              status_org: statusOrg,
+              publico_org: publicoOrg,
+            },
+          }),
+          { httpOnly: true, sameSite: "lax", path: "/", maxAge: CACHE_USUARIO_TTL_MS / 1000 }
+        );
+      }
+    }
 
     const ehSuperAdmin = usuario?.super_admin === true;
-    const orgInfo = usuario?.orgs as
-      | { status?: string; publico?: string }
-      | { status?: string; publico?: string }[]
-      | null;
-    const statusOrg = Array.isArray(orgInfo) ? orgInfo[0]?.status : orgInfo?.status;
-    const publicoOrg = Array.isArray(orgInfo) ? orgInfo[0]?.publico : orgInfo?.publico;
 
     // Empresa suspensa não entra em nada — exceto o dono da plataforma,
     // que nunca fica trancado pra fora por acidente.
