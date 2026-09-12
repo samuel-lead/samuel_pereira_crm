@@ -10,6 +10,14 @@
 //    pg_cron/pg_net. Não usa a service role key aqui de propósito — o
 //    segredo interno fica só no Vault do Postgres, nunca precisa expor a
 //    service role key fora das Edge Functions.
+//
+// verify_jwt fica desligado no deploy de propósito: a chamada interna do
+// cron manda um segredo simples (não um JWT de login de verdade) no
+// Authorization, e o gate de JWT da plataforma barrava isso ANTES do
+// código abaixo rodar — por isso os avisos automáticos nunca chegavam de
+// verdade (bug antigo, achado e corrigido em 2026-09-12). A validação de
+// quem pode chamar continua sendo feita aqui dentro, nos dois casos
+// (getUser real pro teste, segredo interno pros gatilhos).
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3";
