@@ -11,48 +11,57 @@ import {
   IconeCheck,
 } from "@/components/icons";
 
+// Horários batem com o documento "Rotina do SDR" (atualizado pelo Samuel
+// em 12/09/26) — não é mais o mesmo horário da versão anterior, então não
+// "arredondar" pra bater com o de antes se ele atualizar de novo.
 const ATIVIDADES = [
   {
     id: "confirmar_reunioes",
     hora: "09:00–09:30",
     titulo: "Confirmar e reagendar reuniões",
-    desc: "Reuniões do dia e reuniões que não aconteceram.",
+    desc: "Reuniões do dia e reagendar as do dia anterior.",
     Icone: IconeCalendario,
+    cor: "blue",
   },
   {
     id: "retomar_conversas",
     hora: "09:30–10:30",
-    titulo: "Retomar conversas sem resposta",
-    desc: "Leads que responderam ontem no WhatsApp ou Instagram.",
+    titulo: "Retomar conversas",
+    desc: "Leads que responderam no dia anterior no WhatsApp e Instagram.",
     Icone: IconeAtividade,
+    cor: "violet",
   },
   {
     id: "contato_nivel_3",
-    hora: "10:30",
+    hora: "10:30–11:00",
     titulo: "Contato com leads nível 3",
     desc: "Topou reunião mas sumiu na hora de marcar horário.",
     Icone: IconeAlvo,
+    cor: "amber",
   },
   {
     id: "ligacoes_quentes",
-    hora: "10:30–11:00",
+    hora: "11:00–12:00",
     titulo: "Ligações para leads quentes",
     desc: "Mínimo 30 ligações — ICP, tráfego pago, leads engajados.",
     Icone: IconeTelefone,
+    cor: "teal",
   },
   {
     id: "prospeccao",
-    hora: "11:00–15:30",
+    hora: "13:30–16:00",
     titulo: "Prospecção",
-    desc: "Mínimo 80 abordagens por dia no Instagram.",
+    desc: "Mínimo 80 abordagens por dia no Instagram — lead do tráfego é sempre prioridade.",
     Icone: IconeInstagram,
+    cor: "pink",
   },
   {
     id: "follow_niveis_1_2",
-    hora: "15:30–17:00",
+    hora: "16:00–17:00",
     titulo: "Follow com níveis 1 e 2",
     desc: "Sequência de mensagens curtas para reengajar e ligações.",
     Icone: IconeAtividade,
+    cor: "indigo",
   },
   {
     id: "confirmar_amanha",
@@ -60,8 +69,19 @@ const ATIVIDADES = [
     titulo: "Confirmar reuniões de amanhã",
     desc: "E atualizar o CRM antes de enviar o relatório do dia.",
     Icone: IconeCalendario,
+    cor: "emerald",
   },
 ];
+
+const CORES: Record<string, string> = {
+  blue: "bg-blue-50 text-blue-600",
+  violet: "bg-violet-50 text-violet-600",
+  amber: "bg-amber-50 text-amber-600",
+  teal: "bg-teal-50 text-teal-600",
+  pink: "bg-pink-50 text-pink-600",
+  indigo: "bg-indigo-50 text-indigo-600",
+  emerald: "bg-emerald-50 text-emerald-600",
+};
 
 function dataDeHojeFormatada() {
   return new Date().toLocaleDateString("pt-BR", {
@@ -146,14 +166,24 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
                   >
                     {atividade.titulo}
                   </span>
-                  <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      feita ? "bg-neutral-100 text-neutral-400" : CORES[atividade.cor]
+                    }`}
+                  >
                     {atividade.hora}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-neutral-500">{atividade.desc}</p>
               </div>
 
-              <atividade.Icone className="mt-0.5 h-5 w-5 shrink-0 text-neutral-300" />
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                  feita ? "bg-neutral-100 text-neutral-300" : CORES[atividade.cor]
+                }`}
+              >
+                <atividade.Icone className="h-5 w-5" />
+              </span>
             </button>
           );
         })}
