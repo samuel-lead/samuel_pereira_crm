@@ -6,6 +6,11 @@ import { ContextoLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { LeadModalConteudo } from "@/components/lead-modal-conteudo";
 import { LeadPainelImobiliario } from "@/components/lead-painel-imobiliario";
 import { AvatarLead } from "@/components/avatar-lead";
+import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
+import { ProximoContatoBotao } from "@/components/proximo-contato-botao";
+import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
+import { IconeTelefone } from "@/components/icons";
+import { SCRIPT_PRE_QUALIFICACAO } from "@/lib/scripts-sdr";
 import { lerLeadDoCache, salvarLeadNoCache } from "@/lib/leads/cache-lead";
 import { ehImobiliario } from "@/lib/terminologia";
 
@@ -164,6 +169,38 @@ export function ModalLead({
                     {dados.lead.nome}
                   </h1>
                 </div>
+
+                {/* Samuel pediu essas 3 ações no cabeçalho, ao lado do nome,
+                    em vez de espalhadas no corpo do card — dá pra ligar,
+                    marcar o próximo contato e abrir o script sem rolar a
+                    página. Só pra quem edita e só mentoria (imobiliário usa
+                    o painel lateral, layout diferente). */}
+                {!painelLateral && dados.podeEditar && (
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                    {dados.lead.status !== "vendido" && (
+                      <ProximoContatoBotao
+                        leadId={dados.lead.id}
+                        proximoContatoEm={dados.lead.proximo_follow_em}
+                      />
+                    )}
+                    <div className="w-40">
+                      <RegistrarLigacaoButton leadId={dados.lead.id} />
+                    </div>
+                    {!ehImobiliario(dados.publicoOrg) && (dados.souAdmin || dados.souSdr) && (
+                      <div className="w-40">
+                        <BotaoDocumentoExterno
+                          url={SCRIPT_PRE_QUALIFICACAO.url}
+                          label={SCRIPT_PRE_QUALIFICACAO.label}
+                          Icone={IconeTelefone}
+                          aoMudarEstado={(estado) => {
+                            setDocumentoAberto(estado.aberto);
+                            setLarguraDocumento(estado.largura);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <ContextoLeadModalAtivo.Provider
                 value={{ recarregar: carregar, fechar: aoFechar }}
@@ -189,10 +226,6 @@ export function ModalLead({
                       nivelPretendido={nivelPretendido}
                       travaSalvarPorCache={confirmandoCache}
                       documentoAberto={documentoAberto}
-                      aoMudarEstadoDocumento={(estado) => {
-                        setDocumentoAberto(estado.aberto);
-                        setLarguraDocumento(estado.largura);
-                      }}
                     />
                   </div>
                 )}

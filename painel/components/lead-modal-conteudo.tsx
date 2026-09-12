@@ -2,22 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RegistrarNotaForm } from "@/components/registrar-nota-form";
-import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
-import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
-import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
-import { IconeTelefone } from "@/components/icons";
-import { SCRIPT_PRE_QUALIFICACAO } from "@/lib/scripts-sdr";
-import { Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
+import { Reuniao, Sdr } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -59,7 +54,6 @@ export function LeadModalConteudo({
   nivelPretendido,
   travaSalvarPorCache,
   documentoAberto,
-  aoMudarEstadoDocumento,
 }: {
   dados: DetalhesLead;
   marcarReuniao?: boolean;
@@ -84,7 +78,6 @@ export function LeadModalConteudo({
   // largura da JANELA, não do card (foi exatamente isso que espremia tudo
   // antes). Ver components/modal-lead.tsx.
   documentoAberto?: boolean;
-  aoMudarEstadoDocumento?: (estado: { aberto: boolean; largura: number }) => void;
 }) {
   const [focarProposta, setFocarProposta] = useState(!!abrirProposta);
   const propostaRef = useRef<HTMLDivElement>(null);
@@ -113,7 +106,6 @@ export function LeadModalConteudo({
     produtos,
     imoveis,
     souAdmin,
-    souSdr,
     publicoOrg,
     podeEditar,
     podeReivindicar,
@@ -259,10 +251,6 @@ export function LeadModalConteudo({
           </div>
         )}
 
-        {podeEditar && lead.status !== "vendido" && (
-          <ProximoContatoForm leadId={lead.id} proximoContatoEm={lead.proximo_follow_em} />
-        )}
-
         {lead.status === "vendido" ? (
           <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
             <h2 className="text-sm font-semibold text-green-800">✓ Vendido</h2>
@@ -319,17 +307,6 @@ export function LeadModalConteudo({
               />
             </div>
           )
-        )}
-
-        {podeEditar && <RegistrarLigacaoButton leadId={lead.id} />}
-
-        {podeEditar && !ehImobiliario(publicoOrg) && (souAdmin || souSdr) && (
-          <BotaoDocumentoExterno
-            url={SCRIPT_PRE_QUALIFICACAO.url}
-            label={SCRIPT_PRE_QUALIFICACAO.label}
-            Icone={IconeTelefone}
-            aoMudarEstado={aoMudarEstadoDocumento}
-          />
         )}
 
         {podeEditar && (
