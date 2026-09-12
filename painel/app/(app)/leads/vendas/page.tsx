@@ -20,12 +20,18 @@ type LeadVendido = {
   produto: string | null;
   valor_venda: number | null;
   receita_venda: number | null;
+  declarado_em: string;
   vendido_em: string | null;
   responsavel_id: string | null;
 };
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatarData(iso: string | null) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
 export default async function VendasPage({
@@ -53,7 +59,9 @@ export default async function VendasPage({
 
   let consulta = supabase
     .from("leads")
-    .select("id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, vendido_em, responsavel_id")
+    .select(
+      "id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, declarado_em, vendido_em, responsavel_id"
+    )
     .eq("status", "vendido")
     .is("arquivado_em", null)
     .order("vendido_em", { ascending: false });
@@ -190,13 +198,14 @@ export default async function VendasPage({
                 {!ehImobiliario(publicoOrg) && (
                   <th className="px-4 py-3 font-medium">Closer</th>
                 )}
+                <th className="px-4 py-3 font-medium">Entrou em</th>
                 <th className="px-4 py-3 font-medium">Vendido em</th>
               </tr>
             </thead>
             <tbody>
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={ehImobiliario(publicoOrg) ? 7 : 9} className="px-4 py-10 text-center text-sm text-neutral-400">
+                  <td colSpan={ehImobiliario(publicoOrg) ? 8 : 10} className="px-4 py-10 text-center text-sm text-neutral-400">
                     Nenhum cliente encontrado
                   </td>
                 </tr>
@@ -242,6 +251,7 @@ export default async function VendasPage({
                         {lead.responsavel_id ? nomePorUsuario.get(lead.responsavel_id) ?? "—" : "—"}
                       </td>
                     )}
+                    <td className="px-4 py-3 text-neutral-600">{formatarData(lead.declarado_em)}</td>
                     <td className="px-4 py-3 text-neutral-600">
                       <EditarDataVendaInline
                         leadId={lead.id}
