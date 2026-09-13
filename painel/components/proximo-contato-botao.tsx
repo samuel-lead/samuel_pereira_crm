@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { marcarProximoContato, cancelarProximoContato } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { CampoDataHora } from "@/components/campo-data-hora";
+import { IconeCalendario } from "@/components/icons";
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -49,7 +50,7 @@ export function ProximoContatoBotao({
     iniciarTransicao(async () => {
       try {
         await marcarProximoContato(leadId, formData);
-        modalAtivo?.recarregar();
+        await modalAtivo?.recarregar();
         setAberto(false);
       } catch (e) {
         setErro(e instanceof Error ? e.message : "Não deu pra marcar");
@@ -62,7 +63,7 @@ export function ProximoContatoBotao({
     iniciarTransicao(async () => {
       try {
         await cancelarProximoContato(leadId);
-        modalAtivo?.recarregar();
+        await modalAtivo?.recarregar();
         setAberto(false);
       } catch (e) {
         setErro(e instanceof Error ? e.message : "Não deu pra cancelar");
@@ -76,10 +77,11 @@ export function ProximoContatoBotao({
     <div ref={containerRef} className="relative">
       {proximoContatoEm ? (
         <div
-          className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium shadow-sm ${
-            atrasado ? "border-red-200 bg-red-50 text-red-700" : "border-teal-200 bg-teal-50 text-teal-800"
+          className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm ${
+            atrasado ? "bg-red-600 shadow-red-600/30" : "bg-teal-600 shadow-teal-600/30"
           }`}
         >
+          <IconeCalendario className="h-4 w-4 shrink-0" />
           <span className="whitespace-nowrap">
             {atrasado ? "Contato atrasado: " : "Próximo contato: "}
             {formatarData(proximoContatoEm)}
@@ -87,7 +89,7 @@ export function ProximoContatoBotao({
           <button
             type="button"
             onClick={() => setAberto((atual) => !atual)}
-            className="shrink-0 rounded border border-current px-1.5 py-0.5 text-[11px] hover:opacity-70"
+            className="shrink-0 rounded border border-white/70 px-1.5 py-0.5 text-[11px] transition hover:bg-white/10"
           >
             Editar
           </button>
@@ -96,9 +98,10 @@ export function ProximoContatoBotao({
         <button
           type="button"
           onClick={() => setAberto((atual) => !atual)}
-          className="flex items-center gap-2 whitespace-nowrap rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+          className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/30 transition hover:bg-blue-700 hover:shadow-md"
         >
-          📅 Marcar próximo contato
+          <IconeCalendario className="h-4 w-4 shrink-0" />
+          Marcar próximo contato
         </button>
       )}
 

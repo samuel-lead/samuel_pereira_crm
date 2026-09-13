@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RegistrarNotaForm } from "@/components/registrar-nota-form";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
-import { EditarLeadForm } from "@/components/editar-lead-form";
+import { EditarLeadForm, type EstadoRodapeSalvarLead } from "@/components/editar-lead-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
@@ -81,6 +81,11 @@ export function LeadModalConteudo({
 }) {
   const [focarProposta, setFocarProposta] = useState(!!abrirProposta);
   const propostaRef = useRef<HTMLDivElement>(null);
+  // Rodapé de "Salvar alterações" — vem de dentro do EditarLeadForm (ver
+  // comentário em editar-lead-form.tsx), mas é desenhado aqui, fora das
+  // duas colunas, pra ficar preso no rodapé do card inteiro ao rolar
+  // (Samuel pediu: "não está ficando no rodapé, só quando eu salvo").
+  const [rodape, setRodape] = useState<EstadoRodapeSalvarLead | null>(null);
   // Diferente das perguntas do formulário (que param em 3 piscadas): aqui
   // só para quando a proposta é registrada de verdade — não tem timer.
   // Samuel foi explícito: "quando eu preencher a proposta e registrar,
@@ -229,6 +234,7 @@ export function LeadModalConteudo({
           googleCalendarConectado={googleCalendarConectado}
           travaSalvarPorCache={travaSalvarPorCache}
           aoConfirmarTeveProposta={() => setFocarProposta(true)}
+          aoMudarEstadoRodape={setRodape}
         />
       </div>
 
@@ -394,6 +400,37 @@ export function LeadModalConteudo({
           <ExcluirLeadButton leadId={lead.id} nome={lead.nome} />
         )}
       </div>
+
+      {rodape && (
+        <div className="sticky bottom-0 z-10 -mx-5 -mb-5 space-y-2 border-t border-neutral-200 bg-white px-5 py-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)] lg:col-span-2">
+          {rodape.erro && (
+            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{rodape.erro}</p>
+          )}
+
+          {rodape.avisoGoogleAgenda && (
+            <p className="destaque-proposta rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Falta o e-mail para salvar direto no Google Agenda também, por enquanto vai salvar
+              só aqui no CRM. Você vai ter que adicionar no Google Agenda de forma manual se não
+              preencher o e-mail.
+            </p>
+          )}
+
+          {rodape.travaSalvarPorCache && (
+            <p className="text-xs text-neutral-400">Confirmando dados mais recentes desse lead...</p>
+          )}
+
+          {rodape.podeEditar && (
+            <button
+              type="submit"
+              form={rodape.formId}
+              disabled={rodape.pendente || rodape.travaSalvarPorCache}
+              className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+            >
+              {rodape.rotuloBotao}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

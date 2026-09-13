@@ -36,7 +36,7 @@ export type EstadoLeadModalAtivo = {
   // Busca os dados de novo depois de uma ação (salvar, registrar nota
   // etc.) — o pop-up não é uma rota, então nada disso acontece sozinho
   // como aconteceria numa página normal.
-  recarregar: () => void;
+  recarregar: () => Promise<void>;
   fechar: () => void;
 };
 

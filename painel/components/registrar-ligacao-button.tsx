@@ -3,8 +3,18 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { registrarLigacao } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
+import { IconeTelefone } from "@/components/icons";
 
-export function RegistrarLigacaoButton({ leadId }: { leadId: string }) {
+export function RegistrarLigacaoButton({
+  leadId,
+  variante = "padrao",
+}: {
+  leadId: string;
+  // "destaque" é a versão chamativa usada no cabeçalho do card do lead
+  // (Samuel pediu botão "clicável, chamativo") — cor sólida em vez de
+  // borda neutra.
+  variante?: "padrao" | "destaque";
+}) {
   const modalAtivo = useLeadModalAtivo();
   const [erro, setErro] = useState<string | null>(null);
   const [registrado, setRegistrado] = useState<"atendida" | "nao_atendida" | null>(null);
@@ -54,12 +64,15 @@ export function RegistrarLigacaoButton({ leadId }: { leadId: string }) {
         type="button"
         onClick={() => setAberto((atual) => !atual)}
         disabled={pendente || !!registrado}
-        className={`flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium shadow-sm transition disabled:cursor-not-allowed ${
+        className={`flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed ${
           registrado
-            ? "border-green-300 bg-green-50 text-green-700"
-            : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+            ? "bg-green-600 text-white"
+            : variante === "destaque"
+              ? "bg-emerald-600 text-white shadow-emerald-600/30 hover:bg-emerald-700 hover:shadow-md disabled:opacity-60"
+              : "border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
         }`}
       >
+        {variante === "destaque" && !registrado && <IconeTelefone className="h-4 w-4 shrink-0" />}
         {rotulo}
       </button>
 

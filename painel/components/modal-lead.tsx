@@ -155,7 +155,7 @@ export function ModalLead({
           ) : (
             <>
               <div
-                className={`flex shrink-0 items-center gap-3 justify-between border-b border-neutral-200 bg-white px-5 py-4 pr-14 ${
+                className={`flex shrink-0 flex-col gap-3 border-b border-neutral-200 bg-white px-5 py-4 pr-14 ${
                   painelLateral ? "" : "sticky top-0 z-10 rounded-t-xl"
                 }`}
               >
@@ -170,28 +170,30 @@ export function ModalLead({
                   </h1>
                 </div>
 
-                {/* Samuel pediu essas 3 ações no cabeçalho, ao lado do nome,
-                    em vez de espalhadas no corpo do card — dá pra ligar,
-                    marcar o próximo contato e abrir o script sem rolar a
-                    página. Só pra quem edita e só mentoria (imobiliário usa
-                    o painel lateral, layout diferente). */}
+                {/* Samuel pediu essas 3 ações no cabeçalho: nome sempre
+                    inteiro numa linha própria em cima (nunca tampado pelos
+                    botões), botões numa linha logo abaixo, lado a lado —
+                    dá pra ligar, marcar o próximo contato e abrir o script
+                    sem rolar a página. Só pra quem edita e só mentoria
+                    (imobiliário usa o painel lateral, layout diferente). */}
                 {!painelLateral && dados.podeEditar && (
-                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {dados.lead.status !== "vendido" && (
                       <ProximoContatoBotao
                         leadId={dados.lead.id}
                         proximoContatoEm={dados.lead.proximo_follow_em}
                       />
                     )}
-                    <div className="w-40">
-                      <RegistrarLigacaoButton leadId={dados.lead.id} />
+                    <div className="w-44">
+                      <RegistrarLigacaoButton leadId={dados.lead.id} variante="destaque" />
                     </div>
                     {!ehImobiliario(dados.publicoOrg) && (dados.souAdmin || dados.souSdr) && (
-                      <div className="w-40">
+                      <div className="w-44">
                         <BotaoDocumentoExterno
                           url={SCRIPT_PRE_QUALIFICACAO.url}
                           label={SCRIPT_PRE_QUALIFICACAO.label}
                           Icone={IconeTelefone}
+                          variante="destaque"
                           aoMudarEstado={(estado) => {
                             setDocumentoAberto(estado.aberto);
                             setLarguraDocumento(estado.largura);

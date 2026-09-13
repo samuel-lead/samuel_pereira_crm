@@ -45,7 +45,7 @@ export function BotaoDocumentoExterno({
   url: string;
   label: string;
   Icone: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
-  variante?: "cartao" | "botao";
+  variante?: "cartao" | "botao" | "destaque";
   conteudo?: React.ReactNode;
   aoMudarEstado?: (estado: { aberto: boolean; largura: number }) => void;
 }) {
@@ -114,6 +114,15 @@ export function BotaoDocumentoExterno({
           <span className="min-w-0 flex-1 whitespace-nowrap text-[13px] font-semibold text-neutral-800">
             {label}
           </span>
+        </button>
+      ) : variante === "destaque" ? (
+        <button
+          type="button"
+          onClick={abrir}
+          className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-600/30 transition hover:bg-violet-700 hover:shadow-md"
+        >
+          <Icone className="h-4 w-4 shrink-0" />
+          {label}
         </button>
       ) : (
         <button

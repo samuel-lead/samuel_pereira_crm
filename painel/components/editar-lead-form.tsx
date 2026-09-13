@@ -70,6 +70,22 @@ const campoClasse =
 const labelClasse = "text-sm font-medium text-neutral-700";
 const estadoInicial: EstadoFormulario = { erro: null };
 
+// Dentro do pop-up (Samuel pediu), o rodapé com "Salvar alterações" sai
+// daqui de dentro e é desenhado por lead-modal-conteudo.tsx, fora da coluna
+// do formulário — só assim ele fica preso no rodapé do card INTEIRO ao
+// rolar, e não só enquanto esse formulário (que é só a coluna da esquerda)
+// ainda está visível. O botão continua submetendo esse form normalmente
+// via o atributo HTML `form="<id>"`, mesmo estando fora dele no DOM.
+export type EstadoRodapeSalvarLead = {
+  formId: string;
+  erro: string | null;
+  pendente: boolean;
+  travaSalvarPorCache: boolean;
+  avisoGoogleAgenda: boolean;
+  rotuloBotao: string;
+  podeEditar: boolean;
+};
+
 // Lead na Base: o card inteiro (aberto por aqui, "por dentro") não tem
 // mais nível pra escolher nem "Agendar reunião" — só esse botão, igual ao
 // que já existe "por fora" no rodapé do card em base-leads-board.tsx.
@@ -268,6 +284,7 @@ export function EditarLeadForm({
   googleCalendarConectado = false,
   travaSalvarPorCache = false,
   aoConfirmarTeveProposta,
+  aoMudarEstadoRodape,
 }: {
   lead: Lead;
   niveis: NivelResumo[];
@@ -317,6 +334,12 @@ export function EditarLeadForm({
   // proposta" ao mover manualmente pra Follow/Oportunidades — o pop-up
   // rola até o card de Proposta e destaca, em vez de fechar sozinho.
   aoConfirmarTeveProposta?: () => void;
+  // Quando passado (só dentro do pop-up), o rodapé de "Salvar alterações"
+  // não é desenhado aqui — esse callback avisa o estado pra fora, e quem
+  // desenha o botão de verdade é lead-modal-conteudo.tsx (ver comentário
+  // acima de EstadoRodapeSalvarLead). Sem esse prop (ex.: página cheia do
+  // lead, painel do imobiliário), continua tudo como sempre.
+  aoMudarEstadoRodape?: (estado: EstadoRodapeSalvarLead | null) => void;
 }) {
   const modalAtivo = useLeadModalAtivo();
   const acaoComId = atualizarLead.bind(null, lead.id, !modalAtivo);
@@ -532,9 +555,42 @@ export function EditarLeadForm({
   const prontoParaAgenda =
     emReuniaoMarcada && googleCalendarConectado && !!emailAtual.trim();
 
+  const formId = `formulario-editar-lead-${lead.id}`;
+  const avisoGoogleAgenda = emReuniaoMarcada && googleCalendarConectado && !prontoParaAgenda;
+  const rotuloBotao = pendente
+    ? "Salvando..."
+    : travaSalvarPorCache
+      ? "Confirmando..."
+      : prontoParaAgenda
+        ? "Salvar alterações e no Google Agenda"
+        : "Salvar alterações";
+
+  useEffect(() => {
+    if (!aoMudarEstadoRodape) return;
+    aoMudarEstadoRodape({
+      formId,
+      erro: estado.erro,
+      pendente,
+      travaSalvarPorCache,
+      avisoGoogleAgenda,
+      rotuloBotao,
+      podeEditar,
+    });
+    return () => aoMudarEstadoRodape(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    formId,
+    estado.erro,
+    pendente,
+    travaSalvarPorCache,
+    avisoGoogleAgenda,
+    rotuloBotao,
+    podeEditar,
+  ]);
+
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-      <form action={acaoFormulario} className="space-y-4">
+      <form id={formId} action={acaoFormulario} className="space-y-4">
         <fieldset disabled={!podeEditar} className="space-y-4">
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="nome">
@@ -1126,43 +1182,39 @@ export function EditarLeadForm({
         )}
       </fieldset>
 
-        <div className="sticky bottom-0 -mx-6 -mb-6 space-y-2 rounded-b-lg border-t border-neutral-200 bg-white px-6 py-4">
-          {estado.erro && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
-              {estado.erro}
-            </p>
-          )}
+        {!aoMudarEstadoRodape && (
+          <div className="sticky bottom-0 -mx-6 -mb-6 space-y-2 rounded-b-lg border-t border-neutral-200 bg-white px-6 py-4">
+            {estado.erro && (
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+                {estado.erro}
+              </p>
+            )}
 
-          {emReuniaoMarcada && googleCalendarConectado && !prontoParaAgenda && (
-            <p className="destaque-proposta rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              Falta o e-mail para salvar direto no Google Agenda também, por
-              enquanto vai salvar só aqui no CRM. Você vai ter que adicionar
-              no Google Agenda de forma manual se não preencher o e-mail.
-            </p>
-          )}
+            {avisoGoogleAgenda && (
+              <p className="destaque-proposta rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Falta o e-mail para salvar direto no Google Agenda também, por
+                enquanto vai salvar só aqui no CRM. Você vai ter que adicionar
+                no Google Agenda de forma manual se não preencher o e-mail.
+              </p>
+            )}
 
-          {travaSalvarPorCache && (
-            <p className="text-xs text-neutral-400">
-              Confirmando dados mais recentes desse lead...
-            </p>
-          )}
+            {travaSalvarPorCache && (
+              <p className="text-xs text-neutral-400">
+                Confirmando dados mais recentes desse lead...
+              </p>
+            )}
 
-          {podeEditar && (
-            <button
-              type="submit"
-              disabled={pendente || travaSalvarPorCache}
-              className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-            >
-              {pendente
-                ? "Salvando..."
-                : travaSalvarPorCache
-                  ? "Confirmando..."
-                  : prontoParaAgenda
-                    ? "Salvar alterações e no Google Agenda"
-                    : "Salvar alterações"}
-            </button>
-          )}
-        </div>
+            {podeEditar && (
+              <button
+                type="submit"
+                disabled={pendente || travaSalvarPorCache}
+                className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+              >
+                {rotuloBotao}
+              </button>
+            )}
+          </div>
+        )}
       </form>
     </div>
   );
