@@ -115,6 +115,10 @@ export function EditarVendaForm({
           required
           defaultValue={vendidoEm ? vendidoEm.slice(0, 10) : hoje}
           max={hoje}
+          // Sem isso só o ícone do calendário abria o seletor — clicar no
+          // resto do campo só posicionava o cursor pra digitar (Samuel
+          // pediu pra clicar em qualquer parte e já abrir).
+          onClick={(e) => e.currentTarget.showPicker?.()}
           className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
         />
       </div>

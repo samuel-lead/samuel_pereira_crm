@@ -72,6 +72,7 @@ export function EditarDataVendaInline({
           defaultValue={vendidoEm ? vendidoEm.slice(0, 10) : hoje}
           max={hoje}
           autoFocus
+          onClick={(e) => e.currentTarget.showPicker?.()}
           className="rounded border border-neutral-300 px-1.5 py-1 text-xs text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
         <button
