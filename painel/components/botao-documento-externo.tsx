@@ -119,7 +119,7 @@ export function BotaoDocumentoExterno({
         <button
           type="button"
           onClick={abrir}
-          className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-600/30 transition hover:bg-violet-700 hover:shadow-md"
+          className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-amber-600/30 transition hover:bg-amber-700 hover:shadow-md"
         >
           <Icone className="h-4 w-4 shrink-0" />
           {label}

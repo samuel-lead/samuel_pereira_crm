@@ -14,6 +14,13 @@ import { SCRIPT_PRE_QUALIFICACAO } from "@/lib/scripts-sdr";
 import { lerLeadDoCache, salvarLeadNoCache } from "@/lib/leads/cache-lead";
 import { ehImobiliario } from "@/lib/terminologia";
 
+// Mesmos níveis de lib/niveis.ts (4 = Reunião marcada, 7 = Follow após
+// reunião, 8 = Oportunidades pro fim do mês) — Samuel pediu explicitamente
+// pra tirar o botão de pré-qualificação nesses três, porque nessa altura
+// do funil a call já foi marcada/feita, não faz mais sentido pedir pra
+// qualificar de novo antes de marcar.
+const NIVEIS_SEM_PRE_QUALIFICACAO = [4, 7, 8];
+
 // Pop-up que abre por cima da tela atual ao clicar num lead, sem trocar
 // de rota — não usa nenhuma técnica de rota do Next.js (foi exatamente
 // uma rota interceptada que causou aquele 404 real em produção antes;
@@ -204,7 +211,9 @@ export function ModalLead({
                     <div className="w-fit">
                       <RegistrarLigacaoButton leadId={dados.lead.id} variante="destaque" />
                     </div>
-                    {!ehImobiliario(dados.publicoOrg) && (dados.souAdmin || dados.souSdr) && (
+                    {!ehImobiliario(dados.publicoOrg) &&
+                      (dados.souAdmin || dados.souSdr) &&
+                      !NIVEIS_SEM_PRE_QUALIFICACAO.includes(dados.lead.nivel_ordem) && (
                       <div className="w-fit">
                         <BotaoDocumentoExterno
                           url={SCRIPT_PRE_QUALIFICACAO.url}
