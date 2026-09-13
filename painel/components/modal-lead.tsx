@@ -167,7 +167,13 @@ export function ModalLead({
             >
               <div
                 className={`flex shrink-0 flex-col gap-3 border-b border-neutral-200 bg-white px-5 py-4 pr-14 ${
-                  painelLateral ? "" : "sticky top-0 z-10 rounded-t-xl"
+                  // z-20 (não z-10): o rodapé de "Salvar alterações" (ver
+                  // lead-modal-conteudo.tsx) também é "sticky" e tem o
+                  // MESMO z-index por padrão — como ele vem depois no HTML,
+                  // ganhava o empate e tampava os menus que abrem a partir
+                  // daqui (calendário do "Marcar próximo contato", etc.).
+                  // Precisa ficar acima do rodapé sempre.
+                  painelLateral ? "" : "sticky top-0 z-20 rounded-t-xl"
                 }`}
               >
                 <div className="flex min-w-0 items-center gap-3">
