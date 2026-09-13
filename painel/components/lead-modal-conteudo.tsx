@@ -291,7 +291,11 @@ export function LeadModalConteudo({
           lead.nivel_ordem !== NIVEL_REAGENDAMENTO && (
             <div
               ref={propostaRef}
-              className={`scroll-mt-16 rounded-lg ${brilhoPropostaAtivo ? "destaque-proposta" : ""}`}
+              // scroll-mt-16 não bastava mais depois que o cabeçalho ganhou
+              // uma segunda linha de botões (ficou mais alto) — ao rolar
+              // até aqui, o título "Proposta" ficava escondido atrás do
+              // cabeçalho fixo (sticky). Samuel pegou isso ao vivo.
+              className={`scroll-mt-40 rounded-lg ${brilhoPropostaAtivo ? "destaque-proposta" : ""}`}
             >
               <PropostaVendaCard
                 leadId={lead.id}

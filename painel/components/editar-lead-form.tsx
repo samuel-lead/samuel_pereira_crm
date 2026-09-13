@@ -185,7 +185,10 @@ function BlocoReativarLead({
   }
 
   return (
-    <div ref={blocoRef} className="scroll-mt-28 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+    // scroll-mt-40 (não mais 28) — o cabeçalho do card ficou mais alto
+    // depois que ganhou a segunda linha de botões, mesmo ajuste feito em
+    // lead-modal-conteudo.tsx pro card de Proposta.
+    <div ref={blocoRef} className="scroll-mt-40 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
       <MenuSelect
         titulo="Reativar pra qual nível"
         placeholder="Nível de Pré-vendas..."
@@ -793,7 +796,7 @@ export function EditarLeadForm({
           {vaiEntrarEmReuniaoMarcada && (
             <div
               ref={camposReuniaoRef}
-              className="mt-2 scroll-mt-28 space-y-3 rounded-md border border-green-200 bg-green-50 p-3"
+              className="mt-2 scroll-mt-40 space-y-3 rounded-md border border-green-200 bg-green-50 p-3"
             >
               <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="marcada_em">
