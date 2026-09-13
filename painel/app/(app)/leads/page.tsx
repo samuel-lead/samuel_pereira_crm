@@ -131,12 +131,18 @@ export default async function LeadsPage({
 
   const orgId = usuarioAtual?.org_id ?? null;
 
+  // Junta com "leads" e exige arquivado_em nulo em todas as 3 — sem isso,
+  // ligação de um lead já excluído continuava contando aqui pra sempre
+  // (diferente de "Calls marcadas hoje", que já fazia essa checagem).
+  // Samuel pegou isso ao vivo: excluiu um lead de teste e as ligações dele
+  // continuaram aparecendo em "Ligações hoje".
   const consultaLigacoesHoje = user
     ? supabase
         .from("interacoes")
-        .select("id", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
         .eq("tipo", "ligacao")
         .is("excluido_em", null)
+        .is("leads.arquivado_em", null)
         .gte("ocorreu_em", inicioHoje.toISOString())
         .lt("ocorreu_em", amanha.toISOString())
     : null;
@@ -144,10 +150,11 @@ export default async function LeadsPage({
   const consultaLigacoesAtendidasHoje = user
     ? supabase
         .from("interacoes")
-        .select("id", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
         .eq("tipo", "ligacao")
         .eq("atendida", true)
         .is("excluido_em", null)
+        .is("leads.arquivado_em", null)
         .gte("ocorreu_em", inicioHoje.toISOString())
         .lt("ocorreu_em", amanha.toISOString())
     : null;
@@ -155,10 +162,11 @@ export default async function LeadsPage({
   const consultaLigacoesNaoAtendidasHoje = user
     ? supabase
         .from("interacoes")
-        .select("id", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
         .eq("tipo", "ligacao")
         .eq("atendida", false)
         .is("excluido_em", null)
+        .is("leads.arquivado_em", null)
         .gte("ocorreu_em", inicioHoje.toISOString())
         .lt("ocorreu_em", amanha.toISOString())
     : null;

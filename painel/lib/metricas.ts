@@ -106,13 +106,16 @@ export async function calcularMetricas(
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
     // Ligação é diferente: conta pra quem realmente discou, não pra quem é
-    // o responsável do lead — por isso continua em usuario_id.
+    // o responsável do lead — por isso continua em usuario_id. Junta com
+    // "leads" e exige arquivado_em nulo — sem isso, ligação de um lead já
+    // excluído (ex.: lead de teste) continuava contando pra sempre.
     supabase
       .from("interacoes")
-      .select("id", { count: "exact", head: true })
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
       .eq("usuario_id", usuarioId)
       .eq("tipo", "ligacao")
       .is("excluido_em", null)
+      .is("leads.arquivado_em", null)
       .gte("ocorreu_em", inicioISO)
       .lt("ocorreu_em", fimISO),
     // Toda reunião "ativa" no período — marcada dentro dele OU com a call
@@ -328,12 +331,15 @@ export async function calcularMetricasOrg(
       .is("arquivado_em", null)
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
+    // Junta com "leads" e exige arquivado_em nulo — sem isso, ligação de um
+    // lead já excluído (ex.: lead de teste) continuava contando pra sempre.
     supabase
       .from("interacoes")
-      .select("id", { count: "exact", head: true })
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
       .eq("org_id", orgId)
       .eq("tipo", "ligacao")
       .is("excluido_em", null)
+      .is("leads.arquivado_em", null)
       .gte("ocorreu_em", inicioISO)
       .lt("ocorreu_em", fimISO),
     // Usada só pra "lead trabalhado" do período — não conta mais "reuniões
