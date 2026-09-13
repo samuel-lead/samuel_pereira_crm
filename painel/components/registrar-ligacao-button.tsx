@@ -38,7 +38,15 @@ export function RegistrarLigacaoButton({
     iniciarTransicao(async () => {
       try {
         await registrarLigacao(leadId, atendida);
-        modalAtivo?.recarregar();
+        // Precisa esperar terminar (await) antes de liberar o botão — se
+        // duas ligações forem registradas em sequência rápida, duas buscas
+        // de dado novo saem quase juntas, e sem esperar a ordem de chegada
+        // das respostas não é garantida: a busca da PRIMEIRA ligação podia
+        // chegar DEPOIS da segunda e sobrescrever a tela com o dado velho,
+        // fazendo a segunda ligação sumir da linha do tempo mesmo já tendo
+        // sido gravada certinho no banco (Samuel pegou esse padrão ao vivo:
+        // registra uma, a próxima alternada "não registra").
+        await modalAtivo?.recarregar();
         // Fica "travado" mais um instante depois de registrar — sem isso o
         // botão volta ao normal rápido demais e o SDR clica de novo achando
         // que não registrou, criando ligação duplicada.
