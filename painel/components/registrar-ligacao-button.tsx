@@ -62,8 +62,17 @@ export function RegistrarLigacaoButton({
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        onClick={() => setAberto((atual) => !atual)}
-        disabled={pendente || !!registrado}
+        onClick={() => {
+          // O "✓" fica na tela só de confirmação visual — continua
+          // clicável durante esse tempo, senão um segundo telefonema logo
+          // em seguida (bem comum numa sequência de ligações) esbarrava num
+          // botão travado sem nenhum aviso, parecendo que "não registrou"
+          // (Samuel pegou isso ao vivo). Só trava mesmo enquanto a
+          // gravação anterior ainda está em andamento (pendente).
+          setRegistrado(null);
+          setAberto((atual) => !atual);
+        }}
+        disabled={pendente}
         className={`flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed ${
           registrado
             ? "bg-green-600 text-white"

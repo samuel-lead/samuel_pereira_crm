@@ -106,7 +106,7 @@ export function ProximoContatoBotao({
       )}
 
       {aberto && (
-        <div className="absolute right-0 top-full z-20 mt-1.5 w-72 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
+        <div className="absolute left-0 top-full z-20 mt-1.5 w-80 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
           <form onSubmit={aoSubmeter} className="space-y-2">
             <CampoDataHora
               name="proximo_follow_em"
