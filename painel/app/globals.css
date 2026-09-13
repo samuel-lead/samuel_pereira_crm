@@ -104,10 +104,6 @@ body {
   background-color: #404040;
 }
 
-.dark .bg-neutral-800 {
-  background-color: #e5e5e5;
-}
-
 .dark .hover\:bg-neutral-50:hover {
   background-color: #262626;
 }
