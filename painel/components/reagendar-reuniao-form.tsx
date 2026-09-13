@@ -16,6 +16,15 @@ function formatarData(iso: string) {
   });
 }
 
+// Reagendar é sempre pra uma data NOVA — trava dias passados no
+// calendário, sem exceção (mesmo ajuste do reagendar-reuniao-botao.tsx,
+// que é a versão compacta desse formulário usada no cabeçalho do card).
+function agoraParaInputLocal() {
+  const agora = new Date();
+  const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 export function ReagendarReuniaoForm({
   leadId,
   reuniaoId,
@@ -58,6 +67,7 @@ export function ReagendarReuniaoForm({
           id="nova-data-reuniao"
           name="agendada_para"
           required
+          min={agoraParaInputLocal()}
           className="w-full rounded-md border border-amber-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
 

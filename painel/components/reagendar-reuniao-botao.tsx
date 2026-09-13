@@ -16,6 +16,16 @@ function formatarData(iso: string) {
   });
 }
 
+// Reagendar é sempre pra uma data NOVA — a data antiga (a que está sendo
+// trocada) não precisa continuar clicável no calendário, então trava
+// dias passados sempre, sem exceção (Samuel pegou isso ao vivo: dava pra
+// escolher um dia anterior a hoje reagendando).
+function agoraParaInputLocal() {
+  const agora = new Date();
+  const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 // Versão compacta do "Reunião marcada pra..." pro cabeçalho do card do lead
 // (Samuel pediu: tira do lado direito, deixa no topo junto dos outros) —
 // mesmo padrão do ProximoContatoBotao: um pill sempre visível com a data,
@@ -92,6 +102,7 @@ export function ReagendarReuniaoBotao({
               name="agendada_para"
               required
               defaultValue={agendadaPara}
+              min={agoraParaInputLocal()}
               autoFocus
               className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
