@@ -15,6 +15,16 @@ function formatarData(iso: string) {
   });
 }
 
+// Já vem preenchido com a data e hora de agora — sem isso o campo abria
+// vazio e a pessoa tinha que digitar tudo do zero. Além de mais rápido de
+// preencher, evita marcar sem querer uma data que já passou (Samuel pediu
+// os dois: facilitar e não deixar escolher data anterior à de hoje).
+function agoraParaInputLocal() {
+  const agora = new Date();
+  const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 // Versão compacta do "Próximo contato" pro cabeçalho do card do lead
 // (Samuel pediu): sem contato marcado, é só um botão. Marcado, vira um
 // resumo ("Próximo contato: dd/mm HH:MM") com um botão "Editar" do lado
@@ -111,7 +121,11 @@ export function ProximoContatoBotao({
             <CampoDataHora
               name="proximo_follow_em"
               required
-              defaultValue={proximoContatoEm ?? undefined}
+              defaultValue={proximoContatoEm ?? agoraParaInputLocal()}
+              // Só trava data passada quando ainda não tinha nada marcado —
+              // editando um contato que já venceu ("atrasado"), a pessoa
+              // continua podendo reabrir e reconfirmar a mesma data velha.
+              min={proximoContatoEm ? undefined : agoraParaInputLocal()}
               autoFocus
               className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
