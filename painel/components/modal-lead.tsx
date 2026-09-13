@@ -153,7 +153,18 @@ export function ModalLead({
               <p className="text-sm text-red-600">{erro ?? "Não deu pra carregar esse lead"}</p>
             </div>
           ) : (
-            <>
+            // O Provider precisa envolver o cabeçalho TAMBÉM, não só o
+            // conteúdo de baixo — os botões de "Marcar próximo contato" e
+            // "Registrar ligação" moraram pro cabeçalho, mas ainda chamam
+            // modalAtivo?.recarregar() pra atualizar a tela na hora. Como
+            // esse cabeçalho ficava FORA do Provider, useLeadModalAtivo()
+            // voltava null ali e o "?." engolia a chamada de recarregar em
+            // silêncio — os dois botões gravavam certinho no banco, mas a
+            // tela só mostrava o valor novo depois de fechar e abrir o
+            // card de novo (Samuel pegou isso ao vivo nos dois).
+            <ContextoLeadModalAtivo.Provider
+              value={{ recarregar: carregar, fechar: aoFechar }}
+            >
               <div
                 className={`flex shrink-0 flex-col gap-3 border-b border-neutral-200 bg-white px-5 py-4 pr-14 ${
                   painelLateral ? "" : "sticky top-0 z-10 rounded-t-xl"
@@ -204,11 +215,19 @@ export function ModalLead({
                   </div>
                 )}
               </div>
-              <ContextoLeadModalAtivo.Provider
-                value={{ recarregar: carregar, fechar: aoFechar }}
-              >
-                {painelLateral ? (
-                  <LeadPainelImobiliario
+              {painelLateral ? (
+                <LeadPainelImobiliario
+                  key={revisao}
+                  dados={dados}
+                  marcarReuniao={marcarReuniao}
+                  reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
+                  abrirProposta={abrirProposta}
+                  nivelPretendido={nivelPretendido}
+                  travaSalvarPorCache={confirmandoCache}
+                />
+              ) : (
+                <div className={documentoAberto ? "min-h-0 flex-1 overflow-y-auto" : undefined}>
+                  <LeadModalConteudo
                     key={revisao}
                     dados={dados}
                     marcarReuniao={marcarReuniao}
@@ -216,23 +235,11 @@ export function ModalLead({
                     abrirProposta={abrirProposta}
                     nivelPretendido={nivelPretendido}
                     travaSalvarPorCache={confirmandoCache}
+                    documentoAberto={documentoAberto}
                   />
-                ) : (
-                  <div className={documentoAberto ? "min-h-0 flex-1 overflow-y-auto" : undefined}>
-                    <LeadModalConteudo
-                      key={revisao}
-                      dados={dados}
-                      marcarReuniao={marcarReuniao}
-                      reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
-                      abrirProposta={abrirProposta}
-                      nivelPretendido={nivelPretendido}
-                      travaSalvarPorCache={confirmandoCache}
-                      documentoAberto={documentoAberto}
-                    />
-                  </div>
-                )}
-              </ContextoLeadModalAtivo.Provider>
-            </>
+                </div>
+              )}
+            </ContextoLeadModalAtivo.Provider>
           )}
         </div>
       </div>
