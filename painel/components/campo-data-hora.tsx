@@ -199,7 +199,11 @@ export function CampoDataHora({
   function aoDigitar(e: React.ChangeEvent<HTMLInputElement>) {
     setTexto(e.target.value);
     const d = dePrimeiraTentativa(e.target.value);
-    if (d) {
+    // Digitar direto no campo passava reto por cima do min/max — só o
+    // clique no calendário respeitava (diaBloqueado). Samuel pegou isso
+    // ao vivo: digitando dava pra colocar uma data anterior a hoje mesmo
+    // com o campo travado pra não deixar.
+    if (d && !foraDoIntervalo(d)) {
       definirValor(d);
       setMesExibido(inicioDoMes(d));
       setHora(pad(d.getHours()));
@@ -217,6 +221,7 @@ export function CampoDataHora({
     const h = Number(hora || 0);
     const m = Number(minuto || 0);
     const d = new Date(mesExibido.getFullYear(), mesExibido.getMonth(), dia, h, m);
+    if (foraDoIntervalo(d)) return;
     definirValor(d);
     setTexto(paraExibicao(d));
   }
@@ -241,14 +246,25 @@ export function CampoDataHora({
   const dataMin = min ? deIso(min) : null;
   const dataMax = max ? deIso(max) : null;
 
-  function diaBloqueado(dia: number) {
-    const d = new Date(mesExibido.getFullYear(), mesExibido.getMonth(), dia, 23, 59);
-    if (dataMin && d < dataMin) return true;
+  // Compara só o DIA (não a hora exata) — bloqueia qualquer dia anterior
+  // ao de "min", mas permite escolher esse mesmo dia mesmo que a hora
+  // exata já tenha passado. Usada tanto pelo clique no calendário quanto
+  // por quem digita a data direto no campo de texto (ver aoDigitar) —
+  // antes só o clique respeitava, digitar passava reto por cima.
+  function foraDoIntervalo(d: Date) {
+    if (dataMin) {
+      const fimDoDia = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+      if (fimDoDia < dataMin) return true;
+    }
     if (dataMax) {
-      const inicioDia = new Date(mesExibido.getFullYear(), mesExibido.getMonth(), dia, 0, 0);
-      if (inicioDia > dataMax) return true;
+      const inicioDoDia = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+      if (inicioDoDia > dataMax) return true;
     }
     return false;
+  }
+
+  function diaBloqueado(dia: number) {
+    return foraDoIntervalo(new Date(mesExibido.getFullYear(), mesExibido.getMonth(), dia, 12, 0));
   }
 
   const campoClasse =
