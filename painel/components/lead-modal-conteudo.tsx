@@ -11,6 +11,7 @@ import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { AvatarUsuario } from "@/components/avatar-usuario";
+import { IconeLapis } from "@/components/icons";
 import { Reuniao, Sdr } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
@@ -307,7 +308,12 @@ export function LeadModalConteudo({
 
         {podeEditar && (
           <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold text-neutral-800">Registrar nota</h2>
+            <div className="mb-3 flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <IconeLapis className="h-4 w-4" />
+              </span>
+              <h2 className="text-base font-bold text-neutral-900">Registrar nota</h2>
+            </div>
             <RegistrarNotaForm leadId={lead.id} />
           </div>
         )}
