@@ -184,11 +184,11 @@ export function ModalLead({
                         proximoContatoEm={dados.lead.proximo_follow_em}
                       />
                     )}
-                    <div className="w-44">
+                    <div className="w-fit">
                       <RegistrarLigacaoButton leadId={dados.lead.id} variante="destaque" />
                     </div>
                     {!ehImobiliario(dados.publicoOrg) && (dados.souAdmin || dados.souSdr) && (
-                      <div className="w-44">
+                      <div className="w-fit">
                         <BotaoDocumentoExterno
                           url={SCRIPT_PRE_QUALIFICACAO.url}
                           label={SCRIPT_PRE_QUALIFICACAO.label}
