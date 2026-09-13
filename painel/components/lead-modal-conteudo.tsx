@@ -6,7 +6,6 @@ import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { EditarLeadForm, type EstadoRodapeSalvarLead } from "@/components/editar-lead-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
-import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
@@ -239,15 +238,6 @@ export function LeadModalConteudo({
       </div>
 
       <div className="flex flex-col gap-4">
-        {podeEditar && lead.nivel_ordem === NIVEL_REUNIAO_MARCADA && reuniaoAtiva && (
-          <ReagendarReuniaoForm
-            leadId={lead.id}
-            reuniaoId={reuniaoAtiva.id}
-            agendadaPara={reuniaoAtiva.agendada_para}
-            rotulo={Reuniao(publicoOrg)}
-          />
-        )}
-
         {lead.oportunidade_futura && lead.motivo_repescagem_futura && (
           <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
             <h2 className="text-sm font-semibold text-green-800">
@@ -322,7 +312,13 @@ export function LeadModalConteudo({
           </div>
         )}
 
-        {podeEditar && <DiaFollowSelector leadId={lead.id} diaFollow={lead.dia_follow} />}
+        {/* Só faz sentido em Pré-vendas — depois que a reunião é marcada
+            (aba Vendas: Reuniões marcadas, Follow após reunião,
+            Oportunidades, Base...) esse contador de sequência de follow
+            não tem mais uso. Samuel pediu pra sumir de lá. */}
+        {podeEditar && lead.nivel_ordem < NIVEL_REUNIAO_MARCADA && (
+          <DiaFollowSelector leadId={lead.id} diaFollow={lead.dia_follow} />
+        )}
 
         <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-neutral-800">Linha do tempo</h2>

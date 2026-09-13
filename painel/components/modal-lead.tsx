@@ -8,11 +8,12 @@ import { LeadPainelImobiliario } from "@/components/lead-painel-imobiliario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { ProximoContatoBotao } from "@/components/proximo-contato-botao";
+import { ReagendarReuniaoBotao } from "@/components/reagendar-reuniao-botao";
 import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
 import { IconeTelefone } from "@/components/icons";
 import { SCRIPT_PRE_QUALIFICACAO } from "@/lib/scripts-sdr";
 import { lerLeadDoCache, salvarLeadNoCache } from "@/lib/leads/cache-lead";
-import { ehImobiliario } from "@/lib/terminologia";
+import { ehImobiliario, Reuniao } from "@/lib/terminologia";
 
 // Mesmos níveis de lib/niveis.ts (4 = Reunião marcada, 7 = Follow após
 // reunião, 8 = Oportunidades pro fim do mês) — Samuel pediu explicitamente
@@ -20,6 +21,7 @@ import { ehImobiliario } from "@/lib/terminologia";
 // do funil a call já foi marcada/feita, não faz mais sentido pedir pra
 // qualificar de novo antes de marcar.
 const NIVEIS_SEM_PRE_QUALIFICACAO = [4, 7, 8];
+const NIVEL_REUNIAO_MARCADA = 4;
 
 // Pop-up que abre por cima da tela atual ao clicar num lead, sem trocar
 // de rota — não usa nenhuma técnica de rota do Next.js (foi exatamente
@@ -206,6 +208,17 @@ export function ModalLead({
                       <ProximoContatoBotao
                         leadId={dados.lead.id}
                         proximoContatoEm={dados.lead.proximo_follow_em}
+                      />
+                    )}
+                    {/* "Reunião marcada pra..." saiu do lado direito do card
+                        e veio pro topo, junto dos outros — Samuel pediu
+                        explicitamente pra tirar de lá. */}
+                    {dados.lead.nivel_ordem === NIVEL_REUNIAO_MARCADA && dados.reuniaoAtiva && (
+                      <ReagendarReuniaoBotao
+                        leadId={dados.lead.id}
+                        reuniaoId={dados.reuniaoAtiva.id}
+                        agendadaPara={dados.reuniaoAtiva.agendada_para}
+                        rotulo={Reuniao(dados.publicoOrg)}
                       />
                     )}
                     <div className="w-fit">
