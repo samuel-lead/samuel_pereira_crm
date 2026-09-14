@@ -780,7 +780,19 @@ export function KanbanBoard({
   }
 
   return (
-    <div className="relative h-full min-h-0 flex-1">
+    // O dragover/drop de cada coluna já trava o comportamento padrão, mas só
+    // DENTRO dela — soltar o card num vão entre colunas (ou fora delas) não
+    // tinha handler nenhum, e cada navegador reage diferente ao drop "sem
+    // dono": Firefox tenta abrir/buscar o texto solto (o id do lead vai como
+    // text/plain), deixando a página num estado estranho até recarregar.
+    // Chrome geralmente ignora, por isso passava despercebido só nele. Esse
+    // par aqui pega qualquer drop que escape das colunas antes de virar
+    // comportamento nativo do navegador.
+    <div
+      className="relative h-full min-h-0 flex-1"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => e.preventDefault()}
+    >
       <div className="relative h-full">
         <button
           type="button"
@@ -897,6 +909,11 @@ export function KanbanBoard({
                         onMouseEnter={() => prefetchLead(lead.id)}
                         draggable={arrastavel}
                         onDragStart={(e) => arrastavel && aoComecarArrastar(e, lead)}
+                        // select-none (na className abaixo): sem isso, um
+                        // clique que desliza um pouquinho pode virar seleção
+                        // de texto em vez de arrastar o card — mais comum no
+                        // Firefox, onde disputa direto com o gesto nativo de
+                        // drag (foi o que a colaboradora do Samuel pegou).
                         title={
                           arrastavel
                             ? atrasado
@@ -904,7 +921,7 @@ export function KanbanBoard({
                               : undefined
                             : "Você só visualiza — não é seu lead"
                         }
-                        className={`kanban-card group rounded-xl border-x border-b border-t-[3px] bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg has-[.botao-agendar-reuniao:hover]:translate-y-0 has-[.botao-agendar-reuniao:hover]:shadow-sm has-[.botao-reativar-oportunidade:hover]:translate-y-0 has-[.botao-reativar-oportunidade:hover]:shadow-sm ${
+                        className={`kanban-card group select-none rounded-xl border-x border-b border-t-[3px] bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg has-[.botao-agendar-reuniao:hover]:translate-y-0 has-[.botao-agendar-reuniao:hover]:shadow-sm has-[.botao-reativar-oportunidade:hover]:translate-y-0 has-[.botao-reativar-oportunidade:hover]:shadow-sm ${
                           atrasado ? "border-t-red-400" : "border-t-neutral-200"
                         } border-neutral-200 ${
                           arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"
