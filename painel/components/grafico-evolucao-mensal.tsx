@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ResumoMes } from "@/lib/metricas";
 import { MenuSelect } from "@/components/menu-select";
-import { Faturamento, TituloEvolucao } from "@/lib/terminologia";
+import { RotuloReceitaEvolucao, TituloEvolucao } from "@/lib/terminologia";
 
 const NOMES_MESES = [
   "Jan",
@@ -284,7 +284,7 @@ export function GraficoEvolucaoMensal({
                 </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1" style={{ color: "var(--texto-secundario)" }}>
                   <span>
-                    {Faturamento(publicoOrg)}: {formatarMoeda(pontoHover.receita)}
+                    {RotuloReceitaEvolucao(publicoOrg)}: {formatarMoeda(pontoHover.receita)}
                   </span>
                   <span>
                     Meta: {pontoHover.metaReceita !== null ? formatarMoeda(pontoHover.metaReceita) : "não definida"}
@@ -323,7 +323,7 @@ export function GraficoEvolucaoMensal({
                   <thead>
                     <tr style={{ color: "var(--texto-mutado)" }}>
                       <th className="py-1 pr-3 font-medium">Mês</th>
-                      <th className="py-1 pr-3 font-medium">{Faturamento(publicoOrg)}</th>
+                      <th className="py-1 pr-3 font-medium">{RotuloReceitaEvolucao(publicoOrg)}</th>
                       <th className="py-1 pr-3 font-medium">Meta</th>
                       <th className="py-1 pr-3 font-medium">% da meta</th>
                     </tr>

@@ -79,3 +79,10 @@ export function RepescagemFutura(publicoOrg: string) {
 export function TituloEvolucao(publicoOrg: string) {
   return ehImobiliario(publicoOrg) ? "Evolução das vendas" : "Evolução comercial";
 }
+
+// Rótulo da coluna de valor no gráfico de evolução mensal — igual à ideia
+// de Faturamento()/VGV, mas preserva a palavra "Receita" pra mentoria (em
+// vez de "Faturamento"), que é como esse gráfico específico sempre falou.
+export function RotuloReceitaEvolucao(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "VGV" : "Receita";
+}
