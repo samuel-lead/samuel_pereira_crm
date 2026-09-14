@@ -73,3 +73,9 @@ export function faturamento(publicoOrg: string) {
 export function RepescagemFutura(publicoOrg: string) {
   return ehImobiliario(publicoOrg) ? "Oportunidades futuras" : "Repescagem futura de ICP";
 }
+
+// Título do gráfico de evolução mensal no dashboard — imobiliário fala
+// "vendas" (de imóvel), não "comercial".
+export function TituloEvolucao(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) ? "Evolução das vendas" : "Evolução comercial";
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ResumoMes } from "@/lib/metricas";
 import { MenuSelect } from "@/components/menu-select";
+import { TituloEvolucao } from "@/lib/terminologia";
 
 const NOMES_MESES = [
   "Jan",
@@ -48,11 +49,13 @@ export function GraficoEvolucaoMensal({
   ano,
   anoAtual,
   mesAtual,
+  publicoOrg,
 }: {
   dados: ResumoMes[];
   ano: number;
   anoAtual: number;
   mesAtual: number; // 0 se `ano` não é o ano corrente (mostra os 12 meses)
+  publicoOrg: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -145,7 +148,7 @@ export function GraficoEvolucaoMensal({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4 dark:border-white/5">
         <div>
           <h2 className="text-base font-bold" style={{ color: "var(--texto)" }}>
-            Evolução comercial
+            {TituloEvolucao(publicoOrg)}
           </h2>
           <p className="text-xs" style={{ color: "var(--texto-mutado)" }}>
             {mesesComMeta.length > 0

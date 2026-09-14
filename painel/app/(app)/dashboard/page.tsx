@@ -385,6 +385,7 @@ export default async function DashboardPage({
           ano={anoEvolucaoResolvido}
           anoAtual={anoAtualNumero}
           mesAtual={anoEvolucaoResolvido === anoAtualNumero ? inicioHoje.getUTCMonth() + 1 : 0}
+          publicoOrg={publicoOrg}
         />
 
         <section>
