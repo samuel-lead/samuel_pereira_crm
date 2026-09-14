@@ -316,18 +316,18 @@ export default async function EditarLeadPage({
                   <span className="font-medium text-neutral-800">{iscaRespostaData.atuacao}</span>
                 </p>
               )}
+              {iscaRespostaData.maior_desafio && (
+                <p>
+                  <span className="text-neutral-500">Maior desafio: </span>
+                  <span className="font-medium text-neutral-800">{iscaRespostaData.maior_desafio}</span>
+                </p>
+              )}
               {iscaRespostaData.prioridade !== null && (
                 <p>
                   <span className="text-neutral-500">É prioridade resolver agora: </span>
                   <span className="font-medium text-neutral-800">
                     {iscaRespostaData.prioridade ? "Sim" : "Não"}
                   </span>
-                </p>
-              )}
-              {iscaRespostaData.maior_desafio && (
-                <p>
-                  <span className="text-neutral-500">Maior desafio: </span>
-                  <span className="font-medium text-neutral-800">{iscaRespostaData.maior_desafio}</span>
                 </p>
               )}
               {iscaRespostaData.disponibilidade_financeira && (

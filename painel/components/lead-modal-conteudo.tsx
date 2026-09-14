@@ -197,18 +197,18 @@ export function LeadModalConteudo({
                 <span className="font-medium text-neutral-800">{iscaResposta.atuacao}</span>
               </p>
             )}
+            {iscaResposta.maior_desafio && (
+              <p>
+                <span className="text-neutral-500">Maior desafio: </span>
+                <span className="font-medium text-neutral-800">{iscaResposta.maior_desafio}</span>
+              </p>
+            )}
             {iscaResposta.prioridade !== null && (
               <p>
                 <span className="text-neutral-500">É prioridade resolver agora: </span>
                 <span className="font-medium text-neutral-800">
                   {iscaResposta.prioridade ? "Sim" : "Não"}
                 </span>
-              </p>
-            )}
-            {iscaResposta.maior_desafio && (
-              <p>
-                <span className="text-neutral-500">Maior desafio: </span>
-                <span className="font-medium text-neutral-800">{iscaResposta.maior_desafio}</span>
               </p>
             )}
             {iscaResposta.disponibilidade_financeira && (
