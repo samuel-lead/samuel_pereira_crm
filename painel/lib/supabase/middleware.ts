@@ -96,6 +96,17 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginPage = pathname === "/login";
 
+  // Página fixa, pública por natureza (link exigido pelo Google pra
+  // publicar a integração do Agenda) — nunca deve pedir login. Mesma razão
+  // pros arquivos de verificação de domínio que o Google gera (tipo
+  // google<hash>.html, servidos direto da raiz do site): sem isso o robô
+  // do Google (que nunca está logado) cai no /login e a verificação falha.
+  const ehPaginaPublicaFixa =
+    pathname === "/privacidade" || /^\/google[a-z0-9]+\.html$/i.test(pathname);
+  if (ehPaginaPublicaFixa) {
+    return supabaseResponse;
+  }
+
   if (!user && !isLoginPage) {
     // Pode ser o link público de uma isca (dominio.com/<slug>, sem
     // prefixo) — confere antes de mandar pro login. Também libera a
