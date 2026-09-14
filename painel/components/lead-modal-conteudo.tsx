@@ -211,6 +211,14 @@ export function LeadModalConteudo({
                 <span className="font-medium text-neutral-800">{iscaResposta.maior_desafio}</span>
               </p>
             )}
+            {iscaResposta.disponibilidade_financeira && (
+              <p>
+                <span className="text-neutral-500">Disponibilidade financeira: </span>
+                <span className="font-medium text-neutral-800">
+                  {iscaResposta.disponibilidade_financeira}
+                </span>
+              </p>
+            )}
           </div>
         )}
 

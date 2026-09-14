@@ -179,7 +179,7 @@ export default async function EditarLeadPage({
       .order("titulo"),
     supabase
       .from("isca_respostas")
-      .select("tempo_mercado, maior_desafio, prioridade, atuacao")
+      .select("tempo_mercado, maior_desafio, prioridade, atuacao, disponibilidade_financeira")
       .eq("lead_id", id)
       .maybeSingle(),
     supabase.rpc("google_calendar_esta_conectado"),
@@ -328,6 +328,14 @@ export default async function EditarLeadPage({
                 <p>
                   <span className="text-neutral-500">Maior desafio: </span>
                   <span className="font-medium text-neutral-800">{iscaRespostaData.maior_desafio}</span>
+                </p>
+              )}
+              {iscaRespostaData.disponibilidade_financeira && (
+                <p>
+                  <span className="text-neutral-500">Disponibilidade financeira: </span>
+                  <span className="font-medium text-neutral-800">
+                    {iscaRespostaData.disponibilidade_financeira}
+                  </span>
                 </p>
               )}
             </div>

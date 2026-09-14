@@ -1930,6 +1930,7 @@ export type DetalhesLead = {
     maior_desafio: string | null;
     prioridade: boolean | null;
     atuacao: string | null;
+    disponibilidade_financeira: string | null;
   } | null;
   // Se a EMPRESA (org) já conectou o Google Calendar — controla se
   // "Salvar alterações" pode também prometer salvar na agenda (ver
@@ -1995,7 +1996,7 @@ export async function buscarDetalhesDoLead(
       .order("titulo"),
     supabase
       .from("isca_respostas")
-      .select("tempo_mercado, maior_desafio, prioridade, atuacao")
+      .select("tempo_mercado, maior_desafio, prioridade, atuacao, disponibilidade_financeira")
       .eq("lead_id", leadId)
       .maybeSingle(),
     supabase.rpc("google_calendar_esta_conectado"),
