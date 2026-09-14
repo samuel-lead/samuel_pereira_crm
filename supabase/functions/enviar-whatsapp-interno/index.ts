@@ -46,12 +46,22 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
 
   const telefone = usuario?.wpp_comercial_e164?.replace(/\D/g, "");
-  if (!telefone) return json(200, { enviado: false, motivo: "sem telefone cadastrado" });
+  if (!telefone) {
+    // Quem chama isso (pg_cron via net.http_post) nunca olha a resposta —
+    // sem logar aqui, uma falha fica invisível pra sempre. Samuel perguntou
+    // se os lembretes chegavam certo pra todo mundo e essa foi exatamente
+    // a causa real que achei em dois usuários (sem telefone cadastrado).
+    console.error(`enviar-whatsapp-interno: usuario ${usuarioId} sem telefone cadastrado`);
+    return json(200, { enviado: false, motivo: "sem telefone cadastrado" });
+  }
 
   const instancia = Deno.env.get("ZAPI_INSTANCIA_A");
   const token = Deno.env.get("ZAPI_TOKEN_A");
   const clientToken = Deno.env.get("ZAPI_CLIENT_TOKEN_A");
-  if (!instancia || !token) return json(200, { enviado: false, motivo: "Z-API não configurada" });
+  if (!instancia || !token) {
+    console.error("enviar-whatsapp-interno: Z-API não configurada (faltam secrets)");
+    return json(200, { enviado: false, motivo: "Z-API não configurada" });
+  }
 
   try {
     const resposta = await fetch(`https://api.z-api.io/instances/${instancia}/token/${token}/send-text`, {
@@ -62,8 +72,15 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({ phone: telefone, message: mensagem }),
     });
+    if (!resposta.ok) {
+      const corpoResposta = await resposta.text().catch(() => "");
+      console.error(
+        `enviar-whatsapp-interno: Z-API recusou o envio pra usuario ${usuarioId} (status ${resposta.status}): ${corpoResposta}`
+      );
+    }
     return json(200, { enviado: resposta.ok });
   } catch (erro) {
+    console.error(`enviar-whatsapp-interno: erro chamando a Z-API pra usuario ${usuarioId}: ${String(erro)}`);
     return json(200, { enviado: false, motivo: String(erro) });
   }
 });
