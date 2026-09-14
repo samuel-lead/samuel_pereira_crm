@@ -26,12 +26,6 @@ type Passo =
       pergunta: string;
       placeholder: string;
       tipoInput?: string;
-      // Instagram é o único campo de texto opcional — antes o "required"
-      // valia pra todo mundo igual, e o guard de "campo vazio" no submit
-      // travava em silêncio (sem erro nenhum na tela) quem deixava o
-      // Instagram em branco na última etapa. Samuel pegou isso ao vivo:
-      // clicava em "Concluir" e não acontecia nada.
-      obrigatorio?: boolean;
     };
 
 const PASSOS: Passo[] = [
@@ -82,7 +76,6 @@ const PASSOS: Passo[] = [
     chave: "instagram",
     pergunta: "Qual o @ do seu Instagram?",
     placeholder: "@seuusuario",
-    obrigatorio: false,
   },
 ];
 
@@ -502,7 +495,7 @@ export function IscaCapturaForm({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (passo.obrigatorio !== false && !textoAtual.trim()) return;
+              if (!textoAtual.trim()) return;
 
               if (passo.chave === "telefone") {
                 if (!telefoneValido(normalizarTelefone(textoAtual))) {
@@ -532,7 +525,7 @@ export function IscaCapturaForm({
             ) : (
               <input
                 autoFocus
-                required={passo.obrigatorio !== false}
+                required
                 type={passo.tipoInput ?? "text"}
                 value={textoAtual}
                 onChange={(e) => setTextoAtual(e.target.value)}
