@@ -29,6 +29,7 @@ const SLUGS_RESERVADOS = new Set([
   "usuarios",
   "iscas",
   "api",
+  "privacidade",
 ]);
 
 async function contextoAdmin() {
