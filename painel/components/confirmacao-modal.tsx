@@ -24,13 +24,25 @@ type PerguntaTexto = {
   confirmarLabel: string;
 };
 
-type Pergunta = PerguntaSimNao | PerguntaTexto;
+// Substitui alert() — nativo trava a renderização do navegador (e em
+// Chrome, chamado durante/logo depois de um drag-and-drop, às vezes trava
+// a página de vez, exigindo recarregar várias vezes pra voltar a
+// responder a cliques — foi exatamente esse o problema real por trás do
+// "não consigo abrir os cards" que o Samuel relatou; o Kanban chamava
+// alert(erro) direto ao falhar uma movimentação arrastada).
+type PerguntaAviso = {
+  tipo: "aviso";
+  mensagem: string;
+};
+
+type Pergunta = PerguntaSimNao | PerguntaTexto | PerguntaAviso;
 
 export function useConfirmacaoTravaTela() {
   const [pergunta, setPergunta] = useState<Pergunta | null>(null);
   const [textoDigitado, setTextoDigitado] = useState("");
   const resolverBoolRef = useRef<((resposta: boolean) => void) | null>(null);
   const resolverTextoRef = useRef<((resposta: string | null) => void) | null>(null);
+  const resolverAvisoRef = useRef<(() => void) | null>(null);
 
   const perguntar = useCallback(
     (mensagem: string, simLabel = "Sim", naoLabel = "Não") => {
@@ -65,6 +77,19 @@ export function useConfirmacaoTravaTela() {
     setPergunta(null);
   }
 
+  const avisar = useCallback((mensagem: string) => {
+    return new Promise<void>((resolve) => {
+      resolverAvisoRef.current = resolve;
+      setPergunta({ tipo: "aviso", mensagem });
+    });
+  }, []);
+
+  function responderAviso() {
+    resolverAvisoRef.current?.();
+    resolverAvisoRef.current = null;
+    setPergunta(null);
+  }
+
   const modal =
     pergunta && typeof document !== "undefined"
       ? createPortal(
@@ -73,7 +98,17 @@ export function useConfirmacaoTravaTela() {
               <p className="whitespace-pre-line text-sm text-neutral-800">
                 {pergunta.mensagem}
               </p>
-              {pergunta.tipo === "texto" ? (
+              {pergunta.tipo === "aviso" ? (
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={responderAviso}
+                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                  >
+                    OK
+                  </button>
+                </div>
+              ) : pergunta.tipo === "texto" ? (
                 <>
                   <textarea
                     autoFocus
@@ -125,5 +160,5 @@ export function useConfirmacaoTravaTela() {
         )
       : null;
 
-  return { perguntar, perguntarTexto, modal };
+  return { perguntar, perguntarTexto, avisar, modal };
 }

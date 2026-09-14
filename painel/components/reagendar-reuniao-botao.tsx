@@ -5,6 +5,7 @@ import { reagendarReuniao, moverLeadNivel } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { IconeCalendario } from "@/components/icons";
+import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 
 // Mesmo nível "Precisa reagendar" que o Kanban já usa quando o card é
 // arrastado de "Reunião marcada" pra lá — cancelar por aqui passa pelo
@@ -54,6 +55,12 @@ export function ReagendarReuniaoBotao({
   const [aberto, setAberto] = useState(false);
   const [pendente, iniciarTransicao] = useTransition();
   const containerRef = useRef<HTMLDivElement>(null);
+  // perguntar() troca o confirm() nativo — em Chrome, um confirm()
+  // disparado logo depois de um drag-and-drop pode travar a página de
+  // vez (foi a causa real do "preciso recarregar 10 vezes" que o Samuel
+  // relatou em outro lugar do app; corrigido aqui antes de repetir o
+  // mesmo problema nesse botão novo).
+  const { perguntar, modal: modalConfirmacao } = useConfirmacaoTravaTela();
 
   useEffect(() => {
     function aoClicarFora(evento: MouseEvent) {
@@ -83,10 +90,14 @@ export function ReagendarReuniaoBotao({
     });
   }
 
-  function aoCancelarReuniao() {
-    if (!window.confirm(`Cancelar essa ${rotulo.toLowerCase()}? O lead vai pra "Precisa reagendar".`)) {
-      return;
-    }
+  async function aoCancelarReuniao() {
+    const confirmou = await perguntar(
+      `Cancelar essa ${rotulo.toLowerCase()}? O lead vai pra "Precisa reagendar".`,
+      "Cancelar reunião",
+      "Voltar"
+    );
+    if (!confirmou) return;
+
     setErro(null);
     iniciarTransicao(async () => {
       const erroRetornado = await moverLeadNivel(leadId, NIVEL_PRECISA_REAGENDAR);
@@ -152,6 +163,7 @@ export function ReagendarReuniaoBotao({
           </button>
         </div>
       )}
+      {modalConfirmacao}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { reagendarReuniao, moverLeadNivel } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { CampoDataHora } from "@/components/campo-data-hora";
+import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 
 // Mesmo nível "Precisa reagendar" que o Kanban já usa quando o card é
 // arrastado de "Reunião marcada" pra lá — herda de graça a regra que já
@@ -44,6 +45,9 @@ export function ReagendarReuniaoForm({
   const modalAtivo = useLeadModalAtivo();
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciarTransicao] = useTransition();
+  // perguntar() troca o confirm() nativo, que em Chrome pode travar a
+  // página de vez se disparado perto de um drag-and-drop.
+  const { perguntar, modal: modalConfirmacao } = useConfirmacaoTravaTela();
 
   function aoSubmeter(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -59,10 +63,14 @@ export function ReagendarReuniaoForm({
     });
   }
 
-  function aoCancelarReuniao() {
-    if (!window.confirm(`Cancelar essa ${rotulo.toLowerCase()}? O lead vai pra "Precisa reagendar".`)) {
-      return;
-    }
+  async function aoCancelarReuniao() {
+    const confirmou = await perguntar(
+      `Cancelar essa ${rotulo.toLowerCase()}? O lead vai pra "Precisa reagendar".`,
+      "Cancelar reunião",
+      "Voltar"
+    );
+    if (!confirmou) return;
+
     setErro(null);
     iniciarTransicao(async () => {
       const erroRetornado = await moverLeadNivel(leadId, NIVEL_PRECISA_REAGENDAR);
@@ -110,6 +118,7 @@ export function ReagendarReuniaoForm({
       >
         Cancelar {rotulo.toLowerCase()}
       </button>
+      {modalConfirmacao}
     </div>
   );
 }

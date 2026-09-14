@@ -579,7 +579,7 @@ export function KanbanBoard({
   const [, iniciarTransicao] = useTransition();
   const nomePorUsuario = new Map(usuarios.map((u) => [u.id, u.nome]));
   const fotoPorUsuario = new Map(usuarios.map((u) => [u.id, u.foto_url ?? null]));
-  const { perguntar, perguntarTexto, modal: modalConfirmacao } = useConfirmacaoTravaTela();
+  const { perguntar, perguntarTexto, avisar, modal: modalConfirmacao } = useConfirmacaoTravaTela();
   const idRoladoRef = useRef<string | null>(null);
 
   // Busca achou um lead só: rola a tela sozinha até a coluna dele, senão a
@@ -728,7 +728,7 @@ export function KanbanBoard({
           undefined,
           motivoRepescagemFutura
         ).then((erro) => {
-          if (erro) alert(erro);
+          if (erro) avisar(erro);
           // Abre com "sim" mesmo se o servidor recusou o movimento por
           // falta de proposta registrada — é exatamente onde a pessoa
           // precisa ir preencher pra poder tentar mover de novo depois.
@@ -764,7 +764,7 @@ export function KanbanBoard({
         undefined,
         motivoRepescagemFutura
       ).then((erro) => {
-        if (erro) alert(erro);
+        if (erro) avisar(erro);
       });
     });
   }
