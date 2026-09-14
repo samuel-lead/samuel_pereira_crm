@@ -185,15 +185,32 @@ export default async function DashboardPage({
   ]);
 
   const idsLeadsAtrasados = (leadsAtrasadosData ?? []).map((l) => l.id);
-  // Pega a reunião mais recente de cada lead atrasado — é ela que tem a
-  // data, o SDR e o Closer pra mostrar no card.
-  const { data: reunioesDosAtrasadosData } = idsLeadsAtrasados.length
-    ? await supabase
-        .from("reunioes")
-        .select("lead_id, agendada_para, status, closer_id, usuario_id, marcada_em")
-        .in("lead_id", idsLeadsAtrasados)
-        .order("marcada_em", { ascending: false })
-    : { data: [] as { lead_id: string; agendada_para: string; status: string; closer_id: string | null; usuario_id: string; marcada_em: string }[] };
+  // idsLeadsReunioes não depende do resultado da consulta de reuniões dos
+  // atrasados abaixo (só de idsLeadsAtrasados, já conhecido) — as duas
+  // saem juntas no mesmo Promise.all em vez de uma esperar a outra
+  // terminar (eram sequenciais sem motivo, uma ida-e-volta a mais por
+  // navegação nessa página).
+  const idsLeadsProximasReunioes = (reunioesProximasData ?? []).map((r) => r.lead_id);
+  const idsLeadsReunioes = Array.from(new Set([...idsLeadsProximasReunioes, ...idsLeadsAtrasados]));
+
+  const [{ data: reunioesDosAtrasadosData }, { data: leadsDasReunioesData }] = await Promise.all([
+    // Pega a reunião mais recente de cada lead atrasado — é ela que tem a
+    // data, o SDR e o Closer pra mostrar no card.
+    idsLeadsAtrasados.length
+      ? supabase
+          .from("reunioes")
+          .select("lead_id, agendada_para, status, closer_id, usuario_id, marcada_em")
+          .in("lead_id", idsLeadsAtrasados)
+          .order("marcada_em", { ascending: false })
+      : Promise.resolve({ data: [] as { lead_id: string; agendada_para: string; status: string; closer_id: string | null; usuario_id: string; marcada_em: string }[] }),
+    idsLeadsReunioes.length
+      ? supabase
+          .from("leads")
+          .select("id, nome, foto_url")
+          .in("id", idsLeadsReunioes)
+          .is("arquivado_em", null)
+      : Promise.resolve({ data: [] as { id: string; nome: string; foto_url: string | null }[] }),
+  ]);
 
   const ultimaReuniaoPorLead = new Map<
     string,
@@ -202,16 +219,6 @@ export default async function DashboardPage({
   for (const r of reunioesDosAtrasadosData ?? []) {
     if (!ultimaReuniaoPorLead.has(r.lead_id)) ultimaReuniaoPorLead.set(r.lead_id, r);
   }
-
-  const idsLeadsProximasReunioes = (reunioesProximasData ?? []).map((r) => r.lead_id);
-  const idsLeadsReunioes = Array.from(new Set([...idsLeadsProximasReunioes, ...idsLeadsAtrasados]));
-  const { data: leadsDasReunioesData } = idsLeadsReunioes.length
-    ? await supabase
-        .from("leads")
-        .select("id, nome, foto_url")
-        .in("id", idsLeadsReunioes)
-        .is("arquivado_em", null)
-    : { data: [] as { id: string; nome: string; foto_url: string | null }[] };
 
   const metas = metasData as MetasConfig | null;
   const publicoOrg = usuario!.publico_org;

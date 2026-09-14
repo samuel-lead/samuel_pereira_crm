@@ -171,10 +171,15 @@ export default async function VendasPage({
 
   const leadIds = leads.map((lead) => lead.id);
 
+  // anexarUltimaAtividade entra nesse MESMO Promise.all (antes rodava
+  // depois, sequencial — mais uma ida-e-volta inteira só pra isso, sem
+  // motivo, já que não depende de nada das outras consultas aqui). Menos
+  // uma "onda" de rede por navegação nessa página.
   const [
     [receitaOrgMes, metaReceita, vendasHoje, ultimaVenda, vendasMes],
     { data: reunioesMarcadasData },
     { data: todasReunioesData },
+    leadsComAtividadeBase,
   ] = await Promise.all([
       orgId
         ? Promise.all([
@@ -203,6 +208,7 @@ export default async function VendasPage({
       leadIds.length
         ? supabase.from("reunioes").select("lead_id").in("lead_id", leadIds)
         : Promise.resolve({ data: [] as { lead_id: string }[] }),
+      anexarUltimaAtividade(supabase, leads),
     ]);
 
   // Um lead pode ter mais de uma reunião "marcada" ao longo do tempo (ex.:
@@ -216,15 +222,16 @@ export default async function VendasPage({
 
   const leadsComReuniaoRegistrada = new Set((todasReunioesData ?? []).map((r) => r.lead_id));
 
-  const leadsComAtividade = await anexarUltimaAtividade(
-    supabase,
-    leads.map((lead) => ({
-      ...lead,
-      reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
-      nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
-      jaTeveReuniao: leadsComReuniaoRegistrada.has(lead.id),
-    }))
+  const atividadePorLead = new Map(
+    leadsComAtividadeBase.map((lead) => [lead.id, lead.ultima_atividade_em])
   );
+  const leadsComAtividade = leads.map((lead) => ({
+    ...lead,
+    reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
+    nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
+    jaTeveReuniao: leadsComReuniaoRegistrada.has(lead.id),
+    ultima_atividade_em: atividadePorLead.get(lead.id) ?? lead.entrou_nivel_em,
+  }));
 
   // Mesmo critério do selo vermelho "Xd parado" de cada card, igual em
   // Pré-vendas. Lead com próximo contato marcado ou com reunião marcada
