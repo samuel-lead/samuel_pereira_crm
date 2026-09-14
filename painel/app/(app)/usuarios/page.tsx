@@ -18,6 +18,7 @@ type UsuarioLinha = {
   paginas_permitidas: string[];
   foto_url: string | null;
   dono: boolean;
+  wpp_comercial_e164: string | null;
 };
 
 function funcaoLabel(funcao: string, publicoOrg: string) {
@@ -36,6 +37,7 @@ export default async function UsuariosPage() {
   ]);
   const usuarios = (data ?? []) as UsuarioLinha[];
   const souSuperAdmin = usuarioAtual?.super_admin === true;
+  const souAdmin = usuarioAtual?.papel === "admin";
   const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
 
   return (
@@ -127,27 +129,44 @@ export default async function UsuariosPage() {
                   <p className="text-xs text-neutral-400">
                     Desde {formatarData(usuario.criado_em)}
                   </p>
+                  {!usuario.wpp_comercial_e164 && (
+                    <p className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-600">
+                      ⚠️ Sem WhatsApp cadastrado — não recebe lembretes
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {usuario.id !== user?.id && (!usuario.dono || souSuperAdmin) && (
+              {(souAdmin || usuario.id !== user?.id) && (!usuario.dono || souSuperAdmin) && (
                 <div className="flex shrink-0 flex-col items-end gap-2">
-                  <Link
-                    href={`/usuarios/${usuario.id}/permissoes`}
-                    className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50"
-                  >
-                    Permissões
-                  </Link>
-                  {usuario.papel === "membro" && (
-                    <TornarAdminButton usuarioId={usuario.id} nome={usuario.nome} />
+                  {souAdmin && (
+                    <Link
+                      href={`/usuarios/${usuario.id}/editar`}
+                      className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50"
+                    >
+                      Editar
+                    </Link>
                   )}
-                  <ExcluirUsuarioButton
-                    usuarioId={usuario.id}
-                    nome={usuario.nome}
-                    outrosUsuarios={usuarios
-                      .filter((u) => u.id !== usuario.id)
-                      .map((u) => ({ id: u.id, nome: u.nome }))}
-                  />
+                  {usuario.id !== user?.id && (
+                    <>
+                      <Link
+                        href={`/usuarios/${usuario.id}/permissoes`}
+                        className="rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50"
+                      >
+                        Permissões
+                      </Link>
+                      {usuario.papel === "membro" && (
+                        <TornarAdminButton usuarioId={usuario.id} nome={usuario.nome} />
+                      )}
+                      <ExcluirUsuarioButton
+                        usuarioId={usuario.id}
+                        nome={usuario.nome}
+                        outrosUsuarios={usuarios
+                          .filter((u) => u.id !== usuario.id)
+                          .map((u) => ({ id: u.id, nome: u.nome }))}
+                      />
+                    </>
+                  )}
                 </div>
               )}
             </div>

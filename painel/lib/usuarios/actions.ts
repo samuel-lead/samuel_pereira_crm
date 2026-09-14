@@ -201,6 +201,43 @@ export async function tornarAdmin(usuarioId: string) {
   revalidatePath("/usuarios");
 }
 
+// Admin edita nome e WhatsApp de QUALQUER usuário da equipe direto na
+// lista — antes só dava pra cada um trocar o próprio WhatsApp em "Meu
+// perfil" (atualizarMeuTelefone, abaixo). Samuel pediu porque não tinha
+// como editar ninguém além de si mesmo, e vários usuários ficaram sem
+// WhatsApp cadastrado sem ninguém perceber.
+export async function atualizarUsuarioAdmin(
+  usuarioId: string,
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const { usuario } = await usuarioAutenticado();
+  if (!usuario || usuario.papel !== "admin") {
+    return { erro: "Só administradores podem fazer isso" };
+  }
+
+  const nome = String(formData.get("nome") ?? "").trim();
+  const wppComercial = String(formData.get("wpp_comercial") ?? "").trim() || null;
+
+  if (!nome) {
+    return { erro: "Nome é obrigatório" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("usuarios")
+    .update({ nome, wpp_comercial_e164: wppComercial })
+    .eq("id", usuarioId)
+    .eq("org_id", usuario.org_id);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  revalidatePath("/usuarios");
+  redirect("/usuarios");
+}
+
 // Cada usuário troca o próprio WhatsApp — não precisa ser admin, só logado.
 // Igual atualizarPropriaFuncao: o id vem de usuarioAutenticado(), nunca do
 // formulário, então a pessoa só consegue mexer no próprio número.
