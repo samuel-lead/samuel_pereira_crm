@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { reagendarReuniao } from "@/lib/leads/actions";
+import { reagendarReuniao, moverLeadNivel } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { CampoDataHora } from "@/components/campo-data-hora";
+
+// Mesmo nível "Precisa reagendar" que o Kanban já usa quando o card é
+// arrastado de "Reunião marcada" pra lá — herda de graça a regra que já
+// marca a reunião ativa como "cancelada" no banco.
+const NIVEL_PRECISA_REAGENDAR = 6;
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -54,6 +59,21 @@ export function ReagendarReuniaoForm({
     });
   }
 
+  function aoCancelarReuniao() {
+    if (!window.confirm(`Cancelar essa ${rotulo.toLowerCase()}? O lead vai pra "Precisa reagendar".`)) {
+      return;
+    }
+    setErro(null);
+    iniciarTransicao(async () => {
+      const erroRetornado = await moverLeadNivel(leadId, NIVEL_PRECISA_REAGENDAR);
+      if (erroRetornado) {
+        setErro(erroRetornado);
+        return;
+      }
+      modalAtivo?.recarregar();
+    });
+  }
+
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm">
       <h2 className="mb-1 text-sm font-semibold text-amber-800">{rotulo} marcada pra</h2>
@@ -81,6 +101,15 @@ export function ReagendarReuniaoForm({
           Salvar novo horário
         </button>
       </form>
+
+      <button
+        type="button"
+        onClick={aoCancelarReuniao}
+        disabled={pendente}
+        className="mt-2 w-full rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+      >
+        Cancelar {rotulo.toLowerCase()}
+      </button>
     </div>
   );
 }

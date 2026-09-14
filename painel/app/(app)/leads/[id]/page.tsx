@@ -31,6 +31,7 @@ type Lead = {
   instagram: string | null;
   foto_url: string | null;
   origem: string | null;
+  quem_indicou: string | null;
   produto: string | null;
   nivel_ordem: number;
   criterio_problema: string | null;
@@ -147,7 +148,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id"
       )
       .eq("id", id)
       .single(),

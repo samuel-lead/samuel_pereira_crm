@@ -1,10 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { reagendarReuniao } from "@/lib/leads/actions";
+import { reagendarReuniao, moverLeadNivel } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { IconeCalendario } from "@/components/icons";
+
+// Mesmo nível "Precisa reagendar" que o Kanban já usa quando o card é
+// arrastado de "Reunião marcada" pra lá — cancelar por aqui passa pelo
+// mesmo caminho (moverLeadNivel), então herda de graça a mesma regra que
+// já existe: marca a reunião ativa como "cancelada" no banco. Samuel
+// pediu essa opção explicitamente — não tinha jeito nenhum de cancelar
+// sem ser arrastando o card manualmente.
+const NIVEL_PRECISA_REAGENDAR = 6;
 
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -75,6 +83,22 @@ export function ReagendarReuniaoBotao({
     });
   }
 
+  function aoCancelarReuniao() {
+    if (!window.confirm(`Cancelar essa ${rotulo.toLowerCase()}? O lead vai pra "Precisa reagendar".`)) {
+      return;
+    }
+    setErro(null);
+    iniciarTransicao(async () => {
+      const erroRetornado = await moverLeadNivel(leadId, NIVEL_PRECISA_REAGENDAR);
+      if (erroRetornado) {
+        setErro(erroRetornado);
+        return;
+      }
+      await modalAtivo?.recarregar();
+      setAberto(false);
+    });
+  }
+
   return (
     <div ref={containerRef} className="relative">
       <div className="flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-amber-600/30">
@@ -117,6 +141,15 @@ export function ReagendarReuniaoBotao({
               {pendente ? "Salvando..." : "Salvar novo horário"}
             </button>
           </form>
+
+          <button
+            type="button"
+            onClick={aoCancelarReuniao}
+            disabled={pendente}
+            className="mt-2 w-full rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+          >
+            Cancelar {rotulo.toLowerCase()}
+          </button>
         </div>
       )}
     </div>

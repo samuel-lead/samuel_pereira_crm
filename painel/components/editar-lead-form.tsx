@@ -52,6 +52,7 @@ type Lead = {
   email: string | null;
   instagram: string | null;
   origem: string | null;
+  quem_indicou: string | null;
   nivel_ordem: number;
   criterio_problema: string | null;
   criterio_urgencia: string;
@@ -408,6 +409,7 @@ export function EditarLeadForm({
   // do que está realmente escrito no campo depois de uma tentativa que
   // falhou.
   const [emailAtual, setEmailAtual] = useState(lead.email ?? "");
+  const [quemIndicouAtual, setQuemIndicouAtual] = useState(lead.quem_indicou ?? "");
   const [criterioProblemaAtual, setCriterioProblemaAtual] = useState(lead.criterio_problema ?? "");
   const [criterioUrgenciaAtual, setCriterioUrgenciaAtual] = useState(lead.criterio_urgencia);
   const [criterioCapacidadeAtual, setCriterioCapacidadeAtual] = useState(lead.criterio_capacidade);
@@ -672,11 +674,13 @@ export function EditarLeadForm({
               id="quem_indicou"
               name="quem_indicou"
               rows={3}
+              value={quemIndicouAtual}
+              onChange={(e) => setQuemIndicouAtual(e.target.value)}
               placeholder="Nome de quem indicou, características, se já é cliente..."
               className={campoClasse}
             />
             <p className="text-xs text-neutral-400">
-              Isso vai ficar registrado nas notas do lead.
+              Fica salvo aqui — não precisa digitar de novo da próxima vez.
             </p>
           </div>
         )}

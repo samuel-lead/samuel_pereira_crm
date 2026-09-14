@@ -367,6 +367,7 @@ export async function criarLead(
       telefone_e164: telefone,
       instagram,
       origem,
+      quem_indicou: quemIndicou || null,
       responsavel_id: responsavelId,
     })
     .select("id")
@@ -535,7 +536,7 @@ export async function atualizarLead(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id, motivo_base, proposta_valor, instagram, foto_url")
+    .select("nivel_ordem, responsavel_id, motivo_base, proposta_valor, instagram, foto_url, quem_indicou")
     .eq("id", leadId)
     .single();
 
@@ -788,6 +789,7 @@ export async function atualizarLead(
       email,
       instagram,
       origem,
+      quem_indicou: quemIndicou || null,
       imovel_id: imovelId,
       criterio_problema: criterioProblema,
       criterio_urgencia: criterioUrgencia,
@@ -816,8 +818,17 @@ export async function atualizarLead(
 
   // Origem "Indicação" (qualquer variante) + campo preenchido: grava quem
   // indicou direto nas notas do lead, pra não perder esse contexto solto
-  // numa conversa por fora.
-  if (origem && origem.toLowerCase().includes("indica") && quemIndicou) {
+  // numa conversa por fora. Só registra nota quando o nome muda de
+  // verdade — antes o campo nunca lia de volta o que já tinha sido salvo
+  // (sempre abria vazio, Samuel pegou isso ao vivo), então cada vez que a
+  // pessoa reabria e salvava de novo, digitava o mesmo nome e isso
+  // duplicava a nota na linha do tempo.
+  if (
+    origem &&
+    origem.toLowerCase().includes("indica") &&
+    quemIndicou &&
+    quemIndicou !== (leadAtual.quem_indicou ?? "")
+  ) {
     await supabase.from("interacoes").insert({
       org_id: usuario.org_id,
       usuario_id: usuario.id,
@@ -1844,6 +1855,7 @@ export type DetalhesLead = {
     instagram: string | null;
     foto_url: string | null;
     origem: string | null;
+    quem_indicou: string | null;
     produto: string | null;
     nivel_ordem: number;
     criterio_problema: string | null;
@@ -1952,7 +1964,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id"
       )
       .eq("id", leadId)
       .single(),
