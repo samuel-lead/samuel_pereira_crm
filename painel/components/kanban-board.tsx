@@ -828,7 +828,7 @@ export function KanbanBoard({
                 }`}
               >
                 <div className="shrink-0 rounded-t-xl border-b border-neutral-100 bg-white px-4 py-3">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-1.5">
                     <h2
                       title={nivel.nome}
                       className="min-w-0 truncate text-sm font-semibold text-neutral-900"
@@ -837,7 +837,7 @@ export function KanbanBoard({
                       {titulo}
                     </h2>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${cor.badge}`}
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-xs font-semibold ${cor.badge}`}
                     >
                       {leadsDoNivel.length}
                     </span>
