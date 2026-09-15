@@ -219,6 +219,11 @@ export async function calcularMetricas(
       .not("proposta_enviada_em", "is", null)
       .gte("proposta_enviada_em", inicioISO)
       .lt("proposta_enviada_em", fimISO),
+    // Mesmo limite de data de "reunioesDevidas" acima (capado em hoje) —
+    // sem isso essa conta e a de "reunioesDevidas" usavam janelas
+    // diferentes, e o % de no-show batia diferente em telas diferentes
+    // (Samuel pegou isso ao vivo: 32% na Visão geral, 27% no Bônus SDR,
+    // pra mesma pessoa no mesmo período).
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -226,7 +231,7 @@ export async function calcularMetricas(
       .eq("status", "nao_compareceu")
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
-      .lt("agendada_para", fimISO),
+      .lt("agendada_para", limiteDevidasISO),
     // Venda entra pro SDR que MARCOU a reunião (reunioes.usuario_id), não
     // pra quem é o responsável atual do lead — esse depois da venda vira o
     // Closer (transferir_lead_para_closer), e o Closer não faz reunião
@@ -428,6 +433,9 @@ export async function calcularMetricasOrg(
       .not("proposta_enviada_em", "is", null)
       .gte("proposta_enviada_em", inicioISO)
       .lt("proposta_enviada_em", fimISO),
+    // Mesmo limite de data de "reunioesDevidas" acima — ver comentário na
+    // versão por usuário (calcularMetricas) sobre por que precisa ser
+    // igual.
     supabase
       .from("reunioes")
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
@@ -435,7 +443,7 @@ export async function calcularMetricasOrg(
       .eq("status", "nao_compareceu")
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
-      .lt("agendada_para", fimISO),
+      .lt("agendada_para", limiteDevidasISO),
     supabase
       .from("leads")
       .select("receita_venda, valor_venda, proposta_valor")
