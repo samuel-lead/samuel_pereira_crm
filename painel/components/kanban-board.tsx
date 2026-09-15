@@ -831,7 +831,7 @@ export function KanbanBoard({
                   <div className="flex items-center justify-between gap-1.5">
                     <h2
                       title={nivel.nome}
-                      className="min-w-0 truncate text-sm font-semibold text-neutral-900"
+                      className="min-w-0 truncate text-sm font-semibold tracking-tight text-neutral-900"
                     >
                       {numeroVisivel ? `N${numeroVisivel} - ` : ""}
                       {titulo}
