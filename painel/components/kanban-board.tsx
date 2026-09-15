@@ -812,6 +812,7 @@ export function KanbanBoard({
             const cor = corDoNivel(nivel.ordem);
             const numeroVisivel = numerosVisiveis.get(nivel.ordem);
             const recebendoArrasto = colunaAlvo === nivel.ordem;
+            const { titulo, explicacao } = separarExplicacao(nivel.nome);
 
             return (
               <section
@@ -827,35 +828,39 @@ export function KanbanBoard({
                 }`}
               >
                 <div className="shrink-0 rounded-t-xl border-b border-neutral-100 bg-white px-4 py-3">
-                  <div className={`mb-1.5 h-[3px] w-6 rounded-full ${cor.faixa}`} />
-                  {(() => {
-                    const { titulo, explicacao } = separarExplicacao(nivel.nome);
-                    return (
-                      <h2
-                        title={nivel.nome}
-                        className="truncate text-sm font-semibold text-neutral-900"
-                      >
+                  <div className="flex items-center justify-between gap-2">
+                    <h2
+                      title={nivel.nome}
+                      className="flex min-w-0 items-center gap-2 truncate text-sm font-semibold text-neutral-900"
+                    >
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${cor.faixa}`} />
+                      <span className="truncate">
                         {numeroVisivel ? `N${numeroVisivel} - ` : ""}
                         {titulo}
-                        {explicacao && (
-                          <>
-                            {" "}
-                            <span className="text-[10px] font-normal text-neutral-400">
-                              {explicacao}
-                            </span>
-                          </>
+                      </span>
+                    </h2>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${cor.badge}`}
+                    >
+                      {leadsDoNivel.length}
+                    </span>
+                  </div>
+                  {explicacao && (
+                    <p className="mt-0.5 truncate text-[10px] text-neutral-400">{explicacao}</p>
+                  )}
+                  {/* Valor só faz sentido onde já existe proposta em jogo —
+                      Follow após reunião e Oportunidades pra fim do mês.
+                      Nas outras colunas era sempre "R$ 0,00" (Samuel pegou
+                      isso ao vivo em "Reuniões marcadas"), poluindo à toa. */}
+                  {mostrarValor &&
+                    (nivel.ordem === NIVEL_FOLLOW_POS_REUNIAO || nivel.ordem === NIVEL_REUNIAO_FEITA) &&
+                    leadsDoNivel.length > 0 && (
+                      <p className="mt-0.5 truncate text-xs text-neutral-400">
+                        {formatarMoeda(
+                          leadsDoNivel.reduce((soma, l) => soma + (l.valor_venda ?? 0), 0)
                         )}
-                      </h2>
-                    );
-                  })()}
-                  <p className="mt-0.5 truncate text-xs text-neutral-400">
-                    {mostrarValor &&
-                      leadsDoNivel.length > 0 &&
-                      `${formatarMoeda(
-                        leadsDoNivel.reduce((soma, l) => soma + (l.valor_venda ?? 0), 0)
-                      )} · `}
-                    {leadsDoNivel.length} lead{leadsDoNivel.length === 1 ? "" : "s"}
-                  </p>
+                      </p>
+                    )}
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-3">
