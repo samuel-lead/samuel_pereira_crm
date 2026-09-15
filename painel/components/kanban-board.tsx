@@ -828,16 +828,13 @@ export function KanbanBoard({
                 }`}
               >
                 <div className="shrink-0 rounded-t-xl border-b border-neutral-100 bg-white px-4 py-3">
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2">
                     <h2
                       title={nivel.nome}
-                      className="flex min-w-0 items-start gap-2 text-sm font-semibold leading-snug text-neutral-900"
+                      className="min-w-0 truncate text-sm font-semibold text-neutral-900"
                     >
-                      <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${cor.faixa}`} />
-                      <span>
-                        {numeroVisivel ? `N${numeroVisivel} - ` : ""}
-                        {titulo}
-                      </span>
+                      {numeroVisivel ? `N${numeroVisivel} - ` : ""}
+                      {titulo}
                     </h2>
                     <span
                       className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${cor.badge}`}
