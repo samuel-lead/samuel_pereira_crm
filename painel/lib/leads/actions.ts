@@ -1247,10 +1247,26 @@ export async function marcarVendido(
     return { erro: "Data da venda inválida — não pode ser uma data futura" };
   }
 
-  // Receita é opcional: tem venda que fecha (contrato assinado, valor
-  // combinado) mas o dinheiro só entra depois — fica em branco até lá.
-  const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
-  const receita = receitaRaw ? Number(receitaRaw) : null;
+  // Imobiliário não digita receita à mão — "receita" pro corretor não é o
+  // preço do imóvel (isso é VGV), é a fatia que ele embolsa de comissão.
+  // Calcula sozinho: valor da venda × % de comissão configurada no perfil
+  // do corretor responsável (ver components/comissao-form.tsx). Sem %
+  // configurada, fica sem receita (igual antes) até ele preencher.
+  // Mentoria continua digitando a receita à mão, sem mudança nenhuma.
+  let receita: number | null;
+  if (usuario.publico_org === "imobiliario") {
+    const { data: corretor } = await supabase
+      .from("usuarios")
+      .select("comissao_percentual")
+      .eq("id", leadAtual.responsavel_id)
+      .single();
+    receita = corretor?.comissao_percentual
+      ? Math.round(valor * (corretor.comissao_percentual / 100) * 100) / 100
+      : null;
+  } else {
+    const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
+    receita = receitaRaw ? Number(receitaRaw) : null;
+  }
 
   const produto = String(formData.get("produto") ?? "").trim() || null;
 
@@ -1349,10 +1365,31 @@ export async function editarVenda(
     return { erro: "Data da venda inválida — não pode ser uma data futura" };
   }
 
-  // Receita é opcional: tem venda que fecha (contrato assinado, valor
-  // combinado) mas o dinheiro só entra depois — fica em branco até lá.
-  const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
-  const receita = receitaRaw ? Number(receitaRaw) : null;
+  // Mesma regra de marcarVendido: imobiliário recalcula a receita
+  // (comissão) sozinho a partir do valor editado, em vez de aceitar o
+  // que veio do formulário — editar o valor da venda tem que atualizar a
+  // comissão junto, automaticamente.
+  let receita: number | null;
+  if (usuario.publico_org === "imobiliario") {
+    const { data: leadAtual } = await supabase
+      .from("leads")
+      .select("responsavel_id")
+      .eq("id", leadId)
+      .single();
+    const { data: corretor } = leadAtual?.responsavel_id
+      ? await supabase
+          .from("usuarios")
+          .select("comissao_percentual")
+          .eq("id", leadAtual.responsavel_id)
+          .single()
+      : { data: null };
+    receita = corretor?.comissao_percentual
+      ? Math.round(valor * (corretor.comissao_percentual / 100) * 100) / 100
+      : null;
+  } else {
+    const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
+    receita = receitaRaw ? Number(receitaRaw) : null;
+  }
 
   const produto = String(formData.get("produto") ?? "").trim() || null;
 
@@ -1906,7 +1943,13 @@ export type DetalhesLead = {
     usuario_id: string | null;
     ocorreu_em: string;
   }[];
-  usuarios: { id: string; nome: string; funcao: string | null; foto_url: string | null }[];
+  usuarios: {
+    id: string;
+    nome: string;
+    funcao: string | null;
+    foto_url: string | null;
+    comissao_percentual: number | null;
+  }[];
   origens: { id: string; nome: string }[];
   produtos: string[];
   // Só relevante no imobiliário — lista pro seletor "Imóvel de interesse".
@@ -1986,7 +2029,10 @@ export async function buscarDetalhesDoLead(
       .select("id, de_ordem, para_ordem, motivo, automatico, usuario_id, ocorreu_em")
       .eq("lead_id", leadId)
       .order("ocorreu_em", { ascending: false }),
-    supabase.from("usuarios").select("id, nome, funcao, foto_url").order("nome"),
+    supabase
+      .from("usuarios")
+      .select("id, nome, funcao, foto_url, comissao_percentual")
+      .order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
     supabase

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { buscarDetalhesDoLead, type DetalhesLead } from "@/lib/leads/actions";
 import { ContextoLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { LeadModalConteudo } from "@/components/lead-modal-conteudo";
-import { LeadPainelImobiliario } from "@/components/lead-painel-imobiliario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { RegistrarLigacaoButton } from "@/components/registrar-ligacao-button";
 import { ProximoContatoBotao } from "@/components/proximo-contato-botao";
@@ -108,33 +107,18 @@ export function ModalLead({
     return () => document.removeEventListener("keydown", aoTeclar);
   }, [aoFechar]);
 
-  // Imobiliário pediu um painel lateral (cópia do CRM 100Bug), deslizando
-  // da direita, em vez do pop-up centralizado — mentoria continua com o
-  // pop-up de sempre, sem nenhuma mudança. Só decide depois que "dados"
-  // chega (ou já veio do cache) — enquanto carrega do zero, cai no
-  // centralizado por padrão.
-  const painelLateral = dados ? ehImobiliario(dados.publicoOrg) : false;
-
   return (
     <div
-      className={
-        painelLateral
-          ? "fixed inset-0 z-50 flex justify-end bg-black/50"
-          : "fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10 sm:pt-16"
-      }
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10 sm:pt-16"
       onClick={aoFechar}
     >
       <div
         className={
-          painelLateral
-            ? "relative flex h-full w-full max-w-xl flex-col bg-[#f4f5f7] shadow-2xl"
-            : documentoAberto
-              ? "fixed inset-y-6 left-6 flex flex-col overflow-hidden rounded-xl bg-[#f4f5f7] shadow-2xl"
-              : "relative w-full max-w-5xl rounded-xl bg-[#f4f5f7] shadow-2xl"
+          documentoAberto
+            ? "fixed inset-y-6 left-6 flex flex-col overflow-hidden rounded-xl bg-[#f4f5f7] shadow-2xl"
+            : "relative w-full max-w-5xl rounded-xl bg-[#f4f5f7] shadow-2xl"
         }
-        style={
-          !painelLateral && documentoAberto ? { right: larguraDocumento + 48 } : undefined
-        }
+        style={documentoAberto ? { right: larguraDocumento + 48 } : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -148,9 +132,7 @@ export function ModalLead({
 
         <div
           className={
-            painelLateral || documentoAberto
-              ? "flex h-full min-h-0 flex-col"
-              : "max-h-[85vh] overflow-y-auto rounded-xl"
+            documentoAberto ? "flex h-full min-h-0 flex-col" : "max-h-[85vh] overflow-y-auto rounded-xl"
           }
         >
           {carregando ? (
@@ -174,17 +156,7 @@ export function ModalLead({
             <ContextoLeadModalAtivo.Provider
               value={{ recarregar: carregar, fechar: aoFechar }}
             >
-              <div
-                className={`flex shrink-0 flex-col gap-3 border-b border-neutral-200 bg-white px-5 py-4 pr-14 ${
-                  // z-20 (não z-10): o rodapé de "Salvar alterações" (ver
-                  // lead-modal-conteudo.tsx) também é "sticky" e tem o
-                  // MESMO z-index por padrão — como ele vem depois no HTML,
-                  // ganhava o empate e tampava os menus que abrem a partir
-                  // daqui (calendário do "Marcar próximo contato", etc.).
-                  // Precisa ficar acima do rodapé sempre.
-                  painelLateral ? "" : "sticky top-0 z-20 rounded-t-xl"
-                }`}
-              >
+              <div className="sticky top-0 z-20 flex shrink-0 flex-col gap-3 rounded-t-xl border-b border-neutral-200 bg-white px-5 py-4 pr-14">
                 <div className="flex min-w-0 items-center gap-3">
                   <AvatarLead
                     nome={dados.lead.nome}
@@ -196,13 +168,13 @@ export function ModalLead({
                   </h1>
                 </div>
 
-                {/* Samuel pediu essas 3 ações no cabeçalho: nome sempre
-                    inteiro numa linha própria em cima (nunca tampado pelos
-                    botões), botões numa linha logo abaixo, lado a lado —
-                    dá pra ligar, marcar o próximo contato e abrir o script
-                    sem rolar a página. Só pra quem edita e só mentoria
-                    (imobiliário usa o painel lateral, layout diferente). */}
-                {!painelLateral && dados.podeEditar && (
+                {/* Samuel pediu essas ações no cabeçalho: nome sempre inteiro
+                    numa linha própria em cima (nunca tampado pelos botões),
+                    botões numa linha logo abaixo, lado a lado — dá pra ligar,
+                    marcar o próximo contato e abrir o script sem rolar a
+                    página. Mesmo cabeçalho pros dois públicos — pré-
+                    qualificação continua exclusiva de mentoria (ver abaixo). */}
+                {dados.podeEditar && (
                   <div className="flex flex-wrap items-center gap-2">
                     {dados.lead.status !== "vendido" && (
                       <ProximoContatoBotao
@@ -243,8 +215,8 @@ export function ModalLead({
                   </div>
                 )}
               </div>
-              {painelLateral ? (
-                <LeadPainelImobiliario
+              <div className={documentoAberto ? "min-h-0 flex-1 overflow-y-auto" : undefined}>
+                <LeadModalConteudo
                   key={revisao}
                   dados={dados}
                   marcarReuniao={marcarReuniao}
@@ -252,21 +224,9 @@ export function ModalLead({
                   abrirProposta={abrirProposta}
                   nivelPretendido={nivelPretendido}
                   travaSalvarPorCache={confirmandoCache}
+                  documentoAberto={documentoAberto}
                 />
-              ) : (
-                <div className={documentoAberto ? "min-h-0 flex-1 overflow-y-auto" : undefined}>
-                  <LeadModalConteudo
-                    key={revisao}
-                    dados={dados}
-                    marcarReuniao={marcarReuniao}
-                    reuniaoAnteriorSumiu={reuniaoAnteriorSumiu}
-                    abrirProposta={abrirProposta}
-                    nivelPretendido={nivelPretendido}
-                    travaSalvarPorCache={confirmandoCache}
-                    documentoAberto={documentoAberto}
-                  />
-                </div>
-              )}
+              </div>
             </ContextoLeadModalAtivo.Provider>
           )}
         </div>

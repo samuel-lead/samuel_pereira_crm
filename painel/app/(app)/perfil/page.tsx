@@ -5,17 +5,19 @@ import { TrocarSenhaForm } from "@/components/trocar-senha-form";
 import { TrocarTelefoneForm } from "@/components/trocar-telefone-form";
 import { PreferenciaWhatsappForm } from "@/components/preferencia-whatsapp-form";
 import { NotificacoesPushForm } from "@/components/notificacoes-push-form";
+import { ComissaoForm } from "@/components/comissao-form";
 import { temInscricaoPush } from "@/lib/notificacoes/actions";
+import { ehImobiliario } from "@/lib/terminologia";
 
 export default async function PerfilPage() {
   const { user, usuario } = await usuarioAutenticado();
   const jaInscritoPush = await temInscricaoPush();
 
   const supabase = await createClient();
-  const { data: dadosTelefone } = usuario
+  const { data: dadosUsuario } = usuario
     ? await supabase
         .from("usuarios")
-        .select("wpp_comercial_e164")
+        .select("wpp_comercial_e164, comissao_percentual")
         .eq("id", usuario.id)
         .single()
     : { data: null };
@@ -62,8 +64,24 @@ export default async function PerfilPage() {
             Usamos esse número pra avisos importantes, tipo lembrete de contato.
           </p>
 
-          <TrocarTelefoneForm telefoneAtual={dadosTelefone?.wpp_comercial_e164 ?? null} />
+          <TrocarTelefoneForm telefoneAtual={dadosUsuario?.wpp_comercial_e164 ?? null} />
         </div>
+
+        {ehImobiliario(usuario?.publico_org ?? "mentoria") && (
+          <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+              Comissão
+            </h2>
+            <p className="mb-4 text-xs text-neutral-500">
+              Sua porcentagem de comissão em cima do valor de cada venda. O
+              CRM usa isso pra calcular sozinho quanto você recebe (aparece
+              como &quot;Receita&quot; na Visão geral) — sem precisar
+              digitar esse valor toda vez que fecha uma venda.
+            </p>
+
+            <ComissaoForm comissaoAtual={dadosUsuario?.comissao_percentual ?? null} />
+          </div>
+        )}
 
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="mb-1 text-sm font-semibold text-neutral-800">

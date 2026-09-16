@@ -5,6 +5,7 @@ import { marcarVendido, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { IconeCalendario, IconeMoeda, IconeClientePagante, IconeTag } from "@/components/icons";
+import { ehImobiliario } from "@/lib/terminologia";
 
 // Rótulo com um selo de ícone na frente — Samuel pediu pra destacar mais
 // esses 4 campos ("bonito, elegante, impossível de ignorar"). Mesmo
@@ -50,12 +51,17 @@ function CampoMoeda({
   Icone,
   placeholder,
   valorInicial,
+  aoMudarReais,
 }: {
   name: string;
   label: string;
   Icone: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
   placeholder: string;
   valorInicial?: number | null;
+  // Usado só pelo campo de valor da venda no imobiliário, pra mostrar a
+  // prévia da comissão calculada ao vivo enquanto a pessoa digita (ver
+  // MarcarVendidoForm abaixo).
+  aoMudarReais?: (valor: number) => void;
 }) {
   const [centavos, setCentavos] = useState(
     valorInicial ? Math.round(valorInicial * 100) : 0
@@ -63,7 +69,9 @@ function CampoMoeda({
 
   function aoDigitar(evento: ChangeEvent<HTMLInputElement>) {
     const somenteDigitos = evento.target.value.replace(/\D/g, "");
-    setCentavos(somenteDigitos ? Number(somenteDigitos) : 0);
+    const novosCentavos = somenteDigitos ? Number(somenteDigitos) : 0;
+    setCentavos(novosCentavos);
+    aoMudarReais?.(novosCentavos / 100);
   }
 
   return (
@@ -86,12 +94,23 @@ export function MarcarVendidoForm({
   leadId,
   propostaValor,
   produtos,
+  publicoOrg = "mentoria",
+  comissaoPercentual,
 }: {
   leadId: string;
   propostaValor?: number | null;
   produtos: string[];
+  publicoOrg?: string;
+  // % de comissão configurada no perfil do corretor responsável por esse
+  // lead — só usada pra mostrar a prévia calculada aqui (o valor real é
+  // calculado de novo no servidor ao salvar, ver marcarVendido).
+  comissaoPercentual?: number | null;
 }) {
   const modalAtivo = useLeadModalAtivo();
+  const imobiliario = ehImobiliario(publicoOrg);
+  const [valorVendaReais, setValorVendaReais] = useState(propostaValor ?? 0);
+  const comissaoPrevia =
+    imobiliario && comissaoPercentual ? valorVendaReais * (comissaoPercentual / 100) : null;
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const enviandoRef = useRef(false);
@@ -142,17 +161,38 @@ export function MarcarVendidoForm({
           <CampoMoeda
             key={propostaValor ?? "sem-proposta"}
             name="valor_venda"
-            label="Valor da venda (R$)"
+            label={imobiliario ? "Preço do imóvel (R$)" : "Valor da venda (R$)"}
             Icone={IconeMoeda}
             placeholder="Preço combinado com o lead"
             valorInicial={propostaValor}
+            aoMudarReais={imobiliario ? setValorVendaReais : undefined}
           />
-          <CampoMoeda
-            name="receita_venda"
-            label="Receita recebida (R$)"
-            Icone={IconeClientePagante}
-            placeholder="Deixe em branco se o pagamento ainda não caiu"
-          />
+          {imobiliario ? (
+            comissaoPercentual ? (
+              <div className="rounded-lg bg-white p-3 shadow-sm">
+                <RotuloCampo Icone={IconeClientePagante}>Receita (comissão)</RotuloCampo>
+                <p className="text-sm font-semibold text-green-800">
+                  {comissaoPrevia !== null
+                    ? comissaoPrevia.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                    : "—"}
+                </p>
+                <p className="mt-1 text-[10px] text-neutral-400">
+                  Calculado sozinho: {comissaoPercentual}% do preço do imóvel.
+                </p>
+              </div>
+            ) : (
+              <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+                Configure sua % de comissão em Meu perfil pra ver a receita calculada aqui.
+              </p>
+            )
+          ) : (
+            <CampoMoeda
+              name="receita_venda"
+              label="Receita recebida (R$)"
+              Icone={IconeClientePagante}
+              placeholder="Deixe em branco se o pagamento ainda não caiu"
+            />
+          )}
           <div className="rounded-lg bg-white p-3 shadow-sm">
             <RotuloCampo Icone={IconeTag} obrigatorio>
               Produto

@@ -125,6 +125,11 @@ export function LeadModalConteudo({
   } = dados;
 
   const nomePorOrdem = new Map(niveis.map((n) => [n.ordem, n.nome]));
+  // Comissão de quem é o responsável atual pelo lead — usada só no
+  // imobiliário, pra calcular a "receita" (comissão) ao marcar/editar a
+  // venda (ver components/marcar-vendido-form.tsx).
+  const comissaoPercentualResponsavel =
+    usuarios.find((u) => u.id === lead.responsavel_id)?.comissao_percentual ?? null;
 
   return (
     <div
@@ -288,6 +293,7 @@ export function LeadModalConteudo({
                   receitaVenda={lead.receita_venda}
                   produto={lead.produto}
                   produtos={produtos}
+                  publicoOrg={publicoOrg}
                 />
               </div>
             )}
@@ -313,6 +319,8 @@ export function LeadModalConteudo({
                   observacao: lead.proposta_observacao,
                 }}
                 produtos={produtos}
+                publicoOrg={publicoOrg}
+                comissaoPercentual={comissaoPercentualResponsavel}
               />
             </div>
           )

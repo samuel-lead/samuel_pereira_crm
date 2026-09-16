@@ -252,10 +252,10 @@ export function SecaoPeriodo({
 
         <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
           <IconeMoeda className="h-3.5 w-3.5" />
-          Receita
+          {ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "Receita"}
         </p>
         <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
-          {formatarMoeda(metricas.receita)}
+          {formatarMoeda(ehImobiliario(publicoOrg) ? metricas.faturamento : metricas.receita)}
         </p>
         <p className="relative mt-2 text-sm font-medium text-green-100">
           {metricas.vendas} venda{metricas.vendas === 1 ? "" : "s"} fechada
@@ -264,7 +264,9 @@ export function SecaoPeriodo({
             ` · ticket médio ${formatarMoeda(metricas.ticketMedio)}`}
         </p>
         <p className="relative mt-1 text-xs text-green-200/80">
-          {Faturamento(publicoOrg)}: {formatarMoeda(metricas.faturamento)}
+          {ehImobiliario(publicoOrg)
+            ? `Comissão: ${formatarMoeda(metricas.receita)}`
+            : `${Faturamento(publicoOrg)}: ${formatarMoeda(metricas.faturamento)}`}
         </p>
       </div>
 
@@ -340,9 +342,14 @@ export function SecaoPeriodo({
               Icone={IconeEstrela}
             />
             <CardComparativo
-              titulo="Receita"
-              valorFormatado={formatarMoeda(metricas.receita)}
-              variacaoPct={variacao(metricas.receita, metricasAnteriores.receita)}
+              titulo={ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "Receita"}
+              valorFormatado={formatarMoeda(
+                ehImobiliario(publicoOrg) ? metricas.faturamento : metricas.receita
+              )}
+              variacaoPct={variacao(
+                ehImobiliario(publicoOrg) ? metricas.faturamento : metricas.receita,
+                ehImobiliario(publicoOrg) ? metricasAnteriores.faturamento : metricasAnteriores.receita
+              )}
               esquema="esmeralda"
               Icone={IconeMoeda}
               destaque

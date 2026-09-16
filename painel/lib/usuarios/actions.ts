@@ -268,3 +268,38 @@ export async function atualizarMeuTelefone(
   revalidatePath("/perfil");
   return { erro: null };
 }
+
+// Só existe no público imobiliário (ver app/(app)/perfil/page.tsx) — o
+// corretor configura a própria % de comissão aqui, e o CRM usa esse
+// número pra calcular a "receita" dele sozinho quando marca uma venda
+// (valor da venda × essa %), em vez de pedir pra digitar a receita à
+// mão (não faz sentido pro corretor, que só sabe o preço do imóvel).
+export async function atualizarMinhaComissao(
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const { usuario } = await usuarioAutenticado();
+  if (!usuario) {
+    return { erro: "Não autenticado" };
+  }
+
+  const percentualRaw = String(formData.get("comissao_percentual") ?? "").trim();
+  const percentual = percentualRaw ? Number(percentualRaw.replace(",", ".")) : null;
+
+  if (percentualRaw && (percentual === null || Number.isNaN(percentual) || percentual < 0 || percentual > 100)) {
+    return { erro: "Informe uma porcentagem entre 0 e 100" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("usuarios")
+    .update({ comissao_percentual: percentual })
+    .eq("id", usuario.id);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  revalidatePath("/perfil");
+  return { erro: null };
+}

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "r
 import { editarVenda, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
+import { ehImobiliario } from "@/lib/terminologia";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -56,6 +57,7 @@ export function EditarVendaForm({
   receitaVenda,
   produto,
   produtos,
+  publicoOrg = "mentoria",
 }: {
   leadId: string;
   vendidoEm: string | null;
@@ -63,7 +65,9 @@ export function EditarVendaForm({
   receitaVenda: number | null;
   produto: string | null;
   produtos: string[];
+  publicoOrg?: string;
 }) {
+  const imobiliario = ehImobiliario(publicoOrg);
   const [aberto, setAberto] = useState(false);
   const modalAtivo = useLeadModalAtivo();
   const acaoComId = editarVenda.bind(null, leadId);
@@ -122,8 +126,19 @@ export function EditarVendaForm({
           className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
         />
       </div>
-      <CampoMoeda name="valor_venda" label="Valor da venda (R$)" valorInicial={valorVenda} />
-      <CampoMoeda name="receita_venda" label="Receita recebida (R$)" valorInicial={receitaVenda} />
+      <CampoMoeda
+        name="valor_venda"
+        label={imobiliario ? "Preço do imóvel (R$)" : "Valor da venda (R$)"}
+        valorInicial={valorVenda}
+      />
+      {imobiliario ? (
+        <p className="text-xs text-neutral-500">
+          Receita (comissão): recalculada sozinha ao salvar, a partir da sua %
+          configurada em Meu perfil.
+        </p>
+      ) : (
+        <CampoMoeda name="receita_venda" label="Receita recebida (R$)" valorInicial={receitaVenda} />
+      )}
       <div>
         <label className="mb-1 block text-xs font-medium text-green-800">
           Produto

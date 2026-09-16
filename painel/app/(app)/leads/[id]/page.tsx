@@ -169,7 +169,10 @@ export default async function EditarLeadPage({
       .select("id, de_ordem, para_ordem, motivo, automatico, usuario_id, ocorreu_em")
       .eq("lead_id", id)
       .order("ocorreu_em", { ascending: false }),
-    supabase.from("usuarios").select("id, nome, funcao, foto_url").order("nome"),
+    supabase
+      .from("usuarios")
+      .select("id, nome, funcao, foto_url, comissao_percentual")
+      .order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
     supabase
@@ -218,6 +221,9 @@ export default async function EditarLeadPage({
     souAdmin || leadTipado.responsavel_id === user?.id || souCloserAtivo;
   const podeReivindicar = !souAdmin && leadTipado.responsavel_id === null;
   const usuarioResponsavel = usuarios.find((u) => u.id === leadTipado.responsavel_id);
+  // Comissão de quem é o responsável atual — só usada no imobiliário, pra
+  // calcular a "receita" (comissão) ao marcar/editar a venda.
+  const comissaoPercentualResponsavel = usuarioResponsavel?.comissao_percentual ?? null;
   const nomeResponsavel = usuarioResponsavel?.nome;
   const fotoResponsavel = usuarioResponsavel?.foto_url;
   // SDR original = quem marcou a primeira reunião — depois que a reunião é
@@ -433,6 +439,7 @@ export default async function EditarLeadPage({
                     receitaVenda={leadTipado.receita_venda}
                     produto={leadTipado.produto}
                     produtos={produtos}
+                    publicoOrg={publicoOrg}
                   />
                 </div>
               )}
@@ -450,6 +457,8 @@ export default async function EditarLeadPage({
                   observacao: leadTipado.proposta_observacao,
                 }}
                 produtos={produtos}
+                publicoOrg={publicoOrg}
+                comissaoPercentual={comissaoPercentualResponsavel}
               />
             )
           )}

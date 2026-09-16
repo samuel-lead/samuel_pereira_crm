@@ -1144,7 +1144,9 @@ export function EditarLeadForm({
 
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_urgencia">
-                Tem urgência em resolver
+                {ehImobiliario(publicoOrg)
+                  ? "Tem urgência em comprar o imóvel?"
+                  : "Tem urgência em resolver"}
               </label>
               <MenuSelect
                 id="criterio_urgencia"
@@ -1163,7 +1165,9 @@ export function EditarLeadForm({
 
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_capacidade">
-                Consegue pagar a solução
+                {ehImobiliario(publicoOrg)
+                  ? "Consegue pagar o imóvel desejado?"
+                  : "Consegue pagar a solução"}
               </label>
               <MenuSelect
                 id="criterio_capacidade"
