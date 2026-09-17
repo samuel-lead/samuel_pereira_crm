@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { editarVenda, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
+import { ImovelSelect } from "@/components/imovel-select";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { ehImobiliario } from "@/lib/terminologia";
 
@@ -58,6 +59,8 @@ export function EditarVendaForm({
   produto,
   produtos,
   publicoOrg = "mentoria",
+  imoveis = [],
+  imovelIdAtual,
 }: {
   leadId: string;
   vendidoEm: string | null;
@@ -66,6 +69,8 @@ export function EditarVendaForm({
   produto: string | null;
   produtos: string[];
   publicoOrg?: string;
+  imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
+  imovelIdAtual?: string | null;
 }) {
   const imobiliario = ehImobiliario(publicoOrg);
   const [aberto, setAberto] = useState(false);
@@ -141,9 +146,13 @@ export function EditarVendaForm({
       )}
       <div>
         <label className="mb-1 block text-xs font-medium text-green-800">
-          Produto
+          {imobiliario ? "Imóvel vendido" : "Produto"}
         </label>
-        <ProdutoSelect produtos={produtos} valorInicial={produto ?? undefined} />
+        {imobiliario ? (
+          <ImovelSelect imoveis={imoveis} valorInicial={imovelIdAtual} />
+        ) : (
+          <ProdutoSelect produtos={produtos} valorInicial={produto ?? undefined} />
+        )}
       </div>
       {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}
       <div className="flex gap-2">

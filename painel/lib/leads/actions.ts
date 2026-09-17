@@ -1268,10 +1268,29 @@ export async function marcarVendido(
     receita = receitaRaw ? Number(receitaRaw) : null;
   }
 
-  const produto = String(formData.get("produto") ?? "").trim() || null;
-
-  if (!produto) {
-    return { erro: "Selecione o produto vendido antes de salvar." };
+  // Imobiliário não tem lista de "produtos" configurável — o que se vende
+  // é o imóvel, já cadastrado em Imóveis. Grava nos dois campos: imovel_id
+  // (o vínculo real) e produto = título do imóvel (texto), pra não quebrar
+  // nada que já lê leads.produto (dashboard "Vendas por Produto" e a
+  // coluna PRODUTO em /leads/vendas).
+  let produto: string | null;
+  let imovelId: string | null = null;
+  if (usuario.publico_org === "imobiliario") {
+    imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
+    if (!imovelId) {
+      return { erro: "Selecione o imóvel vendido antes de salvar." };
+    }
+    const { data: imovel } = await supabase
+      .from("imoveis")
+      .select("titulo")
+      .eq("id", imovelId)
+      .single();
+    produto = imovel?.titulo ?? null;
+  } else {
+    produto = String(formData.get("produto") ?? "").trim() || null;
+    if (!produto) {
+      return { erro: "Selecione o produto vendido antes de salvar." };
+    }
   }
 
   // Busca a reunião ANTES de gravar a venda — se a data dela ainda não
@@ -1300,6 +1319,7 @@ export async function marcarVendido(
       valor_venda: valor,
       receita_venda: receita,
       produto,
+      imovel_id: imovelId,
       vendido_em: vendidoEm.toISOString(),
     })
     .eq("id", leadId);
@@ -1403,11 +1423,30 @@ export async function editarVenda(
     receita = receitaRaw ? Number(receitaRaw) : null;
   }
 
-  const produto = String(formData.get("produto") ?? "").trim() || null;
+  // Mesmo dual-write de marcarVendido: imobiliário escolhe o imóvel, não
+  // digita produto — grava imovel_id (vínculo real) e produto = título do
+  // imóvel (texto), pra manter os relatórios que já leem leads.produto.
+  let produto: string | null;
+  let imovelId: string | null = null;
+  if (usuario.publico_org === "imobiliario") {
+    imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
+    const { data: imovel } = imovelId
+      ? await supabase.from("imoveis").select("titulo").eq("id", imovelId).single()
+      : { data: null };
+    produto = imovel?.titulo ?? null;
+  } else {
+    produto = String(formData.get("produto") ?? "").trim() || null;
+  }
 
   const { error } = await supabase
     .from("leads")
-    .update({ valor_venda: valor, receita_venda: receita, produto, vendido_em: vendidoEm.toISOString() })
+    .update({
+      valor_venda: valor,
+      receita_venda: receita,
+      produto,
+      imovel_id: imovelId,
+      vendido_em: vendidoEm.toISOString(),
+    })
     .eq("id", leadId)
     .eq("status", "vendido");
 

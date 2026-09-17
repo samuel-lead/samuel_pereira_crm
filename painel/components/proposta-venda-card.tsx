@@ -16,6 +16,8 @@ export function PropostaVendaCard({
   produtos,
   publicoOrg = "mentoria",
   comissaoPercentual,
+  imoveis,
+  imovelIdAtual,
 }: {
   leadId: string;
   propostaAtual: {
@@ -26,6 +28,8 @@ export function PropostaVendaCard({
   produtos: string[];
   publicoOrg?: string;
   comissaoPercentual?: number | null;
+  imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
+  imovelIdAtual?: string | null;
 }) {
   const [aba, setAba] = useState<"proposta" | "venda">("proposta");
 
@@ -67,6 +71,8 @@ export function PropostaVendaCard({
             produtos={produtos}
             publicoOrg={publicoOrg}
             comissaoPercentual={comissaoPercentual}
+            imoveis={imoveis}
+            imovelIdAtual={imovelIdAtual}
           />
         </div>
       </div>

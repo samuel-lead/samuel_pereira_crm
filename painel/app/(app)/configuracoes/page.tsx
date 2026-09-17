@@ -36,7 +36,7 @@ export default async function ConfiguracoesPage() {
       souAdmin
         ? supabase.from("origens").select("id, nome").order("nome")
         : Promise.resolve({ data: null }),
-      souAdmin
+      souAdmin && !ehImobiliario
         ? supabase.from("produtos").select("id, nome").order("nome")
         : Promise.resolve({ data: null }),
       souAdmin && !ehImobiliario
@@ -155,7 +155,11 @@ export default async function ConfiguracoesPage() {
             </div>
           )}
 
-          {souAdmin && (
+          {/* Imobiliário não tem "produto" — o que se vende é o imóvel
+              cadastrado em Imóveis, escolhido direto na hora de marcar a
+              venda (ver components/marcar-vendido-form.tsx). Essa lista de
+              produtos configuráveis não faz sentido pra esse público. */}
+          {souAdmin && !ehImobiliario && (
             <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
               <h2 className="mb-1 text-sm font-semibold text-neutral-800">
                 Produtos

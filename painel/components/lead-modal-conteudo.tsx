@@ -294,6 +294,8 @@ export function LeadModalConteudo({
                   produto={lead.produto}
                   produtos={produtos}
                   publicoOrg={publicoOrg}
+                  imoveis={imoveis}
+                  imovelIdAtual={lead.imovel_id}
                 />
               </div>
             )}
@@ -321,6 +323,8 @@ export function LeadModalConteudo({
                 produtos={produtos}
                 publicoOrg={publicoOrg}
                 comissaoPercentual={comissaoPercentualResponsavel}
+                imoveis={imoveis}
+                imovelIdAtual={lead.imovel_id}
               />
             </div>
           )

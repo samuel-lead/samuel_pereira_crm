@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { marcarVendido, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
+import { ImovelSelect } from "@/components/imovel-select";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { IconeCalendario, IconeMoeda, IconeClientePagante, IconeTag } from "@/components/icons";
 import { ehImobiliario } from "@/lib/terminologia";
@@ -96,6 +97,8 @@ export function MarcarVendidoForm({
   produtos,
   publicoOrg = "mentoria",
   comissaoPercentual,
+  imoveis = [],
+  imovelIdAtual,
 }: {
   leadId: string;
   propostaValor?: number | null;
@@ -105,6 +108,11 @@ export function MarcarVendidoForm({
   // lead — só usada pra mostrar a prévia calculada aqui (o valor real é
   // calculado de novo no servidor ao salvar, ver marcarVendido).
   comissaoPercentual?: number | null;
+  // Imobiliário não escolhe "produto" — escolhe qual imóvel (já
+  // cadastrado em Imóveis) foi o vendido. Vem pré-selecionado com o
+  // "Imóvel de interesse" do lead, se já tinha um.
+  imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
+  imovelIdAtual?: string | null;
 }) {
   const modalAtivo = useLeadModalAtivo();
   const imobiliario = ehImobiliario(publicoOrg);
@@ -195,9 +203,13 @@ export function MarcarVendidoForm({
           )}
           <div className="rounded-lg bg-white p-3 shadow-sm">
             <RotuloCampo Icone={IconeTag} obrigatorio>
-              Produto
+              {imobiliario ? "Imóvel vendido" : "Produto"}
             </RotuloCampo>
-            <ProdutoSelect produtos={produtos} />
+            {imobiliario ? (
+              <ImovelSelect imoveis={imoveis} valorInicial={imovelIdAtual} />
+            ) : (
+              <ProdutoSelect produtos={produtos} />
+            )}
           </div>
         </div>
         {estado.erro && (

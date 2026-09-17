@@ -440,6 +440,8 @@ export default async function EditarLeadPage({
                     produto={leadTipado.produto}
                     produtos={produtos}
                     publicoOrg={publicoOrg}
+                    imoveis={imoveis}
+                    imovelIdAtual={leadTipado.imovel_id}
                   />
                 </div>
               )}
@@ -459,6 +461,8 @@ export default async function EditarLeadPage({
                 produtos={produtos}
                 publicoOrg={publicoOrg}
                 comissaoPercentual={comissaoPercentualResponsavel}
+                imoveis={imoveis}
+                imovelIdAtual={leadTipado.imovel_id}
               />
             )
           )}
