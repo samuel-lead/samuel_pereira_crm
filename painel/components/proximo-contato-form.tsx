@@ -8,6 +8,12 @@ import {
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { CampoDataHora } from "@/components/campo-data-hora";
 
+function agoraParaInputLocal() {
+  const agora = new Date();
+  const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 function formatarData(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit",
@@ -87,6 +93,7 @@ export function ProximoContatoForm({
         <CampoDataHora
           name="proximo_follow_em"
           required
+          min={agoraParaInputLocal()}
           className="w-full rounded-md border border-teal-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
 

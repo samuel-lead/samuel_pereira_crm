@@ -228,6 +228,7 @@ function BlocoReativarLead({
               disabled={pendente}
               value={agendadaPara}
               onChange={setAgendadaPara}
+              min={agoraParaInputLocal()}
               className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
@@ -827,6 +828,7 @@ export function EditarLeadForm({
                   id="reuniao_data"
                   name="reuniao_data"
                   required
+                  min={agoraParaInputLocal()}
                   className={`${campoClasse} bg-white`}
                 />
               </div>

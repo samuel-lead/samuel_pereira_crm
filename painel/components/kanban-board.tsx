@@ -268,6 +268,12 @@ function BotaoReativarOportunidade({
   );
 }
 
+function agoraParaInputLocal() {
+  const agora = new Date();
+  const local = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 // Botão de rodapé pra marcar "Próximo contato" sem abrir o card inteiro —
 // Samuel pediu isso especificamente pra Pré-vendas no mobile, onde abrir
 // o card só pra isso é lento demais. Só aparece pra quem ainda não tem
@@ -317,6 +323,7 @@ function BotaoProximoContatoRapido({ leadId }: { leadId: string }) {
         name="proximo_follow_em"
         required
         autoFocus
+        min={agoraParaInputLocal()}
         className="w-full rounded-md border border-teal-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
       />
       {erro && <p className="text-[11px] text-red-600">{erro}</p>}
