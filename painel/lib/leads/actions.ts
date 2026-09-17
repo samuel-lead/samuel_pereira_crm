@@ -1325,10 +1325,22 @@ export async function marcarVendido(
     // que marcou, não o Closer que realizou), bagunçando a métrica de
     // quem vendeu de verdade (foi o que aconteceu com o Lino/Elizabeth).
     if (reuniaoAtiva.closer_id) {
-      await supabase.rpc("transferir_lead_para_closer", {
+      // Erro aqui ficava invisível — a venda já tinha sido salva no passo
+      // de cima, e sem conferir isso o resultado era o lead ficar com o
+      // SDR como responsável em vez de passar pro Closer, sem ninguém
+      // perceber (foi exatamente o que aconteceu com uma venda da
+      // Elizabeth — a causa real era outra, ver migration
+      // 20260917100000_corrige_permissao_transferir_lead_closer.sql, mas
+      // essa checagem evita que o próximo bug do tipo também fique mudo).
+      const { error: erroTransferencia } = await supabase.rpc("transferir_lead_para_closer", {
         p_lead_id: leadId,
         p_closer_id: reuniaoAtiva.closer_id,
       });
+      if (erroTransferencia) {
+        return {
+          erro: `Venda registrada, mas não deu pra passar o lead pro Closer: ${erroTransferencia.message}`,
+        };
+      }
     }
   }
 
