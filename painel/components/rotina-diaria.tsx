@@ -11,15 +11,16 @@ import {
   IconeCheck,
 } from "@/components/icons";
 
-// Horários batem com o documento "Rotina do SDR" (atualizado pelo Samuel
-// em 12/09/26) — não é mais o mesmo horário da versão anterior, então não
-// "arredondar" pra bater com o de antes se ele atualizar de novo.
+// Horários e descrições batem com o documento "Rotina do SDR" (Samuel
+// ajustou o documento em 17/09/26) — não é mais a mesma redação da
+// versão anterior, então não "arredondar" pra bater com a de antes se
+// ele atualizar de novo.
 const ATIVIDADES = [
   {
     id: "confirmar_reunioes",
     hora: "09:00–09:30",
     titulo: "Confirmar e reagendar reuniões",
-    desc: "Reuniões do dia e reagendar as do dia anterior.",
+    desc: "Reuniões do dia e reagendar as do dia anterior, seguindo o processo anti-no-show.",
     Icone: IconeCalendario,
     cor: "blue",
   },
@@ -27,7 +28,7 @@ const ATIVIDADES = [
     id: "retomar_conversas",
     hora: "09:30–10:30",
     titulo: "Retomar conversas",
-    desc: "Leads que responderam no dia anterior no WhatsApp e Instagram.",
+    desc: "Leads que responderam no WhatsApp e Instagram, parados ou atrasados no CRM.",
     Icone: IconeAtividade,
     cor: "violet",
   },
@@ -35,7 +36,7 @@ const ATIVIDADES = [
     id: "contato_nivel_3",
     hora: "10:30–11:00",
     titulo: "Contato com leads nível 3",
-    desc: "Topou reunião mas sumiu na hora de marcar horário.",
+    desc: "Topou reunião mas sumiu na hora de marcar horário — conforme a matriz de follow-up.",
     Icone: IconeAlvo,
     cor: "amber",
   },
@@ -43,7 +44,7 @@ const ATIVIDADES = [
     id: "ligacoes_quentes",
     hora: "11:00–12:00",
     titulo: "Ligações para leads quentes",
-    desc: "Mínimo 30 ligações — ICP, tráfego pago, leads engajados.",
+    desc: "Mínimo 30 ligações — ex-Instagram, engajados, ICP e tráfego pago.",
     Icone: IconeTelefone,
     cor: "teal",
   },
@@ -51,7 +52,7 @@ const ATIVIDADES = [
     id: "prospeccao",
     hora: "13:30–16:00",
     titulo: "Prospecção",
-    desc: "Mínimo 80 abordagens por dia no Instagram — lead do tráfego é sempre prioridade.",
+    desc: "Mínimo 80 abordagens no Instagram por dia (cota de 20 leads/dia) — lead de tráfego é sempre prioridade.",
     Icone: IconeInstagram,
     cor: "pink",
   },
@@ -59,7 +60,7 @@ const ATIVIDADES = [
     id: "follow_niveis_1_2",
     hora: "16:00–17:00",
     titulo: "Follow com níveis 1 e 2",
-    desc: "Sequência de mensagens curtas para reengajar e ligações.",
+    desc: "Sequência de mensagens curtas e ligações — lead de tráfego é atendido na hora.",
     Icone: IconeAtividade,
     cor: "indigo",
   },
@@ -67,7 +68,7 @@ const ATIVIDADES = [
     id: "confirmar_amanha",
     hora: "17:00–17:30",
     titulo: "Confirmar reuniões de amanhã",
-    desc: "E atualizar o CRM antes de enviar o relatório do dia.",
+    desc: "Atualizar o CRM e enviar o relatório diário até as 18h.",
     Icone: IconeCalendario,
     cor: "emerald",
   },
