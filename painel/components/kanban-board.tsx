@@ -111,6 +111,39 @@ function formatarDataHora(iso: string) {
   });
 }
 
+// Mesmo padrão "Hoje/Amanhã/Dia da semana, DD/MM, HH:mm" já usado nas
+// Próximas reuniões do dashboard e nos Leads recentes — Samuel pediu pra
+// mostrar o dia da semana da reunião aqui no card também, igual lá.
+function formatarDataHoraComDia(iso: string) {
+  const data = new Date(iso);
+  const hoje = new Date();
+  const amanha = new Date(hoje.getTime() + 24 * 60 * 60 * 1000);
+  const mesmodia = (a: Date, b: Date) =>
+    a.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) ===
+    b.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+  const hora = data.toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (mesmodia(data, hoje)) return `Hoje, ${hora}`;
+  if (mesmodia(data, amanha)) return `Amanhã, ${hora}`;
+
+  const diaSemana = data.toLocaleDateString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+  });
+  const diaSemanaCapitalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+  const dataCurta = data.toLocaleDateString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+  });
+  return `${diaSemanaCapitalizado}, ${dataCurta}, ${hora}`;
+}
+
 function diasSemAtividade(ultimaAtividadeEm?: string) {
   if (!ultimaAtividadeEm) return 0;
   return diasUteisDesde(ultimaAtividadeEm);
@@ -1050,7 +1083,7 @@ export function KanbanBoard({
                             >
                               <IconeCalendario className="h-3 w-3 shrink-0" />
                               {reuniaoAtrasada ? `${Reuniao(publicoOrg)} atrasada` : Reuniao(publicoOrg)}:{" "}
-                              {formatarDataHora(lead.reuniao_agendada_para)}
+                              {formatarDataHoraComDia(lead.reuniao_agendada_para)}
                             </p>
                           )}
                           {temProximoContato && (
