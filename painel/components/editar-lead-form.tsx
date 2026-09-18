@@ -1123,7 +1123,7 @@ export function EditarLeadForm({
                 {[
                   "Situação hoje",
                   "O que já tentou",
-                  "Onde quer chegar",
+                  ehImobiliario(publicoOrg) ? "Que tipo de imóvel deseja" : "Onde quer chegar",
                   "Autonomia de decisão",
                 ].map((dica) => (
                   <span
