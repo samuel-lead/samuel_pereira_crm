@@ -122,7 +122,11 @@ export function FiltroPeriodo({
                 setAno(novoAno);
                 if (mes) irParaMesEspecifico(novoAno, mes);
               }}
-              options={[anoAtual, anoAtual + 1, anoAtual + 2, anoAtual + 3, anoAtual + 4].map((a) => ({
+              // Antes só mostrava o ano atual e anos FUTUROS (fazia sentido
+              // pra marcar reunião futura, mas não pra filtrar Clientes e
+              // Visão geral, onde o que se busca é histórico). Samuel pediu
+              // pra trocar por anos passados: de 2020 até o ano atual.
+              options={Array.from({ length: anoAtual - 2020 + 1 }, (_, i) => anoAtual - i).map((a) => ({
                 value: String(a),
                 label: String(a),
               }))}
