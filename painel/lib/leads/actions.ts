@@ -29,6 +29,24 @@ function parseDataHoraLocal(valor: string): Date {
   return new Date(`${comSegundos}-03:00`);
 }
 
+// Imobiliário não digita receita à mão — "receita" pro corretor não é o
+// preço do imóvel (isso é VGV), é o que ele embolsa mesmo. Dois jeitos de
+// calcular, conforme o que o corretor configurou em Meu perfil
+// (ver components/comissao-form.tsx): porcentagem do valor da venda, ou
+// um valor fixo sempre igual, não importa o preço do imóvel. Sem nada
+// configurado, fica sem receita até ele preencher.
+function calcularReceitaComissao(
+  valor: number,
+  corretor: { comissao_tipo: string | null; comissao_percentual: number | null; comissao_valor_fixo: number | null } | null
+): number | null {
+  if (corretor?.comissao_tipo === "fixo") {
+    return corretor.comissao_valor_fixo ?? null;
+  }
+  return corretor?.comissao_percentual
+    ? Math.round(valor * (corretor.comissao_percentual / 100) * 100) / 100
+    : null;
+}
+
 async function contextoUsuario() {
   const supabase = await createClient();
   const user = await usuarioDoToken(supabase);
@@ -1247,22 +1265,16 @@ export async function marcarVendido(
     return { erro: "Data da venda inválida — não pode ser uma data futura" };
   }
 
-  // Imobiliário não digita receita à mão — "receita" pro corretor não é o
-  // preço do imóvel (isso é VGV), é a fatia que ele embolsa de comissão.
-  // Calcula sozinho: valor da venda × % de comissão configurada no perfil
-  // do corretor responsável (ver components/comissao-form.tsx). Sem %
-  // configurada, fica sem receita (igual antes) até ele preencher.
-  // Mentoria continua digitando a receita à mão, sem mudança nenhuma.
+  // Mentoria continua digitando a receita à mão, sem mudança nenhuma —
+  // só imobiliário calcula sozinho (ver calcularReceitaComissao acima).
   let receita: number | null;
   if (usuario.publico_org === "imobiliario") {
     const { data: corretor } = await supabase
       .from("usuarios")
-      .select("comissao_percentual")
+      .select("comissao_tipo, comissao_percentual, comissao_valor_fixo")
       .eq("id", leadAtual.responsavel_id)
       .single();
-    receita = corretor?.comissao_percentual
-      ? Math.round(valor * (corretor.comissao_percentual / 100) * 100) / 100
-      : null;
+    receita = calcularReceitaComissao(valor, corretor);
   } else {
     const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
     receita = receitaRaw ? Number(receitaRaw) : null;
@@ -1411,13 +1423,11 @@ export async function editarVenda(
     const { data: corretor } = leadAtual?.responsavel_id
       ? await supabase
           .from("usuarios")
-          .select("comissao_percentual")
+          .select("comissao_tipo, comissao_percentual, comissao_valor_fixo")
           .eq("id", leadAtual.responsavel_id)
           .single()
       : { data: null };
-    receita = corretor?.comissao_percentual
-      ? Math.round(valor * (corretor.comissao_percentual / 100) * 100) / 100
-      : null;
+    receita = calcularReceitaComissao(valor, corretor);
   } else {
     const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
     receita = receitaRaw ? Number(receitaRaw) : null;
@@ -2001,6 +2011,8 @@ export type DetalhesLead = {
     papel: string | null;
     foto_url: string | null;
     comissao_percentual: number | null;
+    comissao_tipo: string | null;
+    comissao_valor_fixo: number | null;
   }[];
   origens: { id: string; nome: string }[];
   produtos: string[];
@@ -2083,7 +2095,7 @@ export async function buscarDetalhesDoLead(
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("usuarios")
-      .select("id, nome, funcao, papel, foto_url, comissao_percentual")
+      .select("id, nome, funcao, papel, foto_url, comissao_percentual, comissao_tipo, comissao_valor_fixo")
       .order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),

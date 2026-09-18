@@ -283,17 +283,39 @@ export async function atualizarMinhaComissao(
     return { erro: "Não autenticado" };
   }
 
-  const percentualRaw = String(formData.get("comissao_percentual") ?? "").trim();
-  const percentual = percentualRaw ? Number(percentualRaw.replace(",", ".")) : null;
+  // Dois jeitos de ganhar num imóvel: porcentagem do preço, ou um valor
+  // fixo sempre igual, não importa o preço (alguns corretores trabalham
+  // assim — Samuel pediu explicitamente essa segunda opção).
+  const tipo = String(formData.get("comissao_tipo") ?? "percentual").trim();
+  if (tipo !== "percentual" && tipo !== "fixo") {
+    return { erro: "Tipo de comissão inválido" };
+  }
 
-  if (percentualRaw && (percentual === null || Number.isNaN(percentual) || percentual < 0 || percentual > 100)) {
-    return { erro: "Informe uma porcentagem entre 0 e 100" };
+  let percentual: number | null = null;
+  let valorFixo: number | null = null;
+
+  if (tipo === "percentual") {
+    const percentualRaw = String(formData.get("comissao_percentual") ?? "").trim();
+    percentual = percentualRaw ? Number(percentualRaw.replace(",", ".")) : null;
+    if (percentualRaw && (percentual === null || Number.isNaN(percentual) || percentual < 0 || percentual > 100)) {
+      return { erro: "Informe uma porcentagem entre 0 e 100" };
+    }
+  } else {
+    const valorFixoRaw = String(formData.get("comissao_valor_fixo") ?? "").trim();
+    valorFixo = valorFixoRaw ? Number(valorFixoRaw.replace(",", ".")) : null;
+    if (valorFixoRaw && (valorFixo === null || Number.isNaN(valorFixo) || valorFixo < 0)) {
+      return { erro: "Informe um valor fixo válido" };
+    }
   }
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("usuarios")
-    .update({ comissao_percentual: percentual })
+    .update({
+      comissao_tipo: tipo,
+      comissao_percentual: percentual,
+      comissao_valor_fixo: valorFixo,
+    })
     .eq("id", usuario.id);
 
   if (error) {

@@ -16,6 +16,8 @@ export function PropostaVendaCard({
   produtos,
   publicoOrg = "mentoria",
   comissaoPercentual,
+  comissaoTipo,
+  comissaoValorFixo,
   imoveis,
   imovelIdAtual,
 }: {
@@ -28,6 +30,8 @@ export function PropostaVendaCard({
   produtos: string[];
   publicoOrg?: string;
   comissaoPercentual?: number | null;
+  comissaoTipo?: string | null;
+  comissaoValorFixo?: number | null;
   imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
   imovelIdAtual?: string | null;
 }) {
@@ -71,6 +75,8 @@ export function PropostaVendaCard({
             produtos={produtos}
             publicoOrg={publicoOrg}
             comissaoPercentual={comissaoPercentual}
+            comissaoTipo={comissaoTipo}
+            comissaoValorFixo={comissaoValorFixo}
             imoveis={imoveis}
             imovelIdAtual={imovelIdAtual}
           />

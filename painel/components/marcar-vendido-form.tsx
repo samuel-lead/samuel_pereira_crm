@@ -97,6 +97,8 @@ export function MarcarVendidoForm({
   produtos,
   publicoOrg = "mentoria",
   comissaoPercentual,
+  comissaoTipo,
+  comissaoValorFixo,
   imoveis = [],
   imovelIdAtual,
 }: {
@@ -108,6 +110,10 @@ export function MarcarVendidoForm({
   // lead — só usada pra mostrar a prévia calculada aqui (o valor real é
   // calculado de novo no servidor ao salvar, ver marcarVendido).
   comissaoPercentual?: number | null;
+  // "percentual" (padrão) ou "fixo" — corretor pode ganhar valor fixo por
+  // imóvel em vez de porcentagem (ver components/comissao-form.tsx).
+  comissaoTipo?: string | null;
+  comissaoValorFixo?: number | null;
   // Imobiliário não escolhe "produto" — escolhe qual imóvel (já
   // cadastrado em Imóveis) foi o vendido. Vem pré-selecionado com o
   // "Imóvel de interesse" do lead, se já tinha um.
@@ -116,9 +122,16 @@ export function MarcarVendidoForm({
 }) {
   const modalAtivo = useLeadModalAtivo();
   const imobiliario = ehImobiliario(publicoOrg);
+  const ehComissaoFixa = comissaoTipo === "fixo";
+  const comissaoConfigurada = ehComissaoFixa ? comissaoValorFixo : comissaoPercentual;
   const [valorVendaReais, setValorVendaReais] = useState(propostaValor ?? 0);
-  const comissaoPrevia =
-    imobiliario && comissaoPercentual ? valorVendaReais * (comissaoPercentual / 100) : null;
+  const comissaoPrevia = !imobiliario
+    ? null
+    : ehComissaoFixa
+      ? (comissaoValorFixo ?? null)
+      : comissaoPercentual
+        ? valorVendaReais * (comissaoPercentual / 100)
+        : null;
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const enviandoRef = useRef(false);
@@ -176,7 +189,7 @@ export function MarcarVendidoForm({
             aoMudarReais={imobiliario ? setValorVendaReais : undefined}
           />
           {imobiliario ? (
-            comissaoPercentual ? (
+            comissaoConfigurada ? (
               <div className="rounded-lg bg-white p-3 shadow-sm">
                 <RotuloCampo Icone={IconeClientePagante}>Receita (comissão)</RotuloCampo>
                 <p className="text-sm font-semibold text-green-800">
@@ -185,12 +198,14 @@ export function MarcarVendidoForm({
                     : "—"}
                 </p>
                 <p className="mt-1 text-[10px] text-neutral-400">
-                  Calculado sozinho: {comissaoPercentual}% do preço do imóvel.
+                  {ehComissaoFixa
+                    ? "Calculado sozinho: valor fixo configurado no seu perfil."
+                    : `Calculado sozinho: ${comissaoPercentual}% do preço do imóvel.`}
                 </p>
               </div>
             ) : (
               <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
-                Configure sua % de comissão em Meu perfil pra ver a receita calculada aqui.
+                Configure sua comissão em Meu perfil pra ver a receita calculada aqui.
               </p>
             )
           ) : (

@@ -128,8 +128,10 @@ export function LeadModalConteudo({
   // Comissão de quem é o responsável atual pelo lead — usada só no
   // imobiliário, pra calcular a "receita" (comissão) ao marcar/editar a
   // venda (ver components/marcar-vendido-form.tsx).
-  const comissaoPercentualResponsavel =
-    usuarios.find((u) => u.id === lead.responsavel_id)?.comissao_percentual ?? null;
+  const responsavelAtual = usuarios.find((u) => u.id === lead.responsavel_id);
+  const comissaoPercentualResponsavel = responsavelAtual?.comissao_percentual ?? null;
+  const comissaoTipoResponsavel = responsavelAtual?.comissao_tipo ?? null;
+  const comissaoValorFixoResponsavel = responsavelAtual?.comissao_valor_fixo ?? null;
 
   return (
     <div
@@ -323,6 +325,8 @@ export function LeadModalConteudo({
                 produtos={produtos}
                 publicoOrg={publicoOrg}
                 comissaoPercentual={comissaoPercentualResponsavel}
+                comissaoTipo={comissaoTipoResponsavel}
+                comissaoValorFixo={comissaoValorFixoResponsavel}
                 imoveis={imoveis}
                 imovelIdAtual={lead.imovel_id}
               />

@@ -138,8 +138,8 @@ export function EditarVendaForm({
       />
       {imobiliario ? (
         <p className="text-xs text-neutral-500">
-          Receita (comissão): recalculada sozinha ao salvar, a partir da sua %
-          configurada em Meu perfil.
+          Receita (comissão): recalculada sozinha ao salvar, a partir da
+          comissão configurada em Meu perfil.
         </p>
       ) : (
         <CampoMoeda name="receita_venda" label="Receita recebida (R$)" valorInicial={receitaVenda} />

@@ -17,7 +17,7 @@ export default async function PerfilPage() {
   const { data: dadosUsuario } = usuario
     ? await supabase
         .from("usuarios")
-        .select("wpp_comercial_e164, comissao_percentual")
+        .select("wpp_comercial_e164, comissao_percentual, comissao_tipo, comissao_valor_fixo")
         .eq("id", usuario.id)
         .single()
     : { data: null };
@@ -79,7 +79,11 @@ export default async function PerfilPage() {
               digitar esse valor toda vez que fecha uma venda.
             </p>
 
-            <ComissaoForm comissaoAtual={dadosUsuario?.comissao_percentual ?? null} />
+            <ComissaoForm
+              comissaoAtual={dadosUsuario?.comissao_percentual ?? null}
+              tipoAtual={(dadosUsuario?.comissao_tipo as "percentual" | "fixo") ?? "percentual"}
+              valorFixoAtual={dadosUsuario?.comissao_valor_fixo ?? null}
+            />
           </div>
         )}
 

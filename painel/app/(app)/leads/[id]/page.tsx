@@ -171,7 +171,7 @@ export default async function EditarLeadPage({
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("usuarios")
-      .select("id, nome, funcao, papel, foto_url, comissao_percentual")
+      .select("id, nome, funcao, papel, foto_url, comissao_percentual, comissao_tipo, comissao_valor_fixo")
       .order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),
@@ -224,6 +224,8 @@ export default async function EditarLeadPage({
   // Comissão de quem é o responsável atual — só usada no imobiliário, pra
   // calcular a "receita" (comissão) ao marcar/editar a venda.
   const comissaoPercentualResponsavel = usuarioResponsavel?.comissao_percentual ?? null;
+  const comissaoTipoResponsavel = usuarioResponsavel?.comissao_tipo ?? null;
+  const comissaoValorFixoResponsavel = usuarioResponsavel?.comissao_valor_fixo ?? null;
   const nomeResponsavel = usuarioResponsavel?.nome;
   const fotoResponsavel = usuarioResponsavel?.foto_url;
   // SDR original = quem marcou a primeira reunião — depois que a reunião é
@@ -461,6 +463,8 @@ export default async function EditarLeadPage({
                 produtos={produtos}
                 publicoOrg={publicoOrg}
                 comissaoPercentual={comissaoPercentualResponsavel}
+                comissaoTipo={comissaoTipoResponsavel}
+                comissaoValorFixo={comissaoValorFixoResponsavel}
                 imoveis={imoveis}
                 imovelIdAtual={leadTipado.imovel_id}
               />
