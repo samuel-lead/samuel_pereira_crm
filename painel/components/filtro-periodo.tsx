@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { NOMES_MES, type ChavePeriodo } from "@/lib/periodo";
 import { MenuSelect } from "@/components/menu-select";
+import { ehImobiliario } from "@/lib/terminologia";
 
 const OPCOES = [
   { valor: "hoje", label: "Hoje" },
@@ -28,6 +29,7 @@ export function FiltroPeriodo({
   outrosParams,
   atalhos,
   mostrarMesEspecifico = true,
+  publicoOrg = "mentoria",
 }: {
   baseHref: string;
   periodoAtual: ChavePeriodo | null;
@@ -39,6 +41,11 @@ export function FiltroPeriodo({
   // simples (ex.: Lista de leads) só precisam de um subconjunto.
   atalhos?: (typeof OPCOES)[number]["valor"][];
   mostrarMesEspecifico?: boolean;
+  // Imobiliário filtra dado histórico (vendas de anos passados) — mentoria
+  // usa esse seletor pra planejar meta de mês/ano que ainda vai vir. Por
+  // isso o intervalo de anos é diferente pra cada público (Samuel pediu
+  // explicitamente pra não misturar os dois).
+  publicoOrg?: string;
 }) {
   const opcoesVisiveis = atalhos ? OPCOES.filter((o) => atalhos.includes(o.valor)) : OPCOES;
   const router = useRouter();
@@ -122,11 +129,11 @@ export function FiltroPeriodo({
                 setAno(novoAno);
                 if (mes) irParaMesEspecifico(novoAno, mes);
               }}
-              // Antes só mostrava o ano atual e anos FUTUROS (fazia sentido
-              // pra marcar reunião futura, mas não pra filtrar Clientes e
-              // Visão geral, onde o que se busca é histórico). Samuel pediu
-              // pra trocar por anos passados: de 2020 até o ano atual.
-              options={Array.from({ length: anoAtual - 2020 + 1 }, (_, i) => anoAtual - i).map((a) => ({
+              options={(
+                ehImobiliario(publicoOrg)
+                  ? Array.from({ length: anoAtual - 2020 + 1 }, (_, i) => anoAtual - i)
+                  : [anoAtual, anoAtual + 1, anoAtual + 2, anoAtual + 3, anoAtual + 4]
+              ).map((a) => ({
                 value: String(a),
                 label: String(a),
               }))}

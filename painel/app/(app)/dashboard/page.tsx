@@ -332,6 +332,7 @@ export default async function DashboardPage({
             mesAnoAtual={mesAno}
             deAtual={de}
             ateAtual={ate}
+            publicoOrg={publicoOrg}
           />
         </div>
 

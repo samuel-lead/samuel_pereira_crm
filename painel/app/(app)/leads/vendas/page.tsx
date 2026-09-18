@@ -122,6 +122,7 @@ export default async function VendasPage({
             deAtual={deFiltro}
             ateAtual={ateFiltro}
             outrosParams={{ busca: buscaFiltro }}
+            publicoOrg={publicoOrg}
           />
 
           <form className="flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
