@@ -531,8 +531,8 @@ export default async function LeadsPage({
 
             {receitaOrgMes !== null && (
               <MetaReceitaWidget
-                compacta
                 metaReceita={metaReceita}
+                compacta
                 receitaAtual={receitaOrgMes}
                 podeEditar={souAdmin}
                 publicoOrg={publicoOrg}

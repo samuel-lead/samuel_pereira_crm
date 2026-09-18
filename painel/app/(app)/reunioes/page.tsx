@@ -396,8 +396,8 @@ export default async function VendasPage({
 
             {receitaOrgMes !== null && (
               <MetaReceitaWidget
-                compacta
                 metaReceita={metaReceita}
+                compacta
                 receitaAtual={receitaOrgMes}
                 podeEditar={souAdmin}
                 publicoOrg={publicoOrg}
