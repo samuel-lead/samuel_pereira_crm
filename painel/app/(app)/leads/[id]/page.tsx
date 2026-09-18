@@ -171,7 +171,7 @@ export default async function EditarLeadPage({
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("usuarios")
-      .select("id, nome, funcao, foto_url, comissao_percentual")
+      .select("id, nome, funcao, papel, foto_url, comissao_percentual")
       .order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
     supabase.from("produtos").select("nome").order("nome"),

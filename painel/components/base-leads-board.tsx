@@ -34,7 +34,7 @@ function BotaoReativar({
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
   numerosVisiveis: Map<number, number>;
-  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  usuarios: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
   souAdmin: boolean;
   publicoOrg: string;
 }) {
@@ -130,6 +130,7 @@ function BotaoReativar({
           usuarios={usuarios}
           funcaoFiltro="sdr"
           permiteVazio
+          incluirAdmins
           placeholder="Quem vai ser o responsável..."
           abrirAoMontar
         />
@@ -235,7 +236,7 @@ export function BaseLeadsBoard({
   fotoPorUsuario?: Map<string, string | null>;
   niveisReativacao: { ordem: number; nome: string }[];
   numerosVisiveis: Map<number, number>;
-  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  usuarios: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
   publicoOrg?: string;
   souAdmin: boolean;
 }) {

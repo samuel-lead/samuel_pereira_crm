@@ -14,7 +14,7 @@ export function NovoLeadForm({
   origens,
   souAdmin = true,
 }: {
-  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  usuarios: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
   origens: { id: string; nome: string }[];
   souAdmin?: boolean;
 }) {
@@ -124,7 +124,7 @@ export function NovoLeadForm({
             Responsável
           </label>
           {souAdmin ? (
-            <ResponsavelSelect usuarios={usuarios} funcaoFiltro="sdr" />
+            <ResponsavelSelect usuarios={usuarios} funcaoFiltro="sdr" incluirAdmins />
           ) : (
             <p className="w-full rounded-md border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
               Você

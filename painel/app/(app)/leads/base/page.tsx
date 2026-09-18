@@ -65,7 +65,7 @@ export default async function BasePage({
 
   const [{ data: leadsData }, { data: usuariosData }, { data: niveisData }] = await Promise.all([
     consulta,
-    supabase.from("usuarios").select("id, nome, foto_url, funcao"),
+    supabase.from("usuarios").select("id, nome, foto_url, funcao, papel"),
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
   ]);
   const todosNiveis = (niveisData ?? []) as NivelResumo[];

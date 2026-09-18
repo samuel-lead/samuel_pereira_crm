@@ -125,7 +125,7 @@ export default async function VendasPage({
   ] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     consulta,
-    supabase.from("usuarios").select("id, nome, foto_url, funcao").order("nome"),
+    supabase.from("usuarios").select("id, nome, foto_url, funcao, papel").order("nome"),
     supabase
       .from("leads")
       .select("origem")

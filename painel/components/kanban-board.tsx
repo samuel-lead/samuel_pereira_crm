@@ -178,7 +178,7 @@ function BotaoReativarOportunidade({
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
   numerosVisiveis: Map<number, number>;
-  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  usuarios: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
   souAdmin: boolean;
   publicoOrg: string;
 }) {
@@ -273,6 +273,7 @@ function BotaoReativarOportunidade({
           usuarios={usuarios}
           funcaoFiltro="sdr"
           permiteVazio
+          incluirAdmins
           placeholder="Quem vai ser o responsável..."
           abrirAoMontar
         />

@@ -110,7 +110,7 @@ function BlocoReativarLead({
   leadId: string;
   niveisReativacao: { ordem: number; nome: string }[];
   numerosVisiveis: Record<number, number>;
-  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  usuarios: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
   souAdmin: boolean;
   publicoOrg: string;
   preSelecionarReuniao?: boolean;
@@ -213,7 +213,7 @@ function BlocoReativarLead({
           options={[
             { value: "", label: "— Sem responsável —" },
             ...usuarios
-              .filter((u) => u.funcao === "sdr")
+              .filter((u) => u.funcao === "sdr" || u.papel === "admin")
               .map((u) => ({ value: u.id, label: u.nome })),
           ]}
         />
@@ -294,7 +294,7 @@ export function EditarLeadForm({
   lead: Lead;
   niveis: NivelResumo[];
   numerosVisiveis: Record<number, number>;
-  usuarios: { id: string; nome: string; funcao?: string | null }[];
+  usuarios: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
   origens: { id: string; nome: string }[];
   // Só usado no público imobiliário — pra vincular "esse lead quer esse
   // imóvel" (ver components/imovel-select.tsx). Mentoria nem chama com
@@ -696,6 +696,7 @@ export function EditarLeadForm({
               valorInicial={lead.responsavel_id}
               funcaoFiltro="sdr"
               permiteVazio
+              incluirAdmins
             />
           ) : (
             <p className={`${campoClasse} bg-neutral-50 text-neutral-600`}>

@@ -7,7 +7,7 @@ export default async function NovoLeadPage() {
   const { usuario: usuarioAtual } = await usuarioAutenticado();
 
   const [{ data: usuariosData }, { data: origensData }] = await Promise.all([
-    supabase.from("usuarios").select("id, nome, funcao").order("nome"),
+    supabase.from("usuarios").select("id, nome, funcao, papel").order("nome"),
     supabase.from("origens").select("id, nome").order("nome"),
   ]);
 
