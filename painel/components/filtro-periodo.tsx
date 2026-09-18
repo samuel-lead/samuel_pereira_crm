@@ -6,6 +6,12 @@ import { NOMES_MES, type ChavePeriodo } from "@/lib/periodo";
 import { MenuSelect } from "@/components/menu-select";
 import { ehImobiliario } from "@/lib/terminologia";
 
+// Mentoria não tem dado antes disso (é quando o CRM começou) — por
+// enquanto só existe 2026 mesmo, mas o filtro já nasce pronto pra somar
+// 2027, 2028... sozinho conforme os anos forem passando (mesma lógica do
+// imobiliário, só que com piso diferente).
+const ANO_INICIAL_MENTORIA = 2026;
+
 const OPCOES = [
   { valor: "hoje", label: "Hoje" },
   { valor: "ontem", label: "Ontem" },
@@ -129,10 +135,9 @@ export function FiltroPeriodo({
                 setAno(novoAno);
                 if (mes) irParaMesEspecifico(novoAno, mes);
               }}
-              options={(
-                ehImobiliario(publicoOrg)
-                  ? Array.from({ length: anoAtual - 2020 + 1 }, (_, i) => anoAtual - i)
-                  : [anoAtual, anoAtual + 1, anoAtual + 2, anoAtual + 3, anoAtual + 4]
+              options={Array.from(
+                { length: anoAtual - (ehImobiliario(publicoOrg) ? 2020 : ANO_INICIAL_MENTORIA) + 1 },
+                (_, i) => anoAtual - i
               ).map((a) => ({
                 value: String(a),
                 label: String(a),
