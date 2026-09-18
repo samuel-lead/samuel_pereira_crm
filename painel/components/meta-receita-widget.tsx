@@ -60,6 +60,40 @@ export function MetaReceitaWidget({
     );
   }
 
+  // Admin cancelou o aviso de "mês novo, defina a meta" — sem isso não
+  // tinha como sair dessa tela, o formulário ficava aberto forçando
+  // preencher algo. Cancelar deixa exatamente como estava na virada do
+  // mês (sem meta definida), com um jeito de abrir o formulário de novo
+  // quando quiser.
+  if (metaReceita === null && podeEditar && !editando) {
+    if (compacta) {
+      return (
+        <button
+          type="button"
+          onClick={() => setEditando(true)}
+          className="flex shrink-0 items-center rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-500 shadow-sm transition hover:bg-neutral-50"
+        >
+          Meta do mês não definida — clique pra definir
+        </button>
+      );
+    }
+    return (
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-neutral-800">{rotuloMeta}</h2>
+          <button
+            type="button"
+            onClick={() => setEditando(true)}
+            className="text-xs font-medium text-blue-600 hover:text-blue-700"
+          >
+            Definir meta
+          </button>
+        </div>
+        <p className="text-sm text-neutral-500">Ainda não foi definida.</p>
+      </div>
+    );
+  }
+
   if (editando && podeEditar) {
     const ehMesNovo = metaReceita === null;
 
@@ -86,15 +120,15 @@ export function MetaReceitaWidget({
         >
           Salvar meta
         </button>
-        {metaReceita !== null && (
-          <button
-            type="button"
-            onClick={() => setEditando(false)}
-            className="shrink-0 text-sm text-neutral-500 hover:text-neutral-700"
-          >
-            Cancelar
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setEditando(false)}
+          className={`shrink-0 text-sm text-neutral-500 hover:text-neutral-700 ${
+            ehMesNovo ? "text-amber-800" : ""
+          }`}
+        >
+          Cancelar
+        </button>
         {estado.erro && <p className="w-full text-xs text-red-600">{estado.erro}</p>}
       </form>
     );
