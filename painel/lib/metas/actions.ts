@@ -78,6 +78,57 @@ export async function definirMetaReceita(
   }
 
   revalidatePath("/leads");
+  revalidatePath("/reunioes");
+  revalidatePath("/dashboard");
+  return { erro: null };
+}
+
+// Apaga a meta do mês atual, voltando pro estado "sem meta definida" — o
+// mesmo estado de quando o mês vira, só que a qualquer momento (Samuel
+// pediu explicitamente: "cancelar a meta do mês... voltar como se fosse
+// virar todo mês, pra eu definir a meta de novo"). Só zera meta_receita —
+// preserva o resto da linha (ticket_medio, dias_uteis, faturamento_real
+// histórico) pra não perder dado de outro lugar que usa essa mesma linha.
+export async function removerMetaReceita(): Promise<EstadoMeta> {
+  const supabase = await createClient();
+  const user = await usuarioDoToken(supabase);
+
+  if (!user) {
+    return { erro: "Não autenticado" };
+  }
+
+  const { data: usuario, error: erroUsuario } = await supabase
+    .from("usuarios")
+    .select("id, org_id, papel")
+    .eq("id", user.id)
+    .single();
+
+  if (erroUsuario || !usuario) {
+    return { erro: "Usuário não encontrado" };
+  }
+
+  if (usuario.papel !== "admin") {
+    return { erro: "Só administradores podem remover a meta." };
+  }
+
+  const agora = new Date();
+  const inicio = inicioDoMes(agora);
+  const ano = inicio.getUTCFullYear();
+  const mes = inicio.getUTCMonth() + 1;
+
+  const { error } = await supabase
+    .from("metas_mensais")
+    .update({ meta_receita: null })
+    .eq("org_id", usuario.org_id)
+    .eq("ano", ano)
+    .eq("mes", mes);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/reunioes");
   revalidatePath("/dashboard");
   return { erro: null };
 }

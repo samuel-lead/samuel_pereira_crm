@@ -1,9 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { definirMetaReceita, type EstadoMeta } from "@/lib/metas/actions";
-import { IconeLapis } from "@/components/icons";
+import { useActionState, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { definirMetaReceita, removerMetaReceita, type EstadoMeta } from "@/lib/metas/actions";
+import { IconeLapis, IconeX } from "@/components/icons";
 import { Faturamento, ehImobiliario } from "@/lib/terminologia";
+import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 
 const estadoInicial: EstadoMeta = { erro: null };
 
@@ -37,12 +39,29 @@ export function MetaReceitaWidget({
   const [editando, setEditando] = useState(podeEditar && metaReceita === null);
   const rotuloMeta = `Meta de ${ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "receita"} do mês`;
   const rotuloValorAtual = ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "Recebido";
+  const router = useRouter();
+  const [removendo, iniciarRemocao] = useTransition();
+  const { perguntar, modal } = useConfirmacaoTravaTela();
 
   useEffect(() => {
     if (estado !== estadoInicial && !estado.erro) {
       setEditando(false);
     }
   }, [estado]);
+
+  // Samuel pediu explicitamente: poder cancelar a meta a qualquer momento
+  // do mês (não só na virada), voltando pro estado "sem meta definida" —
+  // igual seria se o mês tivesse acabado de virar.
+  function aoRemoverMeta() {
+    iniciarRemocao(async () => {
+      const confirmou = await perguntar(
+        "Remover a meta deste mês? Fica sem meta definida, como se o mês tivesse acabado de virar — dá pra definir outra a qualquer momento."
+      );
+      if (!confirmou) return;
+      await removerMetaReceita();
+      router.refresh();
+    });
+  }
 
   if (metaReceita === null && !podeEditar) {
     if (compacta) {
@@ -193,30 +212,53 @@ export function MetaReceitaWidget({
     }
 
     return (
-      <button
-        type="button"
-        onClick={() => setEditando(true)}
-        title="Clique pra editar a meta do mês"
-        className="relative shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
-      >
-        <IconeLapis className="absolute bottom-2 right-2 h-3.5 w-3.5 text-neutral-400" />
-        {conteudo}
-      </button>
+      <div className="relative shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+        {modal}
+        <button
+          type="button"
+          onClick={() => setEditando(true)}
+          title="Clique pra editar a meta do mês"
+          className="block w-full text-left transition hover:bg-neutral-50"
+        >
+          <IconeLapis className="absolute bottom-2 right-2 h-3.5 w-3.5 text-neutral-400" />
+          {conteudo}
+        </button>
+        <button
+          type="button"
+          onClick={aoRemoverMeta}
+          disabled={removendo}
+          title="Remover meta do mês"
+          className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-neutral-300 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+        >
+          <IconeX className="h-3 w-3" />
+        </button>
+      </div>
     );
   }
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+      {modal}
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-neutral-800">{rotuloMeta}</h2>
         {podeEditar && (
-          <button
-            type="button"
-            onClick={() => setEditando(true)}
-            className="text-xs font-medium text-blue-600 hover:text-blue-700"
-          >
-            Editar
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setEditando(true)}
+              className="text-xs font-medium text-blue-600 hover:text-blue-700"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={aoRemoverMeta}
+              disabled={removendo}
+              className="text-xs font-medium text-neutral-400 hover:text-red-600 disabled:opacity-50"
+            >
+              Remover
+            </button>
+          </div>
         )}
       </div>
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
