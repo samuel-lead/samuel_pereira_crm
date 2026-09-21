@@ -54,6 +54,7 @@ type Lead = {
   origem: string | null;
   quem_indicou: string | null;
   nivel_ordem: number;
+  proposta_valor: number | null;
   criterio_problema: string | null;
   criterio_urgencia: string;
   criterio_capacidade: string;
@@ -362,15 +363,11 @@ export function EditarLeadForm({
     if (enviandoRef.current) {
       enviandoRef.current = false;
       if (estado.erro === null) {
-        // "Teve proposta? Sim" — em vez de fechar, mantém o pop-up aberto
-        // rolado até o card de Proposta, pra pessoa preencher na hora (ver
-        // aoConfirmarTeveProposta em lead-modal-conteudo.tsx).
-        if (tevePropostaResposta === "sim") {
-          modalAtivo?.recarregar();
-          aoConfirmarTeveProposta?.();
-        } else {
-          modalAtivo?.fechar();
-        }
+        // "Salvar alterações" sempre fecha o pop-up. Com "Teve proposta? Sim",
+        // o servidor só aceita salvar depois da proposta registrada (senão
+        // devolve erro e nem chega aqui), então não há mais nada pra
+        // preencher — manter aberto era o bug que Samuel pegou.
+        modalAtivo?.fechar();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -391,8 +388,15 @@ export function EditarLeadForm({
   // fazer (Samuel pediu isso explicitamente).
   const camposReuniaoRef = useRef<HTMLDivElement>(null);
   const [oportunidadeFutura, setOportunidadeFutura] = useState(lead.oportunidade_futura);
-  const [reuniaoAconteceu, setReuniaoAconteceu] = useState("");
-  const [tevePropostaResposta, setTevePropostaResposta] = useState("");
+  // Veio do Kanban com o nível já escolhido (nivelPretendido): as perguntas
+  // "reunião aconteceu?" e "teve proposta?" já foram feitas e respondidas
+  // "sim" lá (senão o card nem abria) — não pergunta de novo. Lead com
+  // proposta já registrada também já responde "teve proposta" sozinho.
+  const respondidoNoKanban = nivelPretendido !== undefined;
+  const [reuniaoAconteceu, setReuniaoAconteceu] = useState(respondidoNoKanban ? "sim" : "");
+  const [tevePropostaResposta, setTevePropostaResposta] = useState(
+    respondidoNoKanban || lead.proposta_valor != null ? "sim" : ""
+  );
   const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
   const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
@@ -916,7 +920,14 @@ export function EditarLeadForm({
               </div>
             )}
 
-          {vaiConfirmarReuniao && (
+          {vaiConfirmarReuniao && respondidoNoKanban && (
+            <>
+              <input type="hidden" name="reuniao_aconteceu" value="sim" />
+              <input type="hidden" name="teve_proposta" value="sim" />
+            </>
+          )}
+
+          {vaiConfirmarReuniao && !respondidoNoKanban && (
             <div
               className={`mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3 ${
                 reuniaoAconteceu === "" ? "destaque-proposta" : ""
@@ -975,7 +986,7 @@ export function EditarLeadForm({
             </div>
           )}
 
-          {vaiConfirmarReuniao && reuniaoAconteceu === "sim" && (
+          {vaiConfirmarReuniao && !respondidoNoKanban && reuniaoAconteceu === "sim" && (
             <div
               className={`mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3 ${
                 tevePropostaResposta === "" ? "destaque-proposta" : ""
