@@ -1,3 +1,14 @@
+// Celular antigo, de 8 dígitos (DDD + 6/7/8/9xxxxxxx), sem o "9" extra que
+// passou a ser obrigatório. WhatsApp recusa esse formato ("número de
+// telefone inválido"), então completa o 9. Só mexe em quem tem 55 + DDD +
+// 8 dígitos começando com 6-9 — fixo começa com 2-5 e fica como está.
+export function completarNonoDigito(numeroComPais: string): string {
+  if (/^55\d{2}[6-9]\d{7}$/.test(numeroComPais)) {
+    return `${numeroComPais.slice(0, 4)}9${numeroComPais.slice(4)}`;
+  }
+  return numeroComPais;
+}
+
 // Deixa qualquer telefone digitado (com parênteses, traço, espaço, com ou
 // sem o 55 na frente) no mesmo formato — só dígitos, sempre com o código
 // do país. Sem isso, "5511933681288" e "(11) 93368-1288" viram dois leads
@@ -16,10 +27,11 @@ export function normalizarTelefone(valor: string): string {
   }
 
   // Já tem código do país (Brasil = 55) + DDD + número.
-  if (digitos.length >= 12) return digitos;
+  if (digitos.length >= 12) return completarNonoDigito(digitos);
 
-  // Só DDD + número (10 dígitos = fixo, 11 = celular) — falta o 55.
-  if (digitos.length === 10 || digitos.length === 11) return `55${digitos}`;
+  // Só DDD + número (10 dígitos = fixo ou celular antigo, 11 = celular) —
+  // falta o 55.
+  if (digitos.length === 10 || digitos.length === 11) return completarNonoDigito(`55${digitos}`);
 
   return digitos;
 }

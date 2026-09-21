@@ -1,3 +1,5 @@
+import { completarNonoDigito } from "@/lib/telefone";
+
 // Só completa com o 55 (Brasil) quando o número claramente não tem
 // código de país nenhum (DDD + número solto, o jeito mais comum de
 // cadastrar por aqui). Número que já vem com código de país diferente
@@ -16,7 +18,9 @@ function digitosWhatsApp(telefone: string) {
 
   // Já vem com o 55 na frente (DDD + 8 ou 9 dígitos) — usa como está.
   if (digitos.startsWith("55") && (digitos.length === 12 || digitos.length === 13)) {
-    return digitos;
+    // Lead salvo antes do "9" ser completado (celular antigo de 8 dígitos)
+    // — sem o 9 o WhatsApp diz que o número é inválido.
+    return completarNonoDigito(digitos);
   }
 
   // DDD + 9 dígitos, sem o 55 — completa com o código do Brasil.
@@ -27,7 +31,7 @@ function digitosWhatsApp(telefone: string) {
   // DDD + 8 dígitos (celular sem o "9" na frente, formato antigo) —
   // completa o "9" que falta e o código do Brasil.
   if (digitos.length === 10) {
-    return `55${digitos.slice(0, 2)}9${digitos.slice(2)}`;
+    return completarNonoDigito(`55${digitos}`);
   }
 
   // Qualquer outro tamanho: provavelmente já é um número internacional
