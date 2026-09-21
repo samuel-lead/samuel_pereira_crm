@@ -41,7 +41,7 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/rotina", label: "Minha rotina", Icone: IconeCalendario, pagina: "admin", somenteMentoria: true },
       { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
       { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
-      { href: "/cartas-contempladas", label: "Banker", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
+      { href: "https://bankerbr.com.br/inicio", label: "Banker", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
       { href: "/bonus-sdr", label: "Bônus SDR", Icone: IconeEstrela, pagina: "admin" },
     ],
   },
@@ -157,6 +157,31 @@ export function Sidebar({
             )}
             {grupo.itens.map(({ href, label, Icone }) => {
               const ativo = pathname === href;
+              const classe = `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                colapsado ? "justify-center" : ""
+              } ${
+                ativo
+                  ? "bg-[#2563eb] text-white shadow-sm"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`;
+              // Banker é um site de fora — abre em outra aba em vez de
+              // navegar dentro do CRM.
+              if (href.startsWith("https://")) {
+                return (
+                  <a
+                    key={href}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={onFecharMobile}
+                    title={colapsado ? label : undefined}
+                    className={classe}
+                  >
+                    <Icone className="h-4 w-4 shrink-0" />
+                    {!colapsado && label}
+                  </a>
+                );
+              }
               return (
                 <Link
                   key={href}
