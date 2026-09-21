@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "r
 import { marcarVendido, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
 import { ImovelSelect } from "@/components/imovel-select";
+import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { IconeCalendario, IconeMoeda, IconeClientePagante, IconeTag } from "@/components/icons";
 import { ehImobiliario } from "@/lib/terminologia";
@@ -122,16 +123,7 @@ export function MarcarVendidoForm({
 }) {
   const modalAtivo = useLeadModalAtivo();
   const imobiliario = ehImobiliario(publicoOrg);
-  const ehComissaoFixa = comissaoTipo === "fixo";
-  const comissaoConfigurada = ehComissaoFixa ? comissaoValorFixo : comissaoPercentual;
   const [valorVendaReais, setValorVendaReais] = useState(propostaValor ?? 0);
-  const comissaoPrevia = !imobiliario
-    ? null
-    : ehComissaoFixa
-      ? (comissaoValorFixo ?? null)
-      : comissaoPercentual
-        ? valorVendaReais * (comissaoPercentual / 100)
-        : null;
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const enviandoRef = useRef(false);
@@ -189,25 +181,12 @@ export function MarcarVendidoForm({
             aoMudarReais={imobiliario ? setValorVendaReais : undefined}
           />
           {imobiliario ? (
-            comissaoConfigurada ? (
-              <div className="rounded-lg bg-white p-3 shadow-sm">
-                <RotuloCampo Icone={IconeClientePagante}>Receita (comissão)</RotuloCampo>
-                <p className="text-sm font-semibold text-green-800">
-                  {comissaoPrevia !== null
-                    ? comissaoPrevia.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-                    : "—"}
-                </p>
-                <p className="mt-1 text-[10px] text-neutral-400">
-                  {ehComissaoFixa
-                    ? "Calculado sozinho: valor fixo configurado no seu perfil."
-                    : `Calculado sozinho: ${comissaoPercentual}% do preço do imóvel.`}
-                </p>
-              </div>
-            ) : (
-              <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
-                Configure sua comissão em Meu perfil pra ver a receita calculada aqui.
-              </p>
-            )
+            <CampoComissaoVenda
+              valorVendaReais={valorVendaReais}
+              tipoInicial={comissaoTipo === "fixo" ? "fixo" : "percentual"}
+              percentualInicial={comissaoPercentual ?? null}
+              valorFixoInicial={comissaoValorFixo ?? null}
+            />
           ) : (
             <CampoMoeda
               name="receita_venda"

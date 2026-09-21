@@ -132,6 +132,13 @@ export function LeadModalConteudo({
   const comissaoPercentualResponsavel = responsavelAtual?.comissao_percentual ?? null;
   const comissaoTipoResponsavel = responsavelAtual?.comissao_tipo ?? null;
   const comissaoValorFixoResponsavel = responsavelAtual?.comissao_valor_fixo ?? null;
+  // Venda já registrada: mostra como ela foi calculada. Venda antiga (sem
+  // isso salvo) cai no padrão do perfil.
+  const tipoVenda = lead.venda_comissao_tipo ?? comissaoTipoResponsavel;
+  const percentualVenda =
+    lead.venda_comissao_tipo === "percentual" ? lead.venda_comissao_valor : comissaoPercentualResponsavel;
+  const valorFixoVenda =
+    lead.venda_comissao_tipo === "fixo" ? lead.venda_comissao_valor : comissaoValorFixoResponsavel;
 
   return (
     <div
@@ -298,6 +305,9 @@ export function LeadModalConteudo({
                   publicoOrg={publicoOrg}
                   imoveis={imoveis}
                   imovelIdAtual={lead.imovel_id}
+                  comissaoTipo={tipoVenda}
+                  comissaoPercentual={percentualVenda}
+                  comissaoValorFixo={valorFixoVenda}
                 />
               </div>
             )}

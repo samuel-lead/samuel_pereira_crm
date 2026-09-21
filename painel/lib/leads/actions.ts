@@ -31,20 +31,53 @@ function parseDataHoraLocal(valor: string): Date {
 
 // Imobiliário não digita receita à mão — "receita" pro corretor não é o
 // preço do imóvel (isso é VGV), é o que ele embolsa mesmo. Dois jeitos de
-// calcular, conforme o que o corretor configurou em Meu perfil
-// (ver components/comissao-form.tsx): porcentagem do valor da venda, ou
-// um valor fixo sempre igual, não importa o preço do imóvel. Sem nada
-// configurado, fica sem receita até ele preencher.
-function calcularReceitaComissao(
+// calcular: porcentagem do valor da venda, ou um valor fixo sempre igual,
+// não importa o preço do imóvel. O tipo e o número vêm do próprio
+// formulário da venda (escolha venda a venda); se não vierem (aba antiga
+// aberta), cai no que o corretor configurou em Meu perfil
+// (ver components/comissao-form.tsx). Sem nada, fica sem receita.
+type ComissaoDoPerfil = {
+  comissao_tipo: string | null;
+  comissao_percentual: number | null;
+  comissao_valor_fixo: number | null;
+} | null;
+
+function resolverComissaoDaVenda(
   valor: number,
-  corretor: { comissao_tipo: string | null; comissao_percentual: number | null; comissao_valor_fixo: number | null } | null
-): number | null {
-  if (corretor?.comissao_tipo === "fixo") {
-    return corretor.comissao_valor_fixo ?? null;
+  formData: FormData,
+  perfil: ComissaoDoPerfil
+):
+  | { erro: string }
+  | { erro: null; receita: number | null; tipo: "percentual" | "fixo"; numero: number | null } {
+  const tipoForm = String(formData.get("comissao_tipo") ?? "").trim();
+  const tipo: "percentual" | "fixo" =
+    tipoForm === "fixo" || tipoForm === "percentual"
+      ? tipoForm
+      : perfil?.comissao_tipo === "fixo"
+        ? "fixo"
+        : "percentual";
+
+  const campo = tipo === "fixo" ? "comissao_valor_fixo" : "comissao_percentual";
+  const bruto = String(formData.get(campo) ?? "").trim();
+  let numero: number | null;
+  if (bruto) {
+    numero = Number(bruto.replace(",", "."));
+    if (Number.isNaN(numero) || numero < 0 || (tipo === "percentual" && numero > 100)) {
+      return { erro: tipo === "fixo" ? "Informe um valor fixo válido" : "Informe uma porcentagem entre 0 e 100" };
+    }
+  } else if (tipoForm) {
+    numero = null;
+  } else {
+    numero = (tipo === "fixo" ? perfil?.comissao_valor_fixo : perfil?.comissao_percentual) ?? null;
   }
-  return corretor?.comissao_percentual
-    ? Math.round(valor * (corretor.comissao_percentual / 100) * 100) / 100
-    : null;
+
+  const receita =
+    numero === null || numero === 0
+      ? null
+      : tipo === "fixo"
+        ? numero
+        : Math.round(valor * (numero / 100) * 100) / 100;
+  return { erro: null, receita, tipo, numero };
 }
 
 async function contextoUsuario() {
@@ -1266,15 +1299,21 @@ export async function marcarVendido(
   }
 
   // Mentoria continua digitando a receita à mão, sem mudança nenhuma —
-  // só imobiliário calcula sozinho (ver calcularReceitaComissao acima).
+  // só imobiliário calcula sozinho (ver resolverComissaoDaVenda acima).
   let receita: number | null;
+  let comissaoTipoVenda: "percentual" | "fixo" | null = null;
+  let comissaoValorVenda: number | null = null;
   if (usuario.publico_org === "imobiliario") {
     const { data: corretor } = await supabase
       .from("usuarios")
       .select("comissao_tipo, comissao_percentual, comissao_valor_fixo")
       .eq("id", leadAtual.responsavel_id)
       .single();
-    receita = calcularReceitaComissao(valor, corretor);
+    const comissao = resolverComissaoDaVenda(valor, formData, corretor);
+    if (comissao.erro !== null) return { erro: comissao.erro };
+    receita = comissao.receita;
+    comissaoTipoVenda = comissao.tipo;
+    comissaoValorVenda = comissao.numero;
   } else {
     const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
     receita = receitaRaw ? Number(receitaRaw) : null;
@@ -1330,6 +1369,8 @@ export async function marcarVendido(
       status: "vendido",
       valor_venda: valor,
       receita_venda: receita,
+      venda_comissao_tipo: comissaoTipoVenda,
+      venda_comissao_valor: comissaoValorVenda,
       produto,
       imovel_id: imovelId,
       vendido_em: vendidoEm.toISOString(),
@@ -1414,6 +1455,8 @@ export async function editarVenda(
   // que veio do formulário — editar o valor da venda tem que atualizar a
   // comissão junto, automaticamente.
   let receita: number | null;
+  let comissaoTipoVenda: "percentual" | "fixo" | null = null;
+  let comissaoValorVenda: number | null = null;
   if (usuario.publico_org === "imobiliario") {
     const { data: leadAtual } = await supabase
       .from("leads")
@@ -1427,7 +1470,11 @@ export async function editarVenda(
           .eq("id", leadAtual.responsavel_id)
           .single()
       : { data: null };
-    receita = calcularReceitaComissao(valor, corretor);
+    const comissao = resolverComissaoDaVenda(valor, formData, corretor);
+    if (comissao.erro !== null) return { erro: comissao.erro };
+    receita = comissao.receita;
+    comissaoTipoVenda = comissao.tipo;
+    comissaoValorVenda = comissao.numero;
   } else {
     const receitaRaw = String(formData.get("receita_venda") ?? "").trim();
     receita = receitaRaw ? Number(receitaRaw) : null;
@@ -1453,6 +1500,8 @@ export async function editarVenda(
     .update({
       valor_venda: valor,
       receita_venda: receita,
+      venda_comissao_tipo: comissaoTipoVenda,
+      venda_comissao_valor: comissaoValorVenda,
       produto,
       imovel_id: imovelId,
       vendido_em: vendidoEm.toISOString(),
@@ -1976,6 +2025,8 @@ export type DetalhesLead = {
     dia_follow: number | null;
     arquivado_em: string | null;
     imovel_id: string | null;
+    venda_comissao_tipo: string | null;
+    venda_comissao_valor: number | null;
   };
   niveis: NivelResumo[];
   interacoes: {
@@ -2072,7 +2123,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, venda_comissao_tipo, venda_comissao_valor"
       )
       .eq("id", leadId)
       .single(),

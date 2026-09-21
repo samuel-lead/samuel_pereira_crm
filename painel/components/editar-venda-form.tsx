@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "r
 import { editarVenda, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
 import { ImovelSelect } from "@/components/imovel-select";
+import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { ehImobiliario } from "@/lib/terminologia";
 
@@ -20,10 +21,12 @@ function CampoMoeda({
   name,
   label,
   valorInicial,
+  aoMudarReais,
 }: {
   name: string;
   label: string;
   valorInicial: number | null;
+  aoMudarReais?: (valor: number) => void;
 }) {
   const [centavos, setCentavos] = useState(
     valorInicial ? Math.round(valorInicial * 100) : 0
@@ -31,7 +34,9 @@ function CampoMoeda({
 
   function aoDigitar(evento: ChangeEvent<HTMLInputElement>) {
     const somenteDigitos = evento.target.value.replace(/\D/g, "");
-    setCentavos(somenteDigitos ? Number(somenteDigitos) : 0);
+    const novosCentavos = somenteDigitos ? Number(somenteDigitos) : 0;
+    setCentavos(novosCentavos);
+    aoMudarReais?.(novosCentavos / 100);
   }
 
   return (
@@ -61,6 +66,9 @@ export function EditarVendaForm({
   publicoOrg = "mentoria",
   imoveis = [],
   imovelIdAtual,
+  comissaoTipo,
+  comissaoPercentual,
+  comissaoValorFixo,
 }: {
   leadId: string;
   vendidoEm: string | null;
@@ -71,8 +79,14 @@ export function EditarVendaForm({
   publicoOrg?: string;
   imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
   imovelIdAtual?: string | null;
+  // Como a venda foi calculada (ou, em venda antiga sem isso, o padrão do
+  // perfil do corretor) — já vem preenchido no campo de comissão.
+  comissaoTipo?: string | null;
+  comissaoPercentual?: number | null;
+  comissaoValorFixo?: number | null;
 }) {
   const imobiliario = ehImobiliario(publicoOrg);
+  const [valorVendaReais, setValorVendaReais] = useState(valorVenda ?? 0);
   const [aberto, setAberto] = useState(false);
   const modalAtivo = useLeadModalAtivo();
   const acaoComId = editarVenda.bind(null, leadId);
@@ -135,12 +149,16 @@ export function EditarVendaForm({
         name="valor_venda"
         label={imobiliario ? "Preço do imóvel (R$)" : "Valor da venda (R$)"}
         valorInicial={valorVenda}
+        aoMudarReais={imobiliario ? setValorVendaReais : undefined}
       />
       {imobiliario ? (
-        <p className="text-xs text-neutral-500">
-          Receita (comissão): recalculada sozinha ao salvar, a partir da
-          comissão configurada em Meu perfil.
-        </p>
+        <CampoComissaoVenda
+          variante="simples"
+          valorVendaReais={valorVendaReais}
+          tipoInicial={comissaoTipo === "fixo" ? "fixo" : "percentual"}
+          percentualInicial={comissaoPercentual ?? null}
+          valorFixoInicial={comissaoValorFixo ?? null}
+        />
       ) : (
         <CampoMoeda name="receita_venda" label="Receita recebida (R$)" valorInicial={receitaVenda} />
       )}
