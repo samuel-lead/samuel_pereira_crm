@@ -41,7 +41,7 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/rotina", label: "Minha rotina", Icone: IconeCalendario, pagina: "admin", somenteMentoria: true },
       { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
       { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
-      { href: "/cartas-contempladas", label: "Cartas contempladas", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
+      { href: "/cartas-contempladas", label: "Banker", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
       { href: "/bonus-sdr", label: "Bônus SDR", Icone: IconeEstrela, pagina: "admin" },
     ],
   },

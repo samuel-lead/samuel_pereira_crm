@@ -6,7 +6,7 @@ export const PAGINAS_CONFIGURAVEIS = [
   // Exclusivas do público imobiliário — ver paginasParaPublico() abaixo,
   // que já tira essas duas da lista pra quem não é imobiliário.
   { chave: "imoveis", label: "Imóveis" },
-  { chave: "cartas_contempladas", label: "Cartas contempladas" },
+  { chave: "cartas_contempladas", label: "Banker" },
 ] as const;
 
 const PAGINAS_SO_IMOBILIARIO = new Set(["imoveis", "cartas_contempladas"]);

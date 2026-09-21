@@ -75,7 +75,7 @@ export default async function CartasContempladasPage({
 
   return (
     <>
-      <PageHeader titulo="Cartas contempladas" />
+      <PageHeader titulo="Banker" />
 
       <main className="max-w-5xl px-6 py-6">
         <p className="mb-4 text-sm text-neutral-500">
