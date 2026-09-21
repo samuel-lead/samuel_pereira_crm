@@ -121,14 +121,11 @@ export function ProximoContatoBotao({
             <CampoDataHora
               name="proximo_follow_em"
               required
-              defaultValue={proximoContatoEm ?? agoraParaInputLocal()}
-              // Só destrava data passada quando o contato marcado já está
-              // ATRASADO de verdade — editar um que ainda não venceu (ex.:
-              // marcado pra amanhã) continua bloqueando dia anterior a hoje.
-              // Bug real: antes a trava desligava com qualquer contato já
-              // marcado, atrasado ou não, liberando escolher dia passado
-              // mesmo num próximo contato que ainda nem chegou.
-              min={atrasado ? undefined : agoraParaInputLocal()}
+              // Contato já vencido não volta preenchido com a data velha — dia
+              // passado nunca fica disponível (Samuel pediu), então abre com
+              // agora e a pessoa escolhe uma data nova.
+              defaultValue={proximoContatoEm && !atrasado ? proximoContatoEm : agoraParaInputLocal()}
+              min={agoraParaInputLocal()}
               autoFocus
               className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
