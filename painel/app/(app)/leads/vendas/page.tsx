@@ -114,7 +114,8 @@ export default async function VendasPage({
       <PageHeader titulo="Clientes" />
 
       <main className="px-6 py-6">
-        <div className="mb-6 flex flex-wrap items-stretch gap-3">
+        {/* Fica preso no topo ao rolar, igual à Visão geral (Samuel pediu). */}
+        <div className="sticky top-0 z-10 -mx-6 mb-4 flex flex-wrap items-stretch gap-3 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)]">
           <FiltroPeriodo
             baseHref="/leads/vendas"
             periodoAtual={periodoResolvido?.chave ?? null}
