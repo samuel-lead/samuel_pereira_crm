@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeCarta, IconeIma, IconeCalendario, IconeX } from "@/components/icons";
+import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeFoguete, IconeIma, IconeCalendario, IconeX } from "@/components/icons";
 
 type ItemMenu = {
   href: string;
@@ -41,7 +41,7 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/rotina", label: "Minha rotina", Icone: IconeCalendario, pagina: "admin", somenteMentoria: true },
       { href: "/atividades", label: "Atividades", Icone: IconeAtividade, pagina: "atividades" },
       { href: "/imoveis", label: "Imóveis", Icone: IconeCasa, pagina: "imoveis", somenteImobiliario: true },
-      { href: "https://bankerbr.com.br/inicio", label: "Banker", Icone: IconeCarta, pagina: "cartas_contempladas", somenteImobiliario: true },
+      { href: "https://bankerbr.com.br/inicio", label: "Banker", Icone: IconeFoguete, pagina: "cartas_contempladas", somenteImobiliario: true },
       { href: "/bonus-sdr", label: "Bônus SDR", Icone: IconeEstrela, pagina: "admin" },
     ],
   },
