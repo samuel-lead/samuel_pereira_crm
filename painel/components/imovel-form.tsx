@@ -11,6 +11,7 @@ const labelClasse = "text-sm font-medium text-neutral-700";
 
 export type ImovelExistente = {
   titulo: string;
+  codigo: string | null;
   tipo: string;
   finalidade: string;
   valor_venda: number | null;
@@ -63,18 +64,32 @@ export function ImovelForm({
 
   return (
     <form action={acaoFormulario} className="space-y-4">
-      <div className="space-y-1">
-        <label className={labelClasse} htmlFor="titulo">
-          Título *
-        </label>
-        <input
-          id="titulo"
-          name="titulo"
-          required
-          defaultValue={imovel?.titulo}
-          placeholder="Ex.: Apartamento 3 quartos - Setor Bueno"
-          className={campoClasse}
-        />
+      <div className="grid grid-cols-3 gap-3">
+        <div className="col-span-2 space-y-1">
+          <label className={labelClasse} htmlFor="titulo">
+            Título *
+          </label>
+          <input
+            id="titulo"
+            name="titulo"
+            required
+            defaultValue={imovel?.titulo}
+            placeholder="Ex.: Apartamento 3 quartos - Setor Bueno"
+            className={campoClasse}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className={labelClasse} htmlFor="codigo">
+            Código
+          </label>
+          <input
+            id="codigo"
+            name="codigo"
+            defaultValue={imovel?.codigo ?? ""}
+            placeholder={imovel ? "" : "Gerado sozinho"}
+            className={`${campoClasse} uppercase`}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">

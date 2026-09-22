@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 type ImovelLinha = {
   id: string;
   titulo: string;
+  codigo: string | null;
   tipo: string;
   finalidade: string;
   valor_venda: number | null;
@@ -35,13 +36,28 @@ function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default async function ImoveisPage() {
+export default async function ImoveisPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ busca?: string }>;
+}) {
+  const { busca } = await searchParams;
+  const buscaFiltro = busca?.trim() || undefined;
+
   const supabase = await createClient();
-  const { data } = await supabase
+  let query = supabase
     .from("imoveis")
-    .select("id, titulo, tipo, finalidade, valor_venda, valor_aluguel, bairro, cidade, status")
+    .select("id, titulo, codigo, tipo, finalidade, valor_venda, valor_aluguel, bairro, cidade, status")
     .is("arquivado_em", null)
     .order("created_at", { ascending: false });
+
+  if (buscaFiltro) {
+    // Pesquisa por título OU código — o corretor pode não lembrar qual dos
+    // dois usou pra achar o imóvel.
+    query = query.or(`titulo.ilike.%${buscaFiltro}%,codigo.ilike.%${buscaFiltro}%`);
+  }
+
+  const { data } = await query;
 
   const imoveis = (data ?? []) as ImovelLinha[];
 
@@ -60,14 +76,45 @@ export default async function ImoveisPage() {
       />
 
       <main className="max-w-4xl px-6 py-6">
+        <form className="mb-4 flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <div className="flex flex-1 flex-col justify-center gap-0.5 px-4 py-2">
+            <label className="text-[10px] font-medium text-neutral-500" htmlFor="busca">
+              Buscar por título ou código
+            </label>
+            <input
+              id="busca"
+              name="busca"
+              defaultValue={buscaFiltro ?? ""}
+              placeholder="Ex.: Setor Bueno ou IM003"
+              className="border-0 bg-transparent p-0 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:ring-0"
+            />
+          </div>
+          <div className="flex items-center gap-2 px-3">
+            {buscaFiltro && (
+              <Link
+                href="/imoveis"
+                className="text-sm font-medium text-neutral-500 hover:text-neutral-700"
+              >
+                Limpar
+              </Link>
+            )}
+            <button
+              type="submit"
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            >
+              Buscar
+            </button>
+          </div>
+        </form>
+
         <p className="mb-4 text-sm text-neutral-500">
-          {imoveis.length} {imoveis.length === 1 ? "imóvel" : "imóveis"} cadastrado
-          {imoveis.length === 1 ? "" : "s"}
+          {imoveis.length} {imoveis.length === 1 ? "imóvel" : "imóveis"}
+          {buscaFiltro ? " encontrado" + (imoveis.length === 1 ? "" : "s") : " cadastrado" + (imoveis.length === 1 ? "" : "s")}
         </p>
 
         {imoveis.length === 0 ? (
           <p className="rounded-lg border border-dashed border-neutral-300 px-4 py-8 text-center text-sm text-neutral-400">
-            Nenhum imóvel cadastrado ainda
+            {buscaFiltro ? "Nenhum imóvel encontrado com essa busca" : "Nenhum imóvel cadastrado ainda"}
           </p>
         ) : (
           <div className="space-y-3">
@@ -81,6 +128,11 @@ export default async function ImoveisPage() {
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
+                      {imovel.codigo && (
+                        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold text-neutral-500">
+                          {imovel.codigo}
+                        </span>
+                      )}
                       <span className="font-medium text-neutral-900">{imovel.titulo}</span>
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusInfo.classe}`}>
                         {statusInfo.texto}

@@ -13,7 +13,7 @@ export default async function ImovelPage({ params }: { params: Promise<{ id: str
   const { data: imovel } = await supabase
     .from("imoveis")
     .select(
-      "titulo, tipo, finalidade, valor_venda, valor_aluguel, endereco, bairro, cidade, estado, cep, quartos, banheiros, vagas_garagem, area_m2, descricao, status, proprietario_nome, proprietario_telefone, foto_url"
+      "titulo, codigo, tipo, finalidade, valor_venda, valor_aluguel, endereco, bairro, cidade, estado, cep, quartos, banheiros, vagas_garagem, area_m2, descricao, status, proprietario_nome, proprietario_telefone, foto_url"
     )
     .eq("id", id)
     .is("arquivado_em", null)

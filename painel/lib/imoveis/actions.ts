@@ -35,6 +35,7 @@ function lerCampos(formData: FormData) {
 
   return {
     titulo: String(formData.get("titulo") ?? "").trim(),
+    codigo: String(formData.get("codigo") ?? "").trim().toUpperCase() || null,
     tipo: String(formData.get("tipo") ?? "apartamento"),
     finalidade: String(formData.get("finalidade") ?? "venda"),
     valor_venda: numeroOuNull(formData.get("valor_venda")),
@@ -66,6 +67,17 @@ export async function criarImovel(
     return { erro: "Título é obrigatório" };
   }
 
+  // Sem código digitado, gera um sozinho (IM001, IM002...) — conta quantos
+  // imóveis a empresa já tem (incluindo arquivados, pra nunca repetir um
+  // código antigo) e soma 1.
+  if (!campos.codigo) {
+    const { count } = await supabase
+      .from("imoveis")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", usuario.org_id);
+    campos.codigo = `IM${String((count ?? 0) + 1).padStart(3, "0")}`;
+  }
+
   const { data, error } = await supabase
     .from("imoveis")
     .insert({ org_id: usuario.org_id, usuario_id: usuario.id, ...campos })
@@ -73,6 +85,9 @@ export async function criarImovel(
     .single();
 
   if (error || !data) {
+    if (error?.code === "23505") {
+      return { erro: `Já existe um imóvel ativo com o código "${campos.codigo}" — escolha outro.` };
+    }
     return { erro: error?.message ?? "Não deu pra cadastrar o imóvel" };
   }
 
@@ -92,9 +107,16 @@ export async function atualizarImovel(
     return { erro: "Título é obrigatório" };
   }
 
+  if (!campos.codigo) {
+    return { erro: "Código é obrigatório" };
+  }
+
   const { error } = await supabase.from("imoveis").update(campos).eq("id", imovelId);
 
   if (error) {
+    if (error.code === "23505") {
+      return { erro: `Já existe um imóvel ativo com o código "${campos.codigo}" — escolha outro.` };
+    }
     return { erro: error.message };
   }
 
