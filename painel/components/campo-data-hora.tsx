@@ -287,6 +287,11 @@ export function CampoDataHora({
           autoFocus={autoFocus}
           disabled={disabled}
           required={required}
+          // Sem isso o navegador mostra aquela lista preta de sugestão com
+          // datas já digitadas antes nesse campo (autocomplete nativo do
+          // Chrome) — some cima do calendário próprio daqui, ficava feio e
+          // confuso (Samuel pegou ao vivo).
+          autoComplete="off"
           className={`${campoClasse} pr-9`}
         />
         <button
