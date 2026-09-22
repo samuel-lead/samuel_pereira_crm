@@ -339,9 +339,8 @@ export default async function VendasPage({
 
         <MetricasColapsaveis>
         <div className="space-y-2.5 border-b border-neutral-200 px-6 py-4">
-          <div className="flex flex-wrap items-start gap-3">
-            <div className="flex flex-col gap-1.5">
-            <div className="flex flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <div className="flex flex-wrap items-stretch gap-3">
+            <div className="flex flex-1 flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
               <StatCell
                 label={mostrarSoParados ? "Leads parados/atrasados" : "Leads em vendas"}
                 value={mostrarSoParados ? leadsExibidos.length : leads.length}
@@ -396,38 +395,38 @@ export default async function VendasPage({
               )}
             </div>
 
-              {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
-                <div className="flex flex-wrap items-center gap-4 px-1 text-xs">
-                  {mostrarSoContato ? (
-                    <Link href={hrefTirarContato} className="font-medium text-teal-600 hover:underline">
-                      Ver todos ✕
-                    </Link>
-                  ) : (
-                    <Link
-                      href={hrefLigarContato}
-                      title="Clique pra ver só os leads com próximo contato marcado"
-                      className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      {leadsComProximoContato.length} com próximo contato
-                    </Link>
-                  )}
-                </div>
+            {receitaOrgMes !== null && (
+              <MetaReceitaWidget
+                metaReceita={metaReceita}
+                compacta
+                receitaAtual={receitaOrgMes}
+                podeEditar={souAdmin}
+                publicoOrg={publicoOrg}
+              />
+            )}
+          </div>
+
+          {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
+            <div className="flex flex-wrap items-center gap-4 px-1 text-xs">
+              {mostrarSoContato ? (
+                <Link href={hrefTirarContato} className="font-medium text-teal-600 hover:underline">
+                  Ver todos ✕
+                </Link>
+              ) : (
+                <Link
+                  href={hrefLigarContato}
+                  title="Clique pra ver só os leads com próximo contato marcado"
+                  className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                  {leadsComProximoContato.length} com próximo contato
+                </Link>
               )}
             </div>
+          )}
 
-            {receitaOrgMes !== null && (
-              <div className="flex w-[34rem] shrink-0 flex-col items-start gap-2">
-                <MetaReceitaWidget
-                  metaReceita={metaReceita}
-                  compacta
-                  receitaAtual={receitaOrgMes}
-                  podeEditar={souAdmin}
-                  publicoOrg={publicoOrg}
-                />
-                <BaseDropzone />
-              </div>
-            )}
+          <div className="w-96">
+            <BaseDropzone />
           </div>
         </div>
         </MetricasColapsaveis>
