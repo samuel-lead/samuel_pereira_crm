@@ -396,17 +396,18 @@ export default async function VendasPage({
             </div>
 
             {receitaOrgMes !== null && (
-              <MetaReceitaWidget
-                metaReceita={metaReceita}
-                compacta
-                receitaAtual={receitaOrgMes}
-                podeEditar={souAdmin}
-                publicoOrg={publicoOrg}
-              />
+              <div className="flex shrink-0 flex-col gap-2">
+                <MetaReceitaWidget
+                  metaReceita={metaReceita}
+                  compacta
+                  receitaAtual={receitaOrgMes}
+                  podeEditar={souAdmin}
+                  publicoOrg={publicoOrg}
+                />
+                <BaseDropzone />
+              </div>
             )}
           </div>
-
-          <BaseDropzone />
 
           {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
             <div className="flex flex-wrap items-center gap-4 px-1 text-xs">

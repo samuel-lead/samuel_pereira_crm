@@ -8,10 +8,10 @@ import { IconeAlvo } from "@/components/icons";
 
 const NIVEL_BASE = 9;
 
-// Faixa fina embaixo do resumo do topo, em Pré-vendas e Vendas — atalho
-// pra mandar um lead direto pra Base sem abrir o card (Samuel pediu, e
-// pediu explicitamente compacto: "só um pouco maior na horizontal" que o
-// botão de antes, sem abrir espaço grande na tela). Solta o card aqui e
+// Botão embaixo da Meta, do lado direito — não é linha inteira, é só um
+// pouco maior que um botão normal, do mesmo tamanho/coluna da Meta acima
+// dele (Samuel foi bem específico: nada de ocupar a largura toda). Atalho
+// pra mandar um lead direto pra Base sem abrir o card. Solta o card aqui e
 // abre um miniformulário só com o motivo (mesma trava obrigatória de
 // moverLeadNivel/atualizarLead: sem motivo não move, "Desqualificado"
 // também pede o detalhe). Se o lead estiver em "Reunião marcada", o
@@ -76,24 +76,32 @@ export function BaseDropzone() {
 
   if (dropInfo) {
     return (
-      <div className="space-y-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="shrink-0 text-sm font-semibold text-blue-900">Motivo:</p>
-          <div className="min-w-[200px] flex-1">
-            <MenuSelect
-              placeholder="Selecione o motivo..."
-              disabled={pendente}
-              value={motivoBase}
-              onChange={setMotivoBase}
-              abrirAoMontar
-              options={MOTIVOS_BASE.map((m) => ({ value: m.valor, label: m.nome }))}
-            />
-          </div>
+      <div className="w-full space-y-1.5 rounded-xl border border-blue-300 bg-blue-50 p-2.5">
+        <p className="text-xs font-semibold text-blue-900">Motivo pra ir pra Base:</p>
+        <MenuSelect
+          placeholder="Selecione..."
+          disabled={pendente}
+          value={motivoBase}
+          onChange={setMotivoBase}
+          abrirAoMontar
+          options={MOTIVOS_BASE.map((m) => ({ value: m.valor, label: m.nome }))}
+        />
+        {motivoBase === "desqualificado" && (
+          <textarea
+            value={motivoBaseDetalhe}
+            onChange={(e) => setMotivoBaseDetalhe(e.target.value)}
+            placeholder="Descreva por que está desqualificado..."
+            rows={2}
+            className="w-full rounded-md border border-blue-300 bg-white px-2 py-1.5 text-sm text-neutral-900 outline-none focus:border-blue-500"
+          />
+        )}
+        {erro && <p className="text-xs font-medium text-red-600">{erro}</p>}
+        <div className="flex gap-2">
           <button
             type="button"
             disabled={pendente}
             onClick={confirmar}
-            className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+            className="flex-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
           >
             {pendente ? "Movendo..." : "Confirmar"}
           </button>
@@ -105,16 +113,6 @@ export function BaseDropzone() {
             Cancelar
           </button>
         </div>
-        {motivoBase === "desqualificado" && (
-          <textarea
-            value={motivoBaseDetalhe}
-            onChange={(e) => setMotivoBaseDetalhe(e.target.value)}
-            placeholder="Descreva por que está desqualificado..."
-            rows={2}
-            className="w-full rounded-md border border-blue-300 bg-white px-2 py-1.5 text-sm text-neutral-900 outline-none focus:border-blue-500"
-          />
-        )}
-        {erro && <p className="text-xs font-medium text-red-600">{erro}</p>}
       </div>
     );
   }
@@ -128,14 +126,14 @@ export function BaseDropzone() {
       }}
       onDragLeave={() => setSobre(false)}
       onDrop={aoSoltar}
-      className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
+      className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${
         sobre
           ? "border-blue-500 bg-blue-50 text-blue-700"
           : "border-neutral-200 bg-white text-neutral-500"
       }`}
     >
       <IconeAlvo className="h-4 w-4 shrink-0" />
-      Arraste um lead até aqui pra mandar pra Base
+      Base de leads
     </div>
   );
 }
