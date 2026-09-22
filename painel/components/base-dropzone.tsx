@@ -8,15 +8,15 @@ import { IconeAlvo } from "@/components/icons";
 
 const NIVEL_BASE = 9;
 
-// Botão embaixo da Meta, do lado direito — não é linha inteira, é só um
-// pouco maior que um botão normal, do mesmo tamanho/coluna da Meta acima
-// dele (Samuel foi bem específico: nada de ocupar a largura toda). Atalho
-// pra mandar um lead direto pra Base sem abrir o card. Solta o card aqui e
-// abre um miniformulário só com o motivo (mesma trava obrigatória de
-// moverLeadNivel/atualizarLead: sem motivo não move, "Desqualificado"
-// também pede o detalhe). Se o lead estiver em "Reunião marcada", o
-// servidor recusa (a reunião ficaria perdida) — mesma regra de sempre, o
-// erro aparece aqui dentro.
+// Destaque discreto embaixo da Meta, do lado direito, do mesmo
+// tamanho/coluna dela — Samuel achou o botão anterior (bordado, grandão)
+// feio; virou um "chip" mais leve, com uma listra colorida do lado em vez
+// de borda ao redor. Atalho pra mandar um lead direto pra Base sem abrir
+// o card. Solta o card aqui e abre um miniformulário só com o motivo
+// (mesma trava obrigatória de moverLeadNivel/atualizarLead: sem motivo
+// não move, "Desqualificado" também pede o detalhe). Se o lead estiver em
+// "Reunião marcada", o servidor recusa (a reunião ficaria perdida) —
+// mesma regra de sempre, o erro aparece aqui dentro.
 export function BaseDropzone() {
   const [dropInfo, setDropInfo] = useState<{ leadId: string; nivelOrigem: number } | null>(null);
   const [sobre, setSobre] = useState(false);
@@ -84,13 +84,13 @@ export function BaseDropzone() {
         }}
         onDragLeave={() => setSobre(false)}
         onDrop={aoSoltar}
-        className={`flex w-80 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${
+        className={`flex w-80 items-center gap-2 rounded-lg border-l-4 px-3 py-2 text-xs font-semibold transition ${
           sobre
-            ? "border-blue-500 bg-blue-50 text-blue-700"
-            : "border-neutral-200 bg-white text-neutral-900"
+            ? "border-l-blue-600 bg-blue-50 text-blue-700"
+            : "border-l-neutral-300 bg-neutral-50 text-neutral-600 hover:border-l-blue-400 hover:bg-blue-50/60"
         }`}
       >
-        <IconeAlvo className="h-4 w-4 shrink-0" />
+        <IconeAlvo className="h-3.5 w-3.5 shrink-0" />
         Base de leads
       </div>
 
