@@ -6,6 +6,7 @@ import { ProximosContatosLista } from "@/components/proximos-contatos-lista";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BuscaLeads } from "@/components/busca-leads";
 import { MetaReceitaWidget } from "@/components/meta-receita-widget";
+import { BaseDropzone } from "@/components/base-dropzone";
 import { MetricasColapsaveis } from "@/components/metricas-colapsaveis";
 import { FiltrosColapsaveis } from "@/components/filtros-colapsaveis";
 import { StatCell } from "@/components/stat-cell";
@@ -404,6 +405,8 @@ export default async function VendasPage({
               />
             )}
           </div>
+
+          <BaseDropzone />
 
           {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
             <div className="flex flex-wrap items-center gap-4 px-1 text-xs">
