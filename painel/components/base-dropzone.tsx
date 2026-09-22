@@ -8,15 +8,15 @@ import { IconeAlvo } from "@/components/icons";
 
 const NIVEL_BASE = 9;
 
-// Destaque discreto embaixo da Meta, do lado direito, do mesmo
-// tamanho/coluna dela — Samuel achou o botão anterior (bordado, grandão)
-// feio; virou um "chip" mais leve, com uma listra colorida do lado em vez
-// de borda ao redor. Atalho pra mandar um lead direto pra Base sem abrir
-// o card. Solta o card aqui e abre um miniformulário só com o motivo
-// (mesma trava obrigatória de moverLeadNivel/atualizarLead: sem motivo
-// não move, "Desqualificado" também pede o detalhe). Se o lead estiver em
-// "Reunião marcada", o servidor recusa (a reunião ficaria perdida) —
-// mesma regra de sempre, o erro aparece aqui dentro.
+// Aba vertical grudada na quina direita da Meta (Samuel pediu bem
+// específico: "nesse canto, lado direito, na vertical") — não é mais um
+// bloco embaixo, é uma faixa fininha do lado, com o texto de pé. Atalho
+// pra mandar um lead direto pra Base sem abrir o card. Solta o card aqui e
+// abre um miniformulário só com o motivo (mesma trava obrigatória de
+// moverLeadNivel/atualizarLead: sem motivo não move, "Desqualificado"
+// também pede o detalhe). Se o lead estiver em "Reunião marcada", o
+// servidor recusa (a reunião ficaria perdida) — mesma regra de sempre, o
+// erro aparece aqui dentro.
 export function BaseDropzone() {
   const [dropInfo, setDropInfo] = useState<{ leadId: string; nivelOrigem: number } | null>(null);
   const [sobre, setSobre] = useState(false);
@@ -75,7 +75,7 @@ export function BaseDropzone() {
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative shrink-0 self-stretch">
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -84,18 +84,23 @@ export function BaseDropzone() {
         }}
         onDragLeave={() => setSobre(false)}
         onDrop={aoSoltar}
-        className={`flex w-80 items-center gap-2 rounded-lg border-l-4 px-3 py-2 text-xs font-semibold transition ${
+        className={`flex h-full w-8 flex-col items-center justify-center gap-1.5 rounded-r-lg border-y border-r py-2 transition ${
           sobre
-            ? "border-l-blue-600 bg-blue-50 text-blue-700"
-            : "border-l-neutral-300 bg-neutral-50 text-neutral-600 hover:border-l-blue-400 hover:bg-blue-50/60"
+            ? "border-blue-500 bg-blue-50 text-blue-700"
+            : "border-neutral-200 bg-neutral-50 text-neutral-500 hover:bg-blue-50/60 hover:text-blue-700"
         }`}
       >
         <IconeAlvo className="h-3.5 w-3.5 shrink-0" />
-        Base de leads
+        <span
+          className="whitespace-nowrap text-[11px] font-semibold tracking-wide"
+          style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+        >
+          Base de leads
+        </span>
       </div>
 
-      {/* Solto aqui, o formulário não fica preso na largura estreita do
-          botão — flutua por cima, bem maior e destacado (Samuel pegou ao
+      {/* Solto aqui, o formulário não fica preso na largura estreita da
+          aba — flutua por cima, bem maior e destacado (Samuel pegou ao
           vivo: do jeito espremido, "não dava nem pra ver"). */}
       {dropInfo && (
         <div className="absolute right-0 top-0 z-30 w-96 space-y-2 rounded-xl border-2 border-blue-400 bg-white p-4 shadow-2xl ring-4 ring-blue-100">
