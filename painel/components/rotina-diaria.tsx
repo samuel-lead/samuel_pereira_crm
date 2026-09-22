@@ -12,63 +12,58 @@ import {
 } from "@/components/icons";
 
 // Horários e descrições batem com o documento "Rotina do SDR" (Samuel
-// ajustou o documento em 17/09/26) — não é mais a mesma redação da
+// ajustou o documento em 22/09/26) — não é mais a mesma redação da
 // versão anterior, então não "arredondar" pra bater com a de antes se
-// ele atualizar de novo.
+// ele atualizar de novo. Nessa versão o contato com nível 3 entrou
+// dentro da Atividade 1 (não é mais uma atividade separada) e a
+// "Atividade 5" do documento não existe — vai direto da 4 pra 6, é
+// assim no documento mesmo.
 const ATIVIDADES = [
   {
     id: "confirmar_reunioes",
     hora: "09:00–09:30",
     titulo: "Confirmar e reagendar reuniões",
-    desc: "Reuniões do dia e reagendar as do dia anterior, seguindo o processo anti-no-show.",
+    desc: "Reuniões do dia, reagendar as do dia anterior (processo anti-no-show) e contato com os leads do nível 3.",
     Icone: IconeCalendario,
     cor: "blue",
   },
   {
     id: "retomar_conversas",
-    hora: "09:30–10:30",
+    hora: "09:30–10:00",
     titulo: "Retomar conversas",
-    desc: "Leads que responderam no WhatsApp e Instagram, parados ou atrasados no CRM.",
+    desc: "Leads que responderam no dia anterior no WhatsApp e Instagram, parados ou atrasados no CRM.",
     Icone: IconeAtividade,
     cor: "violet",
   },
   {
-    id: "contato_nivel_3",
-    hora: "10:30–11:00",
-    titulo: "Contato com leads nível 3",
-    desc: "Topou reunião mas sumiu na hora de marcar horário — conforme a matriz de follow-up.",
-    Icone: IconeAlvo,
-    cor: "amber",
-  },
-  {
-    id: "ligacoes_quentes",
-    hora: "11:00–12:00",
-    titulo: "Ligações para leads quentes",
-    desc: "Mínimo 30 ligações — ex-Instagram, engajados, ICP e tráfego pago.",
-    Icone: IconeTelefone,
-    cor: "teal",
-  },
-  {
     id: "prospeccao",
-    hora: "13:30–16:00",
+    hora: "10:00–12:00 e 13:30–15:30",
     titulo: "Prospecção",
-    desc: "Mínimo 80 abordagens no Instagram por dia (cota de 20 leads/dia) — lead de tráfego é sempre prioridade.",
+    desc: "Instagram, base ou tráfego — lead de tráfego é sempre prioridade. Pausa assim que qualquer lead responder.",
     Icone: IconeInstagram,
     cor: "pink",
   },
   {
+    id: "ligacoes_quentes",
+    hora: "15:30–16:00",
+    titulo: "Ligações para leads quentes",
+    desc: "Mínimo 30 ligações — ex-Instagram que passou o WhatsApp, engajados, ICP e tráfego pago.",
+    Icone: IconeTelefone,
+    cor: "teal",
+  },
+  {
     id: "follow_niveis_1_2",
-    hora: "16:00–17:00",
+    hora: "16:00–16:30",
     titulo: "Follow com níveis 1 e 2",
-    desc: "Sequência de mensagens curtas e ligações — lead de tráfego é atendido na hora.",
-    Icone: IconeAtividade,
+    desc: "Sequência seguindo a matriz de follow-up — pausa e atende na hora quem responder ou lead de tráfego que chegar.",
+    Icone: IconeAlvo,
     cor: "indigo",
   },
   {
     id: "confirmar_amanha",
-    hora: "17:00–17:30",
-    titulo: "Confirmar reuniões de amanhã",
-    desc: "Atualizar o CRM e enviar o relatório diário até as 18h.",
+    hora: "16:30–17:00",
+    titulo: "Confirmar reuniões (anti-no-show)",
+    desc: "Seguir o processo de anti-no-show, atualizar o CRM e enviar o relatório diário no grupo até as 18h.",
     Icone: IconeCalendario,
     cor: "emerald",
   },
