@@ -65,7 +65,7 @@ export function ImovelForm({
   return (
     <form action={acaoFormulario} className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <div className="col-span-2 space-y-1">
+        <div className={`${imovel ? "col-span-2" : "col-span-3"} space-y-1`}>
           <label className={labelClasse} htmlFor="titulo">
             Título *
           </label>
@@ -78,18 +78,22 @@ export function ImovelForm({
             className={campoClasse}
           />
         </div>
-        <div className="space-y-1">
-          <label className={labelClasse} htmlFor="codigo">
-            Código
-          </label>
-          <input
-            id="codigo"
-            name="codigo"
-            defaultValue={imovel?.codigo ?? ""}
-            placeholder={imovel ? "" : "Gerado sozinho"}
-            className={`${campoClasse} uppercase`}
-          />
-        </div>
+        {/* Só aparece na edição — no cadastro o código é gerado sozinho
+            (IM001, IM002...), não faz sentido mostrar um campo vazio com
+            "Gerado sozinho" escrito nele (Samuel achou estranho). */}
+        {imovel && (
+          <div className="space-y-1">
+            <label className={labelClasse} htmlFor="codigo">
+              Código
+            </label>
+            <input
+              id="codigo"
+              name="codigo"
+              defaultValue={imovel.codigo ?? ""}
+              className={`${campoClasse} uppercase`}
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
