@@ -742,6 +742,12 @@ export function EditarLeadForm({
                 options={niveis
                   .filter(
                     (nivel) =>
+                      // Base saiu daqui — agora só se move pra lá arrastando
+                      // o card até o botão "Base de leads" (Samuel pediu,
+                      // pra centralizar o fluxo num só lugar, com o motivo
+                      // obrigatório). Continua existindo no "Mover para..."
+                      // rápido do celular (sem mouse não dá pra arrastar).
+                      String(nivel.ordem) !== NIVEL_BASE &&
                       (String(nivel.ordem) !== NIVEL_REUNIAO_MARCADA ||
                         String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA ||
                         // Acabou de clicar em "Agendar reunião" — mesmo essa
