@@ -406,27 +406,30 @@ export default async function VendasPage({
             )}
           </div>
 
-          {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
-            <div className="flex flex-wrap items-center gap-4 px-1 text-xs">
-              {mostrarSoContato ? (
-                <Link href={hrefTirarContato} className="font-medium text-teal-600 hover:underline">
-                  Ver todos ✕
-                </Link>
-              ) : (
-                <Link
-                  href={hrefLigarContato}
-                  title="Clique pra ver só os leads com próximo contato marcado"
-                  className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                  {leadsComProximoContato.length} com próximo contato
-                </Link>
-              )}
+          <div className="flex flex-wrap items-center justify-between gap-4 px-1 text-xs">
+            <div className="flex flex-wrap items-center gap-4">
+              {(leadsComProximoContato.length > 0 || mostrarSoContato) &&
+                (mostrarSoContato ? (
+                  <Link href={hrefTirarContato} className="font-medium text-teal-600 hover:underline">
+                    Ver todos ✕
+                  </Link>
+                ) : (
+                  <Link
+                    href={hrefLigarContato}
+                    title="Clique pra ver só os leads com próximo contato marcado"
+                    className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                    {leadsComProximoContato.length} com próximo contato
+                  </Link>
+                ))}
             </div>
-          )}
 
-          <div className="w-96">
-            <BaseDropzone />
+            {receitaOrgMes !== null && (
+              <div className="w-96">
+                <BaseDropzone />
+              </div>
+            )}
           </div>
         </div>
         </MetricasColapsaveis>
