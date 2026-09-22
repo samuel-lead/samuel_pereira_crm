@@ -84,10 +84,10 @@ export function BaseDropzone() {
         }}
         onDragLeave={() => setSobre(false)}
         onDrop={aoSoltar}
-        className={`flex w-80 items-center gap-2 rounded-lg border-l-4 px-3 py-2 text-xs font-semibold transition ${
+        className={`flex w-full items-center gap-2 rounded-lg border-x-4 px-3 py-2 text-xs font-semibold transition ${
           sobre
-            ? "border-l-blue-600 bg-blue-50 text-blue-700"
-            : "border-l-neutral-300 bg-neutral-50 text-neutral-600 hover:border-l-blue-400 hover:bg-blue-50/60"
+            ? "border-blue-600 bg-blue-50 text-blue-700"
+            : "border-neutral-300 bg-neutral-50 text-neutral-600 hover:border-blue-400 hover:bg-blue-50/60"
         }`}
       >
         <IconeAlvo className="h-3.5 w-3.5 shrink-0" />
