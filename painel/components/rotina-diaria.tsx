@@ -62,8 +62,8 @@ const ATIVIDADES = [
   {
     id: "confirmar_amanha",
     hora: "16:30–17:00",
-    titulo: "Confirmar reuniões (anti-no-show)",
-    desc: "Seguir o processo de anti-no-show, atualizar o CRM e enviar o relatório diário no grupo até as 18h.",
+    titulo: "Confirmar reuniões de amanhã",
+    desc: "Seguir o processo de anti-no-show e enviar o relatório diário no grupo do comercial até as 18h.",
     Icone: IconeCalendario,
     cor: "emerald",
   },
