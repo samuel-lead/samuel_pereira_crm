@@ -552,7 +552,7 @@ export default async function LeadsPage({
             </div>
 
             {receitaOrgMes !== null && (
-              <div className="flex w-[26rem] shrink-0 flex-col items-end gap-2">
+              <div className="flex w-[34rem] shrink-0 flex-col items-end gap-2">
                 <MetaReceitaWidget
                   metaReceita={metaReceita}
                   compacta
