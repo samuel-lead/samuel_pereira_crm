@@ -340,7 +340,7 @@ export default async function VendasPage({
         <MetricasColapsaveis>
         <div className="space-y-2.5 border-b border-neutral-200 px-6 py-4">
           <div className="flex flex-wrap items-start gap-3">
-            <div className="flex flex-1 flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5">
             <div className="flex flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
               <StatCell
                 label={mostrarSoParados ? "Leads parados/atrasados" : "Leads em vendas"}
