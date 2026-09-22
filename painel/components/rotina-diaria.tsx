@@ -110,24 +110,20 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
   const percentual = Math.round((feitas / total) * 100);
 
   return (
-    <div className="space-y-4 px-6 py-8">
-      {/* Título fica preso na esquerda da página (era um bloco inteiro
-          centralizado antes) — os cards embaixo é que ficam num bloco
-          deslocado pra direita (Samuel pediu). */}
-      <div className="flex items-baseline justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-900">Minha rotina</h1>
-          <p className="text-sm capitalize text-neutral-500">{dataDeHojeFormatada()}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-neutral-900">
-            {feitas} <span className="text-base font-normal text-neutral-400">de {total}</span>
-          </p>
-          <p className="text-xs text-neutral-400">concluídas</p>
-        </div>
+    <div className="flex flex-wrap items-start gap-6 px-6 py-8">
+      {/* Título, data e o contador ficam tudo empilhado na esquerda —
+          os cards formam um bloco à parte, começando no mesmo topo,
+          deslocado pra direita (Samuel pediu, os dois lado a lado). */}
+      <div className="space-y-1">
+        <h1 className="text-xl font-bold text-neutral-900">Minha rotina</h1>
+        <p className="text-sm capitalize text-neutral-500">{dataDeHojeFormatada()}</p>
+        <p className="pt-2 text-2xl font-bold text-neutral-900">
+          {feitas} <span className="text-base font-normal text-neutral-400">de {total}</span>
+        </p>
+        <p className="text-xs text-neutral-400">concluídas</p>
       </div>
 
-      <div className="ml-auto max-w-2xl space-y-4">
+      <div className="ml-auto w-full max-w-2xl flex-1 space-y-4">
         <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
           <div
             className="h-full rounded-full bg-blue-600 transition-all"
