@@ -87,7 +87,7 @@ export function BaseDropzone() {
         className={`flex w-full items-center gap-2 rounded-lg border-x-4 px-3 py-2 text-xs font-semibold transition ${
           sobre
             ? "border-blue-600 bg-blue-50 text-blue-700"
-            : "border-neutral-300 bg-neutral-50 text-neutral-600 hover:border-blue-400 hover:bg-blue-50/60"
+            : "border-neutral-300 bg-neutral-50 text-neutral-900 hover:border-blue-400 hover:bg-blue-50/60"
         }`}
       >
         <IconeAlvo className="h-3.5 w-3.5 shrink-0" />
