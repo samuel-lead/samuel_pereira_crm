@@ -110,7 +110,10 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
   const percentual = Math.round((feitas / total) * 100);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-6 py-8">
+    <div className="space-y-4 px-6 py-8">
+      {/* Título fica preso na esquerda da página (era um bloco inteiro
+          centralizado antes) — os cards embaixo é que ficam num bloco
+          deslocado pra direita (Samuel pediu). */}
       <div className="flex items-baseline justify-between">
         <div>
           <h1 className="text-xl font-bold text-neutral-900">Minha rotina</h1>
@@ -124,14 +127,15 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
         </div>
       </div>
 
-      <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
-        <div
-          className="h-full rounded-full bg-blue-600 transition-all"
-          style={{ width: `${percentual}%` }}
-        />
-      </div>
+      <div className="ml-auto max-w-2xl space-y-4">
+        <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
+          <div
+            className="h-full rounded-full bg-blue-600 transition-all"
+            style={{ width: `${percentual}%` }}
+          />
+        </div>
 
-      <div className="space-y-3">
+        <div className="space-y-3">
         {ATIVIDADES.map((atividade) => {
           const feita = concluidas.has(atividade.id);
           return (
@@ -183,6 +187,7 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );
