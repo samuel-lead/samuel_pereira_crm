@@ -298,13 +298,22 @@ async function sincronizarReuniao(
       if (erroAnterior) return { erro: erroAnterior.message };
     }
 
-    // Se o lead já teve alguma reunião antes, essa aqui é um reagendamento
-    // (ex.: veio de um No-show), não uma call nova — não pode contar como
-    // "call marcada" nova na métrica do dia.
-    const { count: reunioesAnteriores } = await supabase
+    // "Reagendada" é reservado pra mesma reunião mudando de data (ex.:
+    // veio de um No-show ou Precisa reagendar) — não conta como "call
+    // marcada" nova na métrica do dia. Se a reunião anterior desse lead
+    // foi REALIZADA, essa aqui é uma segunda reunião de verdade (proposta
+    // não fechou de primeira, por exemplo), não um reagendamento — conta
+    // como call marcada nova sim. Samuel pegou isso ao vivo: reunião
+    // marcada, lead fez a call, precisou de uma segunda, e ela estava
+    // sumindo do "Calls marcadas" e indo pra "Calls reagendadas" por
+    // engano.
+    const { data: reuniaoAnterior } = await supabase
       .from("reunioes")
-      .select("id", { count: "exact", head: true })
-      .eq("lead_id", leadId);
+      .select("status")
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     const { error } = await supabase.from("reunioes").insert({
       org_id: orgId,
@@ -314,7 +323,7 @@ async function sincronizarReuniao(
       marcada_em: dataMarcada.toISOString(),
       closer_id: closerId || null,
       status: "marcada",
-      reagendada: !!reunioesAnteriores && reunioesAnteriores > 0,
+      reagendada: !!reuniaoAnterior && reuniaoAnterior.status !== "realizada",
     });
 
     if (error) return { erro: error.message };
