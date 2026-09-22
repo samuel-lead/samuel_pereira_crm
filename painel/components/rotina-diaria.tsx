@@ -114,13 +114,21 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
       {/* Título, data e o contador ficam tudo empilhado na esquerda —
           os cards formam um bloco à parte, começando no mesmo topo,
           deslocado pra direita (Samuel pediu, os dois lado a lado). */}
-      <div className="space-y-1">
+      <div className="max-w-xs space-y-1">
         <h1 className="text-xl font-bold text-neutral-900">Minha rotina</h1>
         <p className="text-sm capitalize text-neutral-500">{dataDeHojeFormatada()}</p>
         <p className="pt-2 text-2xl font-bold text-neutral-900">
           {feitas} <span className="text-base font-normal text-neutral-400">de {total}</span>
         </p>
         <p className="text-xs text-neutral-400">concluídas</p>
+        <p className="pt-3 text-sm text-neutral-500">
+          A principal atividade do SDR é a ligação, usamos o WhatsApp apenas como suporte. E só
+          em último caso, depois de tentar tudo por ligação, que fazemos a qualificação por
+          mensagem no WhatsApp.
+        </p>
+        <p className="text-sm font-medium text-neutral-700">
+          Você deve fazer no mínimo 30 ligações por dia.
+        </p>
       </div>
 
       <div className="ml-auto w-full max-w-2xl flex-1 space-y-4">
