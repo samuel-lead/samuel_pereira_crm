@@ -552,16 +552,14 @@ export default async function LeadsPage({
             </div>
 
             {receitaOrgMes !== null && (
-              <div className="flex shrink-0 flex-col gap-2">
-                <div className="self-start">
-                  <MetaReceitaWidget
-                    metaReceita={metaReceita}
-                    compacta
-                    receitaAtual={receitaOrgMes}
-                    podeEditar={souAdmin}
-                    publicoOrg={publicoOrg}
-                  />
-                </div>
+              <div className="flex w-80 shrink-0 flex-col gap-2">
+                <MetaReceitaWidget
+                  metaReceita={metaReceita}
+                  compacta
+                  receitaAtual={receitaOrgMes}
+                  podeEditar={souAdmin}
+                  publicoOrg={publicoOrg}
+                />
                 <BaseDropzone />
               </div>
             )}
