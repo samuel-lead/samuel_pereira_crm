@@ -74,66 +74,69 @@ export function BaseDropzone() {
     });
   }
 
-  if (dropInfo) {
-    return (
-      <div className="w-full space-y-1.5 rounded-xl border border-blue-300 bg-blue-50 p-2.5">
-        <p className="text-xs font-semibold text-blue-900">Motivo pra ir pra Base:</p>
-        <MenuSelect
-          placeholder="Selecione..."
-          disabled={pendente}
-          value={motivoBase}
-          onChange={setMotivoBase}
-          abrirAoMontar
-          options={MOTIVOS_BASE.map((m) => ({ value: m.valor, label: m.nome }))}
-        />
-        {motivoBase === "desqualificado" && (
-          <textarea
-            value={motivoBaseDetalhe}
-            onChange={(e) => setMotivoBaseDetalhe(e.target.value)}
-            placeholder="Descreva por que está desqualificado..."
-            rows={2}
-            className="w-full rounded-md border border-blue-300 bg-white px-2 py-1.5 text-sm text-neutral-900 outline-none focus:border-blue-500"
-          />
-        )}
-        {erro && <p className="text-xs font-medium text-red-600">{erro}</p>}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={pendente}
-            onClick={confirmar}
-            className="flex-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
-          >
-            {pendente ? "Movendo..." : "Confirmar"}
-          </button>
-          <button
-            type="button"
-            onClick={fechar}
-            className="shrink-0 rounded-md border border-blue-300 bg-white px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
-          >
-            Cancelar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-        if (!sobre) setSobre(true);
-      }}
-      onDragLeave={() => setSobre(false)}
-      onDrop={aoSoltar}
-      className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${
-        sobre
-          ? "border-blue-500 bg-blue-50 text-blue-700"
-          : "border-neutral-200 bg-white text-neutral-500"
-      }`}
-    >
-      <IconeAlvo className="h-4 w-4 shrink-0" />
-      Base de leads
+    <div className="relative w-full">
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          if (!sobre) setSobre(true);
+        }}
+        onDragLeave={() => setSobre(false)}
+        onDrop={aoSoltar}
+        className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${
+          sobre
+            ? "border-blue-500 bg-blue-50 text-blue-700"
+            : "border-neutral-200 bg-white text-neutral-500"
+        }`}
+      >
+        <IconeAlvo className="h-4 w-4 shrink-0" />
+        Base de leads
+      </div>
+
+      {/* Solto aqui, o formulário não fica preso na largura estreita do
+          botão — flutua por cima, bem maior e destacado (Samuel pegou ao
+          vivo: do jeito espremido, "não dava nem pra ver"). */}
+      {dropInfo && (
+        <div className="absolute right-0 top-0 z-30 w-96 space-y-2 rounded-xl border-2 border-blue-400 bg-white p-4 shadow-2xl ring-4 ring-blue-100">
+          <p className="text-sm font-bold text-blue-900">Por que esse lead está indo pra Base?</p>
+          <MenuSelect
+            placeholder="Selecione o motivo..."
+            disabled={pendente}
+            value={motivoBase}
+            onChange={setMotivoBase}
+            abrirAoMontar
+            options={MOTIVOS_BASE.map((m) => ({ value: m.valor, label: m.nome }))}
+          />
+          {motivoBase === "desqualificado" && (
+            <textarea
+              value={motivoBaseDetalhe}
+              onChange={(e) => setMotivoBaseDetalhe(e.target.value)}
+              placeholder="Descreva por que está desqualificado..."
+              rows={3}
+              className="w-full rounded-md border border-blue-300 bg-white px-2.5 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500"
+            />
+          )}
+          {erro && <p className="text-sm font-medium text-red-600">{erro}</p>}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={pendente}
+              onClick={confirmar}
+              className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+            >
+              {pendente ? "Movendo..." : "Confirmar"}
+            </button>
+            <button
+              type="button"
+              onClick={fechar}
+              className="shrink-0 rounded-md border border-blue-300 bg-white px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
