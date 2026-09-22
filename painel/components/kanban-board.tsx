@@ -23,6 +23,7 @@ import {
   IconeCalendario,
   IconeReativar,
   IconeCasa,
+  IconeAlvo,
 } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { CampoDataHora } from "@/components/campo-data-hora";
@@ -381,6 +382,136 @@ function BotaoProximoContatoRapido({ leadId }: { leadId: string }) {
         </button>
       </div>
     </form>
+  );
+}
+
+// Botão flutuante fixo no lado direito da tela, em Pré-vendas e Vendas —
+// atalho pra mandar um lead direto pra Base sem abrir o card (Samuel
+// pediu). Arrastar o card até aqui solta um miniformulário só com o
+// motivo (mesma trava obrigatória de moverLeadNivel/atualizarLead: sem
+// motivo não move, "Desqualificado" também pede o detalhe). Se o lead
+// estiver em "Reunião marcada", o servidor recusa (a reunião ficaria
+// perdida) — mesma regra de sempre, o erro aparece aqui dentro.
+function BotaoBaseFlutuante() {
+  const [dropInfo, setDropInfo] = useState<{ leadId: string; nivelOrigem: number } | null>(null);
+  const [sobre, setSobre] = useState(false);
+  const [motivoBase, setMotivoBase] = useState("");
+  const [motivoBaseDetalhe, setMotivoBaseDetalhe] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const [pendente, iniciarTransicao] = useTransition();
+
+  function fechar() {
+    setDropInfo(null);
+    setErro(null);
+    setMotivoBase("");
+    setMotivoBaseDetalhe("");
+  }
+
+  function aoSoltar(e: React.DragEvent) {
+    e.preventDefault();
+    setSobre(false);
+    const leadId = e.dataTransfer.getData("text/plain");
+    const nivelOrigem = Number(e.dataTransfer.getData("application/x-nivel-origem"));
+    if (!leadId) return;
+    setErro(null);
+    setMotivoBase("");
+    setMotivoBaseDetalhe("");
+    setDropInfo({ leadId, nivelOrigem });
+  }
+
+  function confirmar() {
+    if (!dropInfo) return;
+    if (!motivoBase) {
+      setErro("Escolha o motivo.");
+      return;
+    }
+    if (motivoBase === "desqualificado" && !motivoBaseDetalhe.trim()) {
+      setErro("Descreva por que está desqualificado.");
+      return;
+    }
+    setErro(null);
+    iniciarTransicao(() => {
+      moverLeadNivel(
+        dropInfo.leadId,
+        NIVEL_BASE,
+        undefined,
+        undefined,
+        undefined,
+        motivoBase,
+        motivoBaseDetalhe || undefined
+      ).then((erroServidor) => {
+        if (erroServidor) {
+          setErro(erroServidor);
+          return;
+        }
+        fechar();
+      });
+    });
+  }
+
+  return (
+    <>
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          if (!sobre) setSobre(true);
+        }}
+        onDragLeave={() => setSobre(false)}
+        onDrop={aoSoltar}
+        className={`fixed right-6 top-1/2 z-40 flex -translate-y-1/2 items-center gap-2 rounded-full border px-4 py-3 text-sm font-bold shadow-lg transition ${
+          sobre
+            ? "scale-105 border-blue-500 bg-blue-600 text-white"
+            : "border-neutral-200 bg-white text-neutral-700"
+        }`}
+      >
+        <IconeAlvo className="h-4 w-4 shrink-0" />
+        Base de leads
+      </div>
+
+      {dropInfo && (
+        <div className="fixed right-6 top-1/2 z-50 w-72 -translate-y-1/2 space-y-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-2xl">
+          <p className="text-sm font-semibold text-neutral-800">
+            Por que esse lead está indo pra Base?
+          </p>
+          <MenuSelect
+            placeholder="Selecione o motivo..."
+            disabled={pendente}
+            value={motivoBase}
+            onChange={setMotivoBase}
+            abrirAoMontar
+            options={MOTIVOS_BASE.map((m) => ({ value: m.valor, label: m.nome }))}
+          />
+          {motivoBase === "desqualificado" && (
+            <textarea
+              value={motivoBaseDetalhe}
+              onChange={(e) => setMotivoBaseDetalhe(e.target.value)}
+              placeholder="Descreva por que está desqualificado..."
+              rows={3}
+              className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm text-neutral-900 outline-none focus:border-blue-400"
+            />
+          )}
+          {erro && <p className="text-xs text-red-600">{erro}</p>}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={pendente}
+              onClick={confirmar}
+              className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+            >
+              {pendente ? "Movendo..." : "Confirmar"}
+            </button>
+            <button
+              type="button"
+              onClick={fechar}
+              className="rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1228,6 +1359,7 @@ export function KanbanBoard({
         </button>
       </div>
       {modalConfirmacao}
+      <BotaoBaseFlutuante />
     </div>
   );
 }
