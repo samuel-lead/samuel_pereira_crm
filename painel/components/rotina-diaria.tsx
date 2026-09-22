@@ -47,7 +47,7 @@ const ATIVIDADES = [
     id: "ligacoes_quentes",
     hora: "15:30–16:00",
     titulo: "Ligações para leads quentes",
-    desc: "Mínimo 30 ligações — leads do Instagram que passou o WhatsApp, engajados, ICP e tráfego pago.",
+    desc: "Leads do Instagram que passou o WhatsApp, leads engajados, leads qualificados e do tráfego.",
     Icone: IconeTelefone,
     cor: "teal",
   },
