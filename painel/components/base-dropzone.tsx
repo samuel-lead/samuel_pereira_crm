@@ -8,14 +8,15 @@ import { IconeAlvo } from "@/components/icons";
 
 const NIVEL_BASE = 9;
 
-// Faixa grandona embaixo do resumo do topo, em Pré-vendas e Vendas —
-// atalho pra mandar um lead direto pra Base sem abrir o card (Samuel
-// pediu, e pediu destacado/horizontal, não mais flutuante no canto). Solta
-// o card aqui e abre um miniformulário só com o motivo (mesma trava
-// obrigatória de moverLeadNivel/atualizarLead: sem motivo não move,
-// "Desqualificado" também pede o detalhe). Se o lead estiver em "Reunião
-// marcada", o servidor recusa (a reunião ficaria perdida) — mesma regra de
-// sempre, o erro aparece aqui dentro.
+// Faixa fina embaixo do resumo do topo, em Pré-vendas e Vendas — atalho
+// pra mandar um lead direto pra Base sem abrir o card (Samuel pediu, e
+// pediu explicitamente compacto: "só um pouco maior na horizontal" que o
+// botão de antes, sem abrir espaço grande na tela). Solta o card aqui e
+// abre um miniformulário só com o motivo (mesma trava obrigatória de
+// moverLeadNivel/atualizarLead: sem motivo não move, "Desqualificado"
+// também pede o detalhe). Se o lead estiver em "Reunião marcada", o
+// servidor recusa (a reunião ficaria perdida) — mesma regra de sempre, o
+// erro aparece aqui dentro.
 export function BaseDropzone() {
   const [dropInfo, setDropInfo] = useState<{ leadId: string; nivelOrigem: number } | null>(null);
   const [sobre, setSobre] = useState(false);
@@ -75,12 +76,10 @@ export function BaseDropzone() {
 
   if (dropInfo) {
     return (
-      <div className="space-y-2 rounded-xl border-2 border-blue-400 bg-blue-50 p-3 shadow-sm">
-        <p className="text-sm font-semibold text-blue-900">
-          Por que esse lead está indo pra Base?
-        </p>
-        <div className="flex flex-wrap items-start gap-2">
-          <div className="min-w-[220px] flex-1">
+      <div className="space-y-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="shrink-0 text-sm font-semibold text-blue-900">Motivo:</p>
+          <div className="min-w-[200px] flex-1">
             <MenuSelect
               placeholder="Selecione o motivo..."
               disabled={pendente}
@@ -94,14 +93,14 @@ export function BaseDropzone() {
             type="button"
             disabled={pendente}
             onClick={confirmar}
-            className="shrink-0 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+            className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
           >
             {pendente ? "Movendo..." : "Confirmar"}
           </button>
           <button
             type="button"
             onClick={fechar}
-            className="shrink-0 rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+            className="shrink-0 rounded-md border border-blue-300 bg-white px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
           >
             Cancelar
           </button>
@@ -129,13 +128,13 @@ export function BaseDropzone() {
       }}
       onDragLeave={() => setSobre(false)}
       onDrop={aoSoltar}
-      className={`flex w-full items-center justify-center gap-2.5 rounded-xl border-2 border-dashed px-4 py-4 text-sm font-bold transition ${
+      className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
         sobre
-          ? "scale-[1.01] border-blue-500 bg-blue-50 text-blue-700"
-          : "border-neutral-300 bg-white text-neutral-500"
+          ? "border-blue-500 bg-blue-50 text-blue-700"
+          : "border-neutral-200 bg-white text-neutral-500"
       }`}
     >
-      <IconeAlvo className="h-5 w-5 shrink-0" />
+      <IconeAlvo className="h-4 w-4 shrink-0" />
       Arraste um lead até aqui pra mandar pra Base
     </div>
   );
