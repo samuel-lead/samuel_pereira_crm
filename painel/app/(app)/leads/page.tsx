@@ -459,7 +459,8 @@ export default async function LeadsPage({
         <MetricasColapsaveis>
         <div className="space-y-2.5 border-b border-neutral-200 px-6 py-4">
           <div className="flex flex-wrap items-start gap-3">
-            <div className="flex flex-1 flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+            <div className="flex flex-1 flex-col gap-1.5">
+            <div className="flex flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
               <StatCell
                 label={mostrarSoParados ? "Leads parados/atrasados" : "Leads ao todo"}
                 value={mostrarSoParados ? leadsExibidos.length : leads.length}
@@ -530,38 +531,41 @@ export default async function LeadsPage({
               )}
             </div>
 
+              {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
+                <div className="flex flex-wrap items-center gap-4 px-1 text-xs">
+                  {mostrarSoContato ? (
+                    <Link href={hrefTirarContato} className="font-medium text-teal-600 hover:underline">
+                      Ver todos ✕
+                    </Link>
+                  ) : (
+                    <Link
+                      href={hrefLigarContato}
+                      title="Clique pra ver só os leads com próximo contato marcado"
+                      className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                      {leadsComProximoContato.length} com próximo contato
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+
             {receitaOrgMes !== null && (
               <div className="flex shrink-0 flex-col gap-2">
-                <MetaReceitaWidget
-                  metaReceita={metaReceita}
-                  compacta
-                  receitaAtual={receitaOrgMes}
-                  podeEditar={souAdmin}
-                  publicoOrg={publicoOrg}
-                />
+                <div className="self-start">
+                  <MetaReceitaWidget
+                    metaReceita={metaReceita}
+                    compacta
+                    receitaAtual={receitaOrgMes}
+                    podeEditar={souAdmin}
+                    publicoOrg={publicoOrg}
+                  />
+                </div>
                 <BaseDropzone />
               </div>
             )}
           </div>
-
-          {(leadsComProximoContato.length > 0 || mostrarSoContato) && (
-            <div className="flex flex-wrap items-center gap-4 px-1 text-xs">
-              {mostrarSoContato ? (
-                <Link href={hrefTirarContato} className="font-medium text-teal-600 hover:underline">
-                  Ver todos ✕
-                </Link>
-              ) : (
-                <Link
-                  href={hrefLigarContato}
-                  title="Clique pra ver só os leads com próximo contato marcado"
-                  className="inline-flex items-center gap-1.5 font-medium text-teal-600 hover:underline"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                  {leadsComProximoContato.length} com próximo contato
-                </Link>
-              )}
-            </div>
-          )}
         </div>
         </MetricasColapsaveis>
       </BarraFixaKanban>

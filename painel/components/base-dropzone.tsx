@@ -84,7 +84,7 @@ export function BaseDropzone() {
         }}
         onDragLeave={() => setSobre(false)}
         onDrop={aoSoltar}
-        className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${
+        className={`flex w-80 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${
           sobre
             ? "border-blue-500 bg-blue-50 text-blue-700"
             : "border-neutral-200 bg-white text-neutral-500"
