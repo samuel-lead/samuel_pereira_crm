@@ -13,8 +13,28 @@ export function ThemeToggle({ colapsado = false }: { colapsado?: boolean }) {
   function alternar() {
     const novoEscuro = !escuro;
     setEscuro(novoEscuro);
+
+    // Desliga as transições de cor de TODOS os elementos só na hora da
+    // troca. Com centenas de cards na tela, cada um animando cor/fundo
+    // (150ms) ao mesmo tempo, o navegador travava bem no finalzinho
+    // (Samuel pegou isso ao vivo). Sem animar, a troca é instantânea e
+    // fluida; as transições voltam logo em seguida pro hover normal.
+    const estilo = document.createElement("style");
+    estilo.appendChild(
+      document.createTextNode("*,*::before,*::after{transition:none!important}")
+    );
+    document.head.appendChild(estilo);
+
     document.documentElement.classList.toggle("dark", novoEscuro);
-    localStorage.setItem("tema", novoEscuro ? "escuro" : "claro");
+    try {
+      localStorage.setItem("tema", novoEscuro ? "escuro" : "claro");
+    } catch {
+      // sem localStorage (janela privada etc.) — só não lembra o tema depois
+    }
+
+    // Força o navegador a aplicar a troca ANTES de religar as transições.
+    window.getComputedStyle(document.body).opacity;
+    window.setTimeout(() => estilo.remove(), 50);
   }
 
   // No modo colapsado (rail estreito) não cabe o texto — mantém só o ícone.
