@@ -264,7 +264,7 @@ export function IscaCapturaForm({
           {nomeIsca}
         </h1>
         <p className="text-base text-[#c4cad3]">
-          Em 2 minutos você se cadastra e consegue o acesso ao material.
+          Em 2 minutos você se cadastra e consegue o acesso à aula.
         </p>
         <button
           type="button"
@@ -286,7 +286,7 @@ export function IscaCapturaForm({
     // a equipe do Samuel).
     if (resultado.materialUrl) {
       const linkDaIsca = typeof window !== "undefined" ? window.location.href : "";
-      const mensagemCompartilhar = `Olha esse material que eu recebi, acredito que vai te ajudar muito no seu dia a dia como corretor(a). 👇\n\n${linkDaIsca}`;
+      const mensagemCompartilhar = `Olha essa aula que eu recebi, acredito que vai te ajudar muito no seu dia a dia como corretor(a). 👇\n\n${linkDaIsca}`;
       const linkCompartilhar = `https://wa.me/?text=${encodeURIComponent(mensagemCompartilhar)}`;
 
       return (
@@ -295,7 +295,7 @@ export function IscaCapturaForm({
           <div className="h-1 w-16 rounded-full bg-[#4ade80]" />
           <p className="text-lg text-[#c4cad3]">Obrigado, seu cadastro foi concluído.</p>
           <p className="text-2xl font-bold leading-tight text-[#eef1f6]">
-            Clique no botão abaixo para acessar o seu material 👇
+            Clique no botão abaixo para acessar a sua aula 👇
           </p>
           <a
             href={resultado.materialUrl}
@@ -307,7 +307,7 @@ export function IscaCapturaForm({
               <path d="M12 3v12m0 0 4-4m-4 4-4-4" />
               <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
             </svg>
-            Clique aqui para acessar seu material
+            Clique aqui para acessar sua aula
           </a>
           <a
             href={linkCompartilhar}
