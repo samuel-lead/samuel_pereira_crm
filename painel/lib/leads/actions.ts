@@ -478,6 +478,15 @@ function dividirLinhaImportacao(linha: string): string[] {
   return linha.split(",");
 }
 
+// Lista de contato exportada só com telefone (sem nome) vira uma linha
+// com uma coluna só — sem isso, o número ia inteiro pro "Nome" e o campo
+// Telefone ficava vazio (Samuel pegou isso ao vivo, importação de leads
+// do WhatsApp dele). 8 dígitos é o menor telefone válido no Brasil (fixo
+// sem DDD já com o 0 tirado).
+function pareceTelefone(texto: string): boolean {
+  return texto.replace(/\D/g, "").length >= 8;
+}
+
 // Importação em massa pro SDR prospectar (ex.: lista de prospecção fria) —
 // cada linha "Nome, Telefone" vira um lead direto na coluna "Leads"
 // (nivel_ordem 0), sem responsável, pronto pra alguém reivindicar e
@@ -508,7 +517,7 @@ export async function importarLeads(
       .map((parte) => parte.trim())
       .filter(Boolean);
     const nome = partes[0];
-    const telefoneDigitado = partes[1];
+    const telefoneDigitado = partes[1] || (partes.length === 1 && pareceTelefone(nome) ? nome : undefined);
     const origemLinha = partes[2] || origemPadrao;
 
     if (!nome) {
