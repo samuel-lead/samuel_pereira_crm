@@ -172,7 +172,7 @@ export function LeadModalConteudo({
         )}
 
         {podeReivindicar && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div className="destaque-proposta flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             <span>Esse lead ainda não tem responsável.</span>
             <ReivindicarLeadButton leadId={lead.id} />
           </div>
