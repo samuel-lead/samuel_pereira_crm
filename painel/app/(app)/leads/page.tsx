@@ -148,6 +148,18 @@ export default async function LeadsPage({
         .lt("ocorreu_em", amanha.toISOString())
     : null;
 
+  // Leads que ENTRARAM no CRM hoje (created_at, não declarado_em — importação
+  // antiga pode ter declarado_em de outro dia). Samuel pediu essa métrica
+  // junto das de hoje. Não conta lead já excluído.
+  const consultaLeadsNovosHoje = user
+    ? supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .is("arquivado_em", null)
+        .gte("created_at", inicioHoje.toISOString())
+        .lt("created_at", amanha.toISOString())
+    : null;
+
   const consultaLigacoesAtendidasHoje = user
     ? supabase
         .from("interacoes")
@@ -251,6 +263,7 @@ export default async function LeadsPage({
     : null;
 
   const [
+    { count: leadsNovosHoje },
     { count: ligacoesHoje },
     { count: ligacoesAtendidasHoje },
     { count: ligacoesNaoAtendidasHoje },
@@ -265,6 +278,7 @@ export default async function LeadsPage({
     { data: reunioesAgendadaData },
     { data: todasReunioesData },
   ] = await Promise.all([
+    consultaLeadsNovosHoje ? filtrarPorEscopo(consultaLeadsNovosHoje) : { count: null },
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
     consultaLigacoesAtendidasHoje ? filtrarPorEscopo(consultaLigacoesAtendidasHoje) : { count: null },
     consultaLigacoesNaoAtendidasHoje ? filtrarPorEscopo(consultaLigacoesNaoAtendidasHoje) : { count: null },
@@ -488,6 +502,13 @@ export default async function LeadsPage({
                   )
                 }
               />
+              {leadsNovosHoje !== null && (
+                <StatCell
+                  label="Leads novos hoje"
+                  value={leadsNovosHoje}
+                  sub={souAdmin ? "Time todo" : undefined}
+                />
+              )}
               {ligacoesHoje !== null && (
                 <StatCell
                   label="Ligações hoje"
