@@ -13,17 +13,16 @@ const estadoInicial: ResultadoImportacao = {
   total: 0,
 };
 
-const PALAVRAS_CABECALHO = [
-  "nome",
-  "empresa",
-  "razao social",
-  "razão social",
-  "telefone",
-  "fone",
-  "celular",
-  "whatsapp",
-  "origem",
-];
+// Separadas em dois grupos (não é só "parece cabeçalho", é "qual coluna é
+// qual") — sem isso, um arquivo exportado como "WhatsApp, Name" (telefone
+// primeiro, nome depois — é assim que o WhatsApp exporta contato) fazia o
+// número virar Nome e o nome virar Telefone. Samuel pegou isso ao vivo:
+// 178 leads entraram com o telefone como nome e o nome (sem dígito
+// nenhum) virando telefone vazio, todos colidindo como "duplicado" entre
+// si.
+const CABECALHOS_NOME = ["nome", "name", "empresa", "razao social", "razão social"];
+const CABECALHOS_TELEFONE = ["telefone", "fone", "celular", "whatsapp", "phone", "número", "numero"];
+const PALAVRAS_CABECALHO = [...CABECALHOS_NOME, ...CABECALHOS_TELEFONE, "origem"];
 
 // Parser de CSV escrito à mão (sem depender de nenhum pacote de terceiros
 // — os pacotes populares de ler .xlsx têm falha de segurança conhecida e
@@ -81,21 +80,38 @@ function linhaPareceCabecalho(celulas: string[]) {
 
 // Compartilhada entre o CSV (analisarCsv) e o .xlsx (xlsxParaLinhas) — os
 // dois terminam nesse mesmo formato de "linhas de células" antes de virar
-// texto pro campo da lista.
+// texto pro campo da lista. Se a primeira linha for cabeçalho, usa ela
+// pra descobrir em qual coluna está o nome e em qual está o telefone —
+// nunca assume que a ordem é sempre "nome, telefone" (ver comentário dos
+// CABECALHOS_* acima).
 function linhasParaLista(linhas: string[][]) {
-  return linhas
-    .filter((linha, indice) => {
-      const vazia = linha.every((celula) => !celula.trim());
-      if (vazia) return false;
-      if (indice === 0 && linhaPareceCabecalho(linha)) return false;
-      return true;
-    })
-    .map((linha) =>
-      linha
+  if (linhas.length === 0) return "";
+
+  let dados = linhas;
+  let indiceNome = 0;
+  let indiceTelefone = 1;
+
+  const primeiraLinha = linhas[0];
+  if (linhaPareceCabecalho(primeiraLinha)) {
+    const celulas = primeiraLinha.map((c) => c.trim().toLowerCase());
+    const posNome = celulas.findIndex((c) => CABECALHOS_NOME.includes(c));
+    const posTelefone = celulas.findIndex((c) => CABECALHOS_TELEFONE.includes(c));
+    if (posNome !== -1) indiceNome = posNome;
+    if (posTelefone !== -1) indiceTelefone = posTelefone;
+    dados = linhas.slice(1);
+  }
+
+  return dados
+    .filter((linha) => linha.some((celula) => celula.trim()))
+    .map((linha) => {
+      const nome = (linha[indiceNome] ?? "").trim();
+      const telefone = (linha[indiceTelefone] ?? "").trim();
+      const resto = linha
+        .filter((_, indice) => indice !== indiceNome && indice !== indiceTelefone)
         .map((celula) => celula.trim())
-        .filter(Boolean)
-        .join("\t")
-    )
+        .filter(Boolean);
+      return [nome, telefone, ...resto].filter(Boolean).join("\t");
+    })
     .join("\n");
 }
 
