@@ -9,11 +9,17 @@ function DropdownFiltro({
   valorSelecionado,
   opcoes,
   aoSelecionar,
+  // "Funil" é o segundo botão da fileira — grudado no lado esquerdo (como
+  // "Usuários", o primeiro) o menu dele estourava pra fora da tela no
+  // celular, cortando os nomes mais compridos (Samuel pegou ao vivo).
+  // Ancorado pela direita ele abre pro lado que tem espaço de sobra.
+  alinhar = "esquerda",
 }: {
   rotulo: string;
   valorSelecionado: string;
   opcoes: { valor: string; texto: string }[];
   aoSelecionar: (valor: string) => void;
+  alinhar?: "esquerda" | "direita";
 }) {
   const [aberto, setAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,7 +57,11 @@ function DropdownFiltro({
       </button>
 
       {aberto && (
-        <div className="absolute left-0 top-full z-20 mt-1.5 max-h-72 w-64 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-1.5 shadow-lg">
+        <div
+          className={`absolute top-full z-20 mt-1.5 max-h-72 w-64 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-neutral-200 bg-white p-1.5 shadow-lg ${
+            alinhar === "direita" ? "right-0" : "left-0"
+          }`}
+        >
           <button
             type="button"
             onClick={() => {
@@ -123,6 +133,7 @@ export function FiltrosLeads({
       />
       <DropdownFiltro
         rotulo="Funil"
+        alinhar="direita"
         valorSelecionado={origemInicial ?? ""}
         opcoes={origens.map((origem) => ({ valor: origem, texto: origem }))}
         aoSelecionar={(valor) => router.push(construirUrl(usuarioInicial ?? "", valor))}
