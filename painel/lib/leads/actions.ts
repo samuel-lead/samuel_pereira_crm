@@ -516,8 +516,12 @@ export async function importarLeads(
     const partes = dividirLinhaImportacao(linha)
       .map((parte) => parte.trim())
       .filter(Boolean);
-    const nome = partes[0];
-    const telefoneDigitado = partes[1] || (partes.length === 1 && pareceTelefone(nome) ? nome : undefined);
+    // Linha com uma coluna só que parece telefone (lista de contato sem
+    // nome) — em vez de repetir o número no campo Nome, deixa "Sem nome"
+    // escrito ali (Samuel pediu), com o telefone certinho no campo dele.
+    const soTelefone = partes.length === 1 && pareceTelefone(partes[0]);
+    const nome = soTelefone ? "Sem nome" : partes[0];
+    const telefoneDigitado = soTelefone ? partes[0] : partes[1];
     const origemLinha = partes[2] || origemPadrao;
 
     if (!nome) {
