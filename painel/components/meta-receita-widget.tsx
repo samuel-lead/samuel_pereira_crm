@@ -206,7 +206,7 @@ export function MetaReceitaWidget({
   }
 
   return (
-    <div className="destaque-meta rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-neutral-800">{rotuloMeta}</h2>
         {podeEditar && (
