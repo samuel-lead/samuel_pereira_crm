@@ -221,7 +221,8 @@ export default async function EditarLeadPage({
   );
   const podeEditar =
     souAdmin || leadTipado.responsavel_id === user?.id || souCloserAtivo;
-  const podeReivindicar = !souAdmin && leadTipado.responsavel_id === null;
+  // Admin também pega o lead pra si quando ele não tem responsável.
+  const podeReivindicar = leadTipado.responsavel_id === null;
   const usuarioResponsavel = usuarios.find((u) => u.id === leadTipado.responsavel_id);
   // Comissão de quem é o responsável atual — só usada no imobiliário, pra
   // calcular a "receita" (comissão) ao marcar/editar a venda.

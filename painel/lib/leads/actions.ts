@@ -2205,7 +2205,9 @@ export async function buscarDetalhesDoLead(
     (r) => r.status === "marcada" && new Date(r.agendada_para).getTime() < Date.now()
   );
   const podeEditar = souAdmin || lead.responsavel_id === usuario.id || souCloser;
-  const podeReivindicar = !souAdmin && lead.responsavel_id === null;
+  // Admin também pega o lead pra si quando ele não tem responsável
+  // (Samuel pediu — antes só aparecia pra quem não era admin).
+  const podeReivindicar = lead.responsavel_id === null;
   const usuarioResponsavel = usuarios.find((u) => u.id === lead.responsavel_id);
   const nomeResponsavel = usuarioResponsavel?.nome;
   const fotoResponsavel = usuarioResponsavel?.foto_url;
