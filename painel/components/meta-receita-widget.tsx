@@ -186,7 +186,7 @@ export function MetaReceitaWidget({
 
     if (!podeEditar) {
       return (
-        <div className="shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+        <div className="destaque-meta shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
           {conteudo}
         </div>
       );
@@ -197,7 +197,7 @@ export function MetaReceitaWidget({
         type="button"
         onClick={() => setEditando(true)}
         title="Clique pra editar a meta do mês"
-        className="relative shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
+        className="destaque-meta relative shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-sm transition hover:bg-neutral-50"
       >
         <IconeLapis className="absolute bottom-2 right-2 h-3.5 w-3.5 text-neutral-400" />
         {conteudo}
@@ -206,7 +206,7 @@ export function MetaReceitaWidget({
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="destaque-meta rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-neutral-800">{rotuloMeta}</h2>
         {podeEditar && (

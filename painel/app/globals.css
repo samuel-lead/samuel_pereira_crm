@@ -518,3 +518,33 @@ body {
   animation: brilho-proposta 1.3s ease-in-out infinite;
 }
 
+
+/* Meta de receita (Pré-vendas, Vendas, Visão geral): dá um "pulo" com brilho
+   branco a cada 3 segundos, pra chamar atenção pra meta do mês. Samuel
+   pediu o mesmo estilo do brilho da proposta, só que branco e espaçado. */
+@keyframes pulo-meta {
+  0%,
+  30%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 0 rgba(255, 255, 255, 0),
+      0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  12% {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 0 6px rgba(255, 255, 255, 0.85),
+      0 0 30px 10px rgba(255, 255, 255, 0.75);
+  }
+  22% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 10px rgba(255, 255, 255, 0),
+      0 0 40px 14px rgba(255, 255, 255, 0);
+  }
+}
+
+.destaque-meta {
+  animation: pulo-meta 3s ease-in-out infinite;
+}
