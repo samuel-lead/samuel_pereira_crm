@@ -51,7 +51,7 @@ function DropdownFiltro({
       </button>
 
       {aberto && (
-        <div className="absolute left-0 top-full z-20 mt-1.5 max-h-72 w-56 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-1.5 shadow-lg">
+        <div className="absolute left-0 top-full z-20 mt-1.5 max-h-72 w-64 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-1.5 shadow-lg">
           <button
             type="button"
             onClick={() => {
@@ -72,7 +72,7 @@ function DropdownFiltro({
                 aoSelecionar(opcao.valor);
                 setAberto(false);
               }}
-              className={`block w-full truncate rounded-md px-3 py-2 text-left text-sm transition hover:bg-neutral-50 ${
+              className={`block w-full rounded-md px-3 py-2 text-left text-sm transition hover:bg-neutral-50 ${
                 opcao.valor === valorSelecionado ? "font-medium text-blue-700" : "text-neutral-700"
               }`}
             >
