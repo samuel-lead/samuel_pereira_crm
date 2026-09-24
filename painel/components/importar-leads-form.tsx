@@ -79,8 +79,10 @@ function linhaPareceCabecalho(celulas: string[]) {
   return PALAVRAS_CABECALHO.includes(primeira);
 }
 
-function csvParaLista(textoCsv: string) {
-  const linhas = analisarCsv(textoCsv);
+// Compartilhada entre o CSV (analisarCsv) e o .xlsx (xlsxParaLinhas) — os
+// dois terminam nesse mesmo formato de "linhas de células" antes de virar
+// texto pro campo da lista.
+function linhasParaLista(linhas: string[][]) {
   return linhas
     .filter((linha, indice) => {
       const vazia = linha.every((celula) => !celula.trim());
@@ -95,6 +97,149 @@ function csvParaLista(textoCsv: string) {
         .join("\t")
     )
     .join("\n");
+}
+
+function csvParaLista(textoCsv: string) {
+  return linhasParaLista(analisarCsv(textoCsv));
+}
+
+// ---- Leitor de .xlsx escrito à mão -----------------------------------
+// Mesmo motivo do parser de CSV acima: os pacotes populares de ler .xlsx
+// têm falha de segurança conhecida, sem correção. Um .xlsx é só um ZIP
+// com uns XMLs dentro — dá pra ler sem nenhuma biblioteca de terceiro,
+// usando só coisa nativa do navegador: DecompressionStream (descomprime
+// o "deflate" do ZIP) e DOMParser (lê o XML). Só extrai texto de célula,
+// não roda fórmula nem macro nenhuma.
+async function analisarZip(buffer: ArrayBuffer): Promise<Map<string, Uint8Array>> {
+  const dados = new DataView(buffer);
+  const bytes = new Uint8Array(buffer);
+  const tamanho = bytes.length;
+
+  const ASSINATURA_EOCD = 0x06054b50;
+  let posEocd = -1;
+  const inicioBusca = Math.max(0, tamanho - 65557);
+  for (let i = tamanho - 22; i >= inicioBusca; i--) {
+    if (dados.getUint32(i, true) === ASSINATURA_EOCD) {
+      posEocd = i;
+      break;
+    }
+  }
+  if (posEocd === -1) {
+    throw new Error("Não achei o fim do arquivo ZIP — .xlsx corrompido ou não é um .xlsx de verdade.");
+  }
+
+  const numEntradas = dados.getUint16(posEocd + 10, true);
+  const offsetDiretorioCentral = dados.getUint32(posEocd + 16, true);
+
+  const arquivos = new Map<string, Uint8Array>();
+  let ponteiro = offsetDiretorioCentral;
+  const ASSINATURA_CENTRAL = 0x02014b50;
+
+  for (let i = 0; i < numEntradas; i++) {
+    if (dados.getUint32(ponteiro, true) !== ASSINATURA_CENTRAL) break;
+
+    const metodoCompressao = dados.getUint16(ponteiro + 10, true);
+    const tamanhoComprimido = dados.getUint32(ponteiro + 20, true);
+    const tamanhoNome = dados.getUint16(ponteiro + 28, true);
+    const tamanhoExtra = dados.getUint16(ponteiro + 30, true);
+    const tamanhoComentario = dados.getUint16(ponteiro + 32, true);
+    const offsetHeaderLocal = dados.getUint32(ponteiro + 42, true);
+    const nome = new TextDecoder().decode(bytes.subarray(ponteiro + 46, ponteiro + 46 + tamanhoNome));
+
+    // O header local pode ter nome/extra de tamanho diferente do header
+    // central — precisa ler ele pra saber onde os dados de verdade começam.
+    const tamanhoNomeLocal = dados.getUint16(offsetHeaderLocal + 26, true);
+    const tamanhoExtraLocal = dados.getUint16(offsetHeaderLocal + 28, true);
+    const inicioDados = offsetHeaderLocal + 30 + tamanhoNomeLocal + tamanhoExtraLocal;
+    const dadosComprimidos = bytes.subarray(inicioDados, inicioDados + tamanhoComprimido);
+
+    if (metodoCompressao === 0) {
+      arquivos.set(nome, dadosComprimidos);
+    } else if (metodoCompressao === 8) {
+      const stream = new Blob([dadosComprimidos]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      arquivos.set(nome, new Uint8Array(await new Response(stream).arrayBuffer()));
+    }
+    // outro método de compressão é raríssimo em .xlsx — ignora se aparecer
+
+    ponteiro += 46 + tamanhoNome + tamanhoExtra + tamanhoComentario;
+  }
+
+  return arquivos;
+}
+
+function textoDoArquivoZip(arquivos: Map<string, Uint8Array>, nome: string): string | null {
+  const bytes = arquivos.get(nome);
+  return bytes ? new TextDecoder("utf-8").decode(bytes) : null;
+}
+
+function lerTextosCompartilhados(xmlTexto: string | null): string[] {
+  if (!xmlTexto) return [];
+  const doc = new DOMParser().parseFromString(xmlTexto, "application/xml");
+  return Array.from(doc.getElementsByTagName("si")).map((si) =>
+    Array.from(si.getElementsByTagName("t"))
+      .map((t) => t.textContent ?? "")
+      .join("")
+  );
+}
+
+function letraColunaParaIndice(referenciaCelula: string): number {
+  const letras = referenciaCelula.match(/^[A-Z]+/)?.[0] ?? "A";
+  let indice = 0;
+  for (const letra of letras) indice = indice * 26 + (letra.charCodeAt(0) - 64);
+  return indice - 1;
+}
+
+// Acha o arquivo da primeira aba de verdade (xl/workbook.xml + a lista de
+// relacionamentos) — em vez de chutar "sheet1.xml", que nem sempre é o
+// nome real dependendo de como a planilha foi salva/reordenada.
+function acharCaminhoPrimeiraPlanilha(arquivos: Map<string, Uint8Array>): string {
+  const padrao = "xl/worksheets/sheet1.xml";
+  const workbookXml = textoDoArquivoZip(arquivos, "xl/workbook.xml");
+  const relsXml = textoDoArquivoZip(arquivos, "xl/_rels/workbook.xml.rels");
+  if (!workbookXml || !relsXml) return padrao;
+
+  const rId = new DOMParser()
+    .parseFromString(workbookXml, "application/xml")
+    .getElementsByTagName("sheet")[0]
+    ?.getAttribute("r:id");
+  if (!rId) return padrao;
+
+  const relacionamento = Array.from(
+    new DOMParser().parseFromString(relsXml, "application/xml").getElementsByTagName("Relationship")
+  ).find((r) => r.getAttribute("Id") === rId);
+  const alvo = relacionamento?.getAttribute("Target");
+  return alvo ? `xl/${alvo.replace(/^\.?\//, "")}` : padrao;
+}
+
+function lerLinhasDaPlanilha(xmlTexto: string, textosCompartilhados: string[]): string[][] {
+  const doc = new DOMParser().parseFromString(xmlTexto, "application/xml");
+  return Array.from(doc.getElementsByTagName("row")).map((linhaXml) => {
+    const linha: string[] = [];
+    for (const celulaXml of Array.from(linhaXml.getElementsByTagName("c"))) {
+      const indiceColuna = letraColunaParaIndice(celulaXml.getAttribute("r") ?? "A");
+      const tipo = celulaXml.getAttribute("t");
+
+      let valor = "";
+      if (tipo === "inlineStr") {
+        valor = celulaXml.getElementsByTagName("t")[0]?.textContent ?? "";
+      } else {
+        const bruto = celulaXml.getElementsByTagName("v")[0]?.textContent ?? "";
+        valor = tipo === "s" ? (textosCompartilhados[Number(bruto)] ?? "") : bruto;
+      }
+
+      while (linha.length < indiceColuna) linha.push("");
+      linha[indiceColuna] = valor;
+    }
+    return linha;
+  });
+}
+
+async function xlsxParaLinhas(buffer: ArrayBuffer): Promise<string[][]> {
+  const arquivos = await analisarZip(buffer);
+  const xmlPlanilha = textoDoArquivoZip(arquivos, acharCaminhoPrimeiraPlanilha(arquivos));
+  if (!xmlPlanilha) throw new Error("Não consegui achar a planilha dentro do arquivo.");
+  const textosCompartilhados = lerTextosCompartilhados(textoDoArquivoZip(arquivos, "xl/sharedStrings.xml"));
+  return lerLinhasDaPlanilha(xmlPlanilha, textosCompartilhados);
 }
 
 export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: string }) {
@@ -125,10 +270,29 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
     setAvisoArquivo(null);
 
     const nomeMinusculo = arquivo.name.toLowerCase();
-    if (nomeMinusculo.endsWith(".xlsx") || nomeMinusculo.endsWith(".xls")) {
+
+    if (nomeMinusculo.endsWith(".xls")) {
       setAvisoArquivo(
-        'Esse formato (.xlsx) eu ainda não leio direto. Abre a planilha no Excel ou Google Planilhas e exporta como CSV (Arquivo → Fazer download → "Valores separados por vírgula") — depois solta o CSV aqui.'
+        'Esse formato antigo (.xls) eu ainda não leio — só .xlsx e .csv. Abre no Excel ou Google Planilhas e exporta como .xlsx ou CSV.'
       );
+      return;
+    }
+
+    if (nomeMinusculo.endsWith(".xlsx")) {
+      try {
+        const linhas = await xlsxParaLinhas(await arquivo.arrayBuffer());
+        const listaConvertida = linhasParaLista(linhas);
+        if (!listaConvertida) {
+          setAvisoArquivo("Não encontrei nenhuma linha com dado nessa planilha.");
+          return;
+        }
+        setTexto(listaConvertida);
+        setArquivoNome(arquivo.name);
+      } catch {
+        setAvisoArquivo(
+          'Não consegui ler esse .xlsx — confere se não tá corrompido, ou exporta como CSV (Arquivo → Fazer download → "Valores separados por vírgula") e solta aqui.'
+        );
+      }
       return;
     }
 
@@ -161,9 +325,9 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4">
         <h2 className="text-base font-semibold text-neutral-900">Importar leads</h2>
         <p className="mt-1 text-xs text-neutral-500">
-          Arraste uma planilha CSV, ou cole a lista à mão — um lead por
-          linha. Cada um entra direto na coluna &quot;Leads&quot;, sem
-          responsável, pronto pro {sdr(publicoOrg)} pegar e começar a abordar.
+          Arraste uma planilha (.xlsx ou .csv), ou cole a lista à mão — um
+          lead por linha. Cada um entra direto na coluna &quot;Leads&quot;,
+          sem responsável, pronto pro {sdr(publicoOrg)} pegar e começar a abordar.
         </p>
       </div>
 
@@ -187,12 +351,12 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
           <input
             ref={inputArquivoRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={aoSelecionarArquivo}
             className="hidden"
           />
           <p className="text-sm font-medium text-neutral-700">
-            {arquivoNome ? `📄 ${arquivoNome}` : "Arraste a planilha CSV aqui ou clique pra selecionar"}
+            {arquivoNome ? `📄 ${arquivoNome}` : "Arraste a planilha (.xlsx ou .csv) aqui ou clique pra selecionar"}
           </p>
           <p className="text-xs text-neutral-400">Colunas: nome, telefone</p>
         </div>
