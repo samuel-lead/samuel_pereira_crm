@@ -102,6 +102,7 @@ export default async function BasePage({
     nao_iniciou_conversa: [],
     qualificou_sumiu: [],
     iniciou_sem_interesse: [],
+    farming: [],
   };
 
   for (const lead of leads) {

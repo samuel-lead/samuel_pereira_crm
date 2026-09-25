@@ -129,7 +129,8 @@ export type MotivoBase =
   | "proposta_nao_comprou"
   | "nao_iniciou_conversa"
   | "qualificou_sumiu"
-  | "iniciou_sem_interesse";
+  | "iniciou_sem_interesse"
+  | "farming";
 
 const COLUNAS: { chave: MotivoBase; nome: string; cor: { header: string; borda: string; badge: string } }[] = [
   {
@@ -161,6 +162,11 @@ const COLUNAS: { chave: MotivoBase; nome: string; cor: { header: string; borda: 
     chave: "proposta_nao_comprou",
     nome: "Fiz proposta e não comprou",
     cor: { header: "bg-red-50", borda: "border-red-200", badge: "bg-red-200 text-red-700" },
+  },
+  {
+    chave: "farming",
+    nome: "Farming",
+    cor: { header: "bg-emerald-50", borda: "border-emerald-200", badge: "bg-emerald-200 text-emerald-700" },
   },
 ];
 

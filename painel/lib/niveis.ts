@@ -155,6 +155,7 @@ export const MOTIVOS_BASE = [
   { valor: "nao_reagendados", nome: "Não reagendados" },
   { valor: "proposta_nao_comprou", nome: "Fiz proposta e não comprou" },
   { valor: "desqualificado", nome: "Desqualificado (sem perfil pro momento)" },
+  { valor: "farming", nome: "Farming" },
 ] as const;
 
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
