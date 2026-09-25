@@ -143,6 +143,7 @@ export function BaseDropzone() {
               min={amanhaIso()}
               value={proximoContato}
               disabled={pendente}
+              onClick={(e) => e.currentTarget.showPicker?.()}
               onChange={(e) => setProximoContato(e.target.value)}
               className="w-full rounded-md border border-blue-300 bg-white px-2.5 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500"
             />

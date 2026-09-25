@@ -475,12 +475,13 @@ function SeletorMoverParaMobile({
         )}
         <div className="space-y-1">
           <label className="text-[11px] font-medium text-neutral-700">
-            Dia do próximo contato (volta pra Novos Leads às 7h)
+            Quando será o próximo contato?
           </label>
           <input
             type="date"
             value={proximoContatoBase}
             disabled={pendente}
+            onClick={(e) => e.currentTarget.showPicker?.()}
             min={(() => {
               const d = new Date();
               d.setDate(d.getDate() + 1);
