@@ -115,7 +115,7 @@ export function BaseDropzone() {
           vivo: do jeito espremido, "não dava nem pra ver"). */}
       {dropInfo && (
         <div className="absolute right-0 top-0 z-30 w-96 space-y-2 rounded-xl border-2 border-blue-400 bg-white p-4 shadow-2xl ring-4 ring-blue-100">
-          <p className="text-base font-bold text-blue-900">Por que esse lead está indo pra Base?</p>
+          <p className="text-base font-bold text-blue-900 dark:text-white">Por que esse lead está indo pra Base?</p>
           <MenuSelect
             placeholder="Selecione o motivo..."
             disabled={pendente}
@@ -134,7 +134,7 @@ export function BaseDropzone() {
             />
           )}
           <div className="space-y-1">
-            <label className="text-base font-bold text-blue-900" htmlFor="proximo-contato-base">
+            <label className="text-base font-bold text-blue-900 dark:text-white" htmlFor="proximo-contato-base">
               Quando será o próximo contato?
             </label>
             <input
