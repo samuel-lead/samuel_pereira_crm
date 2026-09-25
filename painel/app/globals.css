@@ -548,3 +548,33 @@ body {
 .destaque-meta {
   animation: pulo-meta 3s ease-in-out infinite;
 }
+
+/* No modo claro o brilho branco da meta some no fundo cinza claro (Samuel
+   achou "muito claro") — troca por um brilho escuro, mesmo pulo de 3s.
+   No modo escuro continua o branco. */
+@keyframes pulo-meta-claro {
+  0%,
+  30%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 0 rgba(15, 23, 42, 0),
+      0 0 0 0 rgba(15, 23, 42, 0);
+  }
+  12% {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 0 5px rgba(15, 23, 42, 0.3),
+      0 0 26px 8px rgba(15, 23, 42, 0.4);
+  }
+  22% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 10px rgba(15, 23, 42, 0),
+      0 0 38px 14px rgba(15, 23, 42, 0);
+  }
+}
+
+html:not(.dark) .destaque-meta {
+  animation-name: pulo-meta-claro;
+}
