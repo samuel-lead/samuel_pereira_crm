@@ -91,87 +91,44 @@ export type EstadoRodapeSalvarLead = {
 // Lead na Base: o card inteiro (aberto por aqui, "por dentro") não tem
 // mais nível pra escolher nem "Agendar reunião" — só esse botão, igual ao
 // que já existe "por fora" no rodapé do card em base-leads-board.tsx.
+// Samuel pediu: sem escolha de nível — Reativar sempre manda pra
+// Pré-vendas → Novos Leads, só com o responsável (admin) e confirmar.
 // Não pode ser um <form> de verdade porque esse componente já vive dentro
 // do <form> principal do lead (HTML não permite form aninhado) — por
-// isso o nível e o responsável ficam em estado local em vez de FormData.
+// isso o responsável fica em estado local em vez de FormData.
 function BlocoReativarLead({
   leadId,
-  niveisReativacao,
-  numerosVisiveis,
+  responsavelAtualId,
   usuarios,
   souAdmin,
-  publicoOrg,
-  // Veio do atalho rápido "Reativar" de fora do card (Base ou Repescagem
-  // futura de ICP), onde a pessoa já escolheu "Reunião marcada" antes
-  // mesmo do card abrir — precisa nascer aberto e com o nível já
-  // selecionado, senão o card abre "cru" e ela tem que refazer os
-  // cliques todos de novo (Samuel pegou isso ao vivo).
-  preSelecionarReuniao = false,
 }: {
   leadId: string;
-  niveisReativacao: { ordem: number; nome: string }[];
-  numerosVisiveis: Record<number, number>;
+  responsavelAtualId?: string | null;
+  niveisReativacao?: { ordem: number; nome: string }[];
+  numerosVisiveis?: Record<number, number>;
   usuarios: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
   souAdmin: boolean;
-  publicoOrg: string;
+  publicoOrg?: string;
   preSelecionarReuniao?: boolean;
 }) {
-  const [aberto, setAberto] = useState(preSelecionarReuniao);
-  const [nivel, setNivel] = useState(preSelecionarReuniao ? NIVEL_REUNIAO_MARCADA : "");
-  const [responsavelId, setResponsavelId] = useState("");
-  const [agendadaPara, setAgendadaPara] = useState("");
-  const [closerId, setCloserId] = useState("");
+  const [aberto, setAberto] = useState(false);
+  const [responsavelId, setResponsavelId] = useState(responsavelAtualId ?? "");
   const [pendente, iniciarTransicao] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
-  const vaiParaReuniaoMarcada = nivel === NIVEL_REUNIAO_MARCADA;
   const modalAtivo = useLeadModalAtivo();
-  const blocoRef = useRef<HTMLDivElement>(null);
-
-  // Veio pré-selecionado do atalho rápido de fora do card — sem isso o
-  // bloco abria já preenchido, mas escondido lá embaixo do card, e a
-  // pessoa tinha que descer a rolagem pra achar (Samuel pegou isso ao
-  // vivo, comparando com o "Agendar reunião" normal, que já rola até lá).
-  useEffect(() => {
-    if (preSelecionarReuniao) {
-      blocoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [preSelecionarReuniao]);
 
   function aoConfirmar() {
-    if (!nivel) {
-      setErro("Escolha pra qual nível reativar.");
-      return;
-    }
-    if (vaiParaReuniaoMarcada && !agendadaPara) {
-      setErro(`Informe a data e hora da ${reuniao(publicoOrg)}.`);
-      return;
-    }
     setErro(null);
     iniciarTransicao(() => {
-      reativarLead(
-        leadId,
-        Number(nivel),
-        souAdmin ? responsavelId : undefined,
-        vaiParaReuniaoMarcada ? agendadaPara : undefined,
-        vaiParaReuniaoMarcada ? closerId : undefined
-      ).then((erro) => {
+      reativarLead(leadId, 0, souAdmin ? responsavelId : undefined).then((erro) => {
         setErro(erro);
         if (!erro) {
           setAberto(false);
-          setNivel("");
-          setResponsavelId("");
-          setAgendadaPara("");
-          setCloserId("");
-          // Sem isso o card ficava com o nível/dado velho na tela (sem
-          // reunião ativa, sem opção de Google Agenda) até reabrir —
-          // reativar pra "Reunião marcada" precisa refletir na hora.
           modalAtivo?.recarregar();
         }
       });
     });
   }
-
-  if (niveisReativacao.length === 0) return null;
 
   if (!aberto) {
     return (
@@ -187,30 +144,17 @@ function BlocoReativarLead({
   }
 
   return (
-    // scroll-mt-40 (não mais 28) — o cabeçalho do card ficou mais alto
-    // depois que ganhou a segunda linha de botões, mesmo ajuste feito em
-    // lead-modal-conteudo.tsx pro card de Proposta.
-    <div ref={blocoRef} className="scroll-mt-40 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-      <MenuSelect
-        titulo="Reativar pra qual nível"
-        placeholder="Nível de Pré-vendas..."
-        disabled={pendente}
-        value={nivel}
-        onChange={setNivel}
-        abrirAoMontar
-        options={niveisReativacao.map((n) => ({
-          value: String(n.ordem),
-          label: rotuloNivel(n, numerosVisiveis[n.ordem]),
-        }))}
-      />
-      {nivel && souAdmin && (
+    <div className="scroll-mt-40 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+      <p className="text-xs font-medium text-neutral-700">
+        Esse lead será redirecionado para a área de Pré-vendas, na aba &quot;Novos Leads&quot;.
+      </p>
+      {souAdmin && (
         <MenuSelect
           titulo="Quem vai ser o responsável"
           placeholder="Quem vai ser o responsável..."
           disabled={pendente}
           value={responsavelId}
           onChange={setResponsavelId}
-          abrirAoMontar
           options={[
             { value: "", label: "— Sem responsável —" },
             ...usuarios
@@ -218,32 +162,6 @@ function BlocoReativarLead({
               .map((u) => ({ value: u.id, label: u.nome })),
           ]}
         />
-      )}
-      {vaiParaReuniaoMarcada && (
-        <>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-neutral-700">
-              Data e hora da {reuniao(publicoOrg)}
-            </label>
-            <CampoDataHora
-              disabled={pendente}
-              value={agendadaPara}
-              onChange={setAgendadaPara}
-              min={agoraParaInputLocal()}
-              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-          <MenuSelect
-            titulo={`${rotuloDeQuemFaz(publicoOrg)} (quem vai fazer a ${reuniao(publicoOrg)})`}
-            placeholder={`Selecionar ${rotuloDeQuemFaz(publicoOrg)}`}
-            disabled={pendente}
-            value={closerId}
-            onChange={setCloserId}
-            options={usuarios
-              .filter((u) => u.funcao === funcaoDeQuemFaz(publicoOrg))
-              .map((u) => ({ value: u.id, label: u.nome }))}
-          />
-        </>
       )}
       {erro && <p className="text-[11px] text-red-600">{erro}</p>}
       <div className="flex gap-1.5">
@@ -253,7 +171,7 @@ function BlocoReativarLead({
           onClick={aoConfirmar}
           className="flex-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
         >
-          Confirmar
+          {pendente ? "Reativando..." : "Confirmar"}
         </button>
         <button
           type="button"
@@ -719,12 +637,9 @@ export function EditarLeadForm({
             <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
             <BlocoReativarLead
               leadId={lead.id}
-              niveisReativacao={niveisReativacao}
-              numerosVisiveis={numerosVisiveis}
+              responsavelAtualId={lead.responsavel_id}
               usuarios={usuarios}
               souAdmin={souAdmin}
-              publicoOrg={publicoOrg}
-              preSelecionarReuniao={preSelecionarReuniao}
             />
           </>
         ) : (

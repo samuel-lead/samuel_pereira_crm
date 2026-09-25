@@ -8,6 +8,13 @@ import { IconeAlvo } from "@/components/icons";
 
 const NIVEL_BASE = 9;
 
+// "AAAA-MM-DD" de amanhã (mínimo do campo de dia do próximo contato).
+function amanhaIso() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 // Destaque discreto embaixo da Meta, do lado direito, do mesmo
 // tamanho/coluna dela — Samuel achou o botão anterior (bordado, grandão)
 // feio; virou um "chip" mais leve, com uma listra colorida do lado em vez
@@ -22,6 +29,7 @@ export function BaseDropzone() {
   const [sobre, setSobre] = useState(false);
   const [motivoBase, setMotivoBase] = useState("");
   const [motivoBaseDetalhe, setMotivoBaseDetalhe] = useState("");
+  const [proximoContato, setProximoContato] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciarTransicao] = useTransition();
 
@@ -30,6 +38,7 @@ export function BaseDropzone() {
     setErro(null);
     setMotivoBase("");
     setMotivoBaseDetalhe("");
+    setProximoContato("");
   }
 
   function aoSoltar(e: React.DragEvent) {
@@ -41,6 +50,7 @@ export function BaseDropzone() {
     setErro(null);
     setMotivoBase("");
     setMotivoBaseDetalhe("");
+    setProximoContato("");
     setDropInfo({ leadId, nivelOrigem });
   }
 
@@ -54,6 +64,10 @@ export function BaseDropzone() {
       setErro("Descreva por que está desqualificado.");
       return;
     }
+    if (!proximoContato) {
+      setErro("Escolha o dia do próximo contato com esse lead.");
+      return;
+    }
     setErro(null);
     iniciarTransicao(() => {
       moverLeadNivel(
@@ -63,7 +77,9 @@ export function BaseDropzone() {
         undefined,
         undefined,
         motivoBase,
-        motivoBaseDetalhe || undefined
+        motivoBaseDetalhe || undefined,
+        undefined,
+        proximoContato
       ).then((erroServidor) => {
         if (erroServidor) {
           setErro(erroServidor);
@@ -99,7 +115,7 @@ export function BaseDropzone() {
           vivo: do jeito espremido, "não dava nem pra ver"). */}
       {dropInfo && (
         <div className="absolute right-0 top-0 z-30 w-96 space-y-2 rounded-xl border-2 border-blue-400 bg-white p-4 shadow-2xl ring-4 ring-blue-100">
-          <p className="text-sm font-bold text-blue-900">Por que esse lead está indo pra Base?</p>
+          <p className="text-sm font-bold text-blue-900">Por que esse lead está indo pra Base, e quando falar com ele de novo?</p>
           <MenuSelect
             placeholder="Selecione o motivo..."
             disabled={pendente}
@@ -117,6 +133,20 @@ export function BaseDropzone() {
               className="w-full rounded-md border border-blue-300 bg-white px-2.5 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500"
             />
           )}
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-blue-900" htmlFor="proximo-contato-base">
+              Dia do próximo contato (o lead volta pra Novos Leads às 7h)
+            </label>
+            <input
+              id="proximo-contato-base"
+              type="date"
+              min={amanhaIso()}
+              value={proximoContato}
+              disabled={pendente}
+              onChange={(e) => setProximoContato(e.target.value)}
+              className="w-full rounded-md border border-blue-300 bg-white px-2.5 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500"
+            />
+          </div>
           {erro && <p className="text-sm font-medium text-red-600">{erro}</p>}
           <div className="flex gap-2">
             <button

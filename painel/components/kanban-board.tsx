@@ -410,6 +410,7 @@ function SeletorMoverParaMobile({
   const [escolhendoMotivoBase, setEscolhendoMotivoBase] = useState(false);
   const [motivoBase, setMotivoBase] = useState("");
   const [motivoBaseDetalhe, setMotivoBaseDetalhe] = useState("");
+  const [proximoContatoBase, setProximoContatoBase] = useState("");
   const [pendente, iniciarTransicao] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
 
@@ -422,6 +423,10 @@ function SeletorMoverParaMobile({
       setErro("Descreva por que está desqualificado.");
       return;
     }
+    if (!proximoContatoBase) {
+      setErro("Escolha o dia do próximo contato.");
+      return;
+    }
     setErro(null);
     iniciarTransicao(() => {
       moverLeadNivel(
@@ -431,7 +436,9 @@ function SeletorMoverParaMobile({
         undefined,
         undefined,
         motivoBase,
-        motivoBaseDetalhe || undefined
+        motivoBaseDetalhe || undefined,
+        undefined,
+        proximoContatoBase
       ).then((erro) => {
         if (erro) {
           setErro(erro);
@@ -440,6 +447,7 @@ function SeletorMoverParaMobile({
         setEscolhendoMotivoBase(false);
         setMotivoBase("");
         setMotivoBaseDetalhe("");
+        setProximoContatoBase("");
       });
     });
   }
@@ -465,6 +473,23 @@ function SeletorMoverParaMobile({
             className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-xs text-neutral-900 outline-none focus:border-blue-400"
           />
         )}
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-neutral-700">
+            Dia do próximo contato (volta pra Novos Leads às 7h)
+          </label>
+          <input
+            type="date"
+            value={proximoContatoBase}
+            disabled={pendente}
+            min={(() => {
+              const d = new Date();
+              d.setDate(d.getDate() + 1);
+              return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+            })()}
+            onChange={(e) => setProximoContatoBase(e.target.value)}
+            className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-xs text-neutral-900 outline-none focus:border-blue-400"
+          />
+        </div>
         {erro && <p className="text-[11px] text-red-600">{erro}</p>}
         <div className="flex gap-1.5">
           <button

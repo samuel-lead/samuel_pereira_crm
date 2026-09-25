@@ -656,8 +656,12 @@ export async function atualizarLead(
 
   // Igual à reunião: ninguém move pra Base sem dizer o motivo — precisa pra
   // separar certo nas colunas de "por que não virou venda".
-  if (nivelMudou && novoNivel === NIVEL_BASE && !motivoBaseForm) {
-    return { erro: "Escolha o motivo pelo qual esse lead está indo pra Base." };
+  // Pra Base só pelo botão "Base de leads" (pede motivo E o dia do próximo
+  // contato) — o menu Nível do card não oferece mais Base (Samuel pediu).
+  if (nivelMudou && novoNivel === NIVEL_BASE) {
+    return {
+      erro: 'Pra mandar um lead pra Base, arraste o card até o botão "Base de leads" — ele pede o motivo e o dia do próximo contato.',
+    };
   }
 
   // Mesma ideia pra "Repescagem futura de ICP" — vale sempre que o lead
@@ -987,6 +991,24 @@ export async function atualizarLead(
 // "Minified React error #441" genérico e inútil pra quem está usando o
 // sistema. Devolvendo a mensagem como valor normal, o Next não mexe nela e
 // o alerta em kanban-board.tsx mostra o motivo certinho pra pessoa.
+// Dia do próximo contato ao mandar lead pra Base (obrigatório): "AAAA-MM-DD",
+// tem que ser de amanhã em diante (horário de Brasília). O lead volta pra
+// Novos Leads sozinho às 7h desse dia (ver devolver_leads_da_base no banco).
+function validarDiaProximoContatoBase(dia?: string): { erro: string } | { iso: string } {
+  if (!dia || !/^\d{4}-\d{2}-\d{2}$/.test(dia)) {
+    return { erro: "Informe o dia do próximo contato com esse lead." };
+  }
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  if (dia <= hoje) {
+    return { erro: "O dia do próximo contato tem que ser de amanhã em diante." };
+  }
+  const data = new Date(`${dia}T07:00:00-03:00`);
+  if (Number.isNaN(data.getTime())) {
+    return { erro: "Dia do próximo contato inválido." };
+  }
+  return { iso: data.toISOString() };
+}
+
 export async function moverLeadNivel(
   leadId: string,
   novoNivel: number,
@@ -1004,7 +1026,9 @@ export async function moverLeadNivel(
   // Só usado indo pra "Repescagem futura de ICP" — mesma trava obrigatória
   // de atualizarLead, coletada antes de arrastar (ver perguntarTexto em
   // kanban-board.tsx), já que o card não abre nesse fluxo.
-  motivoRepescagemFutura?: string
+  motivoRepescagemFutura?: string,
+  // Só usado indo pra Base (nível 9): dia do próximo contato, obrigatório.
+  proximoContatoBase?: string
 ): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -1082,6 +1106,13 @@ export async function moverLeadNivel(
     return 'Descreva por que esse lead está desqualificado antes de mover pra "Base".';
   }
 
+  let voltarDaBaseEm: string | null = null;
+  if (nivelReal === NIVEL_BASE) {
+    const dia = validarDiaProximoContatoBase(proximoContatoBase);
+    if ("erro" in dia) return dia.erro;
+    voltarDaBaseEm = dia.iso;
+  }
+
   // Igual atualizarLead: ninguém move pra "Repescagem futura de ICP" sem
   // dizer o motivo — sem essa trava dava pra arrastar o card sem querer
   // e ficar sem registro nenhum do porquê (foi o que aconteceu com o
@@ -1113,7 +1144,11 @@ export async function moverLeadNivel(
       motivo_repescagem_futura: querFutura ? motivoRepescagemFutura : null,
       entrou_nivel_em: new Date().toISOString(),
       ...(nivelReal === NIVEL_BASE
-        ? { motivo_base: motivoBase, motivo_base_detalhe: motivoBaseDetalhe ?? null }
+        ? {
+            motivo_base: motivoBase,
+            motivo_base_detalhe: motivoBaseDetalhe ?? null,
+            voltar_da_base_em: voltarDaBaseEm,
+          }
         : {}),
     })
     .eq("id", leadId);
@@ -1240,6 +1275,8 @@ export async function reativarLead(
       // card, não só escondido na linha do tempo do lead.
       reativado_da_base_em: new Date().toISOString(),
       reativado_origem: origem,
+      // Reativou na mão antes do dia marcado: some o agendamento do robô.
+      voltar_da_base_em: null,
       ...(usuario.papel === "admin" ? { responsavel_id: novoResponsavelId || null } : {}),
     })
     .eq("id", leadId);
