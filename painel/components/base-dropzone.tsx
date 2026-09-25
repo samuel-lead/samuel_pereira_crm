@@ -134,8 +134,8 @@ export function BaseDropzone() {
             />
           )}
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-blue-900" htmlFor="proximo-contato-base">
-              Dia do próximo contato (o lead volta pra Novos Leads às 7h)
+            <label className="text-base font-bold text-blue-900" htmlFor="proximo-contato-base">
+              Dia do próximo contato
             </label>
             <input
               id="proximo-contato-base"
@@ -144,7 +144,7 @@ export function BaseDropzone() {
               value={proximoContato}
               disabled={pendente}
               onChange={(e) => setProximoContato(e.target.value)}
-              className="w-full rounded-md border border-blue-300 bg-white px-2.5 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500"
+              className="w-full rounded-lg border-2 border-blue-400 bg-white px-3 py-3 text-xl font-bold text-neutral-900 outline-none focus:border-blue-600"
             />
           </div>
           {erro && <p className="text-sm font-medium text-red-600">{erro}</p>}
