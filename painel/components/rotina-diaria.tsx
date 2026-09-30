@@ -117,7 +117,7 @@ export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: strin
           mensagem no WhatsApp.
         </p>
         <p className="text-sm font-medium text-neutral-700">
-          Você deve fazer no mínimo 30 ligações por dia.
+          Você deve fazer no mínimo 50 ligações por dia.
         </p>
       </div>
 
