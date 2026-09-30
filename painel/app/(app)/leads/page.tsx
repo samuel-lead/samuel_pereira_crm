@@ -156,6 +156,10 @@ export default async function LeadsPage({
         .from("leads")
         .select("id", { count: "exact", head: true })
         .is("arquivado_em", null)
+        // Lead que já foi pra Farming não conta como "lead novo" — ele só
+        // está ali esperando o dia de falar de novo, não é trabalho novo
+        // (Samuel pediu essa exceção, só pra coluna Farming da Base).
+        .or("nivel_ordem.neq.9,motivo_base.neq.farming")
         .gte("created_at", inicioHoje.toISOString())
         .lt("created_at", amanha.toISOString())
     : null;

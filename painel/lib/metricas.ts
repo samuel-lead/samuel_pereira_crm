@@ -98,11 +98,15 @@ export async function calcularMetricas(
     // sistema (usuario_id é só quem criou o registro — às vezes é um admin
     // cadastrando em nome de um SDR). Todo o resto abaixo segue a mesma
     // lógica: métrica de SDR é sobre quem tem o lead hoje.
+    // Lead que já foi pra Farming não conta como "lead novo" — ele só está
+    // ali esperando o dia de falar de novo, não é trabalho novo (Samuel
+    // pediu essa exceção explicitamente, só pra coluna Farming da Base).
     supabase
       .from("leads")
       .select("id")
       .eq("responsavel_id", usuarioId)
       .is("arquivado_em", null)
+      .or("nivel_ordem.neq.9,motivo_base.neq.farming")
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
     // Ligação é diferente: conta pra quem realmente discou, não pra quem é
@@ -329,11 +333,14 @@ export async function calcularMetricasOrg(
     { count: noShow },
     { data: vendasData },
   ] = await Promise.all([
+    // Mesma exceção da versão por usuário acima: lead em Farming não conta
+    // como "lead novo".
     supabase
       .from("leads")
       .select("id")
       .eq("org_id", orgId)
       .is("arquivado_em", null)
+      .or("nivel_ordem.neq.9,motivo_base.neq.farming")
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
     // Junta com "leads" e exige arquivado_em nulo — sem isso, ligação de um
