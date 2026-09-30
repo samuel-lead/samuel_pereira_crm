@@ -655,11 +655,14 @@ export async function calcularLeadsPorOrigem(
   const fimISO = fim.toISOString();
 
   const [{ data: declarados }, { data: viaReuniao }] = await Promise.all([
+    // Mesma exceção de calcularMetricas/calcularMetricasOrg: lead em
+    // Farming não conta como "lead novo".
     supabase
       .from("leads")
       .select("id, origem")
       .eq("org_id", orgId)
       .is("arquivado_em", null)
+      .or("nivel_ordem.neq.9,motivo_base.neq.farming")
       .gte("declarado_em", inicioISO)
       .lt("declarado_em", fimISO),
     apenasDeclarados
