@@ -6,6 +6,8 @@ import { AlternarStatusOrgButton } from "@/components/alternar-status-org-button
 import { RedefinirSenhaOrgButton } from "@/components/redefinir-senha-org-button";
 import { AlterarEmailOrgButton } from "@/components/alterar-email-org-button";
 import { CopiarLinkLoginButton } from "@/components/copiar-link-login-button";
+import { UltimaAtividadeOrg } from "@/components/ultima-atividade-org";
+import { CobrancaOrgForm } from "@/components/cobranca-org-form";
 import { Sdr, ehImobiliario } from "@/lib/terminologia";
 
 type Org = {
@@ -14,6 +16,10 @@ type Org = {
   status: string;
   publico: string;
   criado_em: string;
+  ultima_atividade_em: string | null;
+  dia_vencimento: number | null;
+  mensalidade_valor: number | null;
+  ultimo_pagamento_em: string | null;
 };
 
 type UsuarioOrg = {
@@ -86,6 +92,10 @@ export default async function DetalheEmpresaPage({
             </span>
           </div>
 
+          <p className="mb-3">
+            <UltimaAtividadeOrg ultimaAtividadeEm={org.ultima_atividade_em} />
+          </p>
+
           <div className="flex flex-wrap gap-2">
             <CopiarLinkLoginButton />
             <AlternarStatusOrgButton orgId={org.id} status={org.status} nome={org.nome} />
@@ -97,6 +107,13 @@ export default async function DetalheEmpresaPage({
             )}
           </div>
         </div>
+
+        <CobrancaOrgForm
+          orgId={org.id}
+          diaVencimentoInicial={org.dia_vencimento}
+          mensalidadeValorInicial={org.mensalidade_valor}
+          ultimoPagamentoEm={org.ultimo_pagamento_em}
+        />
 
         <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-neutral-800">

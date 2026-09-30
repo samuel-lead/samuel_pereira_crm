@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { AlternarStatusOrgButton } from "@/components/alternar-status-org-button";
 import { CopiarLinkLoginButton } from "@/components/copiar-link-login-button";
+import { UltimaAtividadeOrg } from "@/components/ultima-atividade-org";
+import { StatusCobrancaBadge } from "@/components/status-cobranca-badge";
 
 type OrgLinha = {
   id: string;
@@ -12,6 +14,10 @@ type OrgLinha = {
   criado_em: string;
   admin_nome: string | null;
   admin_email: string | null;
+  ultima_atividade_em: string | null;
+  dia_vencimento: number | null;
+  mensalidade_valor: number | null;
+  ultimo_pagamento_em: string | null;
 };
 
 function formatarData(iso: string) {
@@ -76,14 +82,20 @@ export default async function EmpresasPage() {
                     >
                       {empresa.publico === "imobiliario" ? "Imobiliário" : "Serviço/Mentoria/Consultoria"}
                     </span>
+                    <StatusCobrancaBadge
+                      diaVencimento={empresa.dia_vencimento}
+                      ultimoPagamentoEm={empresa.ultimo_pagamento_em}
+                    />
                   </div>
                   <p className="truncate text-sm text-neutral-500">
                     {empresa.admin_nome ?? "Sem admin"}
                     {empresa.admin_email ? ` · ${empresa.admin_email}` : ""}
                   </p>
-                  <p className="text-xs text-neutral-400">
-                    Desde {formatarData(empresa.criado_em)}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-x-2 text-xs text-neutral-400">
+                    <span>Desde {formatarData(empresa.criado_em)}</span>
+                    <span>·</span>
+                    <UltimaAtividadeOrg ultimaAtividadeEm={empresa.ultima_atividade_em} />
+                  </div>
                 </Link>
 
                 <div className="flex shrink-0 items-center gap-2">

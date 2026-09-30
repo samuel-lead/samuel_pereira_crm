@@ -5,19 +5,17 @@ import { alternarAtividadeRotina } from "@/lib/rotina/actions";
 import {
   IconeCalendario,
   IconeAtividade,
-  IconeTelefone,
   IconeInstagram,
   IconeAlvo,
   IconeCheck,
 } from "@/components/icons";
 
-// Horários e descrições batem com o documento "Rotina do SDR" (Samuel
-// ajustou o documento em 22/09/26) — não é mais a mesma redação da
-// versão anterior, então não "arredondar" pra bater com a de antes se
-// ele atualizar de novo. Nessa versão o contato com nível 3 entrou
-// dentro da Atividade 1 (não é mais uma atividade separada) e a
-// "Atividade 5" do documento não existe — vai direto da 4 pra 6, é
-// assim no documento mesmo.
+// Horários batem com o que o Samuel pediu direto no chat em 30/09/26:
+// tirou a atividade "Ligações para leads quentes" (não fazia mais
+// sentido) e esticou Prospecção até as 16h, empurrando Follow 1/2 e
+// Confirmar amanhã pra frente. Antes disso, batiam com o documento
+// "Rotina do SDR" (ajustado por ele em 22/09/26) — não arredondar pra
+// bater com versão nenhuma de antes se ele atualizar de novo.
 const ATIVIDADES = [
   {
     id: "confirmar_reunioes",
@@ -37,23 +35,15 @@ const ATIVIDADES = [
   },
   {
     id: "prospeccao",
-    hora: "10:00–12:00 e 13:30–15:30",
+    hora: "10:00–16:00",
     titulo: "Prospecção",
     desc: "Instagram, base ou tráfego — lead de tráfego é sempre prioridade. Pausa assim que qualquer lead responder.",
     Icone: IconeInstagram,
     cor: "pink",
   },
   {
-    id: "ligacoes_quentes",
-    hora: "15:30–16:00",
-    titulo: "Ligações para leads quentes",
-    desc: "Leads do Instagram que passou o WhatsApp, leads engajados, leads qualificados e do tráfego.",
-    Icone: IconeTelefone,
-    cor: "teal",
-  },
-  {
     id: "follow_niveis_1_2",
-    hora: "16:00–16:30",
+    hora: "16:00–17:00",
     titulo: "Follow com níveis 1 e 2",
     desc: "Sequência seguindo a matriz de follow-up — pausa e atende na hora quem responder ou lead de tráfego que chegar.",
     Icone: IconeAlvo,
@@ -61,7 +51,7 @@ const ATIVIDADES = [
   },
   {
     id: "confirmar_amanha",
-    hora: "16:30–17:00",
+    hora: "17:00–17:30",
     titulo: "Confirmar reuniões de amanhã",
     desc: "Seguir o processo de anti-no-show e enviar o relatório diário no grupo do comercial até as 18h.",
     Icone: IconeCalendario,

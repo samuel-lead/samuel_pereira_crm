@@ -73,6 +73,49 @@ export async function alternarStatusOrg(orgId: string, statusAtual: string) {
   revalidatePath("/empresas");
 }
 
+// Dia de vencimento + valor da mensalidade que essa empresa paga pelo
+// CRM. Só isso — o sistema não cobra de verdade (cartão/Pix), só lembra e
+// mostra a situação de cada cliente (regra do projeto: nenhuma ação
+// financeira automática).
+export async function atualizarCobrancaOrg(
+  orgId: string,
+  diaVencimento: number | null,
+  mensalidadeValor: number | null
+) {
+  const supabase = await createClient();
+
+  if (diaVencimento !== null && (diaVencimento < 1 || diaVencimento > 31)) {
+    throw new Error("O dia de vencimento tem que ser entre 1 e 31");
+  }
+
+  const { error } = await supabase
+    .from("orgs")
+    .update({ dia_vencimento: diaVencimento, mensalidade_valor: mensalidadeValor })
+    .eq("id", orgId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/empresas");
+  revalidatePath(`/empresas/${orgId}`);
+}
+
+// Marca que a empresa pagou a mensalidade agora — não move dinheiro
+// nenhum, só registra a data pra tela de cobrança saber que está em dia.
+export async function marcarOrgComoPaga(orgId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("marcar_org_como_paga", { p_org_id: orgId });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/empresas");
+  revalidatePath(`/empresas/${orgId}`);
+}
+
 // A senha não fica salva em nenhum lugar de um jeito que dê pra "ver" de
 // novo (só um hash irreversível) — em vez de recuperar a antiga, troca por
 // uma nova escolhida agora. Mesmo desenho de criarCliente/criar-usuario:
