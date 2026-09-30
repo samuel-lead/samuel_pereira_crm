@@ -328,7 +328,7 @@ export function SecaoPeriodo({
               Icone={IconeCheck}
             />
             <CardComparativo
-              titulo="Propostas"
+              titulo="Propostas em aberto"
               valorFormatado={String(metricas.propostas)}
               variacaoPct={variacao(metricas.propostas, metricasAnteriores.propostas)}
               esquema="ambar"
