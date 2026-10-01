@@ -387,7 +387,13 @@ async function sincronizarReuniao(
       // nenhum aparecer pra avisar (foi o que aconteceu com um lead do
       // Rafael Torres — reunião marcada como realizada, mas o card nunca
       // saiu de "Reunião marcada").
-      if (novoStatus === "realizada" && reuniaoAtiva.closer_id) {
+      // EXCEÇÃO: Repescagem futura de ICP (querFutura) nunca transfere —
+      // Samuel foi explícito que só "Follow após reunião" e
+      // "Oportunidades pro fim do mês" (a de verdade, não a repescagem)
+      // são 100% do Closer. Repescagem futura continua sendo
+      // responsabilidade de quem já era dono do lead (o SDR continua
+      // conseguindo mexer nele).
+      if (novoStatus === "realizada" && reuniaoAtiva.closer_id && !querFutura) {
         return { erro: null, transferirParaCloserId: reuniaoAtiva.closer_id };
       }
     }
