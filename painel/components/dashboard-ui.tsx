@@ -237,6 +237,12 @@ export function SecaoPeriodo({
     metricas.reunioesDevidas > 0
       ? Math.round((metricas.noShow / metricas.reunioesDevidas) * 100)
       : 0;
+  // Piso de Vendas: não existe uma config separada de "vendas por dia"
+  // (CLAUDE.md define Venda como TAXA, não piso de volume) — então o
+  // piso aqui é a taxa mínima (40%) aplicada em cima de quantas
+  // reuniões já foram realizadas. Arredonda pra cima: só batendo esse
+  // número a taxa de verdade fica ≥ 40%.
+  const pisoVendas = Math.ceil(metricas.reunioesRealizadas * metas.taxa_venda_min);
 
   return (
     <section>
@@ -297,6 +303,13 @@ export function SecaoPeriodo({
           valor={metricas.reunioesRealizadas}
           esquema="esmeralda"
           Icone={IconeCheck}
+        />
+        <CardNumero
+          titulo="Vendas"
+          valor={metricas.vendas}
+          meta={pisoVendas}
+          esquema="esmeralda"
+          Icone={IconeEstrela}
         />
         <CardNumero
           titulo="No-show"
