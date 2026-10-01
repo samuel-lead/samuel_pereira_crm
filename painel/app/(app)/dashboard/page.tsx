@@ -37,7 +37,7 @@ import { numerarNiveis } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, ehImobiliario } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -378,17 +378,12 @@ export default async function DashboardPage({
 
         <div className="grid gap-4 lg:grid-cols-2">
           <PerformanceSdr
-            titulo={`Performance por ${Sdr(publicoOrg)} — ${periodoResolvido.titulo.toLowerCase()}`}
             dados={performancePeriodoSdr}
             periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
             publicoOrg={publicoOrg}
           />
 
-          <PerformanceCloser
-            titulo={`Performance por Closer — ${periodoResolvido.titulo.toLowerCase()}`}
-            dados={performancePeriodoCloser}
-            publicoOrg={publicoOrg}
-          />
+          <PerformanceCloser dados={performancePeriodoCloser} publicoOrg={publicoOrg} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">

@@ -25,20 +25,20 @@ export function PerformanceSdr({
   periodo: string;
   publicoOrg?: string;
 }) {
-  const tituloResolvido = titulo ?? `Performance da semana por ${Sdr(publicoOrg)}`;
+  const tituloResolvido = titulo ?? "Ranking SDR";
   const ranking = [...dados].sort((a, b) => b.reunioesRealizadas - a.reunioesRealizadas);
   const maiorRealizadas = Math.max(1, ...ranking.map((l) => l.reunioesRealizadas));
 
   return (
-    <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <h2 className="mb-1 flex items-center gap-2 text-base font-extrabold tracking-tight text-blue-700 dark:text-blue-400">
-        <span className="h-5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-        {tituloResolvido}
-      </h2>
-      <p className="mb-4 text-xs text-neutral-500">
-        Top {Sdr(publicoOrg)} por {Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · {periodo}
-      </p>
+    <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+      <div className="bg-blue-600 px-4 py-3">
+        <h2 className="text-base font-extrabold tracking-tight text-white">{tituloResolvido}</h2>
+        <p className="text-xs text-blue-100">
+          Top {Sdr(publicoOrg)} por {Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · {periodo}
+        </p>
+      </div>
 
+      <div className="p-4">
       {ranking.length === 0 ? (
         <p className="rounded-lg border border-dashed border-neutral-300 px-4 py-8 text-center text-sm text-neutral-400">
           Ninguém pra comparar ainda
@@ -92,6 +92,7 @@ export function PerformanceSdr({
           })}
         </div>
       )}
+      </div>
     </section>
   );
 }
