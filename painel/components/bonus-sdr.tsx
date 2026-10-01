@@ -1,7 +1,7 @@
 import type { BonusSdr, BonusSdrConfig } from "@/lib/metricas";
 import { BONUS_SDR_CONFIG_PADRAO } from "@/lib/metricas";
 import { IconeEstrela, IconeCalendario, IconeCheck, IconeAlerta, IconeMoeda } from "@/components/icons";
-import { Calls, calls, call } from "@/lib/terminologia";
+import { Calls, calls, call, Call } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -124,7 +124,7 @@ export function BonusSdrTabela({
           </li>
           <li className="whitespace-nowrap">
             <span className="font-bold text-white">2.</span>
-            {` ${call(publicoOrg)} realizada marcada no fim de semana: `}
+            {` ${Call(publicoOrg)} realizada marcada no sábado ou domingo: `}
             <b className="text-white">+{moedaCurta(config.valor_call_fim_semana)}</b> {"cada uma"}
           </li>
           <li className="whitespace-nowrap">
@@ -137,6 +137,7 @@ export function BonusSdrTabela({
             {" · "}
             {moedaCurta(config.faturamento_tier3_valor)}→
             <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
+            {" (maior faixa que bateu, não soma)"}
           </li>
         </ul>
       </div>
