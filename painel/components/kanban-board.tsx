@@ -888,19 +888,19 @@ export function KanbanBoard({
                 onDragOver={(e) => aoPassarSobreColuna(e, nivel.ordem)}
                 onDragLeave={() => setColunaAlvo((atual) => (atual === nivel.ordem ? null : atual))}
                 onDrop={(e) => aoSoltarNaColuna(e, nivel.ordem)}
-                className={`kanban-column flex h-full w-72 shrink-0 flex-col rounded-xl border bg-neutral-50 shadow-sm transition ${
+                className={`kanban-column flex h-full w-80 shrink-0 flex-col rounded-xl border bg-neutral-50 shadow-sm transition ${
                   recebendoArrasto
                     ? "border-2 border-blue-400 ring-2 ring-blue-200"
                     : "border-neutral-300"
                 }`}
               >
                 <div className="shrink-0 rounded-t-xl border-b border-neutral-100 bg-white px-4 py-3">
-                  <div className="flex items-start justify-between gap-1.5">
-                    {/* Nunca abrevia o nome do nível — quebra linha em vez
-                        de cortar com "...", mesmo título comprido (Samuel
-                        pegou isso ao vivo no CRM do Danilo). Mesma regra
-                        já aplicada no nome do lead dentro do card. */}
-                    <h2 className="min-w-0 break-words text-sm font-semibold leading-snug tracking-tight text-neutral-900">
+                  <div className="flex items-center justify-between gap-1.5">
+                    {/* Coluna alargada (w-80) pra caber numa linha só, sem
+                        cortar com "..." (Samuel pegou isso ao vivo no CRM
+                        do Danilo — queria igual ao dele, sem cortar nem
+                        quebrar linha). */}
+                    <h2 className="whitespace-nowrap text-sm font-semibold tracking-tight text-neutral-900">
                       {numeroVisivel ? `N${numeroVisivel} - ` : ""}
                       {titulo}
                     </h2>
