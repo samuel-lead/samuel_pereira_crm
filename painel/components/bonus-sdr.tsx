@@ -110,42 +110,33 @@ export function BonusSdrTabela({
 
         {/* Era uma frase só, cheia de parênteses e barras — o SDR tava
             com dificuldade de entender como o bônus era calculado.
-            Virou 3 linhas simples, uma por regra, cada uma dizendo "bati
-            isso, ganho aquilo" (Samuel pediu bem didático). */}
-        <ul className="relative mt-4 hidden space-y-2 text-sm text-green-50 sm:block">
-          <li className="flex gap-2">
-            <span className="shrink-0 font-bold text-white">1.</span>
-            <span>
-              {`${Calls(publicoOrg)} realizadas no mês: bateu `}
-              <b className="text-white">{config.calls_tier1_qtd}</b> {`ganha `}
-              <b className="text-white">{moedaCurta(config.calls_tier1_valor)}</b>, bateu{" "}
-              <b className="text-white">{config.calls_tier2_qtd}</b> ganha{" "}
-              <b className="text-white">{moedaCurta(config.calls_tier2_valor)}</b>, bateu{" "}
-              <b className="text-white">{config.calls_tier3_qtd}</b> ganha{" "}
-              <b className="text-white">{moedaCurta(config.calls_tier3_valor)}</b>
-              {" (vale só a maior faixa que bateu, não soma)."}
-            </span>
+            Virou 3 linhas curtas, cada uma numa linha só (Samuel pediu:
+            didático e sem quebrar), formato "bateu isso → ganha aquilo". */}
+        <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
+          <li className="whitespace-nowrap">
+            <span className="font-bold text-white">1.</span>{` ${Calls(publicoOrg)}: `}
+            {config.calls_tier1_qtd}→<b className="text-white">{moedaCurta(config.calls_tier1_valor)}</b>
+            {" · "}
+            {config.calls_tier2_qtd}→<b className="text-white">{moedaCurta(config.calls_tier2_valor)}</b>
+            {" · "}
+            {config.calls_tier3_qtd}→<b className="text-white">{moedaCurta(config.calls_tier3_valor)}</b>
+            {" (maior faixa que bateu, não soma)"}
           </li>
-          <li className="flex gap-2">
-            <span className="shrink-0 font-bold text-white">2.</span>
-            <span>
-              {`Toda ${call(publicoOrg)} realizada que tinha sido marcada no sábado ou domingo: `}
-              <b className="text-white">+{moedaCurta(config.valor_call_fim_semana)}</b>
-              {" cada uma."}
-            </span>
+          <li className="whitespace-nowrap">
+            <span className="font-bold text-white">2.</span>
+            {` ${call(publicoOrg)} realizada marcada no fim de semana: `}
+            <b className="text-white">+{moedaCurta(config.valor_call_fim_semana)}</b> {"cada uma"}
           </li>
-          <li className="flex gap-2">
-            <span className="shrink-0 font-bold text-white">3.</span>
-            <span>
-              {`Faturamento do mês: bateu `}
-              <b className="text-white">{moedaCurta(config.faturamento_tier1_valor)}</b> ganha{" "}
-              <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>, bateu{" "}
-              <b className="text-white">{moedaCurta(config.faturamento_tier2_valor)}</b> ganha{" "}
-              <b className="text-white">{moedaCurta(config.faturamento_tier2_bonus)}</b>, bateu{" "}
-              <b className="text-white">{moedaCurta(config.faturamento_tier3_valor)}</b> ganha{" "}
-              <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
-              {" (também não soma, vale a maior faixa)."}
-            </span>
+          <li className="whitespace-nowrap">
+            <span className="font-bold text-white">3.</span> Faturamento do mês:{" "}
+            {moedaCurta(config.faturamento_tier1_valor)}→
+            <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
+            {" · "}
+            {moedaCurta(config.faturamento_tier2_valor)}→
+            <b className="text-white">{moedaCurta(config.faturamento_tier2_bonus)}</b>
+            {" · "}
+            {moedaCurta(config.faturamento_tier3_valor)}→
+            <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
           </li>
         </ul>
       </div>
