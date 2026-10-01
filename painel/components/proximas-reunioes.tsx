@@ -74,7 +74,7 @@ export function ProximasReunioes({
             <LinkLead
               key={item.id}
               leadId={item.lead.id}
-              className="flex items-center justify-between gap-3 rounded-lg border border-[#e5e5e5] bg-[#ffffff] px-3 py-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="flex flex-col gap-2 rounded-lg border border-[#e5e5e5] bg-[#ffffff] px-3 py-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-center gap-2.5">
                 <AvatarLead
@@ -99,7 +99,7 @@ export function ProximasReunioes({
                   </div>
                 </div>
               </div>
-              <div className="flex shrink-0 flex-col items-end gap-1">
+              <div className="flex shrink-0 flex-wrap items-center justify-between gap-1.5 sm:flex-col sm:items-end">
                 <span className="flex items-center gap-1.5 rounded-full bg-[#dcfce7] px-2.5 py-1 text-xs font-semibold text-[#15803d]">
                   <IconeCalendario className="h-3.5 w-3.5 shrink-0" />
                   {formatarHorario(item.agendadaPara)}

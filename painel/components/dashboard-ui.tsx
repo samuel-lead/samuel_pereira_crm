@@ -109,24 +109,18 @@ function CardComparativo({
   variacaoPct,
   esquema,
   Icone,
-  destaque = false,
 }: {
   titulo: string;
   valorFormatado: string;
   variacaoPct: number | null;
   esquema: keyof typeof ESQUEMAS_COMPARATIVO;
   Icone: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  // Receita só usa esse sinalizador pra ocupar a linha inteira sozinha
-  // no mobile (prioridade visual lá) — no resto (fonte, ícone), fica
-  // igual às outras métricas, mesmo padrão de tamanho (Samuel pediu:
-  // ela tava "gigante" comparada com as demais).
-  destaque?: boolean;
 }) {
   const subiu = variacaoPct !== null && variacaoPct > 0;
   const desceu = variacaoPct !== null && variacaoPct < 0;
 
   return (
-    <div className={`shrink-0 px-4 py-3 ${destaque ? "w-full lg:w-1/6" : "w-1/2 sm:w-1/3 lg:w-1/6"}`}>
+    <div className="w-1/2 shrink-0 px-4 py-3 sm:w-1/3 lg:w-1/6">
       <div className="mb-1.5 flex items-center justify-between">
         <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]}`}>
           <Icone className="h-3 w-3" />
@@ -361,7 +355,6 @@ export function SecaoPeriodo({
               )}
               esquema="esmeralda"
               Icone={IconeMoeda}
-              destaque
             />
           </div>
         </div>

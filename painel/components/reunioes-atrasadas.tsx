@@ -65,7 +65,7 @@ export function ReunioesAtrasadas({
               <LinkLead
                 key={item.id}
                 leadId={item.lead.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-[#e5e5e5] bg-[#ffffff] px-3 py-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className="flex flex-col gap-2 rounded-lg border border-[#e5e5e5] bg-[#ffffff] px-3 py-2.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex min-w-0 items-center gap-2.5">
                   <AvatarLead
@@ -94,7 +94,7 @@ export function ReunioesAtrasadas({
                     </div>
                   </div>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
+                <div className="flex shrink-0 items-center justify-between gap-2 sm:flex-col sm:items-end sm:gap-1">
                   <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${rotulo.classe}`}>
                     {rotulo.texto}
                   </span>
