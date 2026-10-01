@@ -298,7 +298,7 @@ export default async function DashboardPage({
 
   return (
     <>
-      <PageHeader titulo="Métricas" />
+      <PageHeader titulo="Visão geral" />
 
       <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
         {!souAdmin && metricasHoje && (
