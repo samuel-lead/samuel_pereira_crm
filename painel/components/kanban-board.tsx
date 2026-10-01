@@ -915,13 +915,18 @@ export function KanbanBoard({
                   {/* Valor só faz sentido onde já existe proposta em jogo —
                       Follow após reunião e Oportunidades pra fim do mês.
                       Nas outras colunas era sempre "R$ 0,00" (Samuel pegou
-                      isso ao vivo em "Reuniões marcadas"), poluindo à toa. */}
+                      isso ao vivo em "Reuniões marcadas"), poluindo à toa.
+                      Soma proposta_valor (o valor da proposta na mesa),
+                      não valor_venda — esse só existe depois que o lead já
+                      virou venda de verdade, então aqui dava sempre
+                      "R$ 0,00" mesmo com proposta registrada (Samuel pegou
+                      isso ao vivo também). */}
                   {mostrarValor &&
                     (nivel.ordem === NIVEL_FOLLOW_POS_REUNIAO || nivel.ordem === NIVEL_REUNIAO_FEITA) &&
                     leadsDoNivel.length > 0 && (
                       <p className="mt-0.5 truncate text-xs text-neutral-400">
                         {formatarMoeda(
-                          leadsDoNivel.reduce((soma, l) => soma + (l.valor_venda ?? 0), 0)
+                          leadsDoNivel.reduce((soma, l) => soma + (l.proposta_valor ?? 0), 0)
                         )}
                       </p>
                     )}
