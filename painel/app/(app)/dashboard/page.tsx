@@ -376,18 +376,20 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <PerformanceSdr
-          titulo={`Performance por ${Sdr(publicoOrg)} — ${periodoResolvido.titulo.toLowerCase()}`}
-          dados={performancePeriodoSdr}
-          periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
-          publicoOrg={publicoOrg}
-        />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <PerformanceSdr
+            titulo={`Performance por ${Sdr(publicoOrg)} — ${periodoResolvido.titulo.toLowerCase()}`}
+            dados={performancePeriodoSdr}
+            periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
+            publicoOrg={publicoOrg}
+          />
 
-        <PerformanceCloser
-          titulo={`Performance por Closer — ${periodoResolvido.titulo.toLowerCase()}`}
-          dados={performancePeriodoCloser}
-          publicoOrg={publicoOrg}
-        />
+          <PerformanceCloser
+            titulo={`Performance por Closer — ${periodoResolvido.titulo.toLowerCase()}`}
+            dados={performancePeriodoCloser}
+            publicoOrg={publicoOrg}
+          />
+        </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <ReunioesAtrasadas reunioes={reunioesAtrasadas} publicoOrg={publicoOrg} />
