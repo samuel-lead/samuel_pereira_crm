@@ -49,7 +49,6 @@ export function PerformanceSdr({
             const noShowPct = formatarPercentual(
               linha.reunioesDevidas > 0 ? linha.noShow / linha.reunioesDevidas : null
             );
-            const taxaVendaPct = formatarPercentual(linha.taxaVenda);
             return (
               <div key={linha.usuarioId} className="flex items-center gap-3">
                 <span
@@ -70,7 +69,6 @@ export function PerformanceSdr({
                   <p className="text-xs text-neutral-400">
                     {linha.leadsTrabalhados} leads novos · {linha.ligacoes} ligações · {linha.reunioesMarcadas} marcadas
                     {noShowPct !== null && ` · ${noShowPct}% no-show`}
-                    {taxaVendaPct !== null && ` · ${taxaVendaPct}% venda`}
                     {` · ${linha.vendas} venda${linha.vendas === 1 ? "" : "s"}`}
                   </p>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
