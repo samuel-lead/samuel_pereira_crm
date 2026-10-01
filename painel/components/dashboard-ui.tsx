@@ -289,7 +289,7 @@ export function SecaoPeriodo({
           Icone={IconeCheck}
         />
         <CardNumero
-          titulo={`${Calls(publicoOrg)} com propostas`}
+          titulo={`${Calls(publicoOrg)} com pitch`}
           valor={metricas.reunioesComPitch}
           esquema="ceu"
           Icone={IconeCarta}
@@ -331,7 +331,7 @@ export function SecaoPeriodo({
               Icone={IconeCheck}
             />
             <CardComparativo
-              titulo={`${Calls(publicoOrg)} com propostas`}
+              titulo={`${Calls(publicoOrg)} com pitch`}
               valorFormatado={String(metricas.reunioesComPitch)}
               variacaoPct={variacao(metricas.reunioesComPitch, metricasAnteriores.reunioesComPitch)}
               esquema="azul"

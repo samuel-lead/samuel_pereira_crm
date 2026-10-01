@@ -65,7 +65,7 @@ export function PerformanceCloser({
                 </div>
                 <p className="text-xs text-neutral-400">
                   {linha.reunioesRealizadas} {Calls(publicoOrg).toLowerCase()} realizadas ·{" "}
-                  {linha.reunioesComPitch} {Calls(publicoOrg).toLowerCase()} com proposta ·{" "}
+                  {linha.reunioesComPitch} {Calls(publicoOrg).toLowerCase()} com pitch ·{" "}
                   {linha.vendas} venda{linha.vendas === 1 ? "" : "s"}
                   {taxaVendaPct !== null && ` · ${taxaVendaPct}% taxa de venda`}
                 </p>
