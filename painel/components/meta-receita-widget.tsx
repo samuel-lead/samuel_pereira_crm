@@ -247,7 +247,7 @@ export function MetaReceitaWidget({
         <span>R$ 0</span>
         <span>{formatarMoeda(meta)}</span>
       </div>
-      <p className="mt-3 text-sm text-neutral-500">
+      <p className="mt-3 text-xs text-neutral-500">
         {bateu ? "Meta batida! 🎉" : `Falta ${formatarMoeda(falta)} pra bater a meta.`}
       </p>
     </div>
