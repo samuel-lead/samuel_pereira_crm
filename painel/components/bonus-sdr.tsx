@@ -104,10 +104,50 @@ export function BonusSdrTabela({
         <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
           {formatarMoeda(totalEquipe)}
         </p>
-        <p className="relative mt-2 hidden text-sm font-medium text-green-100 sm:block">
-          {`${Calls(publicoOrg)} realizadas (≥${config.calls_tier1_qtd}/${config.calls_tier2_qtd}/${config.calls_tier3_qtd} → ${moedaCurta(config.calls_tier1_valor)}/${moedaCurta(config.calls_tier2_valor)}/${moedaCurta(config.calls_tier3_valor)}) + ${moedaCurta(config.valor_call_fim_semana)} por ${call(publicoOrg)} realizada que foi marcada no fim de semana + faturamento do mês (≥${moedaCurta(config.faturamento_tier1_valor)}/${moedaCurta(config.faturamento_tier2_valor)}/${moedaCurta(config.faturamento_tier3_valor)} → ${moedaCurta(config.faturamento_tier1_bonus)}/${moedaCurta(config.faturamento_tier2_bonus)}/${moedaCurta(config.faturamento_tier3_bonus)}).`}
-          {periodo && <> {periodo}.</>}
-        </p>
+        {periodo && (
+          <p className="relative mt-1 text-xs font-medium text-green-200">{periodo}</p>
+        )}
+
+        {/* Era uma frase só, cheia de parênteses e barras — o SDR tava
+            com dificuldade de entender como o bônus era calculado.
+            Virou 3 linhas simples, uma por regra, cada uma dizendo "bati
+            isso, ganho aquilo" (Samuel pediu bem didático). */}
+        <ul className="relative mt-4 hidden space-y-2 text-sm text-green-50 sm:block">
+          <li className="flex gap-2">
+            <span className="shrink-0 font-bold text-white">1.</span>
+            <span>
+              {`${Calls(publicoOrg)} realizadas no mês: bateu `}
+              <b className="text-white">{config.calls_tier1_qtd}</b> {`ganha `}
+              <b className="text-white">{moedaCurta(config.calls_tier1_valor)}</b>, bateu{" "}
+              <b className="text-white">{config.calls_tier2_qtd}</b> ganha{" "}
+              <b className="text-white">{moedaCurta(config.calls_tier2_valor)}</b>, bateu{" "}
+              <b className="text-white">{config.calls_tier3_qtd}</b> ganha{" "}
+              <b className="text-white">{moedaCurta(config.calls_tier3_valor)}</b>
+              {" (vale só a maior faixa que bateu, não soma)."}
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="shrink-0 font-bold text-white">2.</span>
+            <span>
+              {`Toda ${call(publicoOrg)} realizada que tinha sido marcada no sábado ou domingo: `}
+              <b className="text-white">+{moedaCurta(config.valor_call_fim_semana)}</b>
+              {" cada uma."}
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="shrink-0 font-bold text-white">3.</span>
+            <span>
+              {`Faturamento do mês: bateu `}
+              <b className="text-white">{moedaCurta(config.faturamento_tier1_valor)}</b> ganha{" "}
+              <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>, bateu{" "}
+              <b className="text-white">{moedaCurta(config.faturamento_tier2_valor)}</b> ganha{" "}
+              <b className="text-white">{moedaCurta(config.faturamento_tier2_bonus)}</b>, bateu{" "}
+              <b className="text-white">{moedaCurta(config.faturamento_tier3_valor)}</b> ganha{" "}
+              <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
+              {" (também não soma, vale a maior faixa)."}
+            </span>
+          </li>
+        </ul>
       </div>
 
       <div className="space-y-4">
