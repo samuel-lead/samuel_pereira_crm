@@ -207,9 +207,20 @@ export function MetaReceitaWidget({
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-neutral-800">
-          {rotuloMeta}: <span className="font-black text-neutral-900">{formatarMoeda(meta)}</span>
-        </h2>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+          <h2 className="text-base font-semibold text-neutral-800">
+            {rotuloMeta}: <span className="font-black text-neutral-900">{formatarMoeda(meta)}</span>
+          </h2>
+          <p className="text-base font-semibold text-neutral-800">
+            {bateu ? (
+              <span className="font-black text-green-600">Meta batida! 🎉</span>
+            ) : (
+              <>
+                Falta pra meta: <span className="font-black text-amber-600">{formatarMoeda(falta)}</span>
+              </>
+            )}
+          </p>
+        </div>
         {podeEditar && (
           <button
             type="button"
@@ -221,9 +232,10 @@ export function MetaReceitaWidget({
         )}
       </div>
 
-      {/* Os dois números da ponta da barra são os mesmos limites dela —
-          0 de um lado, a meta do outro — pra ficar óbvio que a barra é o
-          caminho de um até o outro. Samuel pediu pra tirar os cartões de
+      {/* Os limites da barra: "Atingido" (começo, sem valor — o valor em
+          si já tá no título ao lado de "Falta pra meta") de um lado, a
+          meta do outro, pra ficar óbvio que a barra é o caminho de um
+          até o outro. Samuel pediu pra tirar os cartões de
           Recebido/Falta/Progressão debaixo — a barra já mostra tudo
           isso sozinha. */}
       <div className="relative mt-5 h-3 w-full">
@@ -245,7 +257,7 @@ export function MetaReceitaWidget({
         </span>
       </div>
       <div className="mt-1.5 flex justify-between text-xs font-medium text-neutral-400">
-        <span>R$ 0</span>
+        <span>Atingido</span>
         <span>{formatarMoeda(meta)}</span>
       </div>
     </div>
