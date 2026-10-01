@@ -114,12 +114,12 @@ export function BonusSdrTabela({
             didático e sem quebrar), formato "bateu isso → ganha aquilo". */}
         <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
           <li className="whitespace-nowrap">
-            <span className="font-bold text-white">1.</span>{` ${Calls(publicoOrg)}: `}
-            {config.calls_tier1_qtd}→<b className="text-white">{moedaCurta(config.calls_tier1_valor)}</b>
+            <span className="font-bold text-white">1.</span>{` ${Calls(publicoOrg)} realizadas: `}
+            {config.calls_tier1_qtd} ganha <b className="text-white">{moedaCurta(config.calls_tier1_valor)}</b>
             {" · "}
-            {config.calls_tier2_qtd}→<b className="text-white">{moedaCurta(config.calls_tier2_valor)}</b>
+            {config.calls_tier2_qtd} ganha <b className="text-white">{moedaCurta(config.calls_tier2_valor)}</b>
             {" · "}
-            {config.calls_tier3_qtd}→<b className="text-white">{moedaCurta(config.calls_tier3_valor)}</b>
+            {config.calls_tier3_qtd} ganha <b className="text-white">{moedaCurta(config.calls_tier3_valor)}</b>
             {" (maior faixa que bateu, não soma)"}
           </li>
           <li className="whitespace-nowrap">
@@ -129,13 +129,13 @@ export function BonusSdrTabela({
           </li>
           <li className="whitespace-nowrap">
             <span className="font-bold text-white">3.</span> Faturamento do mês:{" "}
-            {moedaCurta(config.faturamento_tier1_valor)}→
+            {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
             <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
             {" · "}
-            {moedaCurta(config.faturamento_tier2_valor)}→
+            {moedaCurta(config.faturamento_tier2_valor)} ganha{" "}
             <b className="text-white">{moedaCurta(config.faturamento_tier2_bonus)}</b>
             {" · "}
-            {moedaCurta(config.faturamento_tier3_valor)}→
+            {moedaCurta(config.faturamento_tier3_valor)} ganha{" "}
             <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
             {" (maior faixa que bateu, não soma)"}
           </li>
