@@ -376,15 +376,20 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <PerformanceSdr
-            dados={performancePeriodoSdr}
-            periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
-            publicoOrg={publicoOrg}
-          />
+        {/* Imobiliário não separa SDR de Closer — é tudo "Corretor", um
+            papel só (ver Sdr() em lib/terminologia.ts). Esses dois
+            rankings não fazem sentido pra esse público. */}
+        {!ehImobiliario(publicoOrg) && (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <PerformanceSdr
+              dados={performancePeriodoSdr}
+              periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
+              publicoOrg={publicoOrg}
+            />
 
-          <PerformanceCloser dados={performancePeriodoCloser} publicoOrg={publicoOrg} />
-        </div>
+            <PerformanceCloser dados={performancePeriodoCloser} publicoOrg={publicoOrg} />
+          </div>
+        )}
 
         <div className="grid gap-4 lg:grid-cols-2">
           <ReunioesAtrasadas reunioes={reunioesAtrasadas} publicoOrg={publicoOrg} />
