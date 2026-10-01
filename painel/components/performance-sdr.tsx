@@ -61,8 +61,8 @@ export function PerformanceSdr({
                       <span className="text-xs font-medium text-neutral-400">realizadas</span>
                     </p>
                   </div>
-                  <p className="truncate text-xs text-neutral-400">
-                    {linha.reunioesMarcadas} marcadas
+                  <p className="text-xs text-neutral-400">
+                    {linha.leadsTrabalhados} leads · {linha.ligacoes} ligações · {linha.reunioesMarcadas} marcadas
                     {noShowPct !== null && ` · ${noShowPct}% no-show`}
                     {taxaVendaPct !== null && ` · ${taxaVendaPct}% venda`}
                     {` · ${linha.vendas} venda${linha.vendas === 1 ? "" : "s"}`}

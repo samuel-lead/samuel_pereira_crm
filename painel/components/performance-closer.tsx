@@ -9,6 +9,11 @@ function formatarMoeda(valor: number) {
   });
 }
 
+function formatarPercentual(valor: number | null) {
+  if (valor === null) return null;
+  return Math.round(valor * 100);
+}
+
 // Mesmo formato de ranking da Performance por SDR (ver comentário lá) —
 // posição grandona, nome + valor principal na mesma linha, linha pequena
 // de contexto embaixo, barra proporcional. Ordenado por RECEITA (não
@@ -38,7 +43,9 @@ export function PerformanceCloser({
         </p>
       ) : (
         <div className="space-y-4">
-          {ranking.map((linha, indice) => (
+          {ranking.map((linha, indice) => {
+            const taxaVendaPct = formatarPercentual(linha.taxaVenda);
+            return (
             <div key={linha.usuarioId} className="flex items-center gap-3">
               <span className="w-8 shrink-0 text-center text-2xl font-black text-neutral-200">
                 {indice + 1}
@@ -52,8 +59,9 @@ export function PerformanceCloser({
                     {formatarMoeda(linha.receita)}
                   </p>
                 </div>
-                <p className="truncate text-xs text-neutral-400">
+                <p className="text-xs text-neutral-400">
                   {linha.vendas} venda{linha.vendas === 1 ? "" : "s"}
+                  {taxaVendaPct !== null && ` · ${taxaVendaPct}% taxa de venda`}
                   {linha.ticketMedio !== null && ` · Ticket médio ${formatarMoeda(linha.ticketMedio)}`}
                   {` · ${Faturamento(publicoOrg)} ${formatarMoeda(linha.faturamento)}`}
                 </p>
@@ -65,7 +73,8 @@ export function PerformanceCloser({
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>
