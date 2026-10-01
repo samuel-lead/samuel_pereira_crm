@@ -8,7 +8,7 @@ import {
   IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Reunioes, Calls, Faturamento, ehImobiliario } from "@/lib/terminologia";
+import { Call, Calls, Faturamento, ehImobiliario } from "@/lib/terminologia";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -126,7 +126,7 @@ function CardComparativo({
   const desceu = variacaoPct !== null && variacaoPct < 0;
 
   return (
-    <div className={`shrink-0 px-4 py-3 ${destaque ? "w-full lg:w-1/5" : "w-1/2 sm:w-1/3 lg:w-1/5"}`}>
+    <div className={`shrink-0 px-4 py-3 ${destaque ? "w-full lg:w-1/6" : "w-1/2 sm:w-1/3 lg:w-1/6"}`}>
       <div className="mb-1.5 flex items-center justify-between">
         <span
           className={`flex items-center justify-center rounded-lg ${ESQUEMAS_COMPARATIVO[esquema]} ${
@@ -286,17 +286,23 @@ export function SecaoPeriodo({
           Icone={IconeCarta}
         />
         <CardNumero
-          titulo={`${Reunioes(publicoOrg)} marcadas`}
+          titulo={`${Calls(publicoOrg)} marcadas`}
           valor={metricas.reunioesMarcadas}
           meta={pisoReunioes}
           esquema="ceu"
           Icone={IconeCalendario}
         />
         <CardNumero
-          titulo={`${Reunioes(publicoOrg)} realizadas`}
+          titulo={`${Calls(publicoOrg)} realizadas`}
           valor={metricas.reunioesRealizadas}
           esquema="esmeralda"
           Icone={IconeCheck}
+        />
+        <CardNumero
+          titulo={`${Call(publicoOrg)} realizada com proposta`}
+          valor={metricas.reunioesComPitch}
+          esquema="ceu"
+          Icone={IconeCarta}
         />
         <CardNumero
           titulo="No-show"
@@ -333,6 +339,13 @@ export function SecaoPeriodo({
               variacaoPct={variacao(metricas.reunioesRealizadas, metricasAnteriores.reunioesRealizadas)}
               esquema="verde"
               Icone={IconeCheck}
+            />
+            <CardComparativo
+              titulo={`${Call(publicoOrg)} realizada com proposta`}
+              valorFormatado={String(metricas.reunioesComPitch)}
+              variacaoPct={variacao(metricas.reunioesComPitch, metricasAnteriores.reunioesComPitch)}
+              esquema="azul"
+              Icone={IconeCarta}
             />
             <CardComparativo
               titulo="Vendas"
