@@ -19,10 +19,11 @@ function formatarPercentual(valor: number | null) {
 
 // Virou um ranking (Samuel mandou print de referência: nome + barra
 // proporcional + número grande em destaque, em vez de tabela densa) —
-// ordenado por quem vendeu mais. O resto das métricas continua tudo
-// visível, só que embaixo, em cartões pequenos (StatCell), igual o
-// padrão "premium" já usado em Pré-vendas/Vendas (nunca badge colorido
-// solto).
+// ordenado por quem marcou mais calls REALIZADAS (não por venda — Samuel
+// foi explícito, isso aqui mede volume de call do SDR, venda é o
+// ranking do Closer). O resto das métricas continua tudo visível, só
+// que embaixo, em cartões pequenos (StatCell), igual o padrão "premium"
+// já usado em Pré-vendas/Vendas (nunca badge colorido solto).
 export function PerformanceSdr({
   titulo,
   dados,
@@ -35,14 +36,14 @@ export function PerformanceSdr({
   publicoOrg?: string;
 }) {
   const tituloResolvido = titulo ?? `Performance da semana por ${Sdr(publicoOrg)}`;
-  const ranking = [...dados].sort((a, b) => b.vendas - a.vendas);
-  const maiorVendas = Math.max(1, ...ranking.map((l) => l.vendas));
+  const ranking = [...dados].sort((a, b) => b.reunioesRealizadas - a.reunioesRealizadas);
+  const maiorRealizadas = Math.max(1, ...ranking.map((l) => l.reunioesRealizadas));
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <h2 className="mb-1 text-sm font-semibold text-neutral-800">{tituloResolvido}</h2>
       <p className="mb-4 text-xs text-neutral-500">
-        Ranking por vendas · comparação entre todo o time · {periodo}
+        Ranking por {Calls(publicoOrg).toLowerCase()} realizadas · comparação entre todo o time · {periodo}
       </p>
 
       {ranking.length === 0 ? (
@@ -65,13 +66,13 @@ export function PerformanceSdr({
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                     <div
                       className="h-full rounded-full bg-blue-600"
-                      style={{ width: `${Math.max(4, (linha.vendas / maiorVendas) * 100)}%` }}
+                      style={{ width: `${Math.max(4, (linha.reunioesRealizadas / maiorRealizadas) * 100)}%` }}
                     />
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-xl font-extrabold text-neutral-900">{linha.vendas}</p>
-                  <p className="text-[10px] text-neutral-400">vendas</p>
+                  <p className="text-xl font-extrabold text-neutral-900">{linha.reunioesRealizadas}</p>
+                  <p className="text-[10px] text-neutral-400">{Calls(publicoOrg).toLowerCase()} realizadas</p>
                 </div>
                 {linha.podeCopiarRelatorio && (
                   <CopiarRelatorioButton
@@ -88,13 +89,13 @@ export function PerformanceSdr({
                 <StatCell label="Leads novos" value={linha.leadsTrabalhados} />
                 <StatCell label="Ligações" value={linha.ligacoes} />
                 <StatCell label={`${Calls(publicoOrg)} marcadas`} value={linha.reunioesMarcadas} />
-                <StatCell label={`${Calls(publicoOrg)} realizadas`} value={linha.reunioesRealizadas} />
                 <StatCell
                   label="No-show"
                   value={formatarPercentual(
                     linha.reunioesDevidas > 0 ? linha.noShow / linha.reunioesDevidas : null
                   )}
                 />
+                <StatCell label="Vendas" value={linha.vendas} />
                 <StatCell label="Taxa de venda" value={formatarPercentual(linha.taxaVenda)} />
                 <StatCell label={Faturamento(publicoOrg)} value={formatarMoeda(linha.faturamento)} />
               </div>
