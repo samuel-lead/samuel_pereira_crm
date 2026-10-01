@@ -40,7 +40,7 @@ const ATIVIDADES = [
   {
     id: "follow_niveis_1_2_bloco1",
     hora: "10:00–10:30",
-    titulo: "Follow com níveis 1 e 2 — 1º bloco",
+    titulo: "1º bloco de Follow Up com níveis 1 e 2",
     desc: "Sequência seguindo a matriz de follow-up — pausa e atende na hora quem responder ou lead de tráfego que chegar.",
     Icone: IconeAlvo,
     cor: "indigo",
@@ -56,7 +56,7 @@ const ATIVIDADES = [
   {
     id: "follow_niveis_1_2_bloco2",
     hora: "16:00–16:30",
-    titulo: "Follow com níveis 1 e 2 — 2º bloco",
+    titulo: "2º bloco de Follow Up com níveis 1 e 2",
     desc: "Sequência seguindo a matriz de follow-up — pausa e atende na hora quem responder ou lead de tráfego que chegar.",
     Icone: IconeAlvo,
     cor: "indigo",
