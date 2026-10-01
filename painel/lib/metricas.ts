@@ -837,6 +837,99 @@ export async function calcularMetricasPorUsuario(
   );
 }
 
+export type MetricasCloser = {
+  usuarioId: string;
+  nome: string;
+  reunioesRealizadas: number;
+  reunioesComPitch: number;
+  vendas: number;
+  taxaVenda: number | null;
+  receita: number;
+  faturamento: number;
+  ticketMedio: number | null;
+};
+
+// Performance por Closer — pedida pro Samuel pra ficar logo abaixo da
+// Performance por SDR na Visão geral. Diferente da versão por SDR: aqui
+// tudo é filtrado por `reunioes.closer_id` (quem fez a call de fechamento
+// de verdade), não por `usuario_id` (quem marcou a reunião) — um Closer
+// nunca marca reunião, só realiza a que o SDR marcou. "Calls com
+// proposta" e "Taxa de vendas" usam a mesma régua da versão por SDR:
+// só conta reunião realizada com proposta registrada OU que virou venda
+// (prova que teve pitch de verdade).
+export async function calcularMetricasPorCloser(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<MetricasCloser[]> {
+  const inicioISO = inicio.toISOString();
+  const fimISO = fim.toISOString();
+
+  const { data: closers } = await supabase
+    .from("usuarios")
+    .select("id, nome")
+    .eq("org_id", orgId)
+    .or("funcao.eq.closer,papel.eq.admin")
+    .order("nome");
+
+  const lista = closers ?? [];
+
+  return Promise.all(
+    lista.map(async (usuario) => {
+      const [{ count: reunioesRealizadas }, { count: reunioesComPitch }, { data: vendasData }] =
+        await Promise.all([
+          supabase
+            .from("reunioes")
+            .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+            .eq("closer_id", usuario.id)
+            .eq("status", "realizada")
+            .is("leads.arquivado_em", null)
+            .gte("agendada_para", inicioISO)
+            .lt("agendada_para", fimISO),
+          supabase
+            .from("reunioes")
+            .select("id, leads!inner(arquivado_em, proposta_valor, status)", { count: "exact", head: true })
+            .eq("closer_id", usuario.id)
+            .eq("status", "realizada")
+            .is("leads.arquivado_em", null)
+            .or("proposta_valor.not.is.null,status.eq.vendido", { foreignTable: "leads" })
+            .gte("agendada_para", inicioISO)
+            .lt("agendada_para", fimISO),
+          supabase
+            .from("reunioes")
+            .select("leads!inner(receita_venda, valor_venda, status, vendido_em, arquivado_em)")
+            .eq("closer_id", usuario.id)
+            .eq("resultado", "vendeu")
+            .eq("leads.status", "vendido")
+            .is("leads.arquivado_em", null)
+            .gte("leads.vendido_em", inicioISO)
+            .lt("leads.vendido_em", fimISO),
+        ]);
+
+      const vendasDoCloser = (vendasData ?? []).map(
+        (r) => r.leads as unknown as { receita_venda: number | null; valor_venda: number | null }
+      );
+      const vendas = vendasDoCloser.length;
+      const receita = vendasDoCloser.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+      const faturamento = vendasDoCloser.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+      const comPitch = reunioesComPitch ?? 0;
+
+      return {
+        usuarioId: usuario.id,
+        nome: usuario.nome,
+        reunioesRealizadas: reunioesRealizadas ?? 0,
+        reunioesComPitch: comPitch,
+        vendas,
+        taxaVenda: comPitch > 0 ? vendas / comPitch : null,
+        receita,
+        faturamento,
+        ticketMedio: vendas > 0 ? faturamento / vendas : null,
+      };
+    })
+  );
+}
+
 export type BonusSdr = MetricasUsuario & {
   noShowPercentual: number | null;
   bonusPorCallRealizada: number;

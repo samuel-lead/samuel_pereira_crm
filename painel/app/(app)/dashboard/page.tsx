@@ -7,6 +7,7 @@ import { GraficoEvolucaoMensal } from "@/components/grafico-evolucao-mensal";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
+import { PerformanceCloser } from "@/components/performance-closer";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import { LeadsRecentes, type LeadRecente } from "@/components/leads-recentes";
 import { ProximasReunioes, type ReuniaoProxima } from "@/components/proximas-reunioes";
@@ -20,6 +21,7 @@ import {
   calcularVendasPorCanal,
   calcularVendasPorProduto,
   calcularMetricasPorUsuario,
+  calcularMetricasPorCloser,
   calcularLeadsPorOrigem,
   calcularResumoAno,
   calcularReceitaOrg,
@@ -82,6 +84,7 @@ export default async function DashboardPage({
     vendasPorCanal,
     vendasPorProduto,
     performancePeriodoSdr,
+    performancePeriodoCloser,
     leadsPorOrigem,
     resumoAnoEvolucao,
     receitaOrgMes,
@@ -117,6 +120,7 @@ export default async function DashboardPage({
     calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
       apenasDeclaradosNoPeriodo: true,
     }),
+    calcularMetricasPorCloser(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
       apenasDeclaradosNoPeriodo: true,
     }),
@@ -376,6 +380,12 @@ export default async function DashboardPage({
           titulo={`Performance por ${Sdr(publicoOrg)} — ${periodoResolvido.titulo.toLowerCase()}`}
           dados={performancePeriodoSdr}
           periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
+          publicoOrg={publicoOrg}
+        />
+
+        <PerformanceCloser
+          titulo={`Performance por Closer — ${periodoResolvido.titulo.toLowerCase()}`}
+          dados={performancePeriodoCloser}
           publicoOrg={publicoOrg}
         />
 
