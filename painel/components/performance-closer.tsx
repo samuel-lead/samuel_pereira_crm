@@ -35,22 +35,19 @@ export function PerformanceCloser({
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <div className="bg-neutral-900 px-4 py-3">
-        <h2 className="text-base font-extrabold tracking-tight text-white">{tituloResolvido}</h2>
-        <p className="text-xs text-neutral-300">Top Closer por receita coletada</p>
+      <div className="border-b border-neutral-200 px-4 py-3">
+        <h2 className="text-lg font-extrabold tracking-tight text-neutral-900">{tituloResolvido}</h2>
+        <p className="mt-0.5 text-xs text-neutral-500">Top Closer por receita coletada</p>
       </div>
 
-      <div className="p-4">
       {ranking.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 px-4 py-8 text-center text-sm text-neutral-400">
-          Ninguém pra comparar ainda
-        </p>
+        <p className="px-4 py-8 text-center text-sm text-neutral-400">Ninguém pra comparar ainda</p>
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y divide-neutral-100 px-4">
           {ranking.map((linha, indice) => {
             const taxaVendaPct = formatarPercentual(linha.taxaVenda);
             return (
-            <div key={linha.usuarioId} className="flex items-center gap-3">
+            <div key={linha.usuarioId} className="flex items-center gap-3 py-3.5">
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-extrabold ${corPosicaoRanking(indice)}`}
               >
@@ -74,7 +71,7 @@ export function PerformanceCloser({
                 </p>
                 <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                   <div
-                    className="h-full rounded-full bg-green-600"
+                    className="h-full rounded-full bg-neutral-800"
                     style={{ width: `${Math.max(4, (linha.receita / maiorReceita) * 100)}%` }}
                   />
                 </div>
@@ -84,7 +81,6 @@ export function PerformanceCloser({
           })}
         </div>
       )}
-      </div>
     </section>
   );
 }
