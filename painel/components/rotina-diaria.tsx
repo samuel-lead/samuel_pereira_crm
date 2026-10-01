@@ -12,10 +12,14 @@ import {
 
 // Horários batem com o que o Samuel pediu direto no chat em 30/09/26:
 // tirou a atividade "Ligações para leads quentes" (não fazia mais
-// sentido) e esticou Prospecção até as 16h, empurrando Follow 1/2 e
-// Confirmar amanhã pra frente. Antes disso, batiam com o documento
-// "Rotina do SDR" (ajustado por ele em 22/09/26) — não arredondar pra
-// bater com versão nenhuma de antes se ele atualizar de novo.
+// sentido) e dividiu o Follow com níveis 1 e 2 em dois blocos de meia
+// hora, um antes da Prospecção e outro depois — cada um com o mesmo
+// título e descrição, só numerados (1º bloco / 2º bloco). "Confirmar
+// reuniões de amanhã" voltou a ser 16:30–17:00 (meia hora, não uma),
+// porque o 2º bloco de Follow volta a ocupar só até as 16:30. Antes
+// disso, batiam com o documento "Rotina do SDR" (ajustado por ele em
+// 22/09/26) — não arredondar pra bater com versão nenhuma de antes se
+// ele atualizar de novo.
 const ATIVIDADES = [
   {
     id: "confirmar_reunioes",
@@ -34,24 +38,32 @@ const ATIVIDADES = [
     cor: "violet",
   },
   {
+    id: "follow_niveis_1_2_bloco1",
+    hora: "10:00–10:30",
+    titulo: "Follow com níveis 1 e 2 — 1º bloco",
+    desc: "Sequência seguindo a matriz de follow-up — pausa e atende na hora quem responder ou lead de tráfego que chegar.",
+    Icone: IconeAlvo,
+    cor: "indigo",
+  },
+  {
     id: "prospeccao",
-    hora: "10:00–16:00",
+    hora: "10:30–16:00",
     titulo: "Prospecção",
     desc: "Instagram, base ou tráfego — lead de tráfego é sempre prioridade. Pausa assim que qualquer lead responder.",
     Icone: IconeInstagram,
     cor: "pink",
   },
   {
-    id: "follow_niveis_1_2",
-    hora: "16:00–17:00",
-    titulo: "Follow com níveis 1 e 2",
+    id: "follow_niveis_1_2_bloco2",
+    hora: "16:00–16:30",
+    titulo: "Follow com níveis 1 e 2 — 2º bloco",
     desc: "Sequência seguindo a matriz de follow-up — pausa e atende na hora quem responder ou lead de tráfego que chegar.",
     Icone: IconeAlvo,
     cor: "indigo",
   },
   {
     id: "confirmar_amanha",
-    hora: "17:00–17:30",
+    hora: "16:30–17:00",
     titulo: "Confirmar reuniões de amanhã",
     desc: "Seguir o processo de anti-no-show e enviar o relatório diário no grupo do comercial até as 18h.",
     Icone: IconeCalendario,
