@@ -4,7 +4,11 @@
 // Tailwind — esse projeto já roda com darkMode:"class".
 export function corPosicaoRanking(indice: number) {
   if (indice === 0) {
-    return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+    // 1º lugar: dourado de verdade (cor sólida, não apagada), com um
+    // anel sutil pra dar pop — mesma cor no claro e no escuro, porque é
+    // saturada o bastante pra funcionar nos dois (Samuel achou a versão
+    // antiga, com opacidade baixa no escuro, "feia"/"um trem").
+    return "bg-gradient-to-br from-amber-300 to-amber-500 text-amber-950 shadow-md shadow-amber-500/30 ring-2 ring-amber-200/60";
   }
   if (indice === 1) {
     return "bg-slate-200 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300";
