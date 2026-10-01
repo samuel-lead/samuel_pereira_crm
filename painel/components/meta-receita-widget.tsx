@@ -216,7 +216,7 @@ export function MetaReceitaWidget({
               <span className="font-black text-green-600">Meta batida! 🎉</span>
             ) : (
               <>
-                Falta pra meta: <span className="font-black text-amber-600">{formatarMoeda(falta)}</span>
+                Falta para a meta: <span className="font-black text-amber-600">{formatarMoeda(falta)}</span>
               </>
             )}
           </p>
@@ -232,10 +232,9 @@ export function MetaReceitaWidget({
         )}
       </div>
 
-      {/* Os limites da barra: "Atingido" (começo, sem valor — o valor em
-          si já tá no título ao lado de "Falta pra meta") de um lado, a
-          meta do outro, pra ficar óbvio que a barra é o caminho de um
-          até o outro. Samuel pediu pra tirar os cartões de
+      {/* Os limites da barra: "Atingido: R$ X" de um lado, a meta do
+          outro, pra ficar óbvio que a barra é o caminho de um até o
+          outro. Samuel pediu pra tirar os cartões de
           Recebido/Falta/Progressão debaixo — a barra já mostra tudo
           isso sozinha. */}
       <div className="relative mt-5 h-3 w-full">
@@ -257,7 +256,7 @@ export function MetaReceitaWidget({
         </span>
       </div>
       <div className="mt-1.5 flex justify-between text-xs font-medium text-neutral-400">
-        <span>Atingido</span>
+        <span>Atingido: {formatarMoeda(receitaAtual)}</span>
         <span>{formatarMoeda(meta)}</span>
       </div>
     </div>
