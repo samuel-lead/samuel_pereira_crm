@@ -31,9 +31,9 @@ export function PerformanceSdr({
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <div className="bg-blue-600 px-4 py-3">
+      <div className="bg-neutral-900 px-4 py-3">
         <h2 className="text-base font-extrabold tracking-tight text-white">{tituloResolvido}</h2>
-        <p className="text-xs text-blue-100">
+        <p className="text-xs text-neutral-300">
           Top {Sdr(publicoOrg)} por {Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · {periodo}
         </p>
       </div>
@@ -73,7 +73,7 @@ export function PerformanceSdr({
                   </p>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                     <div
-                      className="h-full rounded-full bg-blue-600"
+                      className="h-full rounded-full bg-green-600"
                       style={{ width: `${Math.max(4, (linha.reunioesRealizadas / maiorRealizadas) * 100)}%` }}
                     />
                   </div>

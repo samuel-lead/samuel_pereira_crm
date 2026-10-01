@@ -35,9 +35,9 @@ export function PerformanceCloser({
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <div className="bg-green-600 px-4 py-3">
+      <div className="bg-neutral-900 px-4 py-3">
         <h2 className="text-base font-extrabold tracking-tight text-white">{tituloResolvido}</h2>
-        <p className="text-xs text-green-100">Top Closer por receita coletada</p>
+        <p className="text-xs text-neutral-300">Top Closer por receita coletada</p>
       </div>
 
       <div className="p-4">
