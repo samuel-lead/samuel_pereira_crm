@@ -128,7 +128,8 @@ export function BonusSdrTabela({
             <b className="text-white">+{moedaCurta(config.valor_call_fim_semana)}</b> {"cada uma"}
           </li>
           <li className="whitespace-nowrap">
-            <span className="font-bold text-white">3.</span> Faturamento do mês:{" "}
+            <span className="font-bold text-white">3.</span>
+            {` Faturamento do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
             {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
             <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
             {" · "}
