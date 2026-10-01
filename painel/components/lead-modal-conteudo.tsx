@@ -10,6 +10,7 @@ import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
+import { EditarMotivoRepescagem } from "@/components/editar-motivo-repescagem";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeLapis } from "@/components/icons";
 import { Reuniao, Sdr } from "@/lib/terminologia";
@@ -266,12 +267,7 @@ export function LeadModalConteudo({
 
       <div className="flex flex-col gap-4">
         {lead.oportunidade_futura && lead.motivo_repescagem_futura && (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-green-800">
-              Motivo de vim para repescagem
-            </h2>
-            <p className="mt-1 text-sm text-green-700">{lead.motivo_repescagem_futura}</p>
-          </div>
+          <EditarMotivoRepescagem leadId={lead.id} motivo={lead.motivo_repescagem_futura} />
         )}
 
         {lead.status === "vendido" ? (

@@ -1485,6 +1485,42 @@ export async function marcarVendido(
   return { erro: null };
 }
 
+// Editar o motivo da Repescagem futura de ICP depois de já registrado —
+// Samuel pediu: a pessoa às vezes digita rápido na hora de mover o lead
+// e quer corrigir/detalhar melhor depois, sem precisar mover o lead de
+// novo só pra isso.
+export async function editarMotivoRepescagem(
+  leadId: string,
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    return { erro: erroPermissao };
+  }
+
+  const motivo = String(formData.get("motivo_repescagem_futura") ?? "").trim();
+  if (!motivo) {
+    return { erro: "Escreva o motivo da repescagem." };
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ motivo_repescagem_futura: motivo })
+    .eq("id", leadId)
+    .eq("oportunidade_futura", true);
+
+  if (error) {
+    return { erro: mensagemAmigavel(error.code, error.message) };
+  }
+
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
 export async function editarVenda(
   leadId: string,
   _estadoAnterior: EstadoFormulario,
