@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { definirMetaReceita, type EstadoMeta } from "@/lib/metas/actions";
 import { IconeLapis } from "@/components/icons";
 import { Faturamento, ehImobiliario } from "@/lib/terminologia";
+import { StatCell } from "@/components/stat-cell";
 
 const estadoInicial: EstadoMeta = { erro: null };
 
@@ -207,8 +208,10 @@ export function MetaReceitaWidget({
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-neutral-800">{rotuloMeta}</h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-neutral-800">
+          {rotuloMeta}: <span className="font-black text-neutral-900">{formatarMoeda(meta)}</span>
+        </h2>
         {podeEditar && (
           <button
             type="button"
@@ -219,18 +222,11 @@ export function MetaReceitaWidget({
           </button>
         )}
       </div>
-      <div className="mb-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-          {rotuloValorAtual}
-        </p>
-        <p className="flex flex-wrap items-baseline gap-1.5 tabular-nums">
-          <span className="text-4xl font-black tracking-tight text-neutral-900">
-            {formatarMoeda(receitaAtual)}
-          </span>
-          <span className="text-base font-medium text-neutral-400">de {formatarMoeda(meta)}</span>
-        </p>
-      </div>
-      <div className="relative mt-6 h-3 w-full">
+
+      {/* Os dois números da ponta da barra são os mesmos limites dela —
+          0 de um lado, a meta do outro — pra ficar óbvio que a barra é o
+          caminho de um até o outro (Samuel pediu bem explícito assim). */}
+      <div className="relative mt-5 h-3 w-full">
         <div className="h-full w-full overflow-hidden rounded-full bg-neutral-100">
           <div
             className={`h-full rounded-full transition-all ${
@@ -248,16 +244,20 @@ export function MetaReceitaWidget({
           {pct}%
         </span>
       </div>
-      <p className="mt-2 text-sm">
-        {bateu ? (
-          <span className="font-semibold text-green-600">Meta batida! 🎉</span>
-        ) : (
-          <>
-            Falta <span className="font-bold text-amber-600">{formatarMoeda(falta)}</span>{" "}
-            pra bater a meta.
-          </>
-        )}
-      </p>
+      <div className="mb-4 mt-1.5 flex justify-between text-xs font-medium text-neutral-400">
+        <span>R$ 0</span>
+        <span>{formatarMoeda(meta)}</span>
+      </div>
+
+      <div className="flex flex-wrap divide-x divide-y divide-neutral-100 overflow-hidden rounded-lg border border-neutral-100 bg-neutral-50/60">
+        <StatCell label={rotuloValorAtual} value={formatarMoeda(receitaAtual)} />
+        <StatCell
+          label="Falta"
+          value={bateu ? "R$ 0" : formatarMoeda(falta)}
+          sub={bateu ? <span className="font-semibold text-green-600">Meta batida! 🎉</span> : undefined}
+        />
+        <StatCell label="Progressão" value={`${pct}%`} />
+      </div>
     </div>
   );
 }
