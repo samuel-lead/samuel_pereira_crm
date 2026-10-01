@@ -4,7 +4,6 @@ import { useActionState, useEffect, useState } from "react";
 import { definirMetaReceita, type EstadoMeta } from "@/lib/metas/actions";
 import { IconeLapis } from "@/components/icons";
 import { Faturamento, ehImobiliario } from "@/lib/terminologia";
-import { StatCell } from "@/components/stat-cell";
 
 const estadoInicial: EstadoMeta = { erro: null };
 
@@ -37,7 +36,6 @@ export function MetaReceitaWidget({
   const [estado, acaoFormulario] = useActionState(definirMetaReceita, estadoInicial);
   const [editando, setEditando] = useState(podeEditar && metaReceita === null);
   const rotuloMeta = `Meta de ${ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "receita"} do mês`;
-  const rotuloValorAtual = ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "Recebido";
 
   useEffect(() => {
     if (estado !== estadoInicial && !estado.erro) {
@@ -245,18 +243,9 @@ export function MetaReceitaWidget({
           {pct}%
         </span>
       </div>
-      <div className="mb-4 mt-1.5 flex justify-between text-xs font-medium text-neutral-400">
+      <div className="mt-1.5 flex justify-between text-xs font-medium text-neutral-400">
         <span>R$ 0</span>
         <span>{formatarMoeda(meta)}</span>
-      </div>
-
-      <div className="flex flex-wrap divide-x divide-y divide-neutral-100 overflow-hidden rounded-lg border border-neutral-100 bg-neutral-50/60">
-        <StatCell label={rotuloValorAtual} value={formatarMoeda(receitaAtual)} />
-        <StatCell
-          label="Falta"
-          value={bateu ? "R$ 0" : formatarMoeda(falta)}
-          sub={bateu ? <span className="font-semibold text-green-600">Meta batida! 🎉</span> : undefined}
-        />
       </div>
     </div>
   );
