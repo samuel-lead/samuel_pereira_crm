@@ -945,26 +945,26 @@ export function KanbanBoard({
                       const temProximoContato = !!lead.proximo_follow_em;
                       const contatoAtrasado =
                         temProximoContato && new Date(lead.proximo_follow_em!).getTime() < Date.now();
-                      // Lead com próximo contato ou reunião marcada não é
-                      // "parado" ENQUANTO a data não chegou. Assim que passa
-                      // sem ninguém ter mexido, volta a contar.
-                      const proximoContatoPendente = temProximoContato && !contatoAtrasado;
-                      const reuniaoMarcadaPendente =
-                        !!lead.reuniao_agendada_para &&
-                        new Date(lead.reuniao_agendada_para).getTime() > Date.now();
+                      const temReuniaoMarcada = !!lead.reuniao_agendada_para;
                       // Reunião com hora marcada que já passou e ninguém
                       // disse se aconteceu ou não — diferente do "parado"
                       // de baixo, essa acende na hora, sem esperar 1 dia
                       // sem atividade nenhuma.
                       const reuniaoAtrasada =
-                        !!lead.reuniao_agendada_para &&
-                        new Date(lead.reuniao_agendada_para).getTime() < Date.now();
+                        temReuniaoMarcada && new Date(lead.reuniao_agendada_para!).getTime() < Date.now();
                       const temAlgoAtrasado = reuniaoAtrasada || contatoAtrasado;
+                      // Lead com QUALQUER próximo contato marcado ou
+                      // reunião marcada nunca mostra "Xd parado" — mesmo já
+                      // vencido, já tem um plano; quem avisa disso é o selo
+                      // "Atrasado" ali do lado, não faz sentido os dois
+                      // juntos (Samuel pegou isso ao vivo: lead com contato
+                      // atrasado de ontem mostrando "16d parado" ao mesmo
+                      // tempo, confuso).
                       const atrasado =
                         mostrarParado &&
                         diasParado >= 1 &&
-                        !proximoContatoPendente &&
-                        !reuniaoMarcadaPendente &&
+                        !temProximoContato &&
+                        !temReuniaoMarcada &&
                         !lead.oportunidade_futura;
                       return (
                       <div

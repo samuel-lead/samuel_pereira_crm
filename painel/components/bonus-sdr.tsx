@@ -106,7 +106,7 @@ export function BonusSdrTabela({
         </p>
         <p className="relative mt-2 hidden text-sm font-medium text-green-100 sm:block">
           {`${Calls(publicoOrg)} realizadas (≥${config.calls_tier1_qtd}/${config.calls_tier2_qtd}/${config.calls_tier3_qtd} → ${moedaCurta(config.calls_tier1_valor)}/${moedaCurta(config.calls_tier2_valor)}/${moedaCurta(config.calls_tier3_valor)}) + ${moedaCurta(config.valor_call_fim_semana)} por ${call(publicoOrg)} realizada que foi marcada no fim de semana + faturamento do mês (≥${moedaCurta(config.faturamento_tier1_valor)}/${moedaCurta(config.faturamento_tier2_valor)}/${moedaCurta(config.faturamento_tier3_valor)} → ${moedaCurta(config.faturamento_tier1_bonus)}/${moedaCurta(config.faturamento_tier2_bonus)}/${moedaCurta(config.faturamento_tier3_bonus)}).`}
-          {periodo && <> Mês de {periodo}.</>}
+          {periodo && <> {periodo}.</>}
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export function BonusSdrTabela({
               <div className="flex flex-nowrap items-center gap-2">
                 {periodo && (
                   <span className="shrink-0 whitespace-nowrap rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-                    Mês de {periodo}
+                    {periodo}
                   </span>
                 )}
                 <span className="shrink-0 whitespace-nowrap rounded-full bg-green-50 px-3 py-1 text-sm font-bold tabular-nums text-green-700">
