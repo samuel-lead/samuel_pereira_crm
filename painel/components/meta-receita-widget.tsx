@@ -257,7 +257,6 @@ export function MetaReceitaWidget({
           value={bateu ? "R$ 0" : formatarMoeda(falta)}
           sub={bateu ? <span className="font-semibold text-green-600">Meta batida! 🎉</span> : undefined}
         />
-        <StatCell label="Progressão" value={`${pct}%`} />
       </div>
     </div>
   );
