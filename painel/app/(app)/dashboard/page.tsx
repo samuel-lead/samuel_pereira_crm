@@ -400,14 +400,6 @@ export default async function DashboardPage({
           />
         </div>
 
-        <GraficoEvolucaoMensal
-          dados={resumoAnoEvolucao}
-          ano={anoEvolucaoResolvido}
-          anoAtual={anoAtualNumero}
-          mesAtual={anoEvolucaoResolvido === anoAtualNumero ? inicioHoje.getUTCMonth() + 1 : 0}
-          publicoOrg={publicoOrg}
-        />
-
         <section>
           <h2 className="mb-3 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-neutral-900">
             <span className="h-6 w-1.5 shrink-0 rounded-full bg-[#2563eb]" />
@@ -424,6 +416,13 @@ export default async function DashboardPage({
               <VendasPorCanal dados={vendasPorCanal} periodo={periodoResolvido.titulo} />
               <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
             </div>
+            <GraficoEvolucaoMensal
+              dados={resumoAnoEvolucao}
+              ano={anoEvolucaoResolvido}
+              anoAtual={anoAtualNumero}
+              mesAtual={anoEvolucaoResolvido === anoAtualNumero ? inicioHoje.getUTCMonth() + 1 : 0}
+              publicoOrg={publicoOrg}
+            />
           </div>
         </section>
 
