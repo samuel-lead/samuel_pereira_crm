@@ -219,23 +219,16 @@ export function MetaReceitaWidget({
           </button>
         )}
       </div>
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-            {rotuloValorAtual}
-          </p>
-          <p className="text-4xl font-black tracking-tight text-neutral-900 tabular-nums">
+      <div className="mb-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          {rotuloValorAtual}
+        </p>
+        <p className="flex flex-wrap items-baseline gap-1.5 tabular-nums">
+          <span className="text-4xl font-black tracking-tight text-neutral-900">
             {formatarMoeda(receitaAtual)}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-            Meta
-          </p>
-          <p className="text-lg font-bold text-neutral-500 tabular-nums">
-            {formatarMoeda(meta)}
-          </p>
-        </div>
+          </span>
+          <span className="text-base font-medium text-neutral-400">de {formatarMoeda(meta)}</span>
+        </p>
       </div>
       <div className="relative mt-6 h-3 w-full">
         <div className="h-full w-full overflow-hidden rounded-full bg-neutral-100">
