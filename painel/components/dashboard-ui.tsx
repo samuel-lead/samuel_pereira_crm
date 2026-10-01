@@ -45,7 +45,6 @@ function CardNumero({
   titulo,
   valor,
   meta,
-  amostraInsuficiente,
   esquema,
   Icone,
   formatoPercentual,
@@ -53,7 +52,6 @@ function CardNumero({
   titulo: string;
   valor: number;
   meta?: number;
-  amostraInsuficiente?: boolean;
   esquema: keyof typeof ESQUEMAS;
   Icone: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   // Mostra "valor%" em vez do número cru — usado no No-show, que faz
@@ -78,9 +76,6 @@ function CardNumero({
         {formatoPercentual ? `${valor}%` : valor}
       </p>
       <p className={`mt-0.5 text-[11px] font-medium ${cor.texto}`}>{titulo}</p>
-      {amostraInsuficiente && (
-        <p className="mt-0.5 text-[10px] text-neutral-400">amostra pequena</p>
-      )}
     </div>
   );
 }
@@ -263,7 +258,6 @@ export function SecaoPeriodo({
           titulo="Leads novos"
           valor={leadsNovosValor}
           meta={pisoLeads}
-          amostraInsuficiente={leadsNovosValor < 20}
           esquema="violeta"
           Icone={IconeAlvo}
         />
