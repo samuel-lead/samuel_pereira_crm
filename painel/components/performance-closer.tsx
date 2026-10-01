@@ -1,5 +1,6 @@
 import type { MetricasCloser } from "@/lib/metricas";
 import { Faturamento } from "@/lib/terminologia";
+import { corPosicaoRanking } from "@/lib/ranking";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", {
@@ -34,7 +35,10 @@ export function PerformanceCloser({
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <h2 className="mb-1 text-sm font-semibold text-neutral-800">{tituloResolvido}</h2>
+      <h2 className="mb-1 flex items-center gap-2 text-base font-extrabold tracking-tight text-neutral-900 dark:text-white">
+        <span className="h-5 w-1.5 shrink-0 rounded-full bg-green-600" />
+        {tituloResolvido}
+      </h2>
       <p className="mb-4 text-xs text-neutral-500">Top Closer por receita coletada</p>
 
       {ranking.length === 0 ? (
@@ -47,7 +51,9 @@ export function PerformanceCloser({
             const taxaVendaPct = formatarPercentual(linha.taxaVenda);
             return (
             <div key={linha.usuarioId} className="flex items-center gap-3">
-              <span className="w-8 shrink-0 text-center text-2xl font-black text-neutral-200">
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-extrabold ${corPosicaoRanking(indice)}`}
+              >
                 {indice + 1}
               </span>
               <div className="min-w-0 flex-1">
@@ -56,7 +62,8 @@ export function PerformanceCloser({
                     {linha.nome}
                   </p>
                   <p className="shrink-0 text-base font-extrabold text-neutral-900">
-                    {formatarMoeda(linha.receita)}
+                    {formatarMoeda(linha.receita)}{" "}
+                    <span className="text-xs font-medium text-neutral-400">Receita</span>
                   </p>
                 </div>
                 <p className="text-xs text-neutral-400">

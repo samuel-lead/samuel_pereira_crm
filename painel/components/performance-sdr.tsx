@@ -1,6 +1,7 @@
 import type { MetricasUsuario } from "@/lib/metricas";
 import { CopiarRelatorioButton } from "@/components/copiar-relatorio-button";
 import { Calls, Sdr } from "@/lib/terminologia";
+import { corPosicaoRanking } from "@/lib/ranking";
 
 function formatarPercentual(valor: number | null) {
   if (valor === null) return null;
@@ -30,7 +31,10 @@ export function PerformanceSdr({
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <h2 className="mb-1 text-sm font-semibold text-neutral-800">{tituloResolvido}</h2>
+      <h2 className="mb-1 flex items-center gap-2 text-base font-extrabold tracking-tight text-neutral-900 dark:text-white">
+        <span className="h-5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+        {tituloResolvido}
+      </h2>
       <p className="mb-4 text-xs text-neutral-500">
         Top {Sdr(publicoOrg)} por {Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · {periodo}
       </p>
@@ -48,7 +52,9 @@ export function PerformanceSdr({
             const taxaVendaPct = formatarPercentual(linha.taxaVenda);
             return (
               <div key={linha.usuarioId} className="flex items-center gap-3">
-                <span className="w-8 shrink-0 text-center text-2xl font-black text-neutral-200">
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-extrabold ${corPosicaoRanking(indice)}`}
+                >
                   {indice + 1}
                 </span>
                 <div className="min-w-0 flex-1">
