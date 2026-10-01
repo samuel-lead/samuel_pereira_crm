@@ -29,7 +29,7 @@ export function PerformanceCloser({
   dados: MetricasCloser[];
   publicoOrg?: string;
 }) {
-  const tituloResolvido = titulo ?? "Ranking do Vendedor";
+  const tituloResolvido = titulo ?? "Ranking Vendedor";
   const ranking = [...dados].sort((a, b) => b.receita - a.receita);
   const maiorReceita = Math.max(1, ...ranking.map((l) => l.receita));
 
