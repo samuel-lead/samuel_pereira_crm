@@ -895,11 +895,12 @@ export function KanbanBoard({
                 }`}
               >
                 <div className="shrink-0 rounded-t-xl border-b border-neutral-100 bg-white px-4 py-3">
-                  <div className="flex items-center justify-between gap-1.5">
-                    <h2
-                      title={nivel.nome}
-                      className="min-w-0 truncate text-sm font-semibold tracking-tight text-neutral-900"
-                    >
+                  <div className="flex items-start justify-between gap-1.5">
+                    {/* Nunca abrevia o nome do nível — quebra linha em vez
+                        de cortar com "...", mesmo título comprido (Samuel
+                        pegou isso ao vivo no CRM do Danilo). Mesma regra
+                        já aplicada no nome do lead dentro do card. */}
+                    <h2 className="min-w-0 break-words text-sm font-semibold leading-snug tracking-tight text-neutral-900">
                       {numeroVisivel ? `N${numeroVisivel} - ` : ""}
                       {titulo}
                     </h2>
