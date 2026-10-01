@@ -212,9 +212,6 @@ export function MetaReceitaWidget({
             {rotuloMeta}: <span className="font-black text-neutral-900">{formatarMoeda(meta)}</span>
           </h2>
           <p className="text-base font-semibold text-neutral-800">
-            Atingido: <span className="font-black text-neutral-900">{formatarMoeda(receitaAtual)}</span>
-          </p>
-          <p className="text-base font-semibold text-neutral-800">
             {bateu ? (
               <span className="font-black text-green-600">Meta batida! 🎉</span>
             ) : (
