@@ -8,7 +8,7 @@ import {
   IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Call, Calls, Faturamento, ehImobiliario } from "@/lib/terminologia";
+import { Calls, Faturamento, ehImobiliario } from "@/lib/terminologia";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -299,7 +299,7 @@ export function SecaoPeriodo({
           Icone={IconeCheck}
         />
         <CardNumero
-          titulo={`${Call(publicoOrg)} realizada com proposta`}
+          titulo={`${Calls(publicoOrg)} com propostas`}
           valor={metricas.reunioesComPitch}
           esquema="ceu"
           Icone={IconeCarta}
@@ -341,7 +341,7 @@ export function SecaoPeriodo({
               Icone={IconeCheck}
             />
             <CardComparativo
-              titulo={`${Call(publicoOrg)} realizada com proposta`}
+              titulo={`${Calls(publicoOrg)} com propostas`}
               valorFormatado={String(metricas.reunioesComPitch)}
               variacaoPct={variacao(metricas.reunioesComPitch, metricasAnteriores.reunioesComPitch)}
               esquema="azul"
