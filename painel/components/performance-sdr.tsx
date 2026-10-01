@@ -32,7 +32,7 @@ export function PerformanceSdr({
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <h2 className="mb-1 text-sm font-semibold text-neutral-800">{tituloResolvido}</h2>
       <p className="mb-4 text-xs text-neutral-500">
-        Top {Sdr(publicoOrg)} por {Calls(publicoOrg).toLowerCase()} marcadas e realizadas · {periodo}
+        Top {Sdr(publicoOrg)} por {Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · {periodo}
       </p>
 
       {ranking.length === 0 ? (
