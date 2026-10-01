@@ -25,7 +25,7 @@ const ATIVIDADES = [
     id: "confirmar_reunioes",
     hora: "09:00–09:30",
     titulo: "Confirmar e reagendar reuniões",
-    desc: "Reuniões do dia, reagendar as do dia anterior (processo anti-no-show) e contato com os leads do nível 3.",
+    desc: "Reuniões do dia, reagendar as do dia anterior (processo anti-no-show) e fazer follow com os leads do nível 3.",
     Icone: IconeCalendario,
     cor: "blue",
   },
