@@ -1,5 +1,5 @@
 import type { MetricasCloser } from "@/lib/metricas";
-import { Calls, Faturamento } from "@/lib/terminologia";
+import { Calls } from "@/lib/terminologia";
 import { corPosicaoRanking } from "@/lib/ranking";
 
 function formatarMoeda(valor: number) {
@@ -71,8 +71,6 @@ export function PerformanceCloser({
                   {linha.reunioesComPitch} {Calls(publicoOrg).toLowerCase()} com proposta ·{" "}
                   {linha.vendas} venda{linha.vendas === 1 ? "" : "s"}
                   {taxaVendaPct !== null && ` · ${taxaVendaPct}% taxa de venda`}
-                  {linha.ticketMedio !== null && ` · Ticket médio ${formatarMoeda(linha.ticketMedio)}`}
-                  {` · ${Faturamento(publicoOrg)} ${formatarMoeda(linha.faturamento)}`}
                 </p>
                 <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                   <div
