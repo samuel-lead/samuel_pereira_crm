@@ -10,16 +10,17 @@ import {
   IconeCheck,
 } from "@/components/icons";
 
-// Horários batem com o que o Samuel pediu direto no chat em 30/09/26:
-// tirou a atividade "Ligações para leads quentes" (não fazia mais
-// sentido) e dividiu o Follow com níveis 1 e 2 em dois blocos de meia
-// hora, um antes da Prospecção e outro depois — cada um com o mesmo
-// título e descrição, só numerados (1º bloco / 2º bloco). "Confirmar
-// reuniões de amanhã" voltou a ser 16:30–17:00 (meia hora, não uma),
-// porque o 2º bloco de Follow volta a ocupar só até as 16:30. Antes
-// disso, batiam com o documento "Rotina do SDR" (ajustado por ele em
-// 22/09/26) — não arredondar pra bater com versão nenhuma de antes se
-// ele atualizar de novo.
+// Horários batem com o que o Samuel pediu direto no chat em 30/09/26 e
+// 01/10/26: tirou a atividade "Ligações para leads quentes" (não fazia
+// mais sentido), dividiu o Follow com níveis 1 e 2 em dois blocos de
+// meia hora (um antes da Prospecção, outro depois), e depois juntou
+// "Retomar conversas" com o 1º bloco de Follow num bloco só (9:30–10:30,
+// uma hora) porque é quase a mesma coisa — só o 2º bloco de Follow
+// (depois da Prospecção) continua separado. "Confirmar reuniões de
+// amanhã" é 16:30–17:00 (meia hora), porque o 2º bloco de Follow ocupa
+// só até as 16:30. Antes disso, batiam com o documento "Rotina do SDR"
+// (ajustado por ele em 22/09/26) — não arredondar pra bater com versão
+// nenhuma de antes se ele atualizar de novo.
 const ATIVIDADES = [
   {
     id: "confirmar_reunioes",
@@ -30,20 +31,12 @@ const ATIVIDADES = [
     cor: "blue",
   },
   {
-    id: "retomar_conversas",
-    hora: "09:30–10:00",
-    titulo: "Retomar conversas",
-    desc: "Leads que responderam no dia anterior no WhatsApp e Instagram, parados ou atrasados no CRM.",
+    id: "retomar_conversas_follow_bloco1",
+    hora: "09:30–10:30",
+    titulo: "Retomar conversas e 1º bloco de Follow Up com níveis 1 e 2",
+    desc: "Leads que responderam no dia anterior no WhatsApp e Instagram, parados ou atrasados no CRM, seguindo a matriz de follow-up — pausa e atende na hora quem responder ou lead de tráfego que chegar, e depois volte conforme a rotina.",
     Icone: IconeAtividade,
     cor: "violet",
-  },
-  {
-    id: "follow_niveis_1_2_bloco1",
-    hora: "10:00–10:30",
-    titulo: "1º bloco de Follow Up com níveis 1 e 2",
-    desc: "Sequência seguindo a matriz de follow-up — pausa e atende na hora quem responder ou lead de tráfego que chegar, e depois volte conforme a rotina.",
-    Icone: IconeAlvo,
-    cor: "indigo",
   },
   {
     id: "prospeccao",
