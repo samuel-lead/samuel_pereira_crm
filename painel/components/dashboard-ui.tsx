@@ -74,12 +74,10 @@ function CardNumero({
           </span>
         )}
       </div>
-      <p className={`text-[11px] font-semibold uppercase tracking-wide ${cor.texto}`}>
-        {titulo}
-      </p>
-      <p className="mt-0.5 text-2xl font-extrabold text-neutral-900">
+      <p className="text-2xl font-extrabold text-neutral-900">
         {formatoPercentual ? `${valor}%` : valor}
       </p>
+      <p className={`mt-0.5 text-[11px] font-medium ${cor.texto}`}>{titulo}</p>
       {amostraInsuficiente && (
         <p className="mt-0.5 text-[10px] text-neutral-400">amostra pequena</p>
       )}
