@@ -377,23 +377,21 @@ async function sincronizarReuniao(
       if (error) return { erro: error.message };
 
       // Reunião realizada de verdade (foi pra Follow ou já virou
-      // Oportunidade E a reunião de fato aconteceu): o lead passa a ser
-      // 100% do Closer que fez a call. A transferência em si só acontece
-      // DEPOIS que quem chamou essa função já salvou tudo que precisava
-      // salvar como o dono atual do lead (nivel_ordem, histórico) — se
-      // ela rodasse aqui, o responsavel_id mudava no meio do caminho e o
-      // resto das escritas (feitas pela pessoa que ainda não é a dona
-      // nova) era barrado pela política de segurança do banco, sem erro
-      // nenhum aparecer pra avisar (foi o que aconteceu com um lead do
-      // Rafael Torres — reunião marcada como realizada, mas o card nunca
-      // saiu de "Reunião marcada").
-      // EXCEÇÃO: Repescagem futura de ICP (querFutura) nunca transfere —
-      // Samuel foi explícito que só "Follow após reunião" e
-      // "Oportunidades pro fim do mês" (a de verdade, não a repescagem)
-      // são 100% do Closer. Repescagem futura continua sendo
-      // responsabilidade de quem já era dono do lead (o SDR continua
-      // conseguindo mexer nele).
-      if (novoStatus === "realizada" && reuniaoAtiva.closer_id && !querFutura) {
+      // Oportunidade E a reunião de fato aconteceu, inclui Repescagem
+      // futura de ICP — ela é só uma divisão visual dentro de
+      // Oportunidades, não muda quem é dono): o lead passa a ser 100% do
+      // Closer que fez a call. Samuel confirmou que a transferência em si
+      // não é o problema — o SDR continua conseguindo "pegar pra ele" de
+      // volta se precisar (ver reivindicarLead). A transferência só
+      // acontece DEPOIS que quem chamou essa função já salvou tudo que
+      // precisava salvar como o dono atual do lead (nivel_ordem,
+      // histórico) — se ela rodasse aqui, o responsavel_id mudava no meio
+      // do caminho e o resto das escritas (feitas pela pessoa que ainda
+      // não é a dona nova) era barrado pela política de segurança do
+      // banco, sem erro nenhum aparecer pra avisar (foi o que aconteceu
+      // com um lead do Rafael Torres — reunião marcada como realizada,
+      // mas o card nunca saiu de "Reunião marcada").
+      if (novoStatus === "realizada" && reuniaoAtiva.closer_id) {
         return { erro: null, transferirParaCloserId: reuniaoAtiva.closer_id };
       }
     }
@@ -2022,7 +2020,12 @@ export async function reativarLeadExcluido(leadId: string): Promise<string | nul
 }
 
 // Lead sem responsável (ex.: chegou de uma campanha, sem dono definido)
-// pode ser "pego" por qualquer usuário com acesso ao Funil.
+// pode ser "pego" por qualquer usuário com acesso ao Funil. Também vale
+// pro SDR que marcou a reunião original "pegar de volta" um lead que foi
+// transferido pro Closer (Follow após reunião / Oportunidades pro fim do
+// mês, incluindo Repescagem futura) — Samuel foi explícito: a
+// transferência pro Closer não é o problema, o SDR só precisa continuar
+// conseguindo agir sobre o lead quando precisar.
 export async function reivindicarLead(
   leadId: string,
   _estadoAnterior: EstadoFormulario,
@@ -2032,7 +2035,7 @@ export async function reivindicarLead(
 
   const { data: lead, error: erroAtual } = await supabase
     .from("leads")
-    .select("responsavel_id")
+    .select("responsavel_id, nivel_ordem")
     .eq("id", leadId)
     .single();
 
@@ -2040,8 +2043,27 @@ export async function reivindicarLead(
     return { erro: "Lead não encontrado" };
   }
 
+  if (lead.responsavel_id === usuario.id) {
+    return { erro: "Esse lead já é seu." };
+  }
+
   if (lead.responsavel_id !== null) {
-    return { erro: "Esse lead já tem responsável." };
+    const souSdrOriginal =
+      (lead.nivel_ordem === NIVEL_FOLLOW_POS_REUNIAO || lead.nivel_ordem === NIVEL_REUNIAO_FEITA) &&
+      (await (async () => {
+        const { data: primeiraReuniao } = await supabase
+          .from("reunioes")
+          .select("usuario_id")
+          .eq("lead_id", leadId)
+          .order("marcada_em", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        return primeiraReuniao?.usuario_id === usuario.id;
+      })());
+
+    if (!souSdrOriginal) {
+      return { erro: "Esse lead já tem responsável." };
+    }
   }
 
   const { error } = await supabase
@@ -2248,18 +2270,26 @@ export async function buscarDetalhesDoLead(
     (r) => r.status === "marcada" && new Date(r.agendada_para).getTime() < Date.now()
   );
   const podeEditar = souAdmin || lead.responsavel_id === usuario.id || souCloser;
-  // Admin também pega o lead pra si quando ele não tem responsável
-  // (Samuel pediu — antes só aparecia pra quem não era admin).
-  const podeReivindicar = lead.responsavel_id === null;
-  const usuarioResponsavel = usuarios.find((u) => u.id === lead.responsavel_id);
-  const nomeResponsavel = usuarioResponsavel?.nome;
-  const fotoResponsavel = usuarioResponsavel?.foto_url;
   const sdrOriginalId = reunioes.length
     ? [...reunioes].sort(
         (a, b) => new Date(a.marcada_em).getTime() - new Date(b.marcada_em).getTime()
       )[0].usuario_id
     : null;
   const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
+  // Admin também pega o lead pra si quando ele não tem responsável
+  // (Samuel pediu — antes só aparecia pra quem não era admin). E o SDR
+  // que marcou a reunião original também pode "pegar de volta" um lead
+  // que foi transferido pro Closer (Follow após reunião/Oportunidades,
+  // incluindo Repescagem futura) — a transferência fica valendo, mas o
+  // SDR não fica de mãos atadas se precisar mexer no lead de novo.
+  const podeReivindicar =
+    lead.responsavel_id === null ||
+    (lead.responsavel_id !== usuario.id &&
+      sdrOriginalId === usuario.id &&
+      (lead.nivel_ordem === NIVEL_FOLLOW_POS_REUNIAO || lead.nivel_ordem === NIVEL_REUNIAO_FEITA));
+  const usuarioResponsavel = usuarios.find((u) => u.id === lead.responsavel_id);
+  const nomeResponsavel = usuarioResponsavel?.nome;
+  const fotoResponsavel = usuarioResponsavel?.foto_url;
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
 
   return {

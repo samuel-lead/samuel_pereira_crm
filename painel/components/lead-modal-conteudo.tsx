@@ -173,7 +173,11 @@ export function LeadModalConteudo({
 
         {podeReivindicar && (
           <div className="destaque-proposta flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <span>Esse lead ainda não tem responsável.</span>
+            <span>
+              {lead.responsavel_id === null
+                ? "Esse lead ainda não tem responsável."
+                : `Esse lead está com ${nomeResponsavel ?? "o Closer"} agora, mas foi você quem marcou a reunião.`}
+            </span>
             <ReivindicarLeadButton leadId={lead.id} />
           </div>
         )}
