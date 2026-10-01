@@ -311,7 +311,7 @@ export function SecaoPeriodo({
 
       {metricasAnteriores && (
         <div className="mt-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <p className="mb-2 text-sm font-extrabold uppercase tracking-wide text-neutral-700">
             Comparado com o período anterior
           </p>
           <div className="flex flex-wrap divide-x divide-y divide-neutral-800 overflow-hidden rounded-xl bg-neutral-900 shadow-sm">
