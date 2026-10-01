@@ -31,7 +31,7 @@ export function PerformanceSdr({
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <div className="border-b border-neutral-200 px-4 py-3">
+      <div className="border-b-2 border-neutral-300 px-4 py-3 dark:border-neutral-700">
         <h2 className="text-lg font-extrabold tracking-tight text-neutral-900">{tituloResolvido}</h2>
         <p className="mt-0.5 text-xs text-neutral-500">
           Top {Sdr(publicoOrg)} por {Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · {periodo}
@@ -41,7 +41,7 @@ export function PerformanceSdr({
       {ranking.length === 0 ? (
         <p className="px-4 py-8 text-center text-sm text-neutral-400">Ninguém pra comparar ainda</p>
       ) : (
-        <div className="divide-y divide-neutral-100 px-4">
+        <div className="divide-y-2 divide-neutral-200 px-4 dark:divide-neutral-800">
           {ranking.map((linha, indice) => {
             const noShowPct = formatarPercentual(
               linha.reunioesDevidas > 0 ? linha.noShow / linha.reunioesDevidas : null
@@ -70,7 +70,7 @@ export function PerformanceSdr({
                   </p>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                     <div
-                      className="h-full rounded-full bg-neutral-800"
+                      className="h-full rounded-full bg-green-600"
                       style={{ width: `${Math.max(4, (linha.reunioesRealizadas / maiorRealizadas) * 100)}%` }}
                     />
                   </div>

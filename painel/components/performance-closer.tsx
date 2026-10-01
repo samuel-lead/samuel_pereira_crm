@@ -35,7 +35,7 @@ export function PerformanceCloser({
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <div className="border-b border-neutral-200 px-4 py-3">
+      <div className="border-b-2 border-neutral-300 px-4 py-3 dark:border-neutral-700">
         <h2 className="text-lg font-extrabold tracking-tight text-neutral-900">{tituloResolvido}</h2>
         <p className="mt-0.5 text-xs text-neutral-500">Top Closer por receita coletada</p>
       </div>
@@ -43,7 +43,7 @@ export function PerformanceCloser({
       {ranking.length === 0 ? (
         <p className="px-4 py-8 text-center text-sm text-neutral-400">Ninguém pra comparar ainda</p>
       ) : (
-        <div className="divide-y divide-neutral-100 px-4">
+        <div className="divide-y-2 divide-neutral-200 px-4 dark:divide-neutral-800">
           {ranking.map((linha, indice) => {
             const taxaVendaPct = formatarPercentual(linha.taxaVenda);
             return (
@@ -71,7 +71,7 @@ export function PerformanceCloser({
                 </p>
                 <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                   <div
-                    className="h-full rounded-full bg-neutral-800"
+                    className="h-full rounded-full bg-green-600"
                     style={{ width: `${Math.max(4, (linha.receita / maiorReceita) * 100)}%` }}
                   />
                 </div>
