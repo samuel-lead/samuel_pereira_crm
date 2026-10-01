@@ -216,7 +216,7 @@ export function MetaReceitaWidget({
               <span className="font-black text-green-600">Meta batida! 🎉</span>
             ) : (
               <>
-                Falta para a meta: <span className="font-black text-amber-600">{formatarMoeda(falta)}</span>
+                Falta para a meta: <span className="font-medium text-neutral-600">{formatarMoeda(falta)}</span>
               </>
             )}
           </p>
