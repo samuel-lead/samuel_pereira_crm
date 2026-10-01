@@ -207,8 +207,8 @@ export function MetaReceitaWidget({
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="mb-7 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2.5 text-2xl font-black tracking-tight text-neutral-900">
-          <span className="h-6 w-1.5 shrink-0 rounded-full bg-blue-600" />
+        <h2 className="flex items-center gap-2 text-base font-bold tracking-tight text-neutral-900">
+          <span className="h-4 w-1 shrink-0 rounded-full bg-blue-600" />
           {rotuloMeta}: {formatarMoeda(meta)}
         </h2>
         {podeEditar && (
