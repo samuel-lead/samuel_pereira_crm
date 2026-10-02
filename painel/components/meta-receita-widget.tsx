@@ -244,7 +244,7 @@ export function MetaReceitaWidget({
         </span>
       </div>
       <div className="mt-1.5 flex justify-between text-xs font-medium text-neutral-400">
-        <span>R$ 0</span>
+        <span>Atingido: {formatarMoeda(receitaAtual)}</span>
         <span>{formatarMoeda(meta)}</span>
       </div>
       <p className="mt-3 text-xs text-neutral-500">
