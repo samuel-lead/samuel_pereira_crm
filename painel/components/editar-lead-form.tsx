@@ -479,7 +479,11 @@ export function EditarLeadForm({
   // de qualquer jeito (trava do servidor, ver atualizarLead) — só o
   // e-mail é opcional. Sem a empresa ter conectado o Google Calendar, a
   // opção nem existe — nunca promete algo que não vai acontecer.
-  const emReuniaoMarcada = nivelSelecionado === NIVEL_REUNIAO_MARCADA;
+  // Cliente (lead já vendido) nunca oferece Google Agenda: a reunião já
+  // aconteceu e virou venda, não tem nada pra sincronizar — o nível dele
+  // pode continuar sendo "Reunião marcada" no banco, por isso só olhar o
+  // nível não bastava (Samuel pegou isso ao vivo na aba Clientes).
+  const emReuniaoMarcada = nivelSelecionado === NIVEL_REUNIAO_MARCADA && !vendido;
   const prontoParaAgenda =
     emReuniaoMarcada && googleCalendarConectado && !!emailAtual.trim();
 
