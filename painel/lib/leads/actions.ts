@@ -2102,13 +2102,33 @@ export async function reivindicarLead(
     }
   }
 
-  const { error } = await supabase
-    .from("leads")
-    .update({ responsavel_id: usuario.id })
-    .eq("id", leadId);
+  if (lead.responsavel_id !== null) {
+    // Lead que já está com o Closer: a policy de UPDATE de leads barra o
+    // SDR (sem dar erro, 0 linhas alteradas — o botão mostrava "Lead pego"
+    // mas nada mudava). A troca precisa passar pela função do banco, que
+    // confere a regra e é a única autorizada a fazer isso.
+    const { error: erroRpc } = await supabase.rpc("reivindicar_lead_sdr_original", {
+      p_lead_id: leadId,
+    });
+    if (erroRpc) {
+      return { erro: erroRpc.message };
+    }
+  } else {
+    // .select() de volta: se a policy barrar de novo, vem vazio em vez de
+    // fingir que deu certo.
+    const { data: atualizado, error } = await supabase
+      .from("leads")
+      .update({ responsavel_id: usuario.id })
+      .eq("id", leadId)
+      .is("responsavel_id", null)
+      .select("id");
 
-  if (error) {
-    return { erro: mensagemAmigavel(error.code, error.message) };
+    if (error) {
+      return { erro: mensagemAmigavel(error.code, error.message) };
+    }
+    if (!atualizado || atualizado.length === 0) {
+      return { erro: "Não consegui pegar esse lead — alguém pode ter pego antes. Atualize a página." };
+    }
   }
 
   revalidatePath("/leads");
