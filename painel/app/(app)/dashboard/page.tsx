@@ -8,6 +8,7 @@ import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
 import { PerformanceCloser } from "@/components/performance-closer";
+import { PerformanceCorretor } from "@/components/performance-corretor";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import { LeadsRecentes, type LeadRecente } from "@/components/leads-recentes";
 import { ProximasReunioes, type ReuniaoProxima } from "@/components/proximas-reunioes";
@@ -37,7 +38,7 @@ import { numerarNiveis } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes, ehImobiliario } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -377,9 +378,18 @@ export default async function DashboardPage({
         )}
 
         {/* Imobiliário não separa SDR de Closer — é tudo "Corretor", um
-            papel só (ver Sdr() em lib/terminologia.ts). Esses dois
-            rankings não fazem sentido pra esse público. */}
-        {!ehImobiliario(publicoOrg) && (
+            papel só (ver Sdr() em lib/terminologia.ts). Lá não tem ranking
+            nem Closer: só a tabela de performance do corretor, com todas as
+            métricas (Samuel pediu de volta). Mentoria segue com os dois
+            rankings lado a lado. */}
+        {ehImobiliario(publicoOrg) ? (
+          <PerformanceCorretor
+            titulo={`Performance por ${Sdr(publicoOrg)} — ${periodoResolvido.titulo.toLowerCase()}`}
+            dados={performancePeriodoSdr}
+            periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
+            publicoOrg={publicoOrg}
+          />
+        ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             <PerformanceSdr
               dados={performancePeriodoSdr}

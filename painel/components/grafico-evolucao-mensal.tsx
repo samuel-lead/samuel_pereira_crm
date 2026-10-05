@@ -174,6 +174,13 @@ export function GraficoEvolucaoMensal({
           </p>
         ) : (
           <>
+            {/* O quadro de detalhe do mês fica POR CIMA do gráfico (absolute),
+                não empurrando a página: antes ele entrava no fluxo logo
+                embaixo do gráfico e, ao passar o mouse, a página crescia;
+                o gráfico se mexia debaixo do cursor, o mouse "saía" do
+                gráfico, o quadro sumia, a página encolhia e o ciclo
+                recomeçava — o tremor que o Samuel pegou ao vivo. */}
+            <div className="relative mb-3">
             <svg viewBox={`0 0 ${largura} ${altura}`} className="w-full">
               <defs>
                 <linearGradient id="gradienteEvolucaoMensal" x1="0" y1="0" x2="0" y2="1">
@@ -273,10 +280,9 @@ export function GraficoEvolucaoMensal({
                 onMouseLeave={() => setHover(null)}
               />
             </svg>
-
             {pontoHover && (
               <div
-                className="mb-3 rounded-lg border px-3 py-2 text-xs"
+                className="pointer-events-none absolute left-2 top-1 z-10 max-w-[calc(100%-1rem)] rounded-lg border px-3 py-2 text-xs shadow-md"
                 style={{ borderColor: "var(--grade)", background: "var(--superficie-alt)" }}
               >
                 <p className="mb-1 font-semibold" style={{ color: "var(--texto)" }}>
@@ -298,6 +304,8 @@ export function GraficoEvolucaoMensal({
                 </div>
               </div>
             )}
+
+            </div>
 
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--texto-mutado)" }}>
               <span className="flex items-center gap-1.5">
