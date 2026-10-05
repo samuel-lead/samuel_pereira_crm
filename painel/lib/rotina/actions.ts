@@ -75,3 +75,57 @@ export async function alternarAtividadeRotina(
   revalidatePath("/rotina");
   return { erro: null };
 }
+
+export type RotinaEquipe = {
+  // Últimos 7 dias (do mais antigo pro de hoje), "AAAA-MM-DD".
+  dias: string[];
+  pessoas: { id: string; nome: string; porDia: Record<string, string[]> }[];
+};
+
+// Só admin: quem da equipe (SDRs) marcou o quê na rotina, hoje e nos 6
+// dias anteriores. Samuel pediu pra conferir se o time realmente usa o
+// check — antes o admin abria a tela e via só a própria rotina.
+export async function buscarRotinaEquipe(): Promise<RotinaEquipe | null> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const { data: eu } = await supabase
+    .from("usuarios")
+    .select("papel")
+    .eq("id", usuario.id)
+    .single();
+  if (eu?.papel !== "admin") return null;
+
+  const hoje = hojeBrasil();
+  const [ano, mes, dia] = hoje.split("-").map(Number);
+  const dias: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.UTC(ano, mes - 1, dia - i));
+    dias.push(d.toISOString().slice(0, 10));
+  }
+
+  const [{ data: sdrs }, { data: marcacoes }] = await Promise.all([
+    supabase
+      .from("usuarios")
+      .select("id, nome")
+      .eq("org_id", usuario.org_id)
+      .eq("funcao", "sdr")
+      .order("nome"),
+    supabase
+      .from("rotina_diaria_status")
+      .select("usuario_id, data, atividade")
+      .eq("org_id", usuario.org_id)
+      .gte("data", dias[0])
+      .lte("data", hoje),
+  ]);
+
+  const pessoas = (sdrs ?? []).map((sdr) => {
+    const porDia: Record<string, string[]> = {};
+    for (const m of marcacoes ?? []) {
+      if (m.usuario_id !== sdr.id) continue;
+      (porDia[m.data] ??= []).push(m.atividade);
+    }
+    return { id: sdr.id, nome: sdr.nome, porDia };
+  });
+
+  return { dias, pessoas };
+}

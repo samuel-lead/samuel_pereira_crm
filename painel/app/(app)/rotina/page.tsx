@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { usuarioAutenticado } from "@/lib/supabase/server";
-import { buscarRotinaHoje } from "@/lib/rotina/actions";
+import { buscarRotinaHoje, buscarRotinaEquipe } from "@/lib/rotina/actions";
 import { PageHeader } from "@/components/page-header";
 import { RotinaDiaria } from "@/components/rotina-diaria";
+import { RotinaEquipeAdmin } from "@/components/rotina-equipe";
 
 export default async function RotinaPage() {
   const { usuario } = await usuarioAutenticado();
@@ -14,13 +15,14 @@ export default async function RotinaPage() {
     redirect("/leads");
   }
 
-  const concluidasIniciais = await buscarRotinaHoje();
+  const [concluidasIniciais, equipe] = await Promise.all([buscarRotinaHoje(), buscarRotinaEquipe()]);
 
   return (
     <>
       <PageHeader titulo="Minha rotina" />
       <main className="min-h-full bg-[#f4f5f7]">
         <RotinaDiaria concluidasIniciais={concluidasIniciais} />
+        {equipe && <RotinaEquipeAdmin equipe={equipe} />}
       </main>
     </>
   );
