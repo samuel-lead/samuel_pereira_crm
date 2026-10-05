@@ -18,6 +18,16 @@ const NIVEL_REAGENDAMENTO = 6;
 const NIVEL_FOLLOW_POS_REUNIAO = 7;
 const NIVEL_REUNIAO_FEITA = 8;
 const NIVEL_BASE = 9;
+// Níveis em que o SDR que marcou a reunião pode "pegar o lead de volta"
+// (reivindicarLead / podeReivindicar) quando ele está com o Closer. Precisa
+// bater com reivindicar_lead_sdr_original no banco.
+const NIVEIS_SDR_PEGA_DE_VOLTA: number[] = [
+  NIVEL_REUNIAO_MARCADA,
+  NIVEL_NO_SHOW,
+  NIVEL_REAGENDAMENTO,
+  NIVEL_FOLLOW_POS_REUNIAO,
+  NIVEL_REUNIAO_FEITA,
+];
 
 // <input type="datetime-local"> manda um horário "solto", sem fuso (ex.:
 // "2026-08-25T14:30"). O servidor roda em UTC — sem isso, "new Date(...)"
@@ -2085,7 +2095,7 @@ export async function reivindicarLead(
 
   if (lead.responsavel_id !== null) {
     const souSdrOriginal =
-      (lead.nivel_ordem === NIVEL_FOLLOW_POS_REUNIAO || lead.nivel_ordem === NIVEL_REUNIAO_FEITA) &&
+      NIVEIS_SDR_PEGA_DE_VOLTA.includes(lead.nivel_ordem) &&
       (await (async () => {
         const { data: primeiraReuniao } = await supabase
           .from("reunioes")
@@ -2342,7 +2352,7 @@ export async function buscarDetalhesDoLead(
     lead.responsavel_id === null ||
     (lead.responsavel_id !== usuario.id &&
       sdrOriginalId === usuario.id &&
-      (lead.nivel_ordem === NIVEL_FOLLOW_POS_REUNIAO || lead.nivel_ordem === NIVEL_REUNIAO_FEITA));
+      NIVEIS_SDR_PEGA_DE_VOLTA.includes(lead.nivel_ordem));
   const usuarioResponsavel = usuarios.find((u) => u.id === lead.responsavel_id);
   const nomeResponsavel = usuarioResponsavel?.nome;
   const fotoResponsavel = usuarioResponsavel?.foto_url;
