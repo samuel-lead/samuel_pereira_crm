@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { IconeWhatsapp, IconeInstagram, IconeReativar } from "@/components/icons";
+import { IconeWhatsapp, IconeInstagram, IconeReativar, IconeCalendario } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
@@ -121,6 +121,8 @@ export type LeadBase = {
   entrou_nivel_em: string;
   proposta_valor: number | null;
   motivo_base_detalhe?: string | null;
+  // Dia (7h de Brasília) em que o lead volta sozinho pra Novos Leads.
+  voltar_da_base_em?: string | null;
 };
 
 export type MotivoBase =
@@ -294,6 +296,18 @@ export function BaseLeadsBoard({
                           Na base há {diasNaBase(lead.entrou_nivel_em)} dia
                           {diasNaBase(lead.entrou_nivel_em) === 1 ? "" : "s"}
                         </p>
+                        {lead.voltar_da_base_em && (
+                          <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                            <IconeCalendario className="h-3 w-3 shrink-0" />
+                            Volta pra Novos Leads em{" "}
+                            {new Date(lead.voltar_da_base_em).toLocaleDateString("pt-BR", {
+                              timeZone: "America/Sao_Paulo",
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "2-digit",
+                            })}
+                          </p>
+                        )}
                         {lead.motivo_base_detalhe && (
                           <p className="mt-1 rounded-md bg-rose-50 px-2 py-1 text-xs text-rose-700">
                             {lead.motivo_base_detalhe}

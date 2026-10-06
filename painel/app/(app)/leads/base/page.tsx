@@ -52,7 +52,7 @@ export default async function BasePage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, instagram, foto_url, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor, motivo_base, motivo_base_detalhe"
+      "id, nome, telefone_e164, instagram, foto_url, origem, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor, motivo_base, motivo_base_detalhe, voltar_da_base_em"
     )
     .eq("nivel_ordem", 9)
     .neq("status", "vendido")
