@@ -772,6 +772,9 @@ export function EditarLeadForm({
                   name="closer_id"
                   placeholder="Ainda não definido"
                   funcaoFiltro={funcaoDeQuemFaz(publicoOrg)}
+                  // Imobiliário: o gerente (admin) também faz visita — Samuel
+                  // pediu pra poder se escolher na lista, não só os corretores.
+                  incluirAdmins={ehImobiliario(publicoOrg)}
                 />
               </div>
 
@@ -841,6 +844,9 @@ export function EditarLeadForm({
                   name="closer_id"
                   placeholder="Ainda não definido"
                   funcaoFiltro={funcaoDeQuemFaz(publicoOrg)}
+                  // Imobiliário: o gerente (admin) também faz visita — Samuel
+                  // pediu pra poder se escolher na lista, não só os corretores.
+                  incluirAdmins={ehImobiliario(publicoOrg)}
                 />
               </div>
             )}
