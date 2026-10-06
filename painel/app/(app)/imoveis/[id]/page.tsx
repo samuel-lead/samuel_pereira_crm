@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
@@ -28,17 +27,7 @@ export default async function ImovelPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <PageHeader
-        titulo={imovel.titulo}
-        acao={
-          <Link
-            href="/imoveis"
-            className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-          >
-            ← Voltar pra Imóveis
-          </Link>
-        }
-      />
+      <PageHeader titulo={imovel.titulo} />
 
       <main className="mx-auto max-w-lg space-y-4 bg-[#f4f5f7] px-6 py-10">
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-md">
