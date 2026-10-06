@@ -1432,16 +1432,20 @@ export async function marcarVendido(
   let produto: string | null;
   let imovelId: string | null = null;
   if (usuario.publico_org === "imobiliario") {
+    // Imóvel NÃO é obrigatório pra registrar a venda (Samuel pediu: o
+    // corretor nem sempre preenche) — sem imóvel, a venda entra sem
+    // vínculo e sem produto.
     imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
-    if (!imovelId) {
-      return { erro: "Selecione o imóvel vendido antes de salvar." };
+    if (imovelId) {
+      const { data: imovel } = await supabase
+        .from("imoveis")
+        .select("titulo")
+        .eq("id", imovelId)
+        .single();
+      produto = imovel?.titulo ?? null;
+    } else {
+      produto = null;
     }
-    const { data: imovel } = await supabase
-      .from("imoveis")
-      .select("titulo")
-      .eq("id", imovelId)
-      .single();
-    produto = imovel?.titulo ?? null;
   } else {
     produto = String(formData.get("produto") ?? "").trim() || null;
     if (!produto) {

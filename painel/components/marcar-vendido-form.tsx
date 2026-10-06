@@ -196,7 +196,7 @@ export function MarcarVendidoForm({
             />
           )}
           <div className="rounded-lg bg-white p-3 shadow-sm">
-            <RotuloCampo Icone={IconeTag} obrigatorio>
+            <RotuloCampo Icone={IconeTag} obrigatorio={!imobiliario}>
               {imobiliario ? "Imóvel vendido" : "Produto"}
             </RotuloCampo>
             {imobiliario ? (

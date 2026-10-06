@@ -92,7 +92,9 @@ export async function criarImovel(
   }
 
   revalidatePath("/imoveis");
-  redirect(`/imoveis/${data.id}`);
+  // Fecha a tela de cadastro e volta pra lista (Samuel pediu: ao salvar, sair
+  // de "adicionar imóvel"). A foto se adiciona depois, abrindo o imóvel.
+  redirect("/imoveis");
 }
 
 export async function atualizarImovel(
