@@ -258,6 +258,38 @@ async function sincronizarReuniao(
     }
   }
 
+  // Corrigir "qual dos dois é": No-show <-> Precisa reagendar. A reunião
+  // já foi fechada ao sair de "Reunião marcada" (No-show = nao_compareceu,
+  // Precisa reagendar = cancelada) — trocar de um pro outro tem que trocar
+  // o status dela também, senão o card muda de coluna mas a métrica não
+  // (foi o que aconteceu com a Rayssa: movida pra Precisa reagendar e
+  // depois pra No-show, o no-show nunca foi contado).
+  if (
+    (deOrdem === NIVEL_NO_SHOW && paraOrdem === NIVEL_REAGENDAMENTO) ||
+    (deOrdem === NIVEL_REAGENDAMENTO && paraOrdem === NIVEL_NO_SHOW)
+  ) {
+    const { data: ultimaReuniao } = await supabase
+      .from("reunioes")
+      .select("id, status")
+      .eq("lead_id", leadId)
+      .in("status", ["cancelada", "nao_compareceu"])
+      .order("agendada_para", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (ultimaReuniao) {
+      const novoStatus = paraOrdem === NIVEL_NO_SHOW ? "nao_compareceu" : "cancelada";
+      if (ultimaReuniao.status !== novoStatus) {
+        const { error } = await supabase
+          .from("reunioes")
+          .update({ status: novoStatus })
+          .eq("id", ultimaReuniao.id);
+        if (error) return { erro: error.message };
+      }
+    }
+    return { erro: null };
+  }
+
   if (paraOrdem === NIVEL_REUNIAO_MARCADA && deOrdem !== NIVEL_REUNIAO_MARCADA) {
     if (!agendadaPara) {
       return { erro: `Informe a data e hora da ${reuniao(publicoOrg)}.` };
