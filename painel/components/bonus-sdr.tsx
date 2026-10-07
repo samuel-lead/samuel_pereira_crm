@@ -116,9 +116,9 @@ export function BonusSdrTabela({
           <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">1.</span>
-              {` ${Call(publicoOrg)} realizada qualificada: `}
+              {` ${Call(publicoOrg)} realizada qualificada, marcada de segunda a sexta: `}
               <b className="text-white">{moedaCurta(config.valor_por_call)}</b>
-              {` · marcada no fim de semana: `}
+              {` · marcada no sábado ou domingo: `}
               <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
             </li>
             <li className="whitespace-nowrap">
@@ -238,7 +238,7 @@ export function BonusSdrTabela({
               <LinhaBonus
                 label={
                   config.modelo === "por_call"
-                    ? `Bônus por ${call(publicoOrg)} marcada no fim de semana (valor mais alto)`
+                    ? `Bônus por ${call(publicoOrg)} marcada no sábado ou domingo`
                     : `Bônus por ${call(publicoOrg)} realizada que foi marcada no fim de semana`
                 }
                 valor={linha.bonusFimDeSemana}
