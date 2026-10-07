@@ -782,6 +782,13 @@ export function KanbanBoard({
       const tevepProposta = aconteceu
         ? await perguntar(`Essa ${reuniao(publicoOrg)} teve proposta?`)
         : false;
+      // Sem proposta, o Closer diz se o lead era qualificado (só serviço/
+      // mentoria — o bônus por call do SDR só vale pra call qualificada).
+      // Com proposta (ou venda) já se sabe que era, então nem pergunta.
+      const leadQualificado =
+        aconteceu && !tevepProposta && !ehImobiliario(publicoOrg)
+          ? await perguntar("O lead era qualificado?")
+          : undefined;
       const motivoRepescagemFutura = await perguntarMotivoRepescagem();
       if (ordem === ORDEM_OPORTUNIDADE_FUTURA && !motivoRepescagemFutura) return;
       iniciarTransicao(() => {
@@ -793,7 +800,9 @@ export function KanbanBoard({
           tevepProposta,
           undefined,
           undefined,
-          motivoRepescagemFutura
+          motivoRepescagemFutura,
+          undefined,
+          leadQualificado
         ).then((erro) => {
           if (erro) avisar(erro);
           // Abre com "sim" mesmo se o servidor recusou o movimento por

@@ -188,6 +188,12 @@ async function sincronizarReuniao(
     // false, não conta como "realizada" (mesmo efeito de um No-show na
     // taxa de comparecimento), mesmo o lead seguindo pro nível escolhido.
     reuniaoAconteceu?: boolean;
+    // Só perguntado (no CRM de serviço/mentoria) quando a reunião aconteceu
+    // e NÃO teve proposta: o Closer diz se o lead era qualificado. false =
+    // a reunião fica marcada como não qualificada e não conta pro bônus
+    // por call do SDR. undefined = qualificada (venda e proposta já provam
+    // que era, e toda reunião nasce qualificada).
+    reuniaoQualificada?: boolean;
     // Só perguntado quando existe uma reunião anterior "esquecida" (ainda
     // "marcada", data já passada) — true = sumiu sem avisar (conta como
     // no-show), false = avisou antes que precisava remarcar (não conta).
@@ -210,6 +216,7 @@ async function sincronizarReuniao(
     marcadaEm,
     closerId,
     reuniaoAconteceu,
+    reuniaoQualificada,
     reuniaoAnteriorSumiu,
     publicoOrg = "mentoria",
     querFutura = false,
@@ -414,7 +421,12 @@ async function sincronizarReuniao(
 
       const { error } = await supabase
         .from("reunioes")
-        .update({ status: novoStatus })
+        .update({
+          status: novoStatus,
+          ...(novoStatus === "realizada" && reuniaoQualificada === false
+            ? { qualificada: false }
+            : {}),
+        })
         .eq("id", reuniaoAtiva.id);
       if (error) return { erro: error.message };
 
@@ -644,6 +656,7 @@ export async function atualizarLead(
     String(formData.get("motivo_repescagem_futura") ?? "").trim() || null;
   const reuniaoAconteceuForm = String(formData.get("reuniao_aconteceu") ?? "").trim();
   const tevePropostaForm = String(formData.get("teve_proposta") ?? "").trim();
+  const leadQualificadoForm = String(formData.get("lead_qualificado") ?? "").trim();
   const reuniaoAnteriorSumiuForm = String(formData.get("reuniao_anterior_sumiu") ?? "").trim();
   // Só faz sentido em Oportunidades (nível 6) — fora dele, fica sempre false.
   const oportunidadeFutura =
@@ -876,6 +889,10 @@ export async function atualizarLead(
       marcadaEm: reuniaoMarcadaEm,
       closerId,
       reuniaoAconteceu: reuniaoAconteceuForm === "sim",
+      reuniaoQualificada:
+        reuniaoAconteceuForm === "sim" && tevePropostaForm === "nao" && leadQualificadoForm === "nao"
+          ? false
+          : undefined,
       reuniaoAnteriorSumiu:
         reuniaoAnteriorSumiuForm === "sim"
           ? true
@@ -1074,7 +1091,10 @@ export async function moverLeadNivel(
   // kanban-board.tsx), já que o card não abre nesse fluxo.
   motivoRepescagemFutura?: string,
   // Só usado indo pra Base (nível 9): dia do próximo contato, obrigatório.
-  proximoContatoBase?: string
+  proximoContatoBase?: string,
+  // Resposta de "o lead era qualificado?" no Kanban (só serviço/mentoria,
+  // só quando a reunião aconteceu sem proposta). false = não qualificado.
+  leadQualificado?: boolean
 ): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -1175,6 +1195,7 @@ export async function moverLeadNivel(
     paraOrdem: nivelReal,
     agendadaPara,
     reuniaoAconteceu,
+    reuniaoQualificada: leadQualificado === false ? false : undefined,
     publicoOrg: usuario.publico_org,
     querFutura,
   });
@@ -1497,7 +1518,7 @@ export async function marcarVendido(
     // métrica da Elizabeth mesmo já sendo cliente).
     await supabase
       .from("reunioes")
-      .update({ status: "realizada", resultado: "vendeu", valor })
+      .update({ status: "realizada", resultado: "vendeu", valor, qualificada: true })
       .eq("id", reuniaoAtiva.id);
 
     // Reunião com Closer definido = o lead passa a ser 100% do Closer que

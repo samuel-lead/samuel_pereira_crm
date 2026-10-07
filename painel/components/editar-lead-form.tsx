@@ -312,6 +312,10 @@ export function EditarLeadForm({
   // proposta já registrada também já responde "teve proposta" sozinho.
   const respondidoNoKanban = nivelPretendido !== undefined;
   const [reuniaoAconteceu, setReuniaoAconteceu] = useState(respondidoNoKanban ? "sim" : "");
+  // "O lead era qualificado?" — só aparece quando a reunião aconteceu e não
+  // teve proposta (serviço/mentoria). Já vem "Sim" marcado: o Closer só
+  // troca pra "Não" se o lead realmente não era qualificado.
+  const [leadQualificadoResposta, setLeadQualificadoResposta] = useState("sim");
   const [tevePropostaResposta, setTevePropostaResposta] = useState(
     respondidoNoKanban || lead.proposta_valor != null ? "sim" : ""
   );
@@ -962,6 +966,38 @@ export function EditarLeadForm({
               )}
             </div>
           )}
+
+          {vaiConfirmarReuniao &&
+            !respondidoNoKanban &&
+            !ehImobiliario(publicoOrg) &&
+            reuniaoAconteceu === "sim" &&
+            tevePropostaResposta === "nao" && (
+              <div className="mt-2 space-y-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-medium text-amber-800">O lead era qualificado?</p>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                    <input
+                      type="radio"
+                      name="lead_qualificado"
+                      value="sim"
+                      checked={leadQualificadoResposta === "sim"}
+                      onChange={() => setLeadQualificadoResposta("sim")}
+                    />
+                    Sim
+                  </label>
+                  <label className="flex items-center gap-1.5 text-sm text-amber-800">
+                    <input
+                      type="radio"
+                      name="lead_qualificado"
+                      value="nao"
+                      checked={leadQualificadoResposta === "nao"}
+                      onChange={() => setLeadQualificadoResposta("nao")}
+                    />
+                    Não
+                  </label>
+                </div>
+              </div>
+            )}
 
           {nivelSelecionado === NIVEL_OPORTUNIDADES && (
             <div className="mt-2 rounded-md border border-green-200 bg-green-50 p-3">
