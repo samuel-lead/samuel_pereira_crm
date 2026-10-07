@@ -88,7 +88,7 @@ export function BonusSdrConfigForm({
     <form action={acaoFormulario} className="space-y-5">
       {config.modelo === "por_call" ? (
         <div>
-          <p className={tituloSecaoClasse}>Bônus por {call(publicoOrg)} realizada e qualificada</p>
+          <p className={tituloSecaoClasse}>Bônus por {call(publicoOrg)} realizada</p>
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
               <Campo name="valor_por_call" label="Por call" defaultValue={config.valor_por_call} prefixo="R$" destaque />
