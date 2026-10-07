@@ -116,7 +116,7 @@ export function BonusSdrTabela({
           <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">1.</span>
-              {` ${Call(publicoOrg)} realizada: `}
+              {` ${Call(publicoOrg)} realizada qualificada: `}
               <b className="text-white">{moedaCurta(config.valor_por_call)}</b>
               {` · marcada no fim de semana: `}
               <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
@@ -175,7 +175,7 @@ export function BonusSdrTabela({
       {config.modelo === "por_call" && (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           Observação: se o no-show do mês passar de {Math.round(config.no_show_maximo * 100)}%, o SDR perde todos
-          os bônus, inclusive o das {calls(publicoOrg)} realizadas.
+          os bônus, inclusive o das {calls(publicoOrg)} realizadas qualificadas.
         </p>
       )}
 
@@ -230,7 +230,7 @@ export function BonusSdrTabela({
               <LinhaBonus
                 label={
                   config.modelo === "por_call"
-                    ? `Bônus por ${calls(publicoOrg)} realizadas (${linha.callsQualificadas})`
+                    ? `Bônus por ${calls(publicoOrg)} realizadas qualificadas (${linha.callsQualificadas})`
                     : `Bônus por ${calls(publicoOrg)} realizadas`
                 }
                 valor={linha.bonusPorCallRealizada}
