@@ -359,8 +359,13 @@ export function LeadModalConteudo({
         {/* Só faz sentido em Pré-vendas — depois que a reunião é marcada
             (aba Vendas: Reuniões marcadas, Follow após reunião,
             Oportunidades, Base...) esse contador de sequência de follow
-            não tem mais uso. Samuel pediu pra sumir de lá. */}
-        {podeEditar && lead.nivel_ordem < NIVEL_REUNIAO_MARCADA && (
+            não tem mais uso. Samuel pediu pra sumir de lá. Exceção: No-show
+            e Precisa reagendar, que ele pediu de volta (07/10/26) porque o
+            SDR segue fazendo follow com o lead nessas duas abas. */}
+        {podeEditar &&
+          (lead.nivel_ordem < NIVEL_REUNIAO_MARCADA ||
+            lead.nivel_ordem === NIVEL_NO_SHOW ||
+            lead.nivel_ordem === NIVEL_REAGENDAMENTO) && (
           <DiaFollowSelector leadId={lead.id} diaFollow={lead.dia_follow} />
         )}
 
