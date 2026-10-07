@@ -171,6 +171,14 @@ export function BonusSdrTabela({
         )}
       </div>
 
+      {config.bonus_inicio && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+          O bônus começa a contar em{" "}
+          {new Date(`${config.bonus_inicio}T12:00:00-03:00`).toLocaleDateString("pt-BR")}. Antes dessa data,
+          fica zerado.
+        </p>
+      )}
+
       {config.modelo === "por_call" && (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           Observação: se o no-show do mês passar de {Math.round(config.no_show_maximo * 100)}%, o SDR perde todos

@@ -946,6 +946,9 @@ export type BonusSdr = MetricasUsuario & {
 };
 
 export type BonusSdrConfig = {
+  // Data (AAAA-MM-DD) a partir da qual o bônus passa a contar; antes dela
+  // fica zerado. null = conta desde o começo do período.
+  bonus_inicio: string | null;
   // 'faixas' = 60/80/100 calls (modelo antigo); 'por_call' = valor por call
   // qualificada (ver migration 20261007120000).
   modelo: "faixas" | "por_call";
@@ -971,6 +974,7 @@ export type BonusSdrConfig = {
 // org ainda não tem uma linha em bonus_sdr_config (ex.: org imobiliário,
 // que não usa essa mecânica e nunca ganha essa linha).
 export const BONUS_SDR_CONFIG_PADRAO: BonusSdrConfig = {
+  bonus_inicio: null,
   modelo: "faixas",
   valor_por_call: 20,
   valor_por_call_venda: 50,
@@ -1002,11 +1006,21 @@ export async function calcularBonusPorSdr(
   inicio: Date,
   fim: Date
 ): Promise<BonusSdr[]> {
-  const [metricasPorUsuario, { data: configData }] = await Promise.all([
-    calcularMetricasPorUsuario(supabase, orgId, inicio, fim),
-    supabase.from("bonus_sdr_config").select("*").eq("org_id", orgId).maybeSingle(),
-  ]);
+  const { data: configData } = await supabase
+    .from("bonus_sdr_config")
+    .select("*")
+    .eq("org_id", orgId)
+    .maybeSingle();
   const config = (configData as BonusSdrConfig | null) ?? BONUS_SDR_CONFIG_PADRAO;
+
+  // Antes de config.bonus_inicio nada conta: o período do bônus começa na
+  // data dele (ou fica vazio, com tudo zerado, se o período acaba antes).
+  const inicioDoBonus = config.bonus_inicio ? new Date(`${config.bonus_inicio}T00:00:00-03:00`) : null;
+  if (inicioDoBonus && inicioDoBonus > inicio) {
+    inicio = inicioDoBonus > fim ? fim : inicioDoBonus;
+  }
+
+  const metricasPorUsuario = await calcularMetricasPorUsuario(supabase, orgId, inicio, fim);
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
 
