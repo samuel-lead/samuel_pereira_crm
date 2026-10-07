@@ -941,6 +941,8 @@ export type BonusSdr = MetricasUsuario & {
   travadoPorNoShow: boolean;
   bonusPorCallRealizada: number;
   bonusFimDeSemana: number;
+  // Só no modelo "por_call": R$ por venda (calls cujo lead virou venda).
+  bonusPorVenda: number;
   bonusPorFaturamento: number;
   totalBonus: number;
 };
@@ -1039,8 +1041,7 @@ export async function calcularBonusPorSdr(
       if (config.modelo === "por_call") {
         // Só conta call realizada E qualificada (venda é sempre qualificada).
         // Call marcada no fim de semana paga o valor de fim de semana.
-        // (Samuel tirou o bônus extra por venda em 07/10/26: quem quiser
-        // premiar venda tem o bônus de faturamento.)
+        // O bônus por venda e o de receita vêm mais abaixo (só vale o maior).
         travadoPorNoShow = noShowPercentual !== null && noShowPercentual > config.no_show_maximo;
         const validas = realizadas.filter((r) => r.qualificada || r.venda);
         const valorDe = (r: (typeof realizadas)[number]) =>
@@ -1078,17 +1079,19 @@ export async function calcularBonusPorSdr(
               ? config.faturamento_tier1_bonus
               : 0;
 
-      // 'por_call': é um OU outro — vale o maior entre o bônus por call e o
-      // bônus por receita, nunca os dois somados. A trava de no-show derruba
-      // os dois (a receita depende das calls acontecerem).
+      // 'por_call': o bônus por call SEMPRE vale e soma. Além dele, só vale
+      // o MAIOR entre o bônus por venda e o bônus por receita — nunca os
+      // dois (Samuel, 07/10/26). A trava de no-show derruba tudo.
+      let bonusPorVenda = 0;
       if (config.modelo === "por_call") {
+        bonusPorVenda = realizadas.filter((r) => r.venda).length * config.valor_por_call_venda;
         if (travadoPorNoShow) {
+          bonusPorVenda = 0;
           bonusPorFaturamento = 0;
-        } else if (bonusPorFaturamento > bonusPorCallRealizada + bonusFimDeSemana) {
-          bonusPorCallRealizada = 0;
-          bonusFimDeSemana = 0;
+        } else if (bonusPorVenda >= bonusPorFaturamento) {
+          bonusPorFaturamento = 0;
         } else {
-          bonusPorFaturamento = 0;
+          bonusPorVenda = 0;
         }
       }
 
@@ -1106,8 +1109,9 @@ export async function calcularBonusPorSdr(
         travadoPorNoShow,
         bonusPorCallRealizada,
         bonusFimDeSemana,
+        bonusPorVenda,
         bonusPorFaturamento,
-        totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorFaturamento,
+        totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda + bonusPorFaturamento,
       };
     })
   );

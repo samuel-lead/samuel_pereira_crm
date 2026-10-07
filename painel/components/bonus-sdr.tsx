@@ -123,6 +123,12 @@ export function BonusSdrTabela({
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">2.</span>
+              {` Venda realizada: `}
+              <b className="text-white">{moedaCurta(config.valor_por_call_venda)}</b>
+              {" por venda"}
+            </li>
+            <li className="whitespace-nowrap">
+              <span className="font-bold text-white">3.</span>
               {` Receita do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
               {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
               <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
@@ -135,8 +141,8 @@ export function BonusSdrTabela({
               {" (maior faixa que bateu, não soma)"}
             </li>
             <li className="whitespace-nowrap">
-              <span className="font-bold text-white">3.</span>
-              {` Vale o maior entre o bônus por ${call(publicoOrg)} (1) e o de receita (2), nunca os dois`}
+              <span className="font-bold text-white">4.</span>
+              {` O bônus por ${call(publicoOrg)} (1) sempre vale. Além dele, só vale o maior entre venda (2) e receita (3), nunca os dois`}
             </li>
           </ul>
         ) : (
@@ -243,6 +249,12 @@ export function BonusSdrTabela({
                 }
                 valor={linha.bonusFimDeSemana}
               />
+              {config.modelo === "por_call" && (
+                <LinhaBonus
+                  label={`Bônus por venda (${linha.callsDeVenda} ${linha.callsDeVenda === 1 ? "venda" : "vendas"})`}
+                  valor={linha.bonusPorVenda}
+                />
+              )}
               <LinhaBonus
                 label={config.modelo === "por_call" ? "Bônus por receita" : "Bônus por faturamento"}
                 valor={linha.bonusPorFaturamento}
