@@ -112,6 +112,36 @@ export function BonusSdrTabela({
             com dificuldade de entender como o bônus era calculado.
             Virou 3 linhas curtas, cada uma numa linha só (Samuel pediu:
             didático e sem quebrar), formato "bateu isso → ganha aquilo". */}
+        {config.modelo === "por_call" ? (
+          <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
+            <li className="whitespace-nowrap">
+              <span className="font-bold text-white">1.</span>
+              {` ${Call(publicoOrg)} realizada e qualificada: `}
+              <b className="text-white">{moedaCurta(config.valor_por_call)}</b>
+              {` · no fim de semana: `}
+              <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
+              {` · que virou venda: `}
+              <b className="text-white">{moedaCurta(config.valor_por_call_venda)}</b>
+            </li>
+            <li className="whitespace-nowrap">
+              <span className="font-bold text-white">2.</span>
+              {` No-show do mês acima de ${Math.round(config.no_show_maximo * 100)}%: o bônus por ${call(publicoOrg)} não vale`}
+            </li>
+            <li className="whitespace-nowrap">
+              <span className="font-bold text-white">3.</span>
+              {` Faturamento do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
+              {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
+              <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
+              {" · "}
+              {moedaCurta(config.faturamento_tier2_valor)} ganha{" "}
+              <b className="text-white">{moedaCurta(config.faturamento_tier2_bonus)}</b>
+              {" · "}
+              {moedaCurta(config.faturamento_tier3_valor)} ganha{" "}
+              <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
+              {" (maior faixa que bateu, não soma)"}
+            </li>
+          </ul>
+        ) : (
         <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
           <li className="whitespace-nowrap">
             <span className="font-bold text-white">1.</span>{` ${Calls(publicoOrg)} realizadas: `}
@@ -141,6 +171,7 @@ export function BonusSdrTabela({
             {" (maior faixa que bateu, não soma)"}
           </li>
         </ul>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -191,13 +222,37 @@ export function BonusSdrTabela({
             </div>
 
             <div className="mt-3 divide-y divide-neutral-100 rounded-lg border border-neutral-100 bg-neutral-50/60">
-              <LinhaBonus label={`Bônus por ${calls(publicoOrg)} realizadas`} valor={linha.bonusPorCallRealizada} />
               <LinhaBonus
-                label={`Bônus por ${call(publicoOrg)} realizada que foi marcada no fim de semana`}
+                label={
+                  config.modelo === "por_call"
+                    ? `Bônus por ${calls(publicoOrg)} realizadas e qualificadas (${linha.callsQualificadas}, sendo ${linha.callsDeVenda} de venda)`
+                    : `Bônus por ${calls(publicoOrg)} realizadas`
+                }
+                valor={linha.bonusPorCallRealizada}
+              />
+              <LinhaBonus
+                label={
+                  config.modelo === "por_call"
+                    ? `Bônus por ${call(publicoOrg)} marcada no fim de semana (valor mais alto)`
+                    : `Bônus por ${call(publicoOrg)} realizada que foi marcada no fim de semana`
+                }
                 valor={linha.bonusFimDeSemana}
               />
               <LinhaBonus label="Bônus por faturamento" valor={linha.bonusPorFaturamento} />
             </div>
+            {config.modelo === "por_call" && linha.travadoPorNoShow && (
+              <p className="mt-2 text-xs font-medium text-red-600">
+                No-show de {formatarPercentual(linha.noShowPercentual)}, acima do limite de{" "}
+                {Math.round(config.no_show_maximo * 100)}%: o bônus por {call(publicoOrg)} não vale neste mês.
+              </p>
+            )}
+            {config.modelo === "por_call" && linha.callsNaoQualificadas > 0 && (
+              <p className="mt-1 text-xs text-neutral-500">
+                {linha.callsNaoQualificadas} {linha.callsNaoQualificadas === 1 ? call(publicoOrg) : calls(publicoOrg)} realizada
+                {linha.callsNaoQualificadas === 1 ? "" : "s"} como não qualificada
+                {linha.callsNaoQualificadas === 1 ? "" : "s"} (não entra no bônus).
+              </p>
+            )}
           </div>
         ))}
       </div>

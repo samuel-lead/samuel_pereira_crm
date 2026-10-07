@@ -148,6 +148,8 @@ export async function atualizarBonusSdrConfig(
     return { erro: "Só admin pode editar os valores do bônus SDR" };
   }
 
+  // O formulário só manda os campos do modelo da empresa ('faixas' ou
+  // 'por_call'), então só valida e grava o que veio.
   const campos = [
     "calls_tier1_qtd",
     "calls_tier1_valor",
@@ -156,6 +158,8 @@ export async function atualizarBonusSdrConfig(
     "calls_tier3_qtd",
     "calls_tier3_valor",
     "valor_call_fim_semana",
+    "valor_por_call",
+    "valor_por_call_venda",
     "faturamento_tier1_valor",
     "faturamento_tier1_bonus",
     "faturamento_tier2_valor",
@@ -166,11 +170,20 @@ export async function atualizarBonusSdrConfig(
 
   const valores: Record<string, number> = {};
   for (const campo of campos) {
+    if (!formData.has(campo)) continue;
     const valor = Number(formData.get(campo));
     if (!Number.isFinite(valor) || valor < 0) {
       return { erro: "Valores inválidos — todos precisam ser números maiores ou iguais a zero" };
     }
     valores[campo] = valor;
+  }
+
+  if (formData.has("no_show_maximo_percentual")) {
+    const percentual = Number(formData.get("no_show_maximo_percentual"));
+    if (!Number.isFinite(percentual) || percentual < 0 || percentual > 100) {
+      return { erro: "O no-show máximo precisa ser um número de 0 a 100" };
+    }
+    valores.no_show_maximo = percentual / 100;
   }
 
   const { error } = await supabase

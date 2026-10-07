@@ -932,6 +932,13 @@ export async function calcularMetricasPorCloser(
 
 export type BonusSdr = MetricasUsuario & {
   noShowPercentual: number | null;
+  // Só no modelo "por_call": contagem de calls que entram na conta e se o
+  // bônus por call foi travado por no-show acima do limite.
+  callsQualificadas: number;
+  callsNaoQualificadas: number;
+  callsDeVenda: number;
+  callsFimDeSemana: number;
+  travadoPorNoShow: boolean;
   bonusPorCallRealizada: number;
   bonusFimDeSemana: number;
   bonusPorFaturamento: number;
@@ -939,6 +946,12 @@ export type BonusSdr = MetricasUsuario & {
 };
 
 export type BonusSdrConfig = {
+  // 'faixas' = 60/80/100 calls (modelo antigo); 'por_call' = valor por call
+  // qualificada (ver migration 20261007120000).
+  modelo: "faixas" | "por_call";
+  valor_por_call: number;
+  valor_por_call_venda: number;
+  no_show_maximo: number;
   calls_tier1_qtd: number;
   calls_tier1_valor: number;
   calls_tier2_qtd: number;
@@ -958,6 +971,10 @@ export type BonusSdrConfig = {
 // org ainda não tem uma linha em bonus_sdr_config (ex.: org imobiliário,
 // que não usa essa mecânica e nunca ganha essa linha).
 export const BONUS_SDR_CONFIG_PADRAO: BonusSdrConfig = {
+  modelo: "faixas",
+  valor_por_call: 20,
+  valor_por_call_venda: 50,
+  no_show_maximo: 0.35,
   calls_tier1_qtd: 60,
   calls_tier1_valor: 300,
   calls_tier2_qtd: 80,
@@ -997,28 +1014,58 @@ export async function calcularBonusPorSdr(
     metricasPorUsuario.map(async (m) => {
       const { data: realizadasNoPeriodo } = await supabase
         .from("reunioes")
-        .select("marcada_em, leads!inner(arquivado_em)")
+        .select("marcada_em, qualificada, resultado, leads!inner(arquivado_em, status)")
         .eq("usuario_id", m.usuarioId)
         .eq("status", "realizada")
         .is("leads.arquivado_em", null)
         .gte("agendada_para", inicioISO)
         .lt("agendada_para", fimISO);
 
-      const callsMarcadasNoFimDeSemana = (realizadasNoPeriodo ?? []).filter((r) => {
-        const dia = diaDaSemana(r.marcada_em);
-        return dia === 0 || dia === 6;
-      }).length;
+      const realizadas = (realizadasNoPeriodo ?? []).map((r) => ({
+        noFimDeSemana: [0, 6].includes(diaDaSemana(r.marcada_em)),
+        qualificada: r.qualificada !== false,
+        venda: r.resultado === "vendeu" || (r.leads as unknown as { status: string }).status === "vendido",
+      }));
 
-      const bonusPorCallRealizada =
-        m.reunioesRealizadas >= config.calls_tier3_qtd
-          ? config.calls_tier3_valor
-          : m.reunioesRealizadas >= config.calls_tier2_qtd
-            ? config.calls_tier2_valor
-            : m.reunioesRealizadas >= config.calls_tier1_qtd
-              ? config.calls_tier1_valor
-              : 0;
+      const callsMarcadasNoFimDeSemana = realizadas.filter((r) => r.noFimDeSemana).length;
 
-      const bonusFimDeSemana = callsMarcadasNoFimDeSemana * config.valor_call_fim_semana;
+      // 1 - 2: dependem do modelo da empresa.
+      let bonusPorCallRealizada: number;
+      let bonusFimDeSemana: number;
+      let travadoPorNoShow = false;
+      const noShowPercentual =
+        m.reunioesDevidas > 0 ? 1 - m.reunioesRealizadas / m.reunioesDevidas : null;
+
+      if (config.modelo === "por_call") {
+        // Só conta call realizada E qualificada (venda é sempre qualificada).
+        // Venda paga o valor de venda NO LUGAR do valor da call (não soma);
+        // call comum de fim de semana paga o valor de fim de semana.
+        travadoPorNoShow = noShowPercentual !== null && noShowPercentual > config.no_show_maximo;
+        const validas = realizadas.filter((r) => r.qualificada || r.venda);
+        const valorDe = (r: (typeof realizadas)[number]) =>
+          r.venda
+            ? config.valor_por_call_venda
+            : r.noFimDeSemana
+              ? config.valor_call_fim_semana
+              : config.valor_por_call;
+        const soma = validas.reduce((total, r) => total + valorDe(r), 0);
+        const somaFimDeSemana = validas
+          .filter((r) => !r.venda && r.noFimDeSemana)
+          .reduce((total, r) => total + valorDe(r), 0);
+        // Mostra fim de semana separado só pra ficar claro de onde vem o valor.
+        bonusPorCallRealizada = travadoPorNoShow ? 0 : soma - somaFimDeSemana;
+        bonusFimDeSemana = travadoPorNoShow ? 0 : somaFimDeSemana;
+      } else {
+        bonusPorCallRealizada =
+          m.reunioesRealizadas >= config.calls_tier3_qtd
+            ? config.calls_tier3_valor
+            : m.reunioesRealizadas >= config.calls_tier2_qtd
+              ? config.calls_tier2_valor
+              : m.reunioesRealizadas >= config.calls_tier1_qtd
+                ? config.calls_tier1_valor
+                : 0;
+        bonusFimDeSemana = callsMarcadasNoFimDeSemana * config.valor_call_fim_semana;
+      }
 
       const bonusPorFaturamento =
         m.faturamento >= config.faturamento_tier3_valor
@@ -1035,8 +1082,12 @@ export async function calcularBonusPorSdr(
         // — reunião marcada pro futuro ainda não teve chance de acontecer,
         // não é no-show. Antes dividia por reunioesMarcadas (que inclui
         // futuro), o que fazia o % de no-show parecer bem pior do que era.
-        noShowPercentual:
-          m.reunioesDevidas > 0 ? 1 - m.reunioesRealizadas / m.reunioesDevidas : null,
+        noShowPercentual,
+        callsQualificadas: realizadas.filter((r) => r.qualificada || r.venda).length,
+        callsNaoQualificadas: realizadas.filter((r) => !r.qualificada && !r.venda).length,
+        callsDeVenda: realizadas.filter((r) => r.venda).length,
+        callsFimDeSemana: callsMarcadasNoFimDeSemana,
+        travadoPorNoShow,
         bonusPorCallRealizada,
         bonusFimDeSemana,
         bonusPorFaturamento,
