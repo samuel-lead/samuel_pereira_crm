@@ -156,7 +156,7 @@ export function BonusSdrConfigForm({
 
       <div>
         <p className={tituloSecaoClasse}>
-          Bônus por faturamento do mês
+          {config.modelo === "por_call" ? "Bônus por receita do mês" : "Bônus por faturamento do mês"}
         </p>
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">

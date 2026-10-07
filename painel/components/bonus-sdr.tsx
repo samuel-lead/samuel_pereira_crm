@@ -123,11 +123,11 @@ export function BonusSdrTabela({
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">2.</span>
-              {` No-show do mês acima de ${Math.round(config.no_show_maximo * 100)}%: o bônus por ${call(publicoOrg)} não vale`}
+              {` No-show do mês acima de ${Math.round(config.no_show_maximo * 100)}%: perde o bônus`}
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">3.</span>
-              {` Faturamento do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
+              {` Receita do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
               {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
               <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
               {" · "}
@@ -137,6 +137,10 @@ export function BonusSdrTabela({
               {moedaCurta(config.faturamento_tier3_valor)} ganha{" "}
               <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
               {" (maior faixa que bateu, não soma)"}
+            </li>
+            <li className="whitespace-nowrap">
+              <span className="font-bold text-white">4.</span>
+              {` Vale o maior entre o bônus por ${call(publicoOrg)} (1) e o de receita (3), nunca os dois`}
             </li>
           </ul>
         ) : (
@@ -212,8 +216,8 @@ export function BonusSdrTabela({
                 Icone={IconeAlerta}
               />
               <MiniCard
-                titulo="Faturamento"
-                valor={formatarMoeda(linha.faturamento)}
+                titulo={config.modelo === "por_call" ? "Receita" : "Faturamento"}
+                valor={formatarMoeda(config.modelo === "por_call" ? linha.receita : linha.faturamento)}
                 esquema="ceu"
                 Icone={IconeMoeda}
               />
@@ -236,7 +240,10 @@ export function BonusSdrTabela({
                 }
                 valor={linha.bonusFimDeSemana}
               />
-              <LinhaBonus label="Bônus por faturamento" valor={linha.bonusPorFaturamento} />
+              <LinhaBonus
+                label={config.modelo === "por_call" ? "Bônus por receita" : "Bônus por faturamento"}
+                valor={linha.bonusPorFaturamento}
+              />
             </div>
             {config.modelo === "por_call" && linha.travadoPorNoShow && (
               <p className="mt-2 text-xs font-medium text-red-600">

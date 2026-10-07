@@ -1064,14 +1064,33 @@ export async function calcularBonusPorSdr(
         bonusFimDeSemana = callsMarcadasNoFimDeSemana * config.valor_call_fim_semana;
       }
 
-      const bonusPorFaturamento =
-        m.faturamento >= config.faturamento_tier3_valor
+      // No modelo 'por_call' as faixas olham a RECEITA (dinheiro que entrou),
+      // não o valor vendido — Samuel pediu (07/10/26) pra não pagar em cima
+      // de venda parcelada que ainda não foi recebida. As empresas no
+      // modelo antigo continuam olhando o faturamento.
+      const baseFaixas = config.modelo === "por_call" ? m.receita : m.faturamento;
+      let bonusPorFaturamento =
+        baseFaixas >= config.faturamento_tier3_valor
           ? config.faturamento_tier3_bonus
-          : m.faturamento >= config.faturamento_tier2_valor
+          : baseFaixas >= config.faturamento_tier2_valor
             ? config.faturamento_tier2_bonus
-            : m.faturamento >= config.faturamento_tier1_valor
+            : baseFaixas >= config.faturamento_tier1_valor
               ? config.faturamento_tier1_bonus
               : 0;
+
+      // 'por_call': é um OU outro — vale o maior entre o bônus por call e o
+      // bônus por receita, nunca os dois somados. A trava de no-show derruba
+      // os dois (a receita depende das calls acontecerem).
+      if (config.modelo === "por_call") {
+        if (travadoPorNoShow) {
+          bonusPorFaturamento = 0;
+        } else if (bonusPorFaturamento > bonusPorCallRealizada + bonusFimDeSemana) {
+          bonusPorCallRealizada = 0;
+          bonusFimDeSemana = 0;
+        } else {
+          bonusPorFaturamento = 0;
+        }
+      }
 
       return {
         ...m,
