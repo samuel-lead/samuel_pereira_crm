@@ -118,10 +118,8 @@ export function BonusSdrTabela({
               <span className="font-bold text-white">1.</span>
               {` ${Call(publicoOrg)} realizada e qualificada: `}
               <b className="text-white">{moedaCurta(config.valor_por_call)}</b>
-              {` · no fim de semana: `}
+              {` · marcada no fim de semana: `}
               <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
-              {` · que virou venda: `}
-              <b className="text-white">{moedaCurta(config.valor_por_call_venda)}</b>
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">2.</span>
@@ -225,7 +223,7 @@ export function BonusSdrTabela({
               <LinhaBonus
                 label={
                   config.modelo === "por_call"
-                    ? `Bônus por ${calls(publicoOrg)} realizadas e qualificadas (${linha.callsQualificadas}, sendo ${linha.callsDeVenda} de venda)`
+                    ? `Bônus por ${calls(publicoOrg)} realizadas e qualificadas (${linha.callsQualificadas})`
                     : `Bônus por ${calls(publicoOrg)} realizadas`
                 }
                 valor={linha.bonusPorCallRealizada}

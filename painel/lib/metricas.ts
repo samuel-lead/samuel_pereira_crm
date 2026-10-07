@@ -1038,19 +1038,16 @@ export async function calcularBonusPorSdr(
 
       if (config.modelo === "por_call") {
         // Só conta call realizada E qualificada (venda é sempre qualificada).
-        // Venda paga o valor de venda NO LUGAR do valor da call (não soma);
-        // call comum de fim de semana paga o valor de fim de semana.
+        // Call marcada no fim de semana paga o valor de fim de semana.
+        // (Samuel tirou o bônus extra por venda em 07/10/26: quem quiser
+        // premiar venda tem o bônus de faturamento.)
         travadoPorNoShow = noShowPercentual !== null && noShowPercentual > config.no_show_maximo;
         const validas = realizadas.filter((r) => r.qualificada || r.venda);
         const valorDe = (r: (typeof realizadas)[number]) =>
-          r.venda
-            ? config.valor_por_call_venda
-            : r.noFimDeSemana
-              ? config.valor_call_fim_semana
-              : config.valor_por_call;
+          r.noFimDeSemana ? config.valor_call_fim_semana : config.valor_por_call;
         const soma = validas.reduce((total, r) => total + valorDe(r), 0);
         const somaFimDeSemana = validas
-          .filter((r) => !r.venda && r.noFimDeSemana)
+          .filter((r) => r.noFimDeSemana)
           .reduce((total, r) => total + valorDe(r), 0);
         // Mostra fim de semana separado só pra ficar claro de onde vem o valor.
         bonusPorCallRealizada = travadoPorNoShow ? 0 : soma - somaFimDeSemana;
