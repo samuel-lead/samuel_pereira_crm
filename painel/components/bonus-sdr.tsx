@@ -116,13 +116,16 @@ export function BonusSdrTabela({
           <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">1.</span>
-              {` ${Call(publicoOrg)} realizada qualificada, marcada de segunda a sexta: `}
+              {` ${Call(publicoOrg)} realizada, qualificada, marcada de segunda a sexta: `}
               <b className="text-white">{moedaCurta(config.valor_por_call)}</b>
-              {` · marcada no sábado ou domingo: `}
-              <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">2.</span>
+              {` ${Call(publicoOrg)} realizada, qualificada, marcada no sábado ou domingo: `}
+              <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
+            </li>
+            <li className="whitespace-nowrap">
+              <span className="font-bold text-white">3.</span>
               {` Receita do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
               {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
               <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
