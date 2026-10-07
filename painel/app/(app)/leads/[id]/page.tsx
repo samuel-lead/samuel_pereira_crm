@@ -14,10 +14,11 @@ import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
+import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
-import { Reuniao, Sdr } from "@/lib/terminologia";
+import { Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
@@ -75,6 +76,7 @@ type Reuniao = {
   closer_id: string | null;
   usuario_id: string;
   reagendada: boolean;
+  qualificada: boolean;
 };
 
 type NivelHistorico = {
@@ -163,7 +165,7 @@ export default async function EditarLeadPage({
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("reunioes")
-      .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id, reagendada")
+      .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id, reagendada, qualificada")
       .eq("lead_id", id)
       .order("agendada_para", { ascending: false }),
     supabase
@@ -532,6 +534,14 @@ export default async function EditarLeadPage({
                       <p className="text-xs text-neutral-500">
                         Resultado: {reuniao.resultado}
                       </p>
+                    )}
+                    {reuniao.status === "realizada" && !ehImobiliario(publicoOrg) && (
+                      <QualificadaReuniao
+                        leadId={leadTipado.id}
+                        reuniaoId={reuniao.id}
+                        qualificada={reuniao.qualificada}
+                        podeEditar={podeEditar}
+                      />
                     )}
                   </li>
                 ))}

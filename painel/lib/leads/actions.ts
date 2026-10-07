@@ -1799,6 +1799,41 @@ export async function definirDiaFollow(leadId: string, dia: number | null) {
   revalidatePath(`/leads/${leadId}`);
 }
 
+// Corrige se a reunião realizada foi qualificada ou não (o Closer pode ter
+// marcado errado na hora). Confere se a linha mudou de verdade — sem isso
+// um bloqueio do banco passaria como "salvo" sem ter salvado nada.
+export async function definirQualificadaReuniao(
+  leadId: string,
+  reuniaoId: string,
+  qualificada: boolean
+) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) {
+    throw new Error(erroPermissao);
+  }
+
+  const { data, error } = await supabase
+    .from("reunioes")
+    .update({ qualificada })
+    .eq("id", reuniaoId)
+    .eq("lead_id", leadId)
+    .eq("status", "realizada")
+    .select("id");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  if (!data || data.length === 0) {
+    throw new Error("Não consegui alterar essa reunião.");
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/dashboard");
+  revalidatePath(`/leads/${leadId}`);
+}
+
 // Muda só a data/hora de uma reunião/visita que já está marcada — sem
 // isso, uma vez marcada não tinha como corrigir o horário (o campo de
 // data só aparecia no formulário na hora de marcar pela primeira vez).
@@ -2255,6 +2290,7 @@ export type DetalhesLead = {
     closer_id: string | null;
     usuario_id: string;
     reagendada: boolean;
+    qualificada: boolean;
   }[];
   nivelHistorico: {
     id: string;
@@ -2346,7 +2382,7 @@ export async function buscarDetalhesDoLead(
       .order("ocorreu_em", { ascending: false }),
     supabase
       .from("reunioes")
-      .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id, reagendada")
+      .select("id, agendada_para, marcada_em, status, resultado, closer_id, usuario_id, reagendada, qualificada")
       .eq("lead_id", leadId)
       .order("agendada_para", { ascending: false }),
     supabase

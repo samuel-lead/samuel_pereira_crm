@@ -10,10 +10,11 @@ import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
+import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { EditarMotivoRepescagem } from "@/components/editar-motivo-repescagem";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeLapis } from "@/components/icons";
-import { Reuniao, Sdr } from "@/lib/terminologia";
+import { Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -396,6 +397,14 @@ export function LeadModalConteudo({
                   )}
                   {reuniao.resultado && (
                     <p className="text-xs text-neutral-500">Resultado: {reuniao.resultado}</p>
+                  )}
+                  {reuniao.status === "realizada" && !ehImobiliario(publicoOrg) && (
+                    <QualificadaReuniao
+                      leadId={lead.id}
+                      reuniaoId={reuniao.id}
+                      qualificada={reuniao.qualificada}
+                      podeEditar={podeEditar}
+                    />
                   )}
                 </li>
               ))}
