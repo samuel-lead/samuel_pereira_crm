@@ -123,10 +123,6 @@ export function BonusSdrTabela({
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">2.</span>
-              {` No-show do mês acima de ${Math.round(config.no_show_maximo * 100)}%: perde o bônus`}
-            </li>
-            <li className="whitespace-nowrap">
-              <span className="font-bold text-white">3.</span>
               {` Receita do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
               {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
               <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
@@ -139,8 +135,8 @@ export function BonusSdrTabela({
               {" (maior faixa que bateu, não soma)"}
             </li>
             <li className="whitespace-nowrap">
-              <span className="font-bold text-white">4.</span>
-              {` Vale o maior entre o bônus por ${call(publicoOrg)} (1) e o de receita (3), nunca os dois`}
+              <span className="font-bold text-white">3.</span>
+              {` Vale o maior entre o bônus por ${call(publicoOrg)} (1) e o de receita (2), nunca os dois`}
             </li>
           </ul>
         ) : (
@@ -175,6 +171,13 @@ export function BonusSdrTabela({
         </ul>
         )}
       </div>
+
+      {config.modelo === "por_call" && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+          Observação: se o no-show do mês passar de {Math.round(config.no_show_maximo * 100)}%, o SDR perde todos
+          os bônus, inclusive o das {calls(publicoOrg)} realizadas.
+        </p>
+      )}
 
       <div className="space-y-4">
         {dados.map((linha) => (
