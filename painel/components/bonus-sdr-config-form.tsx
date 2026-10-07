@@ -89,7 +89,7 @@ export function BonusSdrConfigForm({
       {config.modelo === "por_call" ? (
         <div>
           <p className={tituloSecaoClasse}>Bônus por {call(publicoOrg)} realizada qualificada</p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
               <Campo name="valor_por_call" label="Por call" defaultValue={config.valor_por_call} prefixo="R$" destaque />
             </div>
@@ -104,15 +104,6 @@ export function BonusSdrConfigForm({
             </div>
             <div className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
               <Campo
-                name="valor_por_call_venda"
-                label="Por venda"
-                defaultValue={config.valor_por_call_venda}
-                prefixo="R$"
-                destaque
-              />
-            </div>
-            <div className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
-              <Campo
                 name="no_show_maximo_percentual"
                 label="No-show máximo (%)"
                 defaultValue={Math.round(config.no_show_maximo * 100)}
@@ -120,8 +111,7 @@ export function BonusSdrConfigForm({
             </div>
           </div>
           <p className="mt-2 text-xs text-neutral-500">
-            O bônus por call sempre vale. Além dele, só vale o maior entre o bônus por venda (valor por
-            venda) e o de receita. Passando do no-show máximo no mês, perde todos.
+            O bônus por call e o de receita se somam. Passando do no-show máximo no mês, perde todos.
           </p>
         </div>
       ) : (

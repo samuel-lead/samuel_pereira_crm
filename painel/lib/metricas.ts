@@ -941,8 +941,6 @@ export type BonusSdr = MetricasUsuario & {
   travadoPorNoShow: boolean;
   bonusPorCallRealizada: number;
   bonusFimDeSemana: number;
-  // Só no modelo "por_call": R$ por venda (calls cujo lead virou venda).
-  bonusPorVenda: number;
   bonusPorFaturamento: number;
   totalBonus: number;
 };
@@ -1079,20 +1077,11 @@ export async function calcularBonusPorSdr(
               ? config.faturamento_tier1_bonus
               : 0;
 
-      // 'por_call': o bônus por call SEMPRE vale e soma. Além dele, só vale
-      // o MAIOR entre o bônus por venda e o bônus por receita — nunca os
-      // dois (Samuel, 07/10/26). A trava de no-show derruba tudo.
-      let bonusPorVenda = 0;
-      if (config.modelo === "por_call") {
-        bonusPorVenda = realizadas.filter((r) => r.venda).length * config.valor_por_call_venda;
-        if (travadoPorNoShow) {
-          bonusPorVenda = 0;
-          bonusPorFaturamento = 0;
-        } else if (bonusPorVenda >= bonusPorFaturamento) {
-          bonusPorFaturamento = 0;
-        } else {
-          bonusPorVenda = 0;
-        }
+      // 'por_call': o bônus por call e o bônus por receita somam. Não existe
+      // bônus por venda (Samuel tirou em 07/10/26). A trava de no-show
+      // derruba tudo.
+      if (config.modelo === "por_call" && travadoPorNoShow) {
+        bonusPorFaturamento = 0;
       }
 
       return {
@@ -1109,9 +1098,8 @@ export async function calcularBonusPorSdr(
         travadoPorNoShow,
         bonusPorCallRealizada,
         bonusFimDeSemana,
-        bonusPorVenda,
         bonusPorFaturamento,
-        totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda + bonusPorFaturamento,
+        totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorFaturamento,
       };
     })
   );
