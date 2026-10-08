@@ -120,8 +120,9 @@ export function BonusSdrConfigForm({
             </div>
           </div>
           <p className="mt-2 text-xs text-neutral-500">
-            A call que virou venda paga o valor de venda no lugar do valor da call (não soma). No mês vale
-            o maior entre o total das calls e o bônus de receita. Passando do no-show máximo, perde todos.
+            A call que virou venda paga o valor de venda no lugar do valor da call (não soma). O bônus das
+            calls comuns sempre vale; o bônus por venda e o de receita não somam (vale o maior). Passando do
+            no-show máximo, perde todos.
           </p>
         </div>
       ) : (

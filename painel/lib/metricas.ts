@@ -1093,19 +1093,17 @@ export async function calcularBonusPorSdr(
               ? config.faturamento_tier1_bonus
               : 0;
 
-      // 'por_call': no mês vale só o MAIOR entre o total das calls (semana +
-      // fim de semana + venda) e o bônus por receita — nunca os dois somados.
-      // A trava de no-show derruba tudo.
+      // 'por_call': o bônus das calls comuns (semana e fim de semana) SEMPRE
+      // vale. Já o bônus por venda e o bônus por receita não somam: vale só
+      // o MAIOR dos dois (ex.: receita R$ 1.000 x vendas R$ 700 = R$ 1.000).
+      // A trava de no-show derruba tudo (Samuel, 08/10/26).
       if (config.modelo === "por_call") {
-        const totalCalls = bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda;
         if (travadoPorNoShow) {
           bonusPorCallRealizada = 0;
           bonusFimDeSemana = 0;
           bonusPorVenda = 0;
           bonusPorFaturamento = 0;
-        } else if (bonusPorFaturamento > totalCalls) {
-          bonusPorCallRealizada = 0;
-          bonusFimDeSemana = 0;
+        } else if (bonusPorFaturamento > bonusPorVenda) {
           bonusPorVenda = 0;
         } else {
           bonusPorFaturamento = 0;

@@ -146,7 +146,7 @@ export function BonusSdrTabela({
               {`Não soma o bônus de ${call(publicoOrg)} com o de venda: a ${call(publicoOrg)} que virou venda paga ${moedaCurta(config.valor_por_call_venda)} no lugar de ${moedaCurta(config.valor_por_call)} ou ${moedaCurta(config.valor_call_fim_semana)}. Vale só o maior.`}
             </li>
             <li className="font-semibold text-white">
-              {`Se bater a meta de receita (4), recebe o maior entre o total dos bônus por venda e o de receita. Nunca a soma dos dois.`}
+              {`O bônus das ${calls(publicoOrg)} (1 e 2) sempre vale. Já o bônus por venda (3) e o de receita (4) não somam: recebe só o maior dos dois. Ex.: receita ${moedaCurta(config.faturamento_tier1_bonus)} e vendas R$ 700 = ganha só ${moedaCurta(config.faturamento_tier1_bonus)}.`}
             </li>
           </ul>
         ) : (
