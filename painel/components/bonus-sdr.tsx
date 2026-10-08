@@ -252,6 +252,19 @@ export function BonusSdrTabela({
         </p>
       )}
 
+      {config.modelo === "por_call" && (
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-neutral-500">
+            <IconeEstrela className="h-3.5 w-3.5 text-green-600" />
+            Bônus total da equipe
+          </p>
+          <p className="mt-1 text-4xl font-black tracking-tight tabular-nums text-green-700">
+            {formatarMoeda(totalEquipe)}
+          </p>
+          {periodo && <p className="mt-0.5 text-xs font-medium text-neutral-500">{periodo}</p>}
+        </div>
+      )}
+
       <div className="space-y-4">
         {dados.map((linha) => (
           <div
