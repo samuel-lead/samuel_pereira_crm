@@ -97,15 +97,22 @@ export function BonusSdrTabela({
         <IconeEstrela className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
 
-        <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
-          <IconeEstrela className="h-3.5 w-3.5" />
-          Bônus total da equipe
-        </p>
-        <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
-          {formatarMoeda(totalEquipe)}
-        </p>
-        {periodo && (
-          <p className="relative mt-1 text-xs font-medium text-green-200">{periodo}</p>
+        {/* No modelo por call (empresa do Samuel) a barra mostra só a
+            explicação dos bônus — ele pediu pra tirar o título "Bônus
+            total da equipe", o valor e o período. */}
+        {config.modelo !== "por_call" && (
+          <>
+          <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
+            <IconeEstrela className="h-3.5 w-3.5" />
+            Bônus total da equipe
+          </p>
+          <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
+            {formatarMoeda(totalEquipe)}
+          </p>
+          {periodo && (
+            <p className="relative mt-1 text-xs font-medium text-green-200">{periodo}</p>
+          )}
+          </>
         )}
 
         {/* Era uma frase só, cheia de parênteses e barras — o SDR tava
@@ -113,7 +120,7 @@ export function BonusSdrTabela({
             Virou 3 linhas curtas, cada uma numa linha só (Samuel pediu:
             didático e sem quebrar), formato "bateu isso → ganha aquilo". */}
         {config.modelo === "por_call" ? (
-          <div className="relative mt-5 space-y-3">
+          <div className="relative space-y-3">
             <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               <div className="rounded-xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
