@@ -170,7 +170,7 @@ export function BonusSdrTabela({
             <div className="grid gap-2.5 sm:grid-cols-2">
               <div className="rounded-xl bg-black/15 p-3.5 text-xs leading-relaxed text-green-50 ring-1 ring-white/10">
                 <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-green-200">
-                  Call e venda não somam
+                  Bônus de {Call(publicoOrg)} e venda não somam
                 </p>
                 {`A ${call(publicoOrg)} que virou venda paga o valor da venda (2 ou 3) no lugar de ${moedaCurta(config.valor_por_call)}${config.valor_call_fim_semana !== config.valor_por_call ? ` ou ${moedaCurta(config.valor_call_fim_semana)}` : ""}. Vale só o maior.`}
               </div>
