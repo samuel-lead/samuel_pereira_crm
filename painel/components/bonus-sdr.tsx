@@ -126,6 +126,11 @@ export function BonusSdrTabela({
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">3.</span>
+              {` Bônus por venda realizada: `}
+              <b className="text-white">{moedaCurta(config.valor_por_call_venda)}</b>
+            </li>
+            <li className="whitespace-nowrap">
+              <span className="font-bold text-white">4.</span>
               {` Receita do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
               {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
               <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
@@ -136,6 +141,12 @@ export function BonusSdrTabela({
               {moedaCurta(config.faturamento_tier3_valor)} ganha{" "}
               <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
               {" (maior faixa que bateu, não soma)"}
+            </li>
+            <li className="mt-2 border-t border-white/20 pt-2 font-semibold text-white">
+              {`Não soma o bônus de ${call(publicoOrg)} com o de venda: a ${call(publicoOrg)} que virou venda paga ${moedaCurta(config.valor_por_call_venda)} no lugar de ${moedaCurta(config.valor_por_call)} ou ${moedaCurta(config.valor_call_fim_semana)}. Vale só o maior.`}
+            </li>
+            <li className="font-semibold text-white">
+              {`Se bater a meta de receita (4), recebe o maior entre o total das ${calls(publicoOrg)} (1, 2 e 3) e o de receita. Nunca a soma dos dois.`}
             </li>
           </ul>
         ) : (
@@ -250,6 +261,12 @@ export function BonusSdrTabela({
                 }
                 valor={linha.bonusFimDeSemana}
               />
+              {config.modelo === "por_call" && (
+                <LinhaBonus
+                  label={`Bônus por venda (${linha.callsDeVenda} ${linha.callsDeVenda === 1 ? "venda" : "vendas"})`}
+                  valor={linha.bonusPorVenda}
+                />
+              )}
               <LinhaBonus
                 label={config.modelo === "por_call" ? "Bônus por receita" : "Bônus por faturamento"}
                 valor={linha.bonusPorFaturamento}

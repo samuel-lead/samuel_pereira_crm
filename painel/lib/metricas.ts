@@ -941,6 +941,8 @@ export type BonusSdr = MetricasUsuario & {
   travadoPorNoShow: boolean;
   bonusPorCallRealizada: number;
   bonusFimDeSemana: number;
+  // Só no modelo "por_call": calls que viraram venda (pagam R$ por venda).
+  bonusPorVenda: number;
   bonusPorFaturamento: number;
   totalBonus: number;
 };
@@ -1046,6 +1048,7 @@ export async function calcularBonusPorSdr(
       // 1 - 2: dependem do modelo da empresa.
       let bonusPorCallRealizada: number;
       let bonusFimDeSemana: number;
+      let bonusPorVenda = 0;
       let travadoPorNoShow = false;
       const noShowPercentual =
         m.reunioesDevidas > 0 ? 1 - m.reunioesRealizadas / m.reunioesDevidas : null;
@@ -1053,18 +1056,17 @@ export async function calcularBonusPorSdr(
       if (config.modelo === "por_call") {
         // Só conta call realizada E qualificada (venda é sempre qualificada).
         // Call marcada no fim de semana paga o valor de fim de semana.
-        // O bônus por venda e o de receita vêm mais abaixo (só vale o maior).
+        // Cada call vale UM só valor, o maior que ela se encaixa: se virou
+        // venda paga o valor de venda (R$ 50) NO LUGAR do da call — não soma
+        // (Samuel, 08/10/26); senão, fim de semana paga R$ 40; senão R$ 20.
         travadoPorNoShow = noShowPercentual !== null && noShowPercentual > config.no_show_maximo;
         const validas = realizadas.filter((r) => r.qualificada || r.venda);
-        const valorDe = (r: (typeof realizadas)[number]) =>
-          r.noFimDeSemana ? config.valor_call_fim_semana : config.valor_por_call;
-        const soma = validas.reduce((total, r) => total + valorDe(r), 0);
-        const somaFimDeSemana = validas
-          .filter((r) => r.noFimDeSemana)
-          .reduce((total, r) => total + valorDe(r), 0);
-        // Mostra fim de semana separado só pra ficar claro de onde vem o valor.
-        bonusPorCallRealizada = travadoPorNoShow ? 0 : soma - somaFimDeSemana;
-        bonusFimDeSemana = travadoPorNoShow ? 0 : somaFimDeSemana;
+        const nVenda = validas.filter((r) => r.venda).length;
+        const nFimDeSemana = validas.filter((r) => !r.venda && r.noFimDeSemana).length;
+        const nSemana = validas.length - nVenda - nFimDeSemana;
+        bonusPorCallRealizada = nSemana * config.valor_por_call;
+        bonusFimDeSemana = nFimDeSemana * config.valor_call_fim_semana;
+        bonusPorVenda = nVenda * config.valor_por_call_venda;
       } else {
         bonusPorCallRealizada =
           m.reunioesRealizadas >= config.calls_tier3_qtd
@@ -1091,11 +1093,23 @@ export async function calcularBonusPorSdr(
               ? config.faturamento_tier1_bonus
               : 0;
 
-      // 'por_call': o bônus por call e o bônus por receita somam. Não existe
-      // bônus por venda (Samuel tirou em 07/10/26). A trava de no-show
-      // derruba tudo.
-      if (config.modelo === "por_call" && travadoPorNoShow) {
-        bonusPorFaturamento = 0;
+      // 'por_call': no mês vale só o MAIOR entre o total das calls (semana +
+      // fim de semana + venda) e o bônus por receita — nunca os dois somados.
+      // A trava de no-show derruba tudo.
+      if (config.modelo === "por_call") {
+        const totalCalls = bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda;
+        if (travadoPorNoShow) {
+          bonusPorCallRealizada = 0;
+          bonusFimDeSemana = 0;
+          bonusPorVenda = 0;
+          bonusPorFaturamento = 0;
+        } else if (bonusPorFaturamento > totalCalls) {
+          bonusPorCallRealizada = 0;
+          bonusFimDeSemana = 0;
+          bonusPorVenda = 0;
+        } else {
+          bonusPorFaturamento = 0;
+        }
       }
 
       return {
@@ -1112,8 +1126,9 @@ export async function calcularBonusPorSdr(
         travadoPorNoShow,
         bonusPorCallRealizada,
         bonusFimDeSemana,
+        bonusPorVenda,
         bonusPorFaturamento,
-        totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorFaturamento,
+        totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda + bonusPorFaturamento,
       };
     })
   );
