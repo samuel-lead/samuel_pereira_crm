@@ -116,18 +116,25 @@ export function BonusSdrTabela({
           <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">1.</span>
-              {` ${Call(publicoOrg)} realizada, qualificada, marcada de segunda a sexta: `}
+              {` ${Call(publicoOrg)} realizada e qualificada: `}
               <b className="text-white">{moedaCurta(config.valor_por_call)}</b>
+              {config.valor_call_fim_semana !== config.valor_por_call && (
+                <>
+                  {` (marcada no sábado ou domingo: `}
+                  <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
+                  {`)`}
+                </>
+              )}
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">2.</span>
-              {` ${Call(publicoOrg)} realizada, qualificada, marcada no sábado ou domingo: `}
-              <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
+              {` Venda de ${call(publicoOrg)} marcada de segunda a sexta: `}
+              <b className="text-white">{moedaCurta(config.valor_por_call_venda)}</b>
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">3.</span>
-              {` Bônus por venda realizada: `}
-              <b className="text-white">{moedaCurta(config.valor_por_call_venda)}</b>
+              {` Venda de ${call(publicoOrg)} marcada no sábado ou domingo: `}
+              <b className="text-white">{moedaCurta(config.valor_por_call_venda_fim_semana)}</b>
             </li>
             <li className="whitespace-nowrap">
               <span className="font-bold text-white">4.</span>
@@ -143,10 +150,10 @@ export function BonusSdrTabela({
               {" (maior faixa que bateu, não soma)"}
             </li>
             <li className="mt-2 border-t border-white/20 pt-2 font-semibold text-white">
-              {`Não soma o bônus de ${call(publicoOrg)} com o de venda: a ${call(publicoOrg)} que virou venda paga ${moedaCurta(config.valor_por_call_venda)} no lugar de ${moedaCurta(config.valor_por_call)} ou ${moedaCurta(config.valor_call_fim_semana)}. Vale só o maior.`}
+              {`Não soma o bônus de ${call(publicoOrg)} com o de venda: a ${call(publicoOrg)} que virou venda paga o valor da venda (2 ou 3) no lugar de ${moedaCurta(config.valor_por_call)}. Vale só o maior.`}
             </li>
             <li className="font-semibold text-white">
-              {`O bônus das ${calls(publicoOrg)} (1 e 2) sempre vale. Já o bônus por venda (3) e o de receita (4) não somam: recebe só o maior dos dois. Ex.: receita ${moedaCurta(config.faturamento_tier1_bonus)} e vendas R$ 700 = ganha só ${moedaCurta(config.faturamento_tier1_bonus)}.`}
+              {`O bônus das ${calls(publicoOrg)} sem venda (1) sempre vale. Já o bônus por venda (2 e 3) e o de receita (4) não somam: recebe só o maior dos dois. Ex.: receita ${moedaCurta(config.faturamento_tier1_bonus)} e vendas R$ 700 = ganha só ${moedaCurta(config.faturamento_tier1_bonus)}.`}
             </li>
           </ul>
         ) : (
@@ -256,7 +263,7 @@ export function BonusSdrTabela({
               <LinhaBonus
                 label={
                   config.modelo === "por_call"
-                    ? `Bônus por ${call(publicoOrg)} marcada no sábado ou domingo`
+                    ? `Bônus por ${call(publicoOrg)} sem venda marcada no sábado ou domingo`
                     : `Bônus por ${call(publicoOrg)} realizada que foi marcada no fim de semana`
                 }
                 valor={linha.bonusFimDeSemana}

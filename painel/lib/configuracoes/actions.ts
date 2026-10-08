@@ -160,6 +160,7 @@ export async function atualizarBonusSdrConfig(
     "valor_call_fim_semana",
     "valor_por_call",
     "valor_por_call_venda",
+    "valor_por_call_venda_fim_semana",
     "faturamento_tier1_valor",
     "faturamento_tier1_bonus",
     "faturamento_tier2_valor",

@@ -89,14 +89,14 @@ export function BonusSdrConfigForm({
       {config.modelo === "por_call" ? (
         <div>
           <p className={tituloSecaoClasse}>Bônus por {call(publicoOrg)} realizada qualificada</p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <div className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
               <Campo name="valor_por_call" label="Por call" defaultValue={config.valor_por_call} prefixo="R$" destaque />
             </div>
             <div className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
               <Campo
                 name="valor_call_fim_semana"
-                label="Marcada no fim de semana"
+                label="Marcada no sáb./dom."
                 defaultValue={config.valor_call_fim_semana}
                 prefixo="R$"
                 destaque
@@ -105,8 +105,17 @@ export function BonusSdrConfigForm({
             <div className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
               <Campo
                 name="valor_por_call_venda"
-                label="Que virou venda"
+                label="Venda (seg. a sex.)"
                 defaultValue={config.valor_por_call_venda}
+                prefixo="R$"
+                destaque
+              />
+            </div>
+            <div className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-2">
+              <Campo
+                name="valor_por_call_venda_fim_semana"
+                label="Venda (sáb./dom.)"
+                defaultValue={config.valor_por_call_venda_fim_semana}
                 prefixo="R$"
                 destaque
               />

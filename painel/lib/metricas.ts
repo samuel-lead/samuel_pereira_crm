@@ -956,6 +956,8 @@ export type BonusSdrConfig = {
   modelo: "faixas" | "por_call";
   valor_por_call: number;
   valor_por_call_venda: number;
+  // Venda que veio de call MARCADA no sábado/domingo (modelo 'por_call').
+  valor_por_call_venda_fim_semana: number;
   no_show_maximo: number;
   calls_tier1_qtd: number;
   calls_tier1_valor: number;
@@ -980,6 +982,7 @@ export const BONUS_SDR_CONFIG_PADRAO: BonusSdrConfig = {
   modelo: "faixas",
   valor_por_call: 20,
   valor_por_call_venda: 50,
+  valor_por_call_venda_fim_semana: 100,
   no_show_maximo: 0.35,
   calls_tier1_qtd: 60,
   calls_tier1_valor: 300,
@@ -1056,17 +1059,21 @@ export async function calcularBonusPorSdr(
       if (config.modelo === "por_call") {
         // Só conta call realizada E qualificada (venda é sempre qualificada).
         // Call marcada no fim de semana paga o valor de fim de semana.
-        // Cada call vale UM só valor, o maior que ela se encaixa: se virou
-        // venda paga o valor de venda (R$ 50) NO LUGAR do da call — não soma
-        // (Samuel, 08/10/26); senão, fim de semana paga R$ 40; senão R$ 20.
+        // Cada call vale UM só valor: se virou venda paga o valor de venda
+        // NO LUGAR do da call — não soma (Samuel, 08/10/26): R$ 50 se foi
+        // marcada de segunda a sexta, R$ 100 se foi marcada no sábado/domingo.
+        // Sem venda, paga o valor da call (R$ 20).
         travadoPorNoShow = noShowPercentual !== null && noShowPercentual > config.no_show_maximo;
         const validas = realizadas.filter((r) => r.qualificada || r.venda);
-        const nVenda = validas.filter((r) => r.venda).length;
+        const nVendaSemana = validas.filter((r) => r.venda && !r.noFimDeSemana).length;
+        const nVendaFimDeSemana = validas.filter((r) => r.venda && r.noFimDeSemana).length;
         const nFimDeSemana = validas.filter((r) => !r.venda && r.noFimDeSemana).length;
-        const nSemana = validas.length - nVenda - nFimDeSemana;
+        const nSemana = validas.length - nVendaSemana - nVendaFimDeSemana - nFimDeSemana;
         bonusPorCallRealizada = nSemana * config.valor_por_call;
         bonusFimDeSemana = nFimDeSemana * config.valor_call_fim_semana;
-        bonusPorVenda = nVenda * config.valor_por_call_venda;
+        bonusPorVenda =
+          nVendaSemana * config.valor_por_call_venda +
+          nVendaFimDeSemana * config.valor_por_call_venda_fim_semana;
       } else {
         bonusPorCallRealizada =
           m.reunioesRealizadas >= config.calls_tier3_qtd
