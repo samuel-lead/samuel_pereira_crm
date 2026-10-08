@@ -170,15 +170,18 @@ export function BonusSdrTabela({
                 <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
                   4 · Receita do mês
                 </p>
-                <ul className="mt-1.5 space-y-0.5 text-xs text-green-100">
+                <ul className="mt-1.5 space-y-1 text-xs text-green-100">
                   {[
                     [config.faturamento_tier1_valor, config.faturamento_tier1_bonus],
                     [config.faturamento_tier2_valor, config.faturamento_tier2_bonus],
                     [config.faturamento_tier3_valor, config.faturamento_tier3_bonus],
                   ].map(([meta, bonus]) => (
-                    <li key={meta} className="flex items-center justify-between gap-2">
-                      <span className="tabular-nums">{moedaCurta(meta)}</span>
-                      <span className="font-bold tabular-nums text-white">{moedaCurta(bonus)}</span>
+                    <li key={meta} className="flex flex-wrap items-baseline justify-between gap-x-2">
+                      <span className="text-base font-extrabold tabular-nums text-white">{moedaCurta(meta)}</span>
+                      <span className="font-bold tabular-nums text-white">
+                        <span className="font-normal text-green-200">ganha </span>
+                        {moedaCurta(bonus)}
+                      </span>
                     </li>
                   ))}
                 </ul>
