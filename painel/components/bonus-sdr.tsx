@@ -257,7 +257,9 @@ export function BonusSdrTabela({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div
+              className={`grid grid-cols-2 gap-3 ${config.modelo === "por_call" ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}
+            >
               <MiniCard
                 titulo={`${Calls(publicoOrg)} marcadas`}
                 valor={linha.reunioesMarcadas}
@@ -276,6 +278,9 @@ export function BonusSdrTabela({
                 esquema="rosa"
                 Icone={IconeAlerta}
               />
+              {config.modelo === "por_call" && (
+                <MiniCard titulo="Vendas" valor={linha.vendas} esquema="ceu" Icone={IconeEstrela} />
+              )}
               <MiniCard
                 titulo={config.modelo === "por_call" ? "Receita" : "Faturamento"}
                 valor={formatarMoeda(config.modelo === "por_call" ? linha.receita : linha.faturamento)}
@@ -288,7 +293,7 @@ export function BonusSdrTabela({
               <LinhaBonus
                 label={
                   config.modelo === "por_call"
-                    ? `Bônus por ${calls(publicoOrg)} realizadas qualificadas (${linha.callsQualificadas})`
+                    ? `Bônus por ${call(publicoOrg)} realizada e qualificada, sem venda, marcada de segunda a sexta (${linha.callsSemVendaSemana})`
                     : `Bônus por ${calls(publicoOrg)} realizadas`
                 }
                 valor={linha.bonusPorCallRealizada}
@@ -296,14 +301,14 @@ export function BonusSdrTabela({
               <LinhaBonus
                 label={
                   config.modelo === "por_call"
-                    ? `Bônus por ${call(publicoOrg)} sem venda marcada no sábado ou domingo`
+                    ? `Bônus por ${call(publicoOrg)} realizada e qualificada, sem venda, marcada no sábado ou domingo (${linha.callsSemVendaFimDeSemana})`
                     : `Bônus por ${call(publicoOrg)} realizada que foi marcada no fim de semana`
                 }
                 valor={linha.bonusFimDeSemana}
               />
               {config.modelo === "por_call" && (
                 <LinhaBonus
-                  label={`Bônus por venda (${linha.callsDeVenda} ${linha.callsDeVenda === 1 ? "venda" : "vendas"})`}
+                  label={`Bônus por venda de ${call(publicoOrg)} realizada e qualificada (${linha.callsDeVenda} ${linha.callsDeVenda === 1 ? "venda" : "vendas"})`}
                   valor={linha.bonusPorVenda}
                 />
               )}

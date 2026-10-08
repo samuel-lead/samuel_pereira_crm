@@ -937,6 +937,9 @@ export type BonusSdr = MetricasUsuario & {
   callsQualificadas: number;
   callsNaoQualificadas: number;
   callsDeVenda: number;
+  // Calls realizadas e qualificadas SEM venda, por dia em que foram marcadas.
+  callsSemVendaSemana: number;
+  callsSemVendaFimDeSemana: number;
   callsFimDeSemana: number;
   travadoPorNoShow: boolean;
   bonusPorCallRealizada: number;
@@ -1127,6 +1130,8 @@ export async function calcularBonusPorSdr(
         callsQualificadas: realizadas.filter((r) => r.qualificada || r.venda).length,
         callsNaoQualificadas: realizadas.filter((r) => !r.qualificada && !r.venda).length,
         callsDeVenda: realizadas.filter((r) => r.venda).length,
+        callsSemVendaSemana: realizadas.filter((r) => !r.venda && r.qualificada && !r.noFimDeSemana).length,
+        callsSemVendaFimDeSemana: realizadas.filter((r) => !r.venda && r.qualificada && r.noFimDeSemana).length,
         callsFimDeSemana: callsMarcadasNoFimDeSemana,
         travadoPorNoShow,
         bonusPorCallRealizada,
