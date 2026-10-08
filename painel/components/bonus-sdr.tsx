@@ -309,11 +309,11 @@ export function BonusSdrTabela({
               {config.modelo === "por_call" && (
                 <>
                   <LinhaBonus
-                    label={`Bônus por venda de ${call(publicoOrg)} realizada e qualificada, marcada de segunda a sexta (${linha.vendasSemana})`}
+                    label={`Bônus por venda de ${call(publicoOrg)} marcada de segunda a sexta (${linha.vendasSemana})`}
                     valor={linha.bonusPorVendaSemana}
                   />
                   <LinhaBonus
-                    label={`Bônus por venda de ${call(publicoOrg)} realizada e qualificada, marcada no sábado ou domingo (${linha.vendasFimDeSemana})`}
+                    label={`Bônus por venda de ${call(publicoOrg)} marcada no sábado ou domingo (${linha.vendasFimDeSemana})`}
                     valor={linha.bonusPorVendaFimDeSemana}
                   />
                 </>
