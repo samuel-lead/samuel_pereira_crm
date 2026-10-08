@@ -946,6 +946,12 @@ export type BonusSdr = MetricasUsuario & {
   bonusFimDeSemana: number;
   // Só no modelo "por_call": calls que viraram venda (pagam R$ por venda).
   bonusPorVenda: number;
+  // O mesmo bônus por venda dividido por dia em que a call foi marcada
+  // (semana x sábado/domingo) — soma igual a bonusPorVenda.
+  bonusPorVendaSemana: number;
+  bonusPorVendaFimDeSemana: number;
+  vendasSemana: number;
+  vendasFimDeSemana: number;
   bonusPorFaturamento: number;
   totalBonus: number;
 };
@@ -1055,6 +1061,8 @@ export async function calcularBonusPorSdr(
       let bonusPorCallRealizada: number;
       let bonusFimDeSemana: number;
       let bonusPorVenda = 0;
+      let bonusPorVendaSemana = 0;
+      let bonusPorVendaFimDeSemana = 0;
       let travadoPorNoShow = false;
       const noShowPercentual =
         m.reunioesDevidas > 0 ? 1 - m.reunioesRealizadas / m.reunioesDevidas : null;
@@ -1074,9 +1082,9 @@ export async function calcularBonusPorSdr(
         const nSemana = validas.length - nVendaSemana - nVendaFimDeSemana - nFimDeSemana;
         bonusPorCallRealizada = nSemana * config.valor_por_call;
         bonusFimDeSemana = nFimDeSemana * config.valor_call_fim_semana;
-        bonusPorVenda =
-          nVendaSemana * config.valor_por_call_venda +
-          nVendaFimDeSemana * config.valor_por_call_venda_fim_semana;
+        bonusPorVendaSemana = nVendaSemana * config.valor_por_call_venda;
+        bonusPorVendaFimDeSemana = nVendaFimDeSemana * config.valor_por_call_venda_fim_semana;
+        bonusPorVenda = bonusPorVendaSemana + bonusPorVendaFimDeSemana;
       } else {
         bonusPorCallRealizada =
           m.reunioesRealizadas >= config.calls_tier3_qtd
@@ -1112,9 +1120,13 @@ export async function calcularBonusPorSdr(
           bonusPorCallRealizada = 0;
           bonusFimDeSemana = 0;
           bonusPorVenda = 0;
+          bonusPorVendaSemana = 0;
+          bonusPorVendaFimDeSemana = 0;
           bonusPorFaturamento = 0;
         } else if (bonusPorFaturamento > bonusPorVenda) {
           bonusPorVenda = 0;
+          bonusPorVendaSemana = 0;
+          bonusPorVendaFimDeSemana = 0;
         } else {
           bonusPorFaturamento = 0;
         }
@@ -1137,6 +1149,10 @@ export async function calcularBonusPorSdr(
         bonusPorCallRealizada,
         bonusFimDeSemana,
         bonusPorVenda,
+        bonusPorVendaSemana,
+        bonusPorVendaFimDeSemana,
+        vendasSemana: realizadas.filter((r) => r.venda && !r.noFimDeSemana).length,
+        vendasFimDeSemana: realizadas.filter((r) => r.venda && r.noFimDeSemana).length,
         bonusPorFaturamento,
         totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda + bonusPorFaturamento,
       };
