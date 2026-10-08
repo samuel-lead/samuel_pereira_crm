@@ -113,49 +113,75 @@ export function BonusSdrTabela({
             Virou 3 linhas curtas, cada uma numa linha só (Samuel pediu:
             didático e sem quebrar), formato "bateu isso → ganha aquilo". */}
         {config.modelo === "por_call" ? (
-          <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
-            <li className="whitespace-nowrap">
-              <span className="font-bold text-white">1.</span>
-              {` ${Call(publicoOrg)} realizada e qualificada: `}
-              <b className="text-white">{moedaCurta(config.valor_por_call)}</b>
-              {config.valor_call_fim_semana !== config.valor_por_call && (
-                <>
-                  {` (marcada no sábado ou domingo: `}
-                  <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
-                  {`)`}
-                </>
-              )}
-            </li>
-            <li className="whitespace-nowrap">
-              <span className="font-bold text-white">2.</span>
-              {` Venda de ${call(publicoOrg)} marcada de segunda a sexta: `}
-              <b className="text-white">{moedaCurta(config.valor_por_call_venda)}</b>
-            </li>
-            <li className="whitespace-nowrap">
-              <span className="font-bold text-white">3.</span>
-              {` Venda de ${call(publicoOrg)} marcada no sábado ou domingo: `}
-              <b className="text-white">{moedaCurta(config.valor_por_call_venda_fim_semana)}</b>
-            </li>
-            <li className="whitespace-nowrap">
-              <span className="font-bold text-white">4.</span>
-              {` Receita do mês que veio das suas ${calls(publicoOrg)} realizadas: `}
-              {moedaCurta(config.faturamento_tier1_valor)} ganha{" "}
-              <b className="text-white">{moedaCurta(config.faturamento_tier1_bonus)}</b>
-              {" · "}
-              {moedaCurta(config.faturamento_tier2_valor)} ganha{" "}
-              <b className="text-white">{moedaCurta(config.faturamento_tier2_bonus)}</b>
-              {" · "}
-              {moedaCurta(config.faturamento_tier3_valor)} ganha{" "}
-              <b className="text-white">{moedaCurta(config.faturamento_tier3_bonus)}</b>
-              {" (maior faixa que bateu, não soma)"}
-            </li>
-            <li className="mt-2 border-t border-white/20 pt-2 font-semibold text-white">
-              {`Não soma o bônus de ${call(publicoOrg)} com o de venda: a ${call(publicoOrg)} que virou venda paga o valor da venda (2 ou 3) no lugar de ${moedaCurta(config.valor_por_call)}. Vale só o maior.`}
-            </li>
-            <li className="font-semibold text-white">
-              {`O bônus das ${calls(publicoOrg)} sem venda (1) sempre vale. Já o bônus por venda (2 e 3) e o de receita (4) não somam: recebe só o maior dos dois. Ex.: receita ${moedaCurta(config.faturamento_tier1_bonus)} e vendas R$ 700 = ganha só ${moedaCurta(config.faturamento_tier1_bonus)}.`}
-            </li>
-          </ul>
+          <div className="relative mt-5 space-y-3">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+              <div className="rounded-xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
+                  1 · {Call(publicoOrg)} realizada e qualificada
+                </p>
+                <p className="mt-1 text-2xl font-black tabular-nums text-white">
+                  {moedaCurta(config.valor_por_call)}
+                </p>
+                {config.valor_call_fim_semana !== config.valor_por_call && (
+                  <p className="mt-0.5 text-xs text-green-100">
+                    Marcada no sábado ou domingo:{" "}
+                    <b className="text-white">{moedaCurta(config.valor_call_fim_semana)}</b>
+                  </p>
+                )}
+              </div>
+              <div className="rounded-xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
+                  2 · Venda de {call(publicoOrg)}
+                </p>
+                <p className="mt-1 text-2xl font-black tabular-nums text-white">
+                  {moedaCurta(config.valor_por_call_venda)}
+                </p>
+                <p className="mt-0.5 text-xs text-green-100">Marcada de segunda a sexta</p>
+              </div>
+              <div className="rounded-xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
+                  3 · Venda de {call(publicoOrg)}
+                </p>
+                <p className="mt-1 text-2xl font-black tabular-nums text-white">
+                  {moedaCurta(config.valor_por_call_venda_fim_semana)}
+                </p>
+                <p className="mt-0.5 text-xs text-green-100">Marcada no sábado ou domingo</p>
+              </div>
+              <div className="rounded-xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
+                  4 · Receita do mês
+                </p>
+                <ul className="mt-1.5 space-y-0.5 text-xs text-green-100">
+                  {[
+                    [config.faturamento_tier1_valor, config.faturamento_tier1_bonus],
+                    [config.faturamento_tier2_valor, config.faturamento_tier2_bonus],
+                    [config.faturamento_tier3_valor, config.faturamento_tier3_bonus],
+                  ].map(([meta, bonus]) => (
+                    <li key={meta} className="flex items-center justify-between gap-2">
+                      <span className="tabular-nums">{moedaCurta(meta)}</span>
+                      <span className="font-bold tabular-nums text-white">{moedaCurta(bonus)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-1 text-[11px] text-green-200">Maior faixa que bateu, não soma</p>
+              </div>
+            </div>
+
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              <div className="rounded-xl bg-black/15 p-3.5 text-xs leading-relaxed text-green-50 ring-1 ring-white/10">
+                <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-green-200">
+                  Call e venda não somam
+                </p>
+                {`A ${call(publicoOrg)} que virou venda paga o valor da venda (2 ou 3) no lugar de ${moedaCurta(config.valor_por_call)}. Vale só o maior.`}
+              </div>
+              <div className="rounded-xl bg-black/15 p-3.5 text-xs leading-relaxed text-green-50 ring-1 ring-white/10">
+                <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-green-200">
+                  Venda e receita não somam
+                </p>
+                {`O bônus das ${calls(publicoOrg)} sem venda (1) sempre vale. Já o bônus por venda (2 e 3) e o de receita (4) não somam: recebe só o maior dos dois. Ex.: receita ${moedaCurta(config.faturamento_tier1_bonus)} e vendas R$ 700 = ganha só ${moedaCurta(config.faturamento_tier1_bonus)}.`}
+              </div>
+            </div>
+          </div>
         ) : (
         <ul className="relative mt-4 hidden space-y-1.5 text-xs text-green-50 sm:block">
           <li className="whitespace-nowrap">
