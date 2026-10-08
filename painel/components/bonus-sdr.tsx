@@ -93,9 +93,21 @@ export function BonusSdrTabela({
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
-        <IconeEstrela className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
+      {/* No modelo por call o fundo é um verde escuro só (sem o clareado
+          branco do lado direito) — Samuel disse que atrapalhava a leitura. */}
+      <div
+        className={`relative overflow-hidden rounded-2xl p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10 ${
+          config.modelo === "por_call"
+            ? "bg-gradient-to-br from-green-950 via-green-900 to-green-900"
+            : "bg-gradient-to-br from-green-950 via-green-700 to-green-500"
+        }`}
+      >
+        {config.modelo !== "por_call" && (
+          <>
+            <IconeEstrela className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
+          </>
+        )}
 
         {/* No modelo por call (empresa do Samuel) a barra mostra só a
             explicação dos bônus — ele pediu pra tirar o título "Bônus
