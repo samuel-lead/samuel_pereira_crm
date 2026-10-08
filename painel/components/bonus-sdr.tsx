@@ -176,7 +176,7 @@ export function BonusSdrTabela({
               </div>
               <div className="rounded-xl bg-black/15 p-3.5 text-xs leading-relaxed text-green-50 ring-1 ring-white/10">
                 <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-green-200">
-                  Venda e receita não somam
+                  Bônus de venda e receita não somam
                 </p>
                 {`O bônus das ${calls(publicoOrg)} sem venda (1) sempre vale. Já o bônus por venda (2 e 3) e o de receita (4) não somam: recebe só o maior dos dois. Ex.: receita ${moedaCurta(config.faturamento_tier1_bonus)} e vendas R$ 700 = ganha só ${moedaCurta(config.faturamento_tier1_bonus)}.`}
               </div>
