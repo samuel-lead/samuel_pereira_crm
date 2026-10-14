@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { usuarioAutenticado } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
+import { atividadesDaRotina } from "@/lib/rotina/atividades";
 import { buscarRotinaHoje, buscarRotinaEquipe } from "@/lib/rotina/actions";
 import { PageHeader } from "@/components/page-header";
 import { RotinaDiaria } from "@/components/rotina-diaria";
@@ -15,14 +16,20 @@ export default async function RotinaPage() {
     redirect("/leads");
   }
 
-  const [concluidasIniciais, equipe] = await Promise.all([buscarRotinaHoje(), buscarRotinaEquipe()]);
+  const [concluidasIniciais, equipe, { data: orgRotina }] = await Promise.all([
+    buscarRotinaHoje(),
+    buscarRotinaEquipe(),
+    (await createClient()).from("orgs").select("rotina_modelo").eq("id", usuario.org_id).maybeSingle(),
+  ]);
+  // Cada empresa tem a sua rotina (orgs.rotina_modelo) — ex.: a Banker.
+  const atividades = atividadesDaRotina(orgRotina?.rotina_modelo);
 
   return (
     <>
       <PageHeader titulo="Minha rotina" />
       <main className="min-h-full bg-[#f4f5f7]">
-        <RotinaDiaria concluidasIniciais={concluidasIniciais} />
-        {equipe && <RotinaEquipeAdmin equipe={equipe} />}
+        <RotinaDiaria concluidasIniciais={concluidasIniciais} atividades={atividades} />
+        {equipe && <RotinaEquipeAdmin equipe={equipe} atividades={atividades} />}
       </main>
     </>
   );

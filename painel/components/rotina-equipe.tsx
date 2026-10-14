@@ -1,7 +1,5 @@
 import type { RotinaEquipe } from "@/lib/rotina/actions";
-import { ATIVIDADES_ROTINA } from "@/lib/rotina/atividades";
-
-const IDS_ATUAIS = new Set<string>(ATIVIDADES_ROTINA.map((a) => a.id));
+import type { AtividadeRotina } from "@/lib/rotina/atividades";
 
 function diaCurto(iso: string) {
   const [, mes, dia] = iso.split("-");
@@ -12,8 +10,15 @@ function diaCurto(iso: string) {
 // cada atividade) e o resumo dos últimos 7 dias — pra saber se o time está
 // mesmo usando o check. Conta só as atividades da rotina atual (marcações
 // antigas de atividades que não existem mais são ignoradas).
-export function RotinaEquipeAdmin({ equipe }: { equipe: RotinaEquipe }) {
-  const total = ATIVIDADES_ROTINA.length;
+export function RotinaEquipeAdmin({
+  equipe,
+  atividades,
+}: {
+  equipe: RotinaEquipe;
+  atividades: readonly AtividadeRotina[];
+}) {
+  const IDS_ATUAIS = new Set<string>(atividades.map((a) => a.id));
+  const total = atividades.length;
   const hoje = equipe.dias[equipe.dias.length - 1];
 
   return (
@@ -42,7 +47,7 @@ export function RotinaEquipeAdmin({ equipe }: { equipe: RotinaEquipe }) {
                 </div>
 
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {ATIVIDADES_ROTINA.map((a) => {
+                  {atividades.map((a) => {
                     const feita = feitasHoje.includes(a.id);
                     return (
                       <span

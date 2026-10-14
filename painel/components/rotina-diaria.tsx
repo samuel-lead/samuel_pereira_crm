@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { alternarAtividadeRotina } from "@/lib/rotina/actions";
-import { ATIVIDADES_ROTINA } from "@/lib/rotina/atividades";
+import type { AtividadeRotina } from "@/lib/rotina/atividades";
 import {
+  IconeTelefone,
+  IconeMetricas,
   IconeCalendario,
   IconeAtividade,
   IconeInstagram,
@@ -17,9 +19,9 @@ const ICONES: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>>
   prospeccao: IconeInstagram,
   follow_niveis_1_2_bloco2: IconeAlvo,
   confirmar_amanha: IconeCalendario,
+  ligar_leads_quentes: IconeTelefone,
+  enviar_relatorios: IconeMetricas,
 };
-
-const ATIVIDADES = ATIVIDADES_ROTINA.map((a) => ({ ...a, Icone: ICONES[a.id] ?? IconeCheck }));
 
 const CORES: Record<string, string> = {
   blue: "bg-blue-50 text-blue-600",
@@ -40,7 +42,14 @@ function dataDeHojeFormatada() {
   });
 }
 
-export function RotinaDiaria({ concluidasIniciais }: { concluidasIniciais: string[] }) {
+export function RotinaDiaria({
+  concluidasIniciais,
+  atividades,
+}: {
+  concluidasIniciais: string[];
+  atividades: readonly AtividadeRotina[];
+}) {
+  const ATIVIDADES = atividades.map((a) => ({ ...a, Icone: ICONES[a.id] ?? IconeCheck }));
   const [concluidas, setConcluidas] = useState(new Set(concluidasIniciais));
   const [, iniciarTransicao] = useTransition();
 

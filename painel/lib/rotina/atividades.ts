@@ -13,7 +13,7 @@
 // só até as 16:30. Antes disso, batiam com o documento "Rotina do SDR"
 // (ajustado por ele em 22/09/26) — não arredondar pra bater com versão
 // nenhuma de antes se ele atualizar de novo.
-export const ATIVIDADES_ROTINA = [
+export const ATIVIDADES_ROTINA_PADRAO = [
   {
     id: "confirmar_reunioes",
     hora: "09:00–09:30",
@@ -51,3 +51,43 @@ export const ATIVIDADES_ROTINA = [
   },
 ] as const;
 
+
+// Rotina da Banker - Consorcio (14/10/26): igual à padrão, só que a 1ª
+// atividade é ligar pros leads quentes (níveis 2 e 3, só isso) e a última é
+// enviar os relatórios (no lugar de confirmar reuniões). Os horários das
+// outras continuam os mesmos.
+export const ATIVIDADES_ROTINA_BANKER = [
+  {
+    id: "ligar_leads_quentes",
+    hora: "09:00–09:30",
+    titulo: "Ligar para leads quentes",
+    desc: "Ligar para os leads quentes: os que estão em qualificação (nível 2) e os que toparam a reunião (nível 3).",
+    cor: "blue",
+  },
+  ATIVIDADES_ROTINA_PADRAO[1],
+  ATIVIDADES_ROTINA_PADRAO[2],
+  ATIVIDADES_ROTINA_PADRAO[3],
+  {
+    id: "enviar_relatorios",
+    hora: "16:30–17:00",
+    titulo: "Enviar relatórios",
+    desc: "Enviar os relatórios do dia.",
+    cor: "emerald",
+  },
+] as const;
+
+export type AtividadeRotina = {
+  id: string;
+  hora: string;
+  titulo: string;
+  desc: string;
+  cor: string;
+};
+
+// Rotina de cada empresa (orgs.rotina_modelo): 'padrao' ou 'banker'.
+export function atividadesDaRotina(modelo: string | null | undefined): readonly AtividadeRotina[] {
+  return modelo === "banker" ? ATIVIDADES_ROTINA_BANKER : ATIVIDADES_ROTINA_PADRAO;
+}
+
+// Mantido por compatibilidade com quem ainda importa a lista padrão.
+export const ATIVIDADES_ROTINA = ATIVIDADES_ROTINA_PADRAO;
