@@ -1069,14 +1069,16 @@ export async function calcularBonusPorSdr(
       .is("arquivado_em", null)
       .gte("vendido_em", inicioISO)
       .lt("vendido_em", fimISO),
-    // Reuniões cuja data já passou (menos as canceladas) — base do no-show,
-    // mesma régua de calcularMetricas, só que creditada ao SDR original.
+    // Base do no-show do bônus (creditada ao SDR original): só reunião que já
+    // foi resolvida — realizada ou no-show. Reunião esquecida como "marcada"
+    // (o closer ainda não atualizou) e cancelada não contam contra o SDR
+    // (Samuel, 15/10/26).
     supabase
       .from("reunioes")
       .select("lead_id, status, leads!inner(arquivado_em)")
       .eq("org_id", orgId)
       .is("leads.arquivado_em", null)
-      .neq("status", "cancelada")
+      .in("status", ["realizada", "nao_compareceu"])
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", limiteDevidasISO),
   ]);
