@@ -238,6 +238,36 @@ export async function atualizarUsuarioAdmin(
   redirect("/usuarios");
 }
 
+// Cada usuário troca o próprio nome — não precisa ser admin, só logado. Igual
+// ao WhatsApp, o id vem de usuarioAutenticado(), nunca do formulário.
+export async function atualizarMeuNome(
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const { usuario } = await usuarioAutenticado();
+  if (!usuario) {
+    return { erro: "Não autenticado" };
+  }
+
+  const nome = String(formData.get("nome") ?? "").trim().replace(/\s+/g, " ");
+  if (!nome) {
+    return { erro: "O nome não pode ficar vazio" };
+  }
+  if (nome.length > 80) {
+    return { erro: "O nome pode ter no máximo 80 letras" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("usuarios").update({ nome }).eq("id", usuario.id);
+
+  if (error) {
+    return { erro: error.message };
+  }
+
+  revalidatePath("/", "layout");
+  return { erro: null };
+}
+
 // Cada usuário troca o próprio WhatsApp — não precisa ser admin, só logado.
 // Igual atualizarPropriaFuncao: o id vem de usuarioAutenticado(), nunca do
 // formulário, então a pessoa só consegue mexer no próprio número.

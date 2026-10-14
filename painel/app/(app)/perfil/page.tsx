@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { FotoPerfilForm } from "@/components/foto-perfil-form";
 import { TrocarSenhaForm } from "@/components/trocar-senha-form";
 import { TrocarTelefoneForm } from "@/components/trocar-telefone-form";
+import { TrocarNomeForm } from "@/components/trocar-nome-form";
 import { PreferenciaWhatsappForm } from "@/components/preferencia-whatsapp-form";
 import { NotificacoesPushForm } from "@/components/notificacoes-push-form";
 import { ComissaoForm } from "@/components/comissao-form";
@@ -34,14 +35,14 @@ export default async function PerfilPage() {
 
           <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-xs text-neutral-500">Nome</dt>
-              <dd className="font-medium text-neutral-900">{usuario?.nome ?? "—"}</dd>
-            </div>
-            <div>
               <dt className="text-xs text-neutral-500">E-mail</dt>
               <dd className="font-medium text-neutral-900">{user?.email ?? "—"}</dd>
             </div>
           </dl>
+
+          <div className="mt-5 border-t border-neutral-100 pt-5">
+            <TrocarNomeForm nomeAtual={usuario?.nome ?? ""} />
+          </div>
         </div>
 
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
