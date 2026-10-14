@@ -14,7 +14,7 @@ import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { EditarMotivoRepescagem } from "@/components/editar-motivo-repescagem";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeLapis } from "@/components/icons";
-import { Reuniao, Sdr, Receita, ehImobiliario } from "@/lib/terminologia";
+import { Reuniao, Sdr, Receita, ehImobiliario, semCloser } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -178,7 +178,7 @@ export function LeadModalConteudo({
             <span>
               {lead.responsavel_id === null
                 ? "Esse lead ainda não tem responsável."
-                : `Esse lead está com ${nomeResponsavel ?? "o Closer"} agora, mas foi você quem marcou a reunião.`}
+                : `Esse lead está com ${nomeResponsavel ?? (semCloser(publicoOrg) ? "outra pessoa" : "o Closer")} agora, mas foi você quem marcou a reunião.`}
             </span>
             <ReivindicarLeadButton leadId={lead.id} />
           </div>

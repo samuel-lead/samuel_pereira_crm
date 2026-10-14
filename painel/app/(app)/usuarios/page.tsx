@@ -22,6 +22,9 @@ type UsuarioLinha = {
 };
 
 function funcaoLabel(funcao: string, publicoOrg: string) {
+  // Empresa sem Closer (ex.: Banker): quem sobrou com função "closer" é
+  // tratado como o único papel que existe lá, o Vendedor.
+  if (funcao === "closer" && publicoOrg.split(":").includes("solo")) return Sdr(publicoOrg);
   return funcao === "sdr" ? Sdr(publicoOrg) : funcao === "closer" ? "Closer" : funcao;
 }
 
