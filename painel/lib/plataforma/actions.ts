@@ -176,3 +176,27 @@ export async function alterarEmailOrg(orgId: string, novoEmail: string) {
 
   revalidatePath("/empresas");
 }
+
+// Remove uma pessoa de uma empresa cliente (só o dono da plataforma). Os
+// leads e atividades dela passam pra outra pessoa da mesma empresa — nada
+// de negócio é apagado (ver public.excluir_usuario_da_empresa).
+export async function removerPessoaOrg(
+  orgId: string,
+  usuarioId: string,
+  transferirPara: string | null
+) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("excluir_usuario_da_empresa", {
+    p_org_id: orgId,
+    usuario_id_alvo: usuarioId,
+    transferir_para: transferirPara,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/empresas/${orgId}`);
+  revalidatePath("/empresas");
+}

@@ -8,6 +8,7 @@ import { AlterarEmailOrgButton } from "@/components/alterar-email-org-button";
 import { CopiarLinkLoginButton } from "@/components/copiar-link-login-button";
 import { UltimaAtividadeOrg } from "@/components/ultima-atividade-org";
 import { CobrancaOrgForm } from "@/components/cobranca-org-form";
+import { RemoverPessoaOrgButton } from "@/components/remover-pessoa-org-button";
 import { Sdr, ehImobiliario } from "@/lib/terminologia";
 
 type Org = {
@@ -132,7 +133,7 @@ export default async function DetalheEmpresaPage({
                     <p className="truncate text-sm font-medium text-neutral-900">{u.nome}</p>
                     <p className="truncate text-xs text-neutral-500">{u.email}</p>
                   </div>
-                  <div className="flex shrink-0 gap-1.5">
+                  <div className="flex shrink-0 items-start gap-1.5">
                     <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
                       {ehImobiliario(org.publico)
                         ? u.papel === "admin"
@@ -146,6 +147,11 @@ export default async function DetalheEmpresaPage({
                               ? "Closer"
                               : "Membro"}
                     </span>
+                    <RemoverPessoaOrgButton
+                      orgId={org.id}
+                      pessoa={{ id: u.id, nome: u.nome }}
+                      outras={usuarios.filter((o) => o.id !== u.id).map((o) => ({ id: o.id, nome: o.nome }))}
+                    />
                   </div>
                 </div>
               ))}
