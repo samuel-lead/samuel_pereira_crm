@@ -25,7 +25,7 @@ export function PerformanceSdr({
   periodo: string;
   publicoOrg?: string;
 }) {
-  const tituloResolvido = titulo ?? "Ranking SDR";
+  const tituloResolvido = titulo ?? `Ranking ${Sdr(publicoOrg)}`;
   const ranking = [...dados].sort((a, b) => b.reunioesRealizadas - a.reunioesRealizadas);
   const maiorRealizadas = Math.max(1, ...ranking.map((l) => l.reunioesRealizadas));
 

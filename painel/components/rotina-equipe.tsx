@@ -1,5 +1,6 @@
 import type { RotinaEquipe } from "@/lib/rotina/actions";
 import type { AtividadeRotina } from "@/lib/rotina/atividades";
+import { Sdr } from "@/lib/terminologia";
 
 function diaCurto(iso: string) {
   const [, mes, dia] = iso.split("-");
@@ -13,9 +14,11 @@ function diaCurto(iso: string) {
 export function RotinaEquipeAdmin({
   equipe,
   atividades,
+  publicoOrg = "mentoria",
 }: {
   equipe: RotinaEquipe;
   atividades: readonly AtividadeRotina[];
+  publicoOrg?: string;
 }) {
   const IDS_ATUAIS = new Set<string>(atividades.map((a) => a.id));
   const total = atividades.length;
@@ -27,11 +30,11 @@ export function RotinaEquipeAdmin({
         Acompanhamento da equipe
       </h2>
       <p className="mb-4 mt-0.5 text-xs text-neutral-500">
-        Só você (admin) vê isso. Quanto cada SDR marcou da rotina hoje e nos últimos 7 dias.
+        Só você (admin) vê isso. Quanto cada {Sdr(publicoOrg)} marcou da rotina hoje e nos últimos 7 dias.
       </p>
 
       {equipe.pessoas.length === 0 ? (
-        <p className="py-6 text-center text-sm text-neutral-400">Nenhum SDR cadastrado ainda.</p>
+        <p className="py-6 text-center text-sm text-neutral-400">Nenhum {Sdr(publicoOrg)} cadastrado ainda.</p>
       ) : (
         <div className="divide-y divide-neutral-100">
           {equipe.pessoas.map((pessoa) => {

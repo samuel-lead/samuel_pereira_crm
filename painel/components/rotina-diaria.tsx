@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { alternarAtividadeRotina } from "@/lib/rotina/actions";
 import type { AtividadeRotina } from "@/lib/rotina/atividades";
+import { Sdr } from "@/lib/terminologia";
 import {
   IconeTelefone,
   IconeMetricas,
@@ -46,10 +47,12 @@ export function RotinaDiaria({
   concluidasIniciais,
   atividades,
   metaDiaria,
+  publicoOrg = "mentoria",
 }: {
   concluidasIniciais: string[];
   atividades: readonly AtividadeRotina[];
   metaDiaria: string;
+  publicoOrg?: string;
 }) {
   const ATIVIDADES = atividades.map((a) => ({ ...a, Icone: ICONES[a.id] ?? IconeCheck }));
   const [concluidas, setConcluidas] = useState(new Set(concluidasIniciais));
@@ -85,7 +88,7 @@ export function RotinaDiaria({
         </p>
         <p className="text-xs text-neutral-400">concluídas</p>
         <p className="pt-3 text-sm text-neutral-500">
-          A principal atividade do SDR é a ligação, usamos o WhatsApp apenas como suporte. E só
+          A principal atividade do {Sdr(publicoOrg)} é a ligação, usamos o WhatsApp apenas como suporte. E só
           em último caso, depois de tentar tudo por ligação, que fazemos a qualificação por
           mensagem no WhatsApp.
         </p>

@@ -41,20 +41,30 @@ export function calls(publicoOrg: string) {
 // visita) é chamado de "Corretor" no mercado de imóveis. Não confundir com
 // o valor interno `usuarios.funcao = 'sdr'`, que continua igual no banco
 // pros dois públicos — só o texto que aparece pra pessoa muda.
+// Empresas com vocabulário próprio (ex.: Banker - Consorcio): o público vem
+// com sufixos (":of", ":vend") — ver lib/supabase/middleware.ts.
+function temVariante(publicoOrg: string, variante: string) {
+  return publicoOrg.split(":").slice(1).includes(variante);
+}
+
 export function Sdr(publicoOrg: string) {
-  return ehImobiliario(publicoOrg) ? "Corretor" : "SDR";
+  if (ehImobiliario(publicoOrg)) return "Corretor";
+  return temVariante(publicoOrg, "vend") ? "Vendedor" : "SDR";
 }
 
 export function sdr(publicoOrg: string) {
-  return ehImobiliario(publicoOrg) ? "corretor" : "SDR";
+  if (ehImobiliario(publicoOrg)) return "corretor";
+  return temVariante(publicoOrg, "vend") ? "vendedor" : "SDR";
 }
 
 export function Sdrs(publicoOrg: string) {
-  return ehImobiliario(publicoOrg) ? "Corretores" : "SDRs";
+  if (ehImobiliario(publicoOrg)) return "Corretores";
+  return temVariante(publicoOrg, "vend") ? "Vendedores" : "SDRs";
 }
 
 export function sdrs(publicoOrg: string) {
-  return ehImobiliario(publicoOrg) ? "corretores" : "SDRs";
+  if (ehImobiliario(publicoOrg)) return "corretores";
+  return temVariante(publicoOrg, "vend") ? "vendedores" : "SDRs";
 }
 
 // Imobiliário usa o termo do mercado, "VGV" (Valor Geral de Vendas), no
@@ -74,7 +84,7 @@ export function RepescagemFutura(publicoOrg: string) {
   if (ehImobiliario(publicoOrg)) return "Oportunidades futuras";
   // Sufixo ":of" = empresa que escolheu esse nome (orgs.nome_oportunidades_futuras,
   // ex.: Banker - Consorcio) — ver lib/supabase/middleware.ts.
-  if (publicoOrg.endsWith(":of")) return "Oportunidades Futuras";
+  if (temVariante(publicoOrg, "of")) return "Oportunidades Futuras";
   return "Repescagem futura de ICP";
 }
 
