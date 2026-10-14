@@ -45,9 +45,11 @@ function dataDeHojeFormatada() {
 export function RotinaDiaria({
   concluidasIniciais,
   atividades,
+  metaDiaria,
 }: {
   concluidasIniciais: string[];
   atividades: readonly AtividadeRotina[];
+  metaDiaria: string;
 }) {
   const ATIVIDADES = atividades.map((a) => ({ ...a, Icone: ICONES[a.id] ?? IconeCheck }));
   const [concluidas, setConcluidas] = useState(new Set(concluidasIniciais));
@@ -88,7 +90,7 @@ export function RotinaDiaria({
           mensagem no WhatsApp.
         </p>
         <p className="text-sm font-medium text-neutral-700">
-          Você deve fazer no mínimo 50 ligações por dia.
+          {metaDiaria}
         </p>
       </div>
 

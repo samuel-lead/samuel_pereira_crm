@@ -71,7 +71,11 @@ export function faturamento(publicoOrg: string) {
 // "Repescagem futura de ICP" é jargão de vendas que corretor não usa —
 // pediu pra ficar "Oportunidades futuras", mais simples de entender.
 export function RepescagemFutura(publicoOrg: string) {
-  return ehImobiliario(publicoOrg) ? "Oportunidades futuras" : "Repescagem futura de ICP";
+  if (ehImobiliario(publicoOrg)) return "Oportunidades futuras";
+  // Sufixo ":of" = empresa que escolheu esse nome (orgs.nome_oportunidades_futuras,
+  // ex.: Banker - Consorcio) — ver lib/supabase/middleware.ts.
+  if (publicoOrg.endsWith(":of")) return "Oportunidades Futuras";
+  return "Repescagem futura de ICP";
 }
 
 // Título do gráfico de evolução mensal no dashboard — imobiliário fala

@@ -89,5 +89,12 @@ export function atividadesDaRotina(modelo: string | null | undefined): readonly 
   return modelo === "banker" ? ATIVIDADES_ROTINA_BANKER : ATIVIDADES_ROTINA_PADRAO;
 }
 
+// Meta diária mostrada na tela "Minha rotina" de cada empresa.
+export function metaDiariaDaRotina(modelo: string | null | undefined): string {
+  return modelo === "banker"
+    ? "Você deve fazer no mínimo 80 prospecções por dia no Instagram."
+    : "Você deve fazer no mínimo 50 ligações por dia.";
+}
+
 // Mantido por compatibilidade com quem ainda importa a lista padrão.
 export const ATIVIDADES_ROTINA = ATIVIDADES_ROTINA_PADRAO;

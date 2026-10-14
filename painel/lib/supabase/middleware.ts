@@ -181,17 +181,23 @@ export async function updateSession(request: NextRequest) {
     } else {
       const { data: usuarioDoBanco } = await supabase
         .from("usuarios")
-        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico)")
+        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico, nome_oportunidades_futuras)")
         .eq("id", user.id)
         .single();
 
       usuario = usuarioDoBanco;
-      const orgInfo = usuarioDoBanco?.orgs as
-        | { status?: string; publico?: string }
-        | { status?: string; publico?: string }[]
-        | null;
-      statusOrg = Array.isArray(orgInfo) ? orgInfo[0]?.status : orgInfo?.status;
-      publicoOrg = Array.isArray(orgInfo) ? orgInfo[0]?.publico : orgInfo?.publico;
+      type OrgInfo = { status?: string; publico?: string; nome_oportunidades_futuras?: boolean };
+      const orgInfo = usuarioDoBanco?.orgs as OrgInfo | OrgInfo[] | null;
+      const org = Array.isArray(orgInfo) ? orgInfo[0] : orgInfo;
+      statusOrg = org?.status;
+      publicoOrg = org?.publico;
+      // Empresa que chama "Repescagem futura de ICP" de "Oportunidades
+      // Futuras" (ex.: Banker - Consorcio): vai junto do público como
+      // sufixo ":of" — só lib/terminologia.ts entende, o resto do sistema
+      // continua comparando só com "imobiliario".
+      if (publicoOrg && org?.nome_oportunidades_futuras) {
+        publicoOrg = `${publicoOrg}:of`;
+      }
 
       if (usuarioDoBanco) {
         supabaseResponse.cookies.set(
