@@ -7,7 +7,7 @@ import { ImovelSelect } from "@/components/imovel-select";
 import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { IconeCalendario, IconeMoeda, IconeClientePagante, IconeTag } from "@/components/icons";
-import { ehImobiliario, Receita } from "@/lib/terminologia";
+import { ehImobiliario, Receita, usaComissaoDoVendedor } from "@/lib/terminologia";
 
 // Rótulo com um selo de ícone na frente — Samuel pediu pra destacar mais
 // esses 4 campos ("bonito, elegante, impossível de ignorar"). Mesmo
@@ -123,6 +123,9 @@ export function MarcarVendidoForm({
 }) {
   const modalAtivo = useLeadModalAtivo();
   const imobiliario = ehImobiliario(publicoOrg);
+  // Comissão calculada sozinha a partir do que o vendedor configurou em
+  // Meu perfil (imobiliário e Banker - Consorcio).
+  const comissaoAuto = usaComissaoDoVendedor(publicoOrg);
   const [valorVendaReais, setValorVendaReais] = useState(propostaValor ?? 0);
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
@@ -178,10 +181,11 @@ export function MarcarVendidoForm({
             Icone={IconeMoeda}
             placeholder="Preço combinado com o lead"
             valorInicial={propostaValor}
-            aoMudarReais={imobiliario ? setValorVendaReais : undefined}
+            aoMudarReais={comissaoAuto ? setValorVendaReais : undefined}
           />
-          {imobiliario ? (
+          {comissaoAuto ? (
             <CampoComissaoVenda
+              rotuloCampo={imobiliario ? undefined : `${Receita(publicoOrg)} (% do valor da venda)`}
               valorVendaReais={valorVendaReais}
               tipoInicial={comissaoTipo === "fixo" ? "fixo" : "percentual"}
               percentualInicial={comissaoPercentual ?? null}

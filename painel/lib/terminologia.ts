@@ -55,6 +55,13 @@ export function semCloser(publicoOrg: string) {
   return ehImobiliario(publicoOrg) || temVariante(publicoOrg, "solo");
 }
 
+// Vendedor com comissão própria: o CRM calcula sozinho a comissão de cada
+// venda a partir do % (ou valor fixo) que ele configurou em Meu perfil.
+// Imobiliário sempre usou; a Banker - Consorcio (":com") passou a usar.
+export function usaComissaoDoVendedor(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) || temVariante(publicoOrg, "com");
+}
+
 // Empresa que não usa "Farming" na Base de leads (ex.: Banker - Consorcio).
 export function semFarming(publicoOrg: string) {
   return temVariante(publicoOrg, "sf");

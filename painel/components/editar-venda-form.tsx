@@ -6,7 +6,7 @@ import { ProdutoSelect } from "@/components/produto-select";
 import { ImovelSelect } from "@/components/imovel-select";
 import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
-import { ehImobiliario, Receita } from "@/lib/terminologia";
+import { ehImobiliario, Receita, usaComissaoDoVendedor } from "@/lib/terminologia";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -86,6 +86,7 @@ export function EditarVendaForm({
   comissaoValorFixo?: number | null;
 }) {
   const imobiliario = ehImobiliario(publicoOrg);
+  const comissaoAuto = usaComissaoDoVendedor(publicoOrg);
   const [valorVendaReais, setValorVendaReais] = useState(valorVenda ?? 0);
   const [aberto, setAberto] = useState(false);
   const modalAtivo = useLeadModalAtivo();
@@ -149,10 +150,11 @@ export function EditarVendaForm({
         name="valor_venda"
         label={imobiliario ? "Preço do imóvel (R$)" : "Valor da venda (R$)"}
         valorInicial={valorVenda}
-        aoMudarReais={imobiliario ? setValorVendaReais : undefined}
+        aoMudarReais={comissaoAuto ? setValorVendaReais : undefined}
       />
-      {imobiliario ? (
+      {comissaoAuto ? (
         <CampoComissaoVenda
+          rotuloCampo={imobiliario ? undefined : `${Receita(publicoOrg)} (% do valor da venda)`}
           variante="simples"
           valorVendaReais={valorVendaReais}
           tipoInicial={comissaoTipo === "fixo" ? "fixo" : "percentual"}

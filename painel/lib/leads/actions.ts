@@ -6,7 +6,7 @@ import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { ORDEM_OPORTUNIDADE_FUTURA, numerarNiveis, NIVEIS_REATIVACAO, type NivelResumo } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
-import { reuniao, Reuniao } from "@/lib/terminologia";
+import { reuniao, Reuniao, usaComissaoDoVendedor } from "@/lib/terminologia";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -1429,7 +1429,7 @@ export async function marcarVendido(
   let receita: number | null;
   let comissaoTipoVenda: "percentual" | "fixo" | null = null;
   let comissaoValorVenda: number | null = null;
-  if (usuario.publico_org === "imobiliario") {
+  if (usaComissaoDoVendedor(usuario.publico_org)) {
     const { data: corretor } = await supabase
       .from("usuarios")
       .select("comissao_tipo, comissao_percentual, comissao_valor_fixo")
@@ -1623,7 +1623,7 @@ export async function editarVenda(
   let receita: number | null;
   let comissaoTipoVenda: "percentual" | "fixo" | null = null;
   let comissaoValorVenda: number | null = null;
-  if (usuario.publico_org === "imobiliario") {
+  if (usaComissaoDoVendedor(usuario.publico_org)) {
     const { data: leadAtual } = await supabase
       .from("leads")
       .select("responsavel_id")

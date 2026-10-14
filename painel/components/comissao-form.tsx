@@ -10,10 +10,13 @@ export function ComissaoForm({
   comissaoAtual,
   tipoAtual,
   valorFixoAtual,
+  porImovel = true,
 }: {
   comissaoAtual: number | null;
   tipoAtual: "percentual" | "fixo";
   valorFixoAtual: number | null;
+  // true = imobiliário ("por imóvel"); false = outras empresas ("por venda").
+  porImovel?: boolean;
 }) {
   const [estado, acaoFormulario, pendente] = useActionState(atualizarMinhaComissao, estadoInicial);
   const [salvo, setSalvo] = useState(false);
@@ -57,7 +60,7 @@ export function ComissaoForm({
               tipo === "fixo" ? "bg-white text-blue-700 shadow-sm" : "text-neutral-500"
             }`}
           >
-            Valor fixo por imóvel
+            {porImovel ? "Valor fixo por imóvel" : "Valor fixo por venda"}
           </button>
         </div>
       </div>
@@ -88,7 +91,7 @@ export function ComissaoForm({
       ) : (
         <div className="space-y-1">
           <label className="text-sm font-medium text-neutral-700" htmlFor="comissao_valor_fixo">
-            Valor fixo por imóvel vendido (R$)
+            {porImovel ? "Valor fixo por imóvel vendido (R$)" : "Valor fixo por venda (R$)"}
           </label>
           <div className="relative">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-400">
@@ -107,7 +110,9 @@ export function ComissaoForm({
             />
           </div>
           <p className="text-xs text-neutral-400">
-            Esse valor entra como sua receita em toda venda, não importa o preço do imóvel.
+            {porImovel
+              ? "Esse valor entra como sua receita em toda venda, não importa o preço do imóvel."
+              : "Esse valor entra como sua comissão em toda venda, não importa o valor vendido."}
           </p>
         </div>
       )}

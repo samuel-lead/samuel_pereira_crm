@@ -18,12 +18,14 @@ export function CampoComissaoVenda({
   percentualInicial,
   valorFixoInicial,
   variante = "cartao",
+  rotuloCampo = "Receita (comissão)",
 }: {
   valorVendaReais: number;
   tipoInicial: Tipo;
   percentualInicial: number | null;
   valorFixoInicial: number | null;
   variante?: "cartao" | "simples";
+  rotuloCampo?: string;
 }) {
   const [tipo, setTipo] = useState<Tipo>(tipoInicial);
   const [percentual, setPercentual] = useState(percentualInicial != null ? String(percentualInicial) : "");
@@ -44,7 +46,7 @@ export function CampoComissaoVenda({
 
   return (
     <div className={envelope}>
-      <label className={rotulo}>Receita (comissão)</label>
+      <label className={rotulo}>{rotuloCampo}</label>
       <input type="hidden" name="comissao_tipo" value={tipo} />
       <div className="mb-2 inline-flex w-full rounded-md border border-green-300 bg-green-50 p-0.5">
         {(

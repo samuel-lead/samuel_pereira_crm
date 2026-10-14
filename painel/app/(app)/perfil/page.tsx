@@ -7,7 +7,7 @@ import { PreferenciaWhatsappForm } from "@/components/preferencia-whatsapp-form"
 import { NotificacoesPushForm } from "@/components/notificacoes-push-form";
 import { ComissaoForm } from "@/components/comissao-form";
 import { temInscricaoPush } from "@/lib/notificacoes/actions";
-import { ehImobiliario } from "@/lib/terminologia";
+import { ehImobiliario, Receita, usaComissaoDoVendedor } from "@/lib/terminologia";
 
 export default async function PerfilPage() {
   const { user, usuario } = await usuarioAutenticado();
@@ -67,7 +67,7 @@ export default async function PerfilPage() {
           <TrocarTelefoneForm telefoneAtual={dadosUsuario?.wpp_comercial_e164 ?? null} />
         </div>
 
-        {ehImobiliario(usuario?.publico_org ?? "mentoria") && (
+        {usaComissaoDoVendedor(usuario?.publico_org ?? "mentoria") && (
           <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
             <h2 className="mb-1 text-sm font-semibold text-neutral-800">
               Comissão
@@ -75,7 +75,7 @@ export default async function PerfilPage() {
             <p className="mb-4 text-xs text-neutral-500">
               Sua porcentagem de comissão em cima do valor de cada venda. O
               CRM usa isso pra calcular sozinho quanto você recebe (aparece
-              como &quot;Receita&quot; na Visão geral) — sem precisar
+              como &quot;{Receita(usuario?.publico_org ?? "mentoria")}&quot; na Visão geral) — sem precisar
               digitar esse valor toda vez que fecha uma venda.
             </p>
 
@@ -83,6 +83,7 @@ export default async function PerfilPage() {
               comissaoAtual={dadosUsuario?.comissao_percentual ?? null}
               tipoAtual={(dadosUsuario?.comissao_tipo as "percentual" | "fixo") ?? "percentual"}
               valorFixoAtual={dadosUsuario?.comissao_valor_fixo ?? null}
+              porImovel={ehImobiliario(usuario?.publico_org ?? "mentoria")}
             />
           </div>
         )}
