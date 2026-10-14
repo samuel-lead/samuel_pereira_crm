@@ -92,7 +92,7 @@ export function atividadesDaRotina(modelo: string | null | undefined): readonly 
 // Meta diária mostrada na tela "Minha rotina" de cada empresa.
 export function metaDiariaDaRotina(modelo: string | null | undefined): string {
   return modelo === "banker"
-    ? "Você deve fazer no mínimo 80 prospecções por dia no Instagram."
+    ? "Você deve fazer no mínimo 80 prospecções por dia no Instagram, para pegar o WhatsApp do lead e levar para a ligação."
     : "Você deve fazer no mínimo 50 ligações por dia.";
 }
 
