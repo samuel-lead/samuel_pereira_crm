@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
@@ -33,6 +34,13 @@ export default async function ImovelPage({ params }: { params: Promise<{ id: str
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-md">
           <FotoImovelForm imovelId={id} fotoUrl={imovel.foto_url} />
         </div>
+
+        <Link
+          href={`/imoveis/${id}/unidades`}
+          className="block rounded-2xl border border-blue-200 bg-blue-50 p-5 text-center text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
+        >
+          Unidades do empreendimento (importar planilha)
+        </Link>
 
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-md">
           <ImovelForm
