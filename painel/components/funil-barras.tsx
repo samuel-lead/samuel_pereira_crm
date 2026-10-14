@@ -53,11 +53,30 @@ function SeloCrescimento({ atual, anterior }: { atual: number; anterior: number 
   );
 }
 
+// Piso diário de volume (chão, nunca teto): verde quando bateu, âmbar com
+// quanto falta quando ainda não.
+function SeloPiso({ valor, piso }: { valor: number; piso: number }) {
+  const bateu = valor >= piso;
+  const falta = Math.max(0, Math.ceil(piso - valor));
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+        bateu
+          ? "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400"
+          : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+      }`}
+    >
+      {bateu ? `✓ bateu o piso (${piso})` : `piso ${piso} · faltam ${falta}`}
+    </span>
+  );
+}
+
 type Etapa = {
   rotulo: string;
   valor: number;
   anterior?: number;
   nota?: string;
+  piso?: number;
   // Conversão desde a etapa de cima (null = sem dado).
   conversao?: { nome: string; valor: number | null; minimo?: number };
 };
@@ -137,13 +156,12 @@ export function FunilBarras({
       rotulo: "Leads trabalhados",
       valor: metricas.leadsTrabalhados,
       anterior: ant?.leadsTrabalhados,
-      nota: `piso ${pisoLeads}`,
     },
     {
       rotulo: `${Calls(publicoOrg)} marcadas`,
       valor: metricas.reunioesMarcadas,
       anterior: ant?.reunioesMarcadas,
-      nota: `piso ${pisoReunioes}`,
+      piso: pisoReunioes,
       conversao: { nome: "agendamento", valor: metricas.taxaAgendamento, minimo: metas.taxa_agendamento_min },
     },
     {
@@ -203,6 +221,9 @@ export function FunilBarras({
             <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
               Leads novos que chegaram
             </p>
+            <div className="mt-1">
+              <SeloPiso valor={leadsNovos} piso={pisoLeads} />
+            </div>
           </div>
         </div>
         {ant && (
@@ -255,6 +276,11 @@ export function FunilBarras({
                   <SeloCrescimento atual={etapa.valor} anterior={etapa.anterior} />
                 </div>
               </div>
+              {etapa.piso !== undefined && (
+                <div className="pl-[7.5rem] pt-1 sm:pl-36">
+                  <SeloPiso valor={etapa.valor} piso={etapa.piso} />
+                </div>
+              )}
               {etapa.nota && (
                 <p className="pl-[7.5rem] text-[10px] text-neutral-400 sm:pl-36">{etapa.nota}</p>
               )}
