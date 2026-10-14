@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
+import { paginasOcultasDaOrg } from "@/lib/paginas-ocultas";
 import { ProvedorLeadModal } from "@/components/provedor-lead-modal";
 import { Sdr } from "@/lib/terminologia";
 
@@ -14,18 +15,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let cargo = "Membro";
   let funcao: string | null = null;
   let publicoOrg = "mentoria";
-  // Algumas empresas (ex.: Banker - Consorcio) não usam bônus de SDR —
-  // desligado por empresa em orgs.bonus_sdr_ativo.
-  let bonusSdrAtivo = true;
+  // Páginas que a empresa não usa (ex.: Banker - Consorcio) — ficam fora do
+  // menu. Lista em orgs.paginas_ocultas.
+  let paginasOcultas: string[] = [];
 
   if (usuario) {
-    const supabase = await createClient();
-    const { data: orgData } = await supabase
-      .from("orgs")
-      .select("bonus_sdr_ativo")
-      .eq("id", usuario.org_id)
-      .maybeSingle();
-    bonusSdrAtivo = orgData?.bonus_sdr_ativo !== false;
+    paginasOcultas = await paginasOcultasDaOrg(await createClient(), usuario.org_id);
 
     isSuperAdmin = usuario.super_admin === true;
     isAdmin = usuario.papel === "admin" || isSuperAdmin;
@@ -53,7 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         cargo={cargo}
         funcao={funcao}
         publicoOrg={publicoOrg}
-        bonusSdrAtivo={bonusSdrAtivo}
+        paginasOcultas={paginasOcultas}
       >
         {children}
       </AppShell>

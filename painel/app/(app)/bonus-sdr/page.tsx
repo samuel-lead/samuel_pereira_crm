@@ -1,10 +1,10 @@
-import { redirect } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { BonusSdrTabela } from "@/components/bonus-sdr";
 import { calcularBonusPorSdr, type BonusSdrConfig } from "@/lib/metricas";
 import { resolverPeriodo } from "@/lib/periodo";
+import { bloquearSeOculta } from "@/lib/paginas-ocultas";
 
 // Samuel pediu um filtro de mês aqui — antes a tela só mostrava o mês
 // atual, sem jeito nenhum de olhar o bônus de um mês passado. O bônus é
@@ -23,16 +23,9 @@ export default async function BonusSdrPage({
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
-  // Empresa com o bônus de SDR desligado: a página nem abre (ex.: digitando
-  // o endereço na mão).
-  const { data: orgBonus } = await supabase
-    .from("orgs")
-    .select("bonus_sdr_ativo")
-    .eq("id", usuario!.org_id)
-    .maybeSingle();
-  if (orgBonus?.bonus_sdr_ativo === false) {
-    redirect("/leads");
-  }
+  // Empresa que escondeu o Bônus SDR: a página nem abre (ex.: digitando o
+  // endereço na mão).
+  await bloquearSeOculta(supabase, usuario!.org_id, "/bonus-sdr");
 
   const agora = new Date();
   const periodoResolvido =

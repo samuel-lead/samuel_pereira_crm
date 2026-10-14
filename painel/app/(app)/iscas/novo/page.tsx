@@ -2,12 +2,16 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { PageHeader } from "@/components/page-header";
 import { NovoIscaForm } from "@/components/novo-isca-form";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
+import { bloquearSeOculta } from "@/lib/paginas-ocultas";
 
 export default async function NovaIscaPage({
   searchParams,
 }: {
   searchParams: Promise<{ tipo?: string }>;
 }) {
+  const { usuario } = await usuarioAutenticado();
+  await bloquearSeOculta(await createClient(), usuario!.org_id, "/iscas");
   const cabecalhos = await headers();
   const host = cabecalhos.get("host") ?? "";
   const protocolo = host.startsWith("localhost") ? "http" : "https";

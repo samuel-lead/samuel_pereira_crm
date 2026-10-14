@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
+import { bloquearSeOculta } from "@/lib/paginas-ocultas";
 import { PageHeader } from "@/components/page-header";
 import { CopiarLinkIscaButton } from "@/components/copiar-link-isca-button";
 import { ArquivarIscaButton } from "@/components/arquivar-isca-button";
@@ -17,6 +18,8 @@ type IscaLinha = {
 
 export default async function IscasPage() {
   const supabase = await createClient();
+  const { usuario } = await usuarioAutenticado();
+  await bloquearSeOculta(supabase, usuario!.org_id, "/iscas");
   const cabecalhos = await headers();
   const host = cabecalhos.get("host") ?? "";
   const protocolo = host.startsWith("localhost") ? "http" : "https";

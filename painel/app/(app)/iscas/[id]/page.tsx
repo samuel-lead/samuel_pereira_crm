@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
+import { bloquearSeOculta } from "@/lib/paginas-ocultas";
 import { PageHeader } from "@/components/page-header";
 import { EditarIscaForm } from "@/components/editar-isca-form";
 
@@ -12,6 +13,8 @@ export default async function EditarIscaPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { usuario } = await usuarioAutenticado();
+  await bloquearSeOculta(supabase, usuario!.org_id, "/iscas");
   const cabecalhos = await headers();
   const host = cabecalhos.get("host") ?? "";
   const protocolo = host.startsWith("localhost") ? "http" : "https";
