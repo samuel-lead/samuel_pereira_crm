@@ -260,7 +260,6 @@ export function SecaoPeriodo({
           metricasAnteriores={metricasAnteriores}
           metas={metas}
           leadsNovos={leadsNovosValor}
-          taxaAgendamentoLeadsNovos={taxaAgendamentoLeadsNovos}
           noShowPct={noShowPct}
           pisoLeads={pisoLeads}
           pisoReunioes={pisoReunioes}

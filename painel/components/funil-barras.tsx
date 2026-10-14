@@ -114,7 +114,6 @@ export function FunilBarras({
   metricasAnteriores,
   metas,
   leadsNovos,
-  taxaAgendamentoLeadsNovos,
   noShowPct,
   pisoLeads,
   pisoReunioes,
@@ -124,9 +123,6 @@ export function FunilBarras({
   metricasAnteriores?: Metricas;
   metas: MetasConfig;
   leadsNovos: number;
-  // Marcadas de lead que entrou no período ÷ leads novos (a outra leitura da
-  // taxa de agendamento, que ignora lead antigo).
-  taxaAgendamentoLeadsNovos: number | null;
   noShowPct: number;
   pisoLeads: number;
   pisoReunioes: number;
@@ -141,7 +137,7 @@ export function FunilBarras({
       rotulo: "Leads trabalhados",
       valor: metricas.leadsTrabalhados,
       anterior: ant?.leadsTrabalhados,
-      nota: `${leadsNovos} leads novos · piso ${pisoLeads}`,
+      nota: `piso ${pisoLeads}`,
     },
     {
       rotulo: `${Calls(publicoOrg)} marcadas`,
@@ -191,12 +187,23 @@ export function FunilBarras({
 
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
-      <div className="mb-5 flex items-end justify-between gap-3">
-        <div>
-          <p className="text-xl font-black tabular-nums text-neutral-900 dark:text-white">
-            {formatarPct(conversaoTotal, 2)}
-          </p>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Conversão total</p>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+          <div>
+            <p className="text-xl font-black tabular-nums text-neutral-900 dark:text-white">
+              {formatarPct(conversaoTotal, 2)}
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Conversão total</p>
+          </div>
+          <div>
+            <p className="flex items-center gap-2 text-xl font-black tabular-nums text-neutral-900 dark:text-white">
+              {leadsNovos}
+              <SeloCrescimento atual={leadsNovos} anterior={ant?.leadsTrabalhadosDeclarados} />
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+              Leads novos que chegaram
+            </p>
+          </div>
         </div>
         {ant && (
           <p className="text-right text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
@@ -256,18 +263,10 @@ export function FunilBarras({
         })}
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-x-2 gap-y-5 border-t border-neutral-100 pt-5 sm:grid-cols-5 dark:border-neutral-800">
-        <Medidor
-          valor={taxaAgendamentoLeadsNovos}
-          rotulo="Agendamento · leads novos"
-          legenda={`meta ${Math.round(metas.taxa_agendamento_min * 100)}% · ${metricas.reunioesMarcadasLeadNovo} de ${leadsNovos}`}
-          bom={
-            taxaAgendamentoLeadsNovos === null ? null : taxaAgendamentoLeadsNovos >= metas.taxa_agendamento_min
-          }
-        />
+      <div className="mt-6 grid grid-cols-2 gap-x-2 gap-y-5 border-t border-neutral-100 pt-5 sm:grid-cols-4 dark:border-neutral-800">
         <Medidor
           valor={metricas.taxaAgendamento}
-          rotulo="Agendamento · novos e antigos"
+          rotulo="Agendamento"
           legenda={`meta ${Math.round(metas.taxa_agendamento_min * 100)}% · ${metricas.reunioesMarcadas} de ${metricas.leadsTrabalhados}`}
           bom={metricas.taxaAgendamento === null ? null : metricas.taxaAgendamento >= metas.taxa_agendamento_min}
         />
