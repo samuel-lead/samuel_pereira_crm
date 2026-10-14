@@ -107,6 +107,7 @@ export function FunilBarras({
   metricasAnteriores,
   metas,
   leadsNovos,
+  taxaAgendamentoLeadsNovos,
   noShowPct,
   pisoLeads,
   pisoReunioes,
@@ -116,6 +117,9 @@ export function FunilBarras({
   metricasAnteriores?: Metricas;
   metas: MetasConfig;
   leadsNovos: number;
+  // Marcadas de lead que entrou no período ÷ leads novos (a outra leitura da
+  // taxa de agendamento, que ignora lead antigo).
+  taxaAgendamentoLeadsNovos: number | null;
   noShowPct: number;
   pisoLeads: number;
   pisoReunioes: number;
@@ -245,12 +249,28 @@ export function FunilBarras({
         })}
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-2 border-t border-neutral-100 pt-5 dark:border-neutral-800">
+      <div className="mt-6 grid grid-cols-3 gap-x-2 gap-y-5 border-t border-neutral-100 pt-5 sm:grid-cols-5 dark:border-neutral-800">
+        <Medidor
+          valor={taxaAgendamentoLeadsNovos}
+          rotulo="Agendamento · leads novos"
+          legenda={`meta ${Math.round(metas.taxa_agendamento_min * 100)}% · ${metricas.reunioesMarcadasLeadNovo} de ${leadsNovos}`}
+          bom={
+            taxaAgendamentoLeadsNovos === null ? null : taxaAgendamentoLeadsNovos >= metas.taxa_agendamento_min
+          }
+        />
         <Medidor
           valor={metricas.taxaAgendamento}
-          rotulo="Taxa agendamento"
-          legenda={`meta ${Math.round(metas.taxa_agendamento_min * 100)}%`}
+          rotulo="Agendamento · novos e antigos"
+          legenda={`meta ${Math.round(metas.taxa_agendamento_min * 100)}% · ${metricas.reunioesMarcadas} de ${metricas.leadsTrabalhados}`}
           bom={metricas.taxaAgendamento === null ? null : metricas.taxaAgendamento >= metas.taxa_agendamento_min}
+        />
+        <Medidor
+          valor={metricas.taxaComparecimento}
+          rotulo="Comparecimento"
+          legenda={`meta ${Math.round(metas.taxa_comparecimento_min * 100)}%`}
+          bom={
+            metricas.taxaComparecimento === null ? null : metricas.taxaComparecimento >= metas.taxa_comparecimento_min
+          }
         />
         <Medidor
           valor={noShowPct / 100}
@@ -260,7 +280,7 @@ export function FunilBarras({
         />
         <Medidor
           valor={metricas.taxaVenda}
-          rotulo="Taxa de venda"
+          rotulo="Venda"
           legenda={`meta ${Math.round(metas.taxa_venda_min * 100)}%`}
           bom={metricas.taxaVenda === null ? null : metricas.taxaVenda >= metas.taxa_venda_min}
         />
