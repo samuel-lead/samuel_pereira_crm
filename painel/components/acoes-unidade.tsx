@@ -50,6 +50,7 @@ export function AcoesUnidade({
         <option value="disponivel">Disponível</option>
         <option value="reservada">Reservada</option>
         <option value="vendida">Vendida</option>
+        <option value="indisponivel">Indisponível</option>
       </select>
       <button
         type="button"

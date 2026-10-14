@@ -3,8 +3,7 @@
 import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { marcarVendido, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
-import { ImovelSelect } from "@/components/imovel-select";
-import { UnidadeSelect } from "@/components/unidade-select";
+import { SeletorImovelVenda } from "@/components/seletor-imovel-venda";
 import type { UnidadeParaVenda } from "@/lib/imoveis/unidades-actions";
 import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
@@ -129,9 +128,8 @@ export function MarcarVendidoForm({
   // Meu perfil (imobiliário e Banker - Consorcio).
   const comissaoAuto = usaComissaoDoVendedor(publicoOrg);
   const [valorVendaReais, setValorVendaReais] = useState(propostaValor ?? 0);
-  // Empreendimento escolhido (imobiliário) e preço da unidade escolhida — o
-  // preço da unidade preenche o valor da venda sozinho.
-  const [imovelEscolhido, setImovelEscolhido] = useState(imovelIdAtual ?? "");
+  // Preço da unidade escolhida (imobiliário) — preenche o valor da venda
+  // sozinho.
   const [precoUnidade, setPrecoUnidade] = useState<number | null>(null);
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
@@ -210,16 +208,14 @@ export function MarcarVendidoForm({
               {imobiliario ? "Imóvel vendido" : "Produto"}
             </RotuloCampo>
             {imobiliario ? (
-              <>
-                <ImovelSelect imoveis={imoveis} valorInicial={imovelIdAtual} aoMudar={setImovelEscolhido} />
-                <UnidadeSelect
-                  imovelId={imovelEscolhido}
-                  aoEscolher={(unidade: UnidadeParaVenda | null) => {
-                    setPrecoUnidade(unidade?.valor ?? null);
-                    if (unidade?.valor != null) setValorVendaReais(unidade.valor);
-                  }}
-                />
-              </>
+              <SeletorImovelVenda
+                imoveis={imoveis}
+                imovelIdAtual={imovelIdAtual}
+                aoEscolherUnidade={(unidade: UnidadeParaVenda | null) => {
+                  setPrecoUnidade(unidade?.valor ?? null);
+                  if (unidade?.valor != null) setValorVendaReais(unidade.valor);
+                }}
+              />
             ) : (
               <ProdutoSelect produtos={produtos} />
             )}

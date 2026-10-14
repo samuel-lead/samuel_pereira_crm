@@ -3,7 +3,8 @@
 import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { editarVenda, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
-import { ImovelSelect } from "@/components/imovel-select";
+import { SeletorImovelVenda } from "@/components/seletor-imovel-venda";
+import type { UnidadeParaVenda } from "@/lib/imoveis/unidades-actions";
 import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { ehImobiliario, Receita, usaComissaoDoVendedor } from "@/lib/terminologia";
@@ -66,6 +67,8 @@ export function EditarVendaForm({
   publicoOrg = "mentoria",
   imoveis = [],
   imovelIdAtual,
+  unidadeIdAtual,
+  captacaoAtual = false,
   comissaoTipo,
   comissaoPercentual,
   comissaoValorFixo,
@@ -79,6 +82,10 @@ export function EditarVendaForm({
   publicoOrg?: string;
   imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
   imovelIdAtual?: string | null;
+  // Unidade do empreendimento que foi vendida, e se foi uma captação (imóvel
+  // de terceiros — nesse caso o texto da captação está em `produto`).
+  unidadeIdAtual?: string | null;
+  captacaoAtual?: boolean;
   // Como a venda foi calculada (ou, em venda antiga sem isso, o padrão do
   // perfil do corretor) — já vem preenchido no campo de comissão.
   comissaoTipo?: string | null;
@@ -88,6 +95,8 @@ export function EditarVendaForm({
   const imobiliario = ehImobiliario(publicoOrg);
   const comissaoAuto = usaComissaoDoVendedor(publicoOrg);
   const [valorVendaReais, setValorVendaReais] = useState(valorVenda ?? 0);
+  // Se a pessoa troca a unidade, o preço da nova unidade vira o valor.
+  const [precoUnidade, setPrecoUnidade] = useState<number | null>(null);
   const [aberto, setAberto] = useState(false);
   const modalAtivo = useLeadModalAtivo();
   const acaoComId = editarVenda.bind(null, leadId);
@@ -147,9 +156,10 @@ export function EditarVendaForm({
         />
       </div>
       <CampoMoeda
+        key={precoUnidade ?? "valor-original"}
         name="valor_venda"
         label={imobiliario ? "Preço do imóvel (R$)" : "Valor da venda (R$)"}
-        valorInicial={valorVenda}
+        valorInicial={precoUnidade ?? valorVenda}
         aoMudarReais={comissaoAuto ? setValorVendaReais : undefined}
       />
       {comissaoAuto ? (
@@ -169,7 +179,19 @@ export function EditarVendaForm({
           {imobiliario ? "Imóvel vendido" : "Produto"}
         </label>
         {imobiliario ? (
-          <ImovelSelect imoveis={imoveis} valorInicial={imovelIdAtual} />
+          <SeletorImovelVenda
+            imoveis={imoveis}
+            imovelIdAtual={imovelIdAtual}
+            unidadeIdAtual={unidadeIdAtual}
+            captacaoAtual={captacaoAtual}
+            descricaoCaptacaoAtual={captacaoAtual ? produto : null}
+            aoEscolherUnidade={(unidade: UnidadeParaVenda | null) => {
+              if (unidade?.valor != null) {
+                setPrecoUnidade(unidade.valor);
+                setValorVendaReais(unidade.valor);
+              }
+            }}
+          />
         ) : (
           <ProdutoSelect produtos={produtos} valorInicial={produto ?? undefined} />
         )}

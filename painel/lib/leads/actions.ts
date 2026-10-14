@@ -1372,6 +1372,84 @@ export async function reativarLead(
   return null;
 }
 
+// Lê do formulário de venda o que foi vendido no imobiliário: empreendimento
+// próprio (com unidade opcional) ou captação (imóvel de terceiros, só uma
+// descrição). Devolve o que gravar no lead, ou um erro.
+async function resolverImovelDaVenda(
+  supabase: SupabaseServerClient,
+  formData: FormData,
+  leadId: string
+): Promise<
+  | { erro: string }
+  | {
+      erro: null;
+      imovelId: string | null;
+      unidadeId: string | null;
+      captacao: boolean;
+      produto: string | null;
+    }
+> {
+  const tipo = String(formData.get("tipo_imovel") ?? "proprio").trim();
+
+  if (tipo === "captacao") {
+    const descricao = String(formData.get("captacao_descricao") ?? "").trim() || null;
+    return { erro: null, imovelId: null, unidadeId: null, captacao: true, produto: descricao };
+  }
+
+  const imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
+  if (!imovelId) {
+    // Imóvel NÃO é obrigatório pra registrar a venda (Samuel pediu).
+    return { erro: null, imovelId: null, unidadeId: null, captacao: false, produto: null };
+  }
+
+  const { data: imovel } = await supabase.from("imoveis").select("titulo").eq("id", imovelId).single();
+
+  let unidadeId: string | null = null;
+  const unidadeBruta = String(formData.get("unidade_id") ?? "").trim() || null;
+  if (unidadeBruta) {
+    const { data: unidade } = await supabase
+      .from("unidades_imovel")
+      .select("id, status, lead_id")
+      .eq("id", unidadeBruta)
+      .eq("imovel_id", imovelId)
+      .is("arquivado_em", null)
+      .maybeSingle();
+    if (!unidade) {
+      return { erro: "Essa unidade não pertence ao empreendimento escolhido." };
+    }
+    // Vendida pra OUTRO lead não pode; a que já é desse mesmo lead (edição) pode.
+    if (unidade.status === "vendida" && unidade.lead_id !== leadId) {
+      return { erro: "Essa unidade já foi vendida. Escolha outra." };
+    }
+    unidadeId = unidade.id;
+  }
+
+  return { erro: null, imovelId, unidadeId, captacao: false, produto: imovel?.titulo ?? null };
+}
+
+// Depois de gravar a venda: a unidade escolhida vira "vendida" (ligada ao
+// lead) e a que o lead tinha antes, se mudou, volta pra "disponível".
+async function atualizarUnidadesDaVenda(
+  supabase: SupabaseServerClient,
+  leadId: string,
+  unidadeNova: string | null,
+  unidadeAntiga: string | null
+) {
+  if (unidadeAntiga && unidadeAntiga !== unidadeNova) {
+    await supabase
+      .from("unidades_imovel")
+      .update({ status: "disponivel", lead_id: null })
+      .eq("id", unidadeAntiga)
+      .eq("lead_id", leadId);
+  }
+  if (unidadeNova) {
+    await supabase
+      .from("unidades_imovel")
+      .update({ status: "vendida", lead_id: leadId })
+      .eq("id", unidadeNova);
+  }
+}
+
 export async function marcarVendido(
   leadId: string,
   _estadoAnterior: EstadoFormulario,
@@ -1453,40 +1531,14 @@ export async function marcarVendido(
   let produto: string | null;
   let imovelId: string | null = null;
   let unidadeId: string | null = null;
+  let captacao = false;
   if (usuario.publico_org === "imobiliario") {
-    // Imóvel NÃO é obrigatório pra registrar a venda (Samuel pediu: o
-    // corretor nem sempre preenche) — sem imóvel, a venda entra sem
-    // vínculo e sem produto.
-    imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
-    // Unidade (do empreendimento) também é opcional. Se veio, tem que ser
-    // do empreendimento escolhido e ainda não vendida.
-    const unidadeBruta = String(formData.get("unidade_id") ?? "").trim() || null;
-    if (unidadeBruta && imovelId) {
-      const { data: unidade } = await supabase
-        .from("unidades_imovel")
-        .select("id, status")
-        .eq("id", unidadeBruta)
-        .eq("imovel_id", imovelId)
-        .is("arquivado_em", null)
-        .maybeSingle();
-      if (!unidade) {
-        return { erro: "Essa unidade não pertence ao empreendimento escolhido." };
-      }
-      if (unidade.status === "vendida") {
-        return { erro: "Essa unidade já foi vendida. Escolha outra." };
-      }
-      unidadeId = unidade.id;
-    }
-    if (imovelId) {
-      const { data: imovel } = await supabase
-        .from("imoveis")
-        .select("titulo")
-        .eq("id", imovelId)
-        .single();
-      produto = imovel?.titulo ?? null;
-    } else {
-      produto = null;
-    }
+    const r = await resolverImovelDaVenda(supabase, formData, leadId);
+    if (r.erro !== null) return { erro: r.erro };
+    imovelId = r.imovelId;
+    unidadeId = r.unidadeId;
+    captacao = r.captacao;
+    produto = r.produto;
   } else {
     produto = String(formData.get("produto") ?? "").trim() || null;
     if (!produto) {
@@ -1524,6 +1576,7 @@ export async function marcarVendido(
       produto,
       imovel_id: imovelId,
       unidade_id: unidadeId,
+      imovel_captacao: captacao,
       vendido_em: vendidoEm.toISOString(),
     })
     .eq("id", leadId);
@@ -1533,12 +1586,7 @@ export async function marcarVendido(
   }
 
   // A unidade vendida sai da lista de disponíveis e fica ligada ao lead.
-  if (unidadeId) {
-    await supabase
-      .from("unidades_imovel")
-      .update({ status: "vendida", lead_id: leadId })
-      .eq("id", unidadeId);
-  }
+  await atualizarUnidadesDaVenda(supabase, leadId, unidadeId, null);
 
   if (reuniaoAtiva) {
     // Vendeu = a reunião aconteceu de verdade. Sem isso, a reunião ficava
@@ -1675,17 +1723,29 @@ export async function editarVenda(
     receita = receitaRaw ? Number(receitaRaw) : null;
   }
 
-  // Mesmo dual-write de marcarVendido: imobiliário escolhe o imóvel, não
-  // digita produto — grava imovel_id (vínculo real) e produto = título do
-  // imóvel (texto), pra manter os relatórios que já leem leads.produto.
+  // Mesmo dual-write de marcarVendido: imobiliário escolhe o imóvel (ou
+  // captação), não digita produto — grava imovel_id (vínculo real) e
+  // produto = título do imóvel (texto), pra manter os relatórios que já
+  // leem leads.produto.
   let produto: string | null;
   let imovelId: string | null = null;
+  let unidadeId: string | null = null;
+  let captacao = false;
+  let unidadeAntiga: string | null = null;
   if (usuario.publico_org === "imobiliario") {
-    imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
-    const { data: imovel } = imovelId
-      ? await supabase.from("imoveis").select("titulo").eq("id", imovelId).single()
-      : { data: null };
-    produto = imovel?.titulo ?? null;
+    const r = await resolverImovelDaVenda(supabase, formData, leadId);
+    if (r.erro !== null) return { erro: r.erro };
+    imovelId = r.imovelId;
+    unidadeId = r.unidadeId;
+    captacao = r.captacao;
+    produto = r.produto;
+
+    const { data: leadComUnidade } = await supabase
+      .from("leads")
+      .select("unidade_id")
+      .eq("id", leadId)
+      .single();
+    unidadeAntiga = leadComUnidade?.unidade_id ?? null;
   } else {
     produto = String(formData.get("produto") ?? "").trim() || null;
   }
@@ -1699,6 +1759,8 @@ export async function editarVenda(
       venda_comissao_valor: comissaoValorVenda,
       produto,
       imovel_id: imovelId,
+      unidade_id: unidadeId,
+      imovel_captacao: captacao,
       vendido_em: vendidoEm.toISOString(),
     })
     .eq("id", leadId)
@@ -1706,6 +1768,10 @@ export async function editarVenda(
 
   if (error) {
     return { erro: error.message };
+  }
+
+  if (usuario.publico_org === "imobiliario") {
+    await atualizarUnidadesDaVenda(supabase, leadId, unidadeId, unidadeAntiga);
   }
 
   revalidatePath("/leads/vendas");
@@ -2377,6 +2443,8 @@ export type DetalhesLead = {
     dia_follow: number | null;
     arquivado_em: string | null;
     imovel_id: string | null;
+    unidade_id: string | null;
+    imovel_captacao: boolean;
     venda_comissao_tipo: string | null;
     venda_comissao_valor: number | null;
   };
@@ -2476,7 +2544,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, venda_comissao_tipo, venda_comissao_valor"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor"
       )
       .eq("id", leadId)
       .single(),

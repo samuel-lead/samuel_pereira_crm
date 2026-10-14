@@ -20,16 +20,23 @@ type Unidade = {
   parcela_mensal: number | null;
   parcela_semestral: number | null;
   parcela_chaves: number | null;
+  lead: { id: string; nome: string } | { id: string; nome: string }[] | null;
 };
 
 function moeda(v: number | null) {
   return v === null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
+function nomeDoLead(u: Unidade) {
+  const lead = Array.isArray(u.lead) ? u.lead[0] : u.lead;
+  return lead?.nome ?? null;
+}
+
 const ROTULO_STATUS: Record<string, string> = {
   disponivel: "Disponível",
   reservada: "Reservada",
   vendida: "Vendida",
+  indisponivel: "Indisponível",
 };
 
 export default async function UnidadesPage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,7 +54,7 @@ export default async function UnidadesPage({ params }: { params: Promise<{ id: s
   const { data } = await supabase
     .from("unidades_imovel")
     .select(
-      "id, numero, andar, area_m2, quartos, vagas, tipologia, posicao, status, valor, parcela_entrada, parcela_mensal, parcela_semestral, parcela_chaves"
+      "id, numero, andar, area_m2, quartos, vagas, tipologia, posicao, status, valor, parcela_entrada, parcela_mensal, parcela_semestral, parcela_chaves, lead:leads(id, nome)"
     )
     .eq("imovel_id", id)
     .is("arquivado_em", null)
@@ -81,6 +88,9 @@ export default async function UnidadesPage({ params }: { params: Promise<{ id: s
             </span>
             <span className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 shadow-sm">
               <b className="text-neutral-700">{contagem("vendida")}</b> vendidas
+            </span>
+            <span className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 shadow-sm">
+              <b className="text-neutral-500">{contagem("indisponivel")}</b> indisponíveis
             </span>
           </div>
         </div>
@@ -126,7 +136,10 @@ export default async function UnidadesPage({ params }: { params: Promise<{ id: s
                     <td className="px-3 py-2.5">{moeda(u.parcela_chaves)}</td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-neutral-500">{ROTULO_STATUS[u.status] ?? u.status}</span>
+                        <span className="text-xs text-neutral-500">
+                          {ROTULO_STATUS[u.status] ?? u.status}
+                          {u.status === "vendida" && nomeDoLead(u) ? ` — ${nomeDoLead(u)}` : ""}
+                        </span>
                         <AcoesUnidade imovelId={id} unidadeId={u.id} status={u.status} />
                       </div>
                     </td>

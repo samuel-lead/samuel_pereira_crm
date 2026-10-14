@@ -170,6 +170,9 @@ export function ImportarUnidadesForm({ imovelId }: { imovelId: string }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const [arrastando, setArrastando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoUnidades | null>(null);
+  // Ligado por padrão: a tabela lista só o que está à venda, então quem
+  // sumiu dela provavelmente já foi vendido por fora.
+  const [marcarAusentes, setMarcarAusentes] = useState(true);
   const [pendente, iniciarTransicao] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -233,7 +236,7 @@ export function ImportarUnidadesForm({ imovelId }: { imovelId: string }) {
   function importar() {
     setResultado(null);
     iniciarTransicao(async () => {
-      const r = await importarUnidades(imovelId, unidades);
+      const r = await importarUnidades(imovelId, unidades, marcarAusentes);
       setResultado(r);
       if (!r.erro) {
         setLinhasBrutas(null);
@@ -349,6 +352,18 @@ export function ImportarUnidadesForm({ imovelId }: { imovelId: string }) {
               {unidades.length > 8 && (
                 <p className="text-xs text-neutral-400">Mostrando as 8 primeiras de {unidades.length}.</p>
               )}
+              <label className="flex items-start gap-2 text-xs text-neutral-600">
+                <input
+                  type="checkbox"
+                  checked={marcarAusentes}
+                  onChange={(e) => setMarcarAusentes(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Marcar como <b>indisponíveis</b> as unidades disponíveis que <b>não estão</b> nesta tabela (a tabela
+                  só lista o que ainda está à venda). Reservadas e vendidas não são mexidas.
+                </span>
+              </label>
               <button
                 type="button"
                 onClick={importar}
@@ -372,6 +387,10 @@ export function ImportarUnidadesForm({ imovelId }: { imovelId: string }) {
             ? resultado.erro
             : `Pronto: ${resultado.criadas} criadas, ${resultado.atualizadas} atualizadas${
                 resultado.ignoradas ? `, ${resultado.ignoradas} ignoradas` : ""
+              }${
+                resultado.indisponibilizadas
+                  ? `, ${resultado.indisponibilizadas} marcadas como indisponíveis (não estavam na tabela)`
+                  : ""
               }.`}
         </p>
       )}

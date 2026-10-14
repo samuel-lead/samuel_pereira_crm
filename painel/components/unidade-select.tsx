@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buscarUnidadesParaVenda, type UnidadeParaVenda } from "@/lib/imoveis/unidades-actions";
 
 function moeda(v: number | null) {
@@ -21,23 +21,34 @@ function rotulo(u: UnidadeParaVenda) {
 
 // Depois de escolher o empreendimento, lista as unidades que ainda dá pra
 // vender. Escolher uma preenche o valor da venda sozinho (aoEscolher).
+// Ao editar uma venda, `unidadeInicial` é a unidade que o lead já tem: ela
+// aparece selecionada (e na lista, mesmo já vendida) sem mexer no valor.
 export function UnidadeSelect({
   imovelId,
+  unidadeInicial,
   aoEscolher,
 }: {
   imovelId: string;
+  unidadeInicial?: string | null;
   aoEscolher: (unidade: UnidadeParaVenda | null) => void;
 }) {
   const [unidades, setUnidades] = useState<UnidadeParaVenda[] | null>(null);
-  const [selecionada, setSelecionada] = useState("");
+  const [selecionada, setSelecionada] = useState(unidadeInicial ?? "");
+  const primeiraCarga = useRef(true);
 
   useEffect(() => {
     let cancelado = false;
+    const ehPrimeira = primeiraCarga.current;
+    primeiraCarga.current = false;
+
     setUnidades(null);
-    setSelecionada("");
-    aoEscolher(null);
+    if (!ehPrimeira) {
+      // Trocou de empreendimento depois de abrir a tela: limpa a escolha.
+      setSelecionada("");
+      aoEscolher(null);
+    }
     if (!imovelId) return;
-    buscarUnidadesParaVenda(imovelId)
+    buscarUnidadesParaVenda(imovelId, ehPrimeira ? unidadeInicial : null)
       .then((lista) => {
         if (!cancelado) setUnidades(lista);
       })

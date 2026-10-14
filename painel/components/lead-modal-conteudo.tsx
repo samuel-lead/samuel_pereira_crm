@@ -306,6 +306,8 @@ export function LeadModalConteudo({
                   publicoOrg={publicoOrg}
                   imoveis={imoveis}
                   imovelIdAtual={lead.imovel_id}
+                  unidadeIdAtual={lead.unidade_id}
+                  captacaoAtual={lead.imovel_captacao}
                   comissaoTipo={tipoVenda}
                   comissaoPercentual={percentualVenda}
                   comissaoValorFixo={valorFixoVenda}

@@ -24,6 +24,8 @@ export type ResultadoUnidades = {
   criadas: number;
   atualizadas: number;
   ignoradas: number;
+  // Unidades que estavam disponíveis e não aparecem na tabela importada.
+  indisponibilizadas?: number;
 };
 
 async function contextoUsuario() {
@@ -58,7 +60,12 @@ function numeroOuNull(valor: unknown) {
 // reservada, vendida); número novo cria unidade nova. Nada é apagado.
 export async function importarUnidades(
   imovelId: string,
-  linhas: UnidadeLinha[]
+  linhas: UnidadeLinha[],
+  // Quando ligado, as unidades "disponíveis" que NÃO estão nessa tabela
+  // viram "indisponíveis" (a tabela de preços só lista o que ainda está à
+  // venda — quem sumiu provavelmente já foi vendido por fora). Reservadas e
+  // vendidas nunca são mexidas por aqui.
+  marcarAusentes = false
 ): Promise<ResultadoUnidades> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -151,8 +158,23 @@ export async function importarUnidades(
     criadas = novas.length;
   }
 
+  let indisponibilizadas = 0;
+  if (marcarAusentes && vistos.size > 0) {
+    const ausentes = (existentes ?? [])
+      .filter((u) => u.status === "disponivel" && !vistos.has(u.numero))
+      .map((u) => u.id);
+    if (ausentes.length > 0) {
+      const { data } = await supabase
+        .from("unidades_imovel")
+        .update({ status: "indisponivel" })
+        .in("id", ausentes)
+        .select("id");
+      indisponibilizadas = data?.length ?? 0;
+    }
+  }
+
   revalidatePath(`/imoveis/${imovelId}/unidades`);
-  return { erro: null, criadas, atualizadas, ignoradas };
+  return { erro: null, criadas, atualizadas, ignoradas, indisponibilizadas };
 }
 
 // Remove (arquiva) uma unidade — some das listas, mas o registro fica no
@@ -186,7 +208,7 @@ export async function removerUnidade(imovelId: string, unidadeId: string) {
 export async function mudarStatusUnidade(imovelId: string, unidadeId: string, status: string) {
   const { supabase } = await contextoUsuario();
 
-  if (!["disponivel", "reservada", "vendida"].includes(status)) {
+  if (!["disponivel", "reservada", "vendida", "indisponivel"].includes(status)) {
     throw new Error("Situação inválida.");
   }
 
@@ -216,15 +238,29 @@ export type UnidadeParaVenda = {
 
 // Unidades que ainda podem ser vendidas (disponíveis e reservadas) de um
 // empreendimento — alimenta a lista "Unidade" na hora de registrar a venda.
-export async function buscarUnidadesParaVenda(imovelId: string): Promise<UnidadeParaVenda[]> {
+export async function buscarUnidadesParaVenda(
+  imovelId: string,
+  // Ao editar uma venda, a unidade que já está vendida pra esse lead também
+  // precisa aparecer na lista (ela é a escolhida).
+  incluirUnidadeId?: string | null
+): Promise<UnidadeParaVenda[]> {
   const { supabase } = await contextoUsuario();
 
-  const { data } = await supabase
+  const consulta = supabase
     .from("unidades_imovel")
     .select("id, numero, andar, area_m2, tipologia, posicao, status, valor")
     .eq("imovel_id", imovelId)
-    .is("arquivado_em", null)
-    .in("status", ["disponivel", "reservada"])
+    .is("arquivado_em", null);
+
+  // O id vai dentro de um filtro de texto — só aceita se for um UUID de verdade.
+  const idValido =
+    incluirUnidadeId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(incluirUnidadeId)
+      ? incluirUnidadeId
+      : null;
+
+  const { data } = await (idValido
+    ? consulta.or(`status.in.(disponivel,reservada),id.eq.${idValido}`)
+    : consulta.in("status", ["disponivel", "reservada"]))
     .order("andar", { ascending: true, nullsFirst: false })
     .order("numero", { ascending: true });
 
