@@ -58,6 +58,7 @@ export default async function LeadsPage({
     busca?: string;
     parado?: string;
     contato?: string;
+    imovel?: string;
   }>;
 }) {
   const {
@@ -66,9 +67,13 @@ export default async function LeadsPage({
     busca: buscaFiltro,
     parado: paradoFiltro,
     contato: contatoFiltro,
+    imovel: imovelFiltroBruto,
   } = await searchParams;
   const supabase = await createClient();
   const { user, usuario: usuarioAtual } = await usuarioAutenticado();
+  // Filtro por imóvel/empreendimento: só existe no imobiliário.
+  const ehImob = ehImobiliario(usuarioAtual?.publico_org ?? "mentoria");
+  const imovelFiltro = ehImob ? imovelFiltroBruto : undefined;
 
   let consulta = supabase
     .from("leads")
@@ -88,6 +93,9 @@ export default async function LeadsPage({
   if (origemFiltro) {
     consulta = consulta.eq("origem", origemFiltro);
   }
+  if (imovelFiltro) {
+    consulta = consulta.eq("imovel_id", imovelFiltro);
+  }
   if (buscaFiltro) {
     consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
@@ -97,6 +105,7 @@ export default async function LeadsPage({
     { data: leadsData },
     { data: usuariosData },
     { data: origensData },
+    { data: imoveisData },
   ] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     consulta,
@@ -108,7 +117,14 @@ export default async function LeadsPage({
       .neq("status", "vendido")
       .in("nivel_ordem", NIVEIS_PRE_VENDAS)
       .not("origem", "is", null),
+    ehImob
+      ? supabase.from("imoveis").select("id, titulo").is("arquivado_em", null).order("titulo")
+      : Promise.resolve({ data: null }),
   ]);
+  const imoveisFiltro = ((imoveisData ?? []) as { id: string; titulo: string }[]).map((i) => ({
+    id: i.id,
+    nome: i.titulo,
+  }));
 
   const origens = Array.from(
     new Set((origensData ?? []).map((lead) => lead.origem as string))
@@ -389,6 +405,7 @@ export default async function LeadsPage({
   const parametrosFiltro = new URLSearchParams();
   if (usuarioFiltro) parametrosFiltro.set("usuario", usuarioFiltro);
   if (origemFiltro) parametrosFiltro.set("origem", origemFiltro);
+  if (imovelFiltro) parametrosFiltro.set("imovel", imovelFiltro);
   if (buscaFiltro) parametrosFiltro.set("busca", buscaFiltro);
   const parametrosSemParado = parametrosFiltro.toString();
   parametrosFiltro.set("parado", "1");
@@ -399,6 +416,7 @@ export default async function LeadsPage({
   const parametrosParaContato = new URLSearchParams();
   if (usuarioFiltro) parametrosParaContato.set("usuario", usuarioFiltro);
   if (origemFiltro) parametrosParaContato.set("origem", origemFiltro);
+  if (imovelFiltro) parametrosParaContato.set("imovel", imovelFiltro);
   if (buscaFiltro) parametrosParaContato.set("busca", buscaFiltro);
   parametrosParaContato.set("contato", "1");
   const hrefLigarContato = `/leads?${parametrosParaContato.toString()}`;
@@ -421,6 +439,8 @@ export default async function LeadsPage({
                         origens={origens}
                         usuarioInicial={usuarioFiltro}
                         origemInicial={origemFiltro}
+                        imoveis={ehImob ? imoveisFiltro : undefined}
+                        imovelInicial={imovelFiltro}
                       />
                       <Link
                         href="/leads/importar"

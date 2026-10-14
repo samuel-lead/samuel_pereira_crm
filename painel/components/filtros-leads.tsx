@@ -100,18 +100,23 @@ export function FiltrosLeads({
   origens,
   usuarioInicial,
   origemInicial,
+  imoveis,
+  imovelInicial,
   baseHref = "/leads",
 }: {
   usuarios: { id: string; nome: string }[];
   origens: string[];
   usuarioInicial?: string;
   origemInicial?: string;
+  // Só imobiliário: filtra os leads pelo imóvel/empreendimento de interesse.
+  imoveis?: { id: string; nome: string }[];
+  imovelInicial?: string;
   baseHref?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  function construirUrl(usuario: string, origem: string) {
+  function construirUrl(usuario: string, origem: string, imovel?: string) {
     // Preserva outros parâmetros já na URL (ex.: "busca") — sem isso,
     // trocar um filtro apagava o que a pessoa tinha digitado na busca.
     const params = new URLSearchParams(searchParams.toString());
@@ -119,6 +124,10 @@ export function FiltrosLeads({
     else params.delete("usuario");
     if (origem) params.set("origem", origem);
     else params.delete("origem");
+    if (imovel !== undefined) {
+      if (imovel) params.set("imovel", imovel);
+      else params.delete("imovel");
+    }
     const query = params.toString();
     return query ? `${baseHref}?${query}` : baseHref;
   }
@@ -138,6 +147,17 @@ export function FiltrosLeads({
         opcoes={origens.map((origem) => ({ valor: origem, texto: origem }))}
         aoSelecionar={(valor) => router.push(construirUrl(usuarioInicial ?? "", valor))}
       />
+      {imoveis && imoveis.length > 0 && (
+        <DropdownFiltro
+          rotulo="Imóvel"
+          alinhar="direita"
+          valorSelecionado={imovelInicial ?? ""}
+          opcoes={imoveis.map((i) => ({ valor: i.id, texto: i.nome }))}
+          aoSelecionar={(valor) =>
+            router.push(construirUrl(usuarioInicial ?? "", origemInicial ?? "", valor))
+          }
+        />
+      )}
     </div>
   );
 }
