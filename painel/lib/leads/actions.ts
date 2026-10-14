@@ -471,9 +471,23 @@ export async function criarLead(
     usuario.papel === "admin"
       ? String(formData.get("responsavel_id") ?? "").trim() || null
       : usuario.id;
+  // Imóvel de interesse (opcional) — só o imobiliário manda esse campo.
+  let imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
 
   if (!nome) {
     return { erro: "Nome é obrigatório" };
+  }
+
+  // Só aceita imóvel que existe nessa empresa (a política de segurança já
+  // esconde os das outras).
+  if (imovelId) {
+    const { data: imovelDaEmpresa } = await supabase
+      .from("imoveis")
+      .select("id")
+      .eq("id", imovelId)
+      .is("arquivado_em", null)
+      .maybeSingle();
+    if (!imovelDaEmpresa) imovelId = null;
   }
 
   const { data: novoLead, error } = await supabase
@@ -487,6 +501,7 @@ export async function criarLead(
       origem,
       quem_indicou: quemIndicou || null,
       responsavel_id: responsavelId,
+      imovel_id: imovelId,
     })
     .select("id")
     .single();

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { criarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
+import { ImovelSelect } from "@/components/imovel-select";
 import { IconePessoaMais } from "@/components/icons";
 
 const estadoInicial: EstadoFormulario = { erro: null };
@@ -13,10 +14,13 @@ export function NovoLeadForm({
   usuarios,
   origens,
   souAdmin = true,
+  imoveis,
 }: {
   usuarios: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
   origens: { id: string; nome: string }[];
   souAdmin?: boolean;
+  // Só imobiliário: lista pro campo opcional "Imóvel de interesse".
+  imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
 }) {
   const [estado, acaoFormulario, pendente] = useActionState(criarLead, estadoInicial);
   const [origemAtual, setOrigemAtual] = useState("");
@@ -100,6 +104,15 @@ export function NovoLeadForm({
           </label>
           <OrigemSelect origens={origens} onChange={setOrigemAtual} />
         </div>
+
+        {imoveis && (
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-neutral-700">
+              Imóvel de interesse <span className="font-normal text-neutral-400">(opcional)</span>
+            </label>
+            <ImovelSelect imoveis={imoveis} />
+          </div>
+        )}
 
         {ehIndicacao && (
           <div className="space-y-1">
