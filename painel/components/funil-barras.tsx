@@ -23,8 +23,15 @@ function SeloCrescimento({ atual, anterior }: { atual: number; anterior: number 
   const v = variacao(atual, anterior);
   if (v === null) {
     return (
-      <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-        {atual > 0 ? "novo" : "—"}
+      // Não dá pra calcular % em cima de zero — mostra que antes era 0.
+      <span
+        className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+          atual > 0
+            ? "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400"
+            : "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
+        }`}
+      >
+        {atual > 0 ? "↑ era 0" : "—"}
       </span>
     );
   }
