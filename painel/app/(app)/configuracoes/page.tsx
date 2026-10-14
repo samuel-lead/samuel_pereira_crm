@@ -7,6 +7,7 @@ import { MetasConfigForm } from "@/components/metas-config-form";
 import { BonusSdrConfigForm } from "@/components/bonus-sdr-config-form";
 import { PixelsConfigForm } from "@/components/pixels-config-form";
 import type { BonusSdrConfig } from "@/lib/metricas";
+import { paginasOcultasDaOrg } from "@/lib/paginas-ocultas";
 
 type MetasConfig = {
   piso_leads_dia: number;
@@ -23,6 +24,11 @@ export default async function ConfiguracoesPage() {
   const souAdmin = usuario?.papel === "admin";
   const souSuperAdmin = usuario?.super_admin === true;
   const ehImobiliario = usuario?.publico_org === "imobiliario";
+  // Seções que a empresa escondeu (orgs.paginas_ocultas), ex.: Banker -
+  // Consorcio não mostra "Metas e taxas" nem "Valores do bônus".
+  const ocultas = await paginasOcultasDaOrg(supabase, usuario!.org_id);
+  const ocultaMetas = ocultas.includes("config:metas");
+  const ocultaBonus = ocultas.includes("config:bonus");
 
   const [{ data: metasData }, { data: origensData }, { data: produtosData }, { data: bonusSdrData }, { data: orgData }] =
     await Promise.all([
@@ -125,7 +131,7 @@ export default async function ConfiguracoesPage() {
           </div>
         )}
 
-        {metas && (
+        {metas && !ocultaMetas && (
           <div className="mb-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
             <h2 className="mb-1 text-sm font-semibold text-neutral-800">
               Metas e taxas do sistema
@@ -173,7 +179,7 @@ export default async function ConfiguracoesPage() {
           )}
         </div>
 
-        {bonusSdrConfig && (
+        {bonusSdrConfig && !ocultaBonus && (
           <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
             <h2 className="mb-1 text-sm font-semibold text-neutral-800">
               Valores do bônus SDR
