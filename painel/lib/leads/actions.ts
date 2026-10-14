@@ -1452,11 +1452,31 @@ export async function marcarVendido(
   // coluna PRODUTO em /leads/vendas).
   let produto: string | null;
   let imovelId: string | null = null;
+  let unidadeId: string | null = null;
   if (usuario.publico_org === "imobiliario") {
     // Imóvel NÃO é obrigatório pra registrar a venda (Samuel pediu: o
     // corretor nem sempre preenche) — sem imóvel, a venda entra sem
     // vínculo e sem produto.
     imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
+    // Unidade (do empreendimento) também é opcional. Se veio, tem que ser
+    // do empreendimento escolhido e ainda não vendida.
+    const unidadeBruta = String(formData.get("unidade_id") ?? "").trim() || null;
+    if (unidadeBruta && imovelId) {
+      const { data: unidade } = await supabase
+        .from("unidades_imovel")
+        .select("id, status")
+        .eq("id", unidadeBruta)
+        .eq("imovel_id", imovelId)
+        .is("arquivado_em", null)
+        .maybeSingle();
+      if (!unidade) {
+        return { erro: "Essa unidade não pertence ao empreendimento escolhido." };
+      }
+      if (unidade.status === "vendida") {
+        return { erro: "Essa unidade já foi vendida. Escolha outra." };
+      }
+      unidadeId = unidade.id;
+    }
     if (imovelId) {
       const { data: imovel } = await supabase
         .from("imoveis")
@@ -1503,12 +1523,21 @@ export async function marcarVendido(
       venda_comissao_valor: comissaoValorVenda,
       produto,
       imovel_id: imovelId,
+      unidade_id: unidadeId,
       vendido_em: vendidoEm.toISOString(),
     })
     .eq("id", leadId);
 
   if (error) {
     return { erro: error.message };
+  }
+
+  // A unidade vendida sai da lista de disponíveis e fica ligada ao lead.
+  if (unidadeId) {
+    await supabase
+      .from("unidades_imovel")
+      .update({ status: "vendida", lead_id: leadId })
+      .eq("id", unidadeId);
   }
 
   if (reuniaoAtiva) {

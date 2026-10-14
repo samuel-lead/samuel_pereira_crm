@@ -202,3 +202,31 @@ export async function mudarStatusUnidade(imovelId: string, unidadeId: string, st
 
   revalidatePath(`/imoveis/${imovelId}/unidades`);
 }
+
+export type UnidadeParaVenda = {
+  id: string;
+  numero: string;
+  andar: number | null;
+  area_m2: number | null;
+  tipologia: string | null;
+  posicao: string | null;
+  status: string;
+  valor: number | null;
+};
+
+// Unidades que ainda podem ser vendidas (disponíveis e reservadas) de um
+// empreendimento — alimenta a lista "Unidade" na hora de registrar a venda.
+export async function buscarUnidadesParaVenda(imovelId: string): Promise<UnidadeParaVenda[]> {
+  const { supabase } = await contextoUsuario();
+
+  const { data } = await supabase
+    .from("unidades_imovel")
+    .select("id, numero, andar, area_m2, tipologia, posicao, status, valor")
+    .eq("imovel_id", imovelId)
+    .is("arquivado_em", null)
+    .in("status", ["disponivel", "reservada"])
+    .order("andar", { ascending: true, nullsFirst: false })
+    .order("numero", { ascending: true });
+
+  return (data ?? []) as UnidadeParaVenda[];
+}

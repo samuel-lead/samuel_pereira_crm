@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { analisarCsv, xlsxParaLinhas } from "@/lib/planilha";
+import { pdfParaLinhas } from "@/lib/planilha-pdf";
 import {
   importarUnidades,
   type ResultadoUnidades,
@@ -203,12 +204,19 @@ export function ImportarUnidadesForm({ imovelId }: { imovelId: string }) {
         return;
       }
       if (nome.endsWith(".pdf")) {
-        setAviso("Por enquanto eu leio planilha (.xlsx ou CSV). Exporta a tabela como planilha e envia aqui.");
+        const linhasPdf = await pdfParaLinhas(await arquivo.arrayBuffer());
+        if (linhasPdf.length === 0) {
+          setAviso(
+            "Esse PDF não tem texto que eu consiga ler (parece uma foto ou escaneado). Exporta a tabela como planilha ou como PDF de verdade."
+          );
+          return;
+        }
+        carregar(linhasPdf, arquivo.name);
         return;
       }
       carregar(analisarCsv(await arquivo.text()), arquivo.name);
     } catch {
-      setAviso("Não consegui ler esse arquivo. Tenta exportar como CSV e enviar de novo.");
+      setAviso("Não consegui ler esse arquivo. Se for PDF, confere se é um PDF com texto (não foto); senão, exporta como CSV e tenta de novo.");
     }
   }
 
@@ -254,7 +262,7 @@ export function ImportarUnidadesForm({ imovelId }: { imovelId: string }) {
         }`}
       >
         <p className="text-sm font-medium text-neutral-700">
-          {arquivoNome ?? "Solte aqui a planilha (.xlsx ou CSV) ou clique pra escolher"}
+          {arquivoNome ?? "Solte aqui a tabela (PDF, .xlsx ou CSV) ou clique pra escolher"}
         </p>
         <p className="mt-1 text-xs text-neutral-400">
           Colunas aceitas: Unidade, Área, Vagas, Tipologia, Posição, Status, Preço, Entrada, Mensal, Semestral e

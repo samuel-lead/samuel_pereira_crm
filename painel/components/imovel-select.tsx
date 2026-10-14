@@ -13,9 +13,13 @@ function rotuloImovel(imovel: Imovel) {
 export function ImovelSelect({
   imoveis,
   valorInicial,
+  aoMudar,
 }: {
   imoveis: Imovel[];
   valorInicial?: string | null;
+  // Avisa quem usa o campo qual imóvel foi escolhido (usado na venda, pra
+  // listar as unidades do empreendimento).
+  aoMudar?: (imovelId: string) => void;
 }) {
   const [selecionado, setSelecionado] = useState(valorInicial ?? "");
   const [aberto, setAberto] = useState(false);
@@ -38,6 +42,11 @@ export function ImovelSelect({
     const alvo = busca.toLowerCase();
     return imoveis.filter((i) => rotuloImovel(i).toLowerCase().includes(alvo));
   }, [busca, imoveis]);
+
+  useEffect(() => {
+    aoMudar?.(selecionado);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selecionado]);
 
   const imovelSelecionado = imoveis.find((i) => i.id === selecionado);
   const rotulo = imovelSelecionado ? rotuloImovel(imovelSelecionado) : "Sem imóvel vinculado";

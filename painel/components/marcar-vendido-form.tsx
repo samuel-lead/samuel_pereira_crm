@@ -4,6 +4,8 @@ import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "r
 import { marcarVendido, type EstadoFormulario } from "@/lib/leads/actions";
 import { ProdutoSelect } from "@/components/produto-select";
 import { ImovelSelect } from "@/components/imovel-select";
+import { UnidadeSelect } from "@/components/unidade-select";
+import type { UnidadeParaVenda } from "@/lib/imoveis/unidades-actions";
 import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { IconeCalendario, IconeMoeda, IconeClientePagante, IconeTag } from "@/components/icons";
@@ -127,6 +129,10 @@ export function MarcarVendidoForm({
   // Meu perfil (imobiliário e Banker - Consorcio).
   const comissaoAuto = usaComissaoDoVendedor(publicoOrg);
   const [valorVendaReais, setValorVendaReais] = useState(propostaValor ?? 0);
+  // Empreendimento escolhido (imobiliário) e preço da unidade escolhida — o
+  // preço da unidade preenche o valor da venda sozinho.
+  const [imovelEscolhido, setImovelEscolhido] = useState(imovelIdAtual ?? "");
+  const [precoUnidade, setPrecoUnidade] = useState<number | null>(null);
   const acaoComId = marcarVendido.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const enviandoRef = useRef(false);
@@ -175,12 +181,12 @@ export function MarcarVendidoForm({
             </p>
           </div>
           <CampoMoeda
-            key={propostaValor ?? "sem-proposta"}
+            key={`${propostaValor ?? "sem-proposta"}-${precoUnidade ?? "sem-unidade"}`}
             name="valor_venda"
             label={imobiliario ? "Preço do imóvel (R$)" : "Valor da venda (R$)"}
             Icone={IconeMoeda}
             placeholder="Preço combinado com o lead"
-            valorInicial={propostaValor}
+            valorInicial={precoUnidade ?? propostaValor}
             aoMudarReais={comissaoAuto ? setValorVendaReais : undefined}
           />
           {comissaoAuto ? (
@@ -204,7 +210,16 @@ export function MarcarVendidoForm({
               {imobiliario ? "Imóvel vendido" : "Produto"}
             </RotuloCampo>
             {imobiliario ? (
-              <ImovelSelect imoveis={imoveis} valorInicial={imovelIdAtual} />
+              <>
+                <ImovelSelect imoveis={imoveis} valorInicial={imovelIdAtual} aoMudar={setImovelEscolhido} />
+                <UnidadeSelect
+                  imovelId={imovelEscolhido}
+                  aoEscolher={(unidade: UnidadeParaVenda | null) => {
+                    setPrecoUnidade(unidade?.valor ?? null);
+                    if (unidade?.valor != null) setValorVendaReais(unidade.valor);
+                  }}
+                />
+              </>
             ) : (
               <ProdutoSelect produtos={produtos} />
             )}
