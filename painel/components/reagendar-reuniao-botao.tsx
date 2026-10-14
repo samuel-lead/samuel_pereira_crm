@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { reagendarReuniao, moverLeadNivel } from "@/lib/leads/actions";
+import { reagendarReuniao, moverLeadNivel, desfazerReuniaoMarcada } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { IconeCalendario } from "@/components/icons";
@@ -110,6 +110,26 @@ export function ReagendarReuniaoBotao({
     });
   }
 
+  async function aoDesfazerReuniao() {
+    const confirmou = await perguntar(
+      `Essa ${rotulo.toLowerCase()} foi marcada por engano? Ela vai sumir das contas, como se nunca tivesse sido marcada, e o lead volta pro nível anterior.`,
+      "Sim, desfazer",
+      "Voltar"
+    );
+    if (!confirmou) return;
+
+    setErro(null);
+    iniciarTransicao(async () => {
+      try {
+        await desfazerReuniaoMarcada(leadId, reuniaoId);
+        await modalAtivo?.recarregar();
+        setAberto(false);
+      } catch (e) {
+        setErro(e instanceof Error ? e.message : "Não deu pra desfazer");
+      }
+    });
+  }
+
   return (
     <div ref={containerRef} className="relative">
       <div className="flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-amber-600/30">
@@ -160,6 +180,14 @@ export function ReagendarReuniaoBotao({
             className="mt-2 w-full rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
           >
             Cancelar {rotulo.toLowerCase()}
+          </button>
+          <button
+            type="button"
+            onClick={aoDesfazerReuniao}
+            disabled={pendente}
+            className="mt-2 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-50 disabled:opacity-60"
+          >
+            Marquei por engano — desfazer
           </button>
         </div>
       )}

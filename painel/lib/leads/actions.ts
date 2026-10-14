@@ -1834,6 +1834,84 @@ export async function definirQualificadaReuniao(
   revalidatePath(`/leads/${leadId}`);
 }
 
+// Reunião/visita marcada POR ENGANO (data errada, lead errado...): desfaz de
+// vez — a reunião some das contas (não conta como marcada, nem como no-show)
+// e o lead volta pra "Topou reunião, horário a definir" (ou pra "Follow após
+// reunião", se esse lead já tinha feito uma reunião antes). Diferente de
+// "Cancelar", que manda pra "Precisa reagendar" e mantém a reunião como
+// cancelada. Fica registrado no histórico do lead, com os dados da reunião
+// desfeita, pra dar pra recuperar se precisar.
+export async function desfazerReuniaoMarcada(leadId: string, reuniaoId: string) {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) throw new Error(erroPermissao);
+
+  const { data: reuniaoAtual } = await supabase
+    .from("reunioes")
+    .select("id, status, agendada_para, marcada_em, closer_id, google_event_id")
+    .eq("id", reuniaoId)
+    .eq("lead_id", leadId)
+    .maybeSingle();
+  if (!reuniaoAtual) throw new Error(`${Reuniao(usuario.publico_org)} não encontrada.`);
+  if (reuniaoAtual.status !== "marcada") {
+    throw new Error(`Só dá pra desfazer uma ${reuniao(usuario.publico_org)} que ainda está marcada.`);
+  }
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("nivel_ordem")
+    .eq("id", leadId)
+    .single();
+  if (!lead) throw new Error("Lead não encontrado");
+
+  // Se o lead já fez uma reunião antes dessa, volta pro Follow — não faz
+  // sentido voltar pra "Topou reunião" quem já teve uma.
+  const { count: jaRealizadas } = await supabase
+    .from("reunioes")
+    .select("id", { count: "exact", head: true })
+    .eq("lead_id", leadId)
+    .eq("status", "realizada");
+  const nivelDestino = (jaRealizadas ?? 0) > 0 ? NIVEL_FOLLOW_POS_REUNIAO : 3;
+
+  const { data: apagadas, error: erroApagar } = await supabase
+    .from("reunioes")
+    .delete()
+    .eq("id", reuniaoId)
+    .eq("lead_id", leadId)
+    .eq("status", "marcada")
+    .select("id");
+  if (erroApagar) throw new Error(erroApagar.message);
+  if (!apagadas || apagadas.length === 0) throw new Error("Não consegui desfazer essa reunião.");
+
+  const { error: erroLead } = await supabase
+    .from("leads")
+    .update({ nivel_ordem: nivelDestino, entrou_nivel_em: new Date().toISOString() })
+    .eq("id", leadId);
+  if (erroLead) throw new Error(erroLead.message);
+
+  const formatarDataHoraBr = (iso: string) =>
+    new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+  await supabase.from("nivel_historico").insert({
+    org_id: usuario.org_id,
+    lead_id: leadId,
+    usuario_id: usuario.id,
+    de_ordem: lead.nivel_ordem,
+    para_ordem: nivelDestino,
+    automatico: false,
+    motivo: `${Reuniao(usuario.publico_org)} marcada por engano, desfeita (era pra ${formatarDataHoraBr(
+      reuniaoAtual.agendada_para
+    )}, marcada em ${formatarDataHoraBr(reuniaoAtual.marcada_em)}, closer ${reuniaoAtual.closer_id ?? "—"}${
+      reuniaoAtual.google_event_id ? `, evento Google ${reuniaoAtual.google_event_id}` : ""
+    })`,
+  });
+
+  revalidatePath("/leads");
+  revalidatePath("/reunioes");
+  revalidatePath(`/leads/${leadId}`);
+}
+
 // Muda só a data/hora de uma reunião/visita que já está marcada — sem
 // isso, uma vez marcada não tinha como corrigir o horário (o campo de
 // data só aparecia no formulário na hora de marcar pela primeira vez).
