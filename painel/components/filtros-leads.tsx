@@ -14,7 +14,10 @@ function DropdownFiltro({
   // celular, cortando os nomes mais compridos (Samuel pegou ao vivo).
   // Ancorado pela direita ele abre pro lado que tem espaço de sobra.
   alinhar = "esquerda",
+  textoVazio,
 }: {
+  // Mostrado quando não há nenhuma opção (ex.: nenhum imóvel cadastrado ainda).
+  textoVazio?: string;
   rotulo: string;
   valorSelecionado: string;
   opcoes: { valor: string; texto: string }[];
@@ -74,6 +77,9 @@ function DropdownFiltro({
           >
             Todos
           </button>
+          {opcoes.length === 0 && textoVazio && (
+            <p className="px-3 py-2 text-xs text-neutral-400">{textoVazio}</p>
+          )}
           {opcoes.map((opcao) => (
             <button
               key={opcao.valor}
@@ -147,10 +153,11 @@ export function FiltrosLeads({
         opcoes={origens.map((origem) => ({ valor: origem, texto: origem }))}
         aoSelecionar={(valor) => router.push(construirUrl(usuarioInicial ?? "", valor))}
       />
-      {imoveis && imoveis.length > 0 && (
+      {imoveis && (
         <DropdownFiltro
           rotulo="Imóvel"
           alinhar="direita"
+          textoVazio="Nenhum imóvel cadastrado ainda. Cadastre em Imóveis."
           valorSelecionado={imovelInicial ?? ""}
           opcoes={imoveis.map((i) => ({ valor: i.id, texto: i.nome }))}
           aoSelecionar={(valor) =>
