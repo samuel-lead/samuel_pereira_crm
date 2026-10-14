@@ -1043,7 +1043,13 @@ export async function calcularBonusPorSdr(
   // aconteceu (Samuel, 14/10/26): se a Julia marcou, o lead pediu pra
   // reagendar e o Samuel marcou a nova, a call continua sendo da Julia. Se
   // o lead nunca foi de outro SDR (ex.: o Samuel mesmo marcou), fica com ele.
-  const [{ data: realizadasDaOrg }, { data: funcoesData }, { data: vendidosNoPeriodo }] = await Promise.all([
+  const limiteDevidasISO = (fim < new Date() ? fim : new Date()).toISOString();
+  const [
+    { data: realizadasDaOrg },
+    { data: funcoesData },
+    { data: vendidosNoPeriodo },
+    { data: devidasDaOrg },
+  ] = await Promise.all([
     supabase
       .from("reunioes")
       .select("lead_id, usuario_id, marcada_em, qualificada, resultado, leads!inner(arquivado_em, status)")
@@ -1063,6 +1069,16 @@ export async function calcularBonusPorSdr(
       .is("arquivado_em", null)
       .gte("vendido_em", inicioISO)
       .lt("vendido_em", fimISO),
+    // Reuniões cuja data já passou (menos as canceladas) — base do no-show,
+    // mesma régua de calcularMetricas, só que creditada ao SDR original.
+    supabase
+      .from("reunioes")
+      .select("lead_id, status, leads!inner(arquivado_em)")
+      .eq("org_id", orgId)
+      .is("leads.arquivado_em", null)
+      .neq("status", "cancelada")
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", limiteDevidasISO),
   ]);
   const funcaoPorUsuario = new Map((funcoesData ?? []).map((u) => [u.id, u.funcao as string | null]));
   // Sábados/domingos que o SDR trabalhou pra repor uma folga na semana: NÃO
@@ -1075,6 +1091,7 @@ export async function calcularBonusPorSdr(
     ...new Set([
       ...(realizadasDaOrg ?? []).map((r) => r.lead_id),
       ...(vendidosNoPeriodo ?? []).map((l) => l.id),
+      ...(devidasDaOrg ?? []).map((r) => r.lead_id),
     ]),
   ];
   const primeiraReuniaoPorLead = new Map<string, { usuario_id: string; marcada_em: string }>();
@@ -1135,8 +1152,17 @@ export async function calcularBonusPorSdr(
       let bonusPorVendaSemana = 0;
       let bonusPorVendaFimDeSemana = 0;
       let travadoPorNoShow = false;
-      const noShowPercentual =
-        m.reunioesDevidas > 0 ? 1 - m.reunioesRealizadas / m.reunioesDevidas : null;
+      // No modelo "por_call" o no-show também segue o SDR original do lead
+      // (mesma regra das calls): a reunião que o Samuel marcou depois de a
+      // Julia ter remarcado continua sendo dela.
+      const devidasDele = usarSdrOriginal
+        ? (devidasDaOrg ?? []).filter((r) => primeiraReuniaoPorLead.get(r.lead_id)?.usuario_id === m.usuarioId)
+        : [];
+      const devidasQtd = usarSdrOriginal ? devidasDele.length : m.reunioesDevidas;
+      const realizadasQtd = usarSdrOriginal
+        ? devidasDele.filter((r) => r.status === "realizada").length
+        : m.reunioesRealizadas;
+      const noShowPercentual = devidasQtd > 0 ? 1 - realizadasQtd / devidasQtd : null;
 
       if (config.modelo === "por_call") {
         // Só conta call realizada E qualificada (venda é sempre qualificada).
