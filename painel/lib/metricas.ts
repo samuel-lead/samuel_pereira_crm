@@ -1038,19 +1038,82 @@ export async function calcularBonusPorSdr(
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
 
-  return Promise.all(
-    metricasPorUsuario.map(async (m) => {
-      const { data: realizadasNoPeriodo } = await supabase
-        .from("reunioes")
-        .select("marcada_em, qualificada, resultado, leads!inner(arquivado_em, status)")
-        .eq("usuario_id", m.usuarioId)
-        .eq("status", "realizada")
-        .is("leads.arquivado_em", null)
-        .gte("agendada_para", inicioISO)
-        .lt("agendada_para", fimISO);
+  // O bônus de uma call vai pro SDR ORIGINAL do lead — quem marcou a
+  // primeira reunião dele — e não pra quem marcou a reunião que de fato
+  // aconteceu (Samuel, 14/10/26): se a Julia marcou, o lead pediu pra
+  // reagendar e o Samuel marcou a nova, a call continua sendo da Julia. Se
+  // o lead nunca foi de outro SDR (ex.: o Samuel mesmo marcou), fica com ele.
+  const [{ data: realizadasDaOrg }, { data: funcoesData }, { data: vendidosNoPeriodo }] = await Promise.all([
+    supabase
+      .from("reunioes")
+      .select("lead_id, usuario_id, marcada_em, qualificada, resultado, leads!inner(arquivado_em, status)")
+      .eq("org_id", orgId)
+      .eq("status", "realizada")
+      .is("leads.arquivado_em", null)
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", fimISO),
+    supabase.from("usuarios").select("id, funcao").eq("org_id", orgId),
+    // Vendas do período (pela data da venda) — receita e faturamento do SDR
+    // também seguem o SDR original do lead.
+    supabase
+      .from("leads")
+      .select("id, receita_venda, valor_venda")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicioISO)
+      .lt("vendido_em", fimISO),
+  ]);
+  const funcaoPorUsuario = new Map((funcoesData ?? []).map((u) => [u.id, u.funcao as string | null]));
 
-      const realizadas = (realizadasNoPeriodo ?? []).map((r) => ({
-        noFimDeSemana: [0, 6].includes(diaDaSemana(r.marcada_em)),
+  const leadsDasCalls = [
+    ...new Set([
+      ...(realizadasDaOrg ?? []).map((r) => r.lead_id),
+      ...(vendidosNoPeriodo ?? []).map((l) => l.id),
+    ]),
+  ];
+  const primeiraReuniaoPorLead = new Map<string, { usuario_id: string; marcada_em: string }>();
+  if (leadsDasCalls.length > 0) {
+    const { data: todasReunioes } = await supabase
+      .from("reunioes")
+      .select("lead_id, usuario_id, marcada_em")
+      .in("lead_id", leadsDasCalls)
+      .order("marcada_em", { ascending: true });
+    for (const r of todasReunioes ?? []) {
+      if (!primeiraReuniaoPorLead.has(r.lead_id)) {
+        primeiraReuniaoPorLead.set(r.lead_id, { usuario_id: r.usuario_id, marcada_em: r.marcada_em });
+      }
+    }
+  }
+
+  // O SDR original só vale pro modelo "por_call" (empresa do Samuel). As
+  // outras empresas continuam creditando quem marcou a reunião que aconteceu.
+  const usarSdrOriginal = config.modelo === "por_call";
+
+  const bonusPorUsuario = await Promise.all(
+    metricasPorUsuario.map(async (m) => {
+      const realizadasNoPeriodo = (realizadasDaOrg ?? []).filter((r) =>
+        usarSdrOriginal
+          ? primeiraReuniaoPorLead.get(r.lead_id)?.usuario_id === m.usuarioId
+          : r.usuario_id === m.usuarioId
+      );
+
+      // Vendas do período cujo SDR original é esse usuário.
+      const vendasDele = (vendidosNoPeriodo ?? []).filter(
+        (l) => primeiraReuniaoPorLead.get(l.id)?.usuario_id === m.usuarioId
+      );
+      const vendasDeleQtd = usarSdrOriginal ? vendasDele.length : m.vendas;
+      const receitaDele = usarSdrOriginal
+        ? vendasDele.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0)
+        : m.receita;
+      const faturamentoDele = usarSdrOriginal
+        ? vendasDele.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0)
+        : m.faturamento;
+
+      const realizadas = realizadasNoPeriodo.map((r) => ({
+        noFimDeSemana: [0, 6].includes(
+          diaDaSemana(primeiraReuniaoPorLead.get(r.lead_id)?.marcada_em ?? r.marcada_em)
+        ),
         qualificada: r.qualificada !== false,
         venda: r.resultado === "vendeu" || (r.leads as unknown as { status: string }).status === "vendido",
       }));
@@ -1101,7 +1164,7 @@ export async function calcularBonusPorSdr(
       // não o valor vendido — Samuel pediu (07/10/26) pra não pagar em cima
       // de venda parcelada que ainda não foi recebida. As empresas no
       // modelo antigo continuam olhando o faturamento.
-      const baseFaixas = config.modelo === "por_call" ? m.receita : m.faturamento;
+      const baseFaixas = config.modelo === "por_call" ? receitaDele : faturamentoDele;
       let bonusPorFaturamento =
         baseFaixas >= config.faturamento_tier3_valor
           ? config.faturamento_tier3_bonus
@@ -1134,6 +1197,9 @@ export async function calcularBonusPorSdr(
 
       return {
         ...m,
+        vendas: vendasDeleQtd,
+        receita: receitaDele,
+        faturamento: faturamentoDele,
         // Só conta contra o SDR reunião cuja data JÁ PASSOU (reunioesDevidas)
         // — reunião marcada pro futuro ainda não teve chance de acontecer,
         // não é no-show. Antes dividia por reunioesMarcadas (que inclui
@@ -1158,6 +1224,15 @@ export async function calcularBonusPorSdr(
       };
     })
   );
+
+  // Só aparece na tela quem é SDR, ou quem (como o admin/Closer) teve alguma
+  // call creditada no período — o Samuel não precisa aparecer na lista
+  // quando todas as calls foram da Julia.
+  return usarSdrOriginal
+    ? bonusPorUsuario.filter(
+        (b) => funcaoPorUsuario.get(b.usuarioId) === "sdr" || b.callsQualificadas + b.callsNaoQualificadas > 0
+      )
+    : bonusPorUsuario;
 }
 
 export type ResumoMes = {
