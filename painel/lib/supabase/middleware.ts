@@ -181,7 +181,7 @@ export async function updateSession(request: NextRequest) {
     } else {
       const { data: usuarioDoBanco } = await supabase
         .from("usuarios")
-        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming, chama_receita_de_comissao)")
+        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming, chama_receita_de_comissao, dashboard_em_barras)")
         .eq("id", user.id)
         .single();
 
@@ -194,6 +194,7 @@ export async function updateSession(request: NextRequest) {
         sem_closer?: boolean;
         sem_farming?: boolean;
         chama_receita_de_comissao?: boolean;
+        dashboard_em_barras?: boolean;
       };
       const orgInfo = usuarioDoBanco?.orgs as OrgInfo | OrgInfo[] | null;
       const org = Array.isArray(orgInfo) ? orgInfo[0] : orgInfo;
@@ -202,7 +203,7 @@ export async function updateSession(request: NextRequest) {
       // Vocabulário próprio de algumas empresas (ex.: Banker - Consorcio)
       // vai junto do público como sufixos: ":of" = "Oportunidades Futuras"
       // no lugar de "Repescagem futura de ICP"; ":vend" = "Vendedor" no
-      // lugar de "SDR"; "":solo" = empresa sem Closer; "":sf" = sem Farming na Base; ":com" = "Comissão" no lugar de "Receita". Só lib/terminologia.ts entende — o resto do sistema
+      // lugar de "SDR"; "":solo" = empresa sem Closer; "":sf" = sem Farming na Base; ":com" = "Comissão" no lugar de "Receita"; ":fb" = funil em barras na Visão geral. Só lib/terminologia.ts entende — o resto do sistema
       // continua comparando só com "imobiliario".
       if (publicoOrg) {
         if (org?.nome_oportunidades_futuras) publicoOrg += ":of";
@@ -210,6 +211,7 @@ export async function updateSession(request: NextRequest) {
         if (org?.sem_closer) publicoOrg += ":solo";
         if (org?.sem_farming) publicoOrg += ":sf";
         if (org?.chama_receita_de_comissao) publicoOrg += ":com";
+        if (org?.dashboard_em_barras) publicoOrg += ":fb";
       }
 
       if (usuarioDoBanco) {

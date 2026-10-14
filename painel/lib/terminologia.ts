@@ -62,6 +62,11 @@ export function usaComissaoDoVendedor(publicoOrg: string) {
   return ehImobiliario(publicoOrg) || temVariante(publicoOrg, "com");
 }
 
+// Empresa cuja Visão geral mostra o funil em barras (sufixo ":fb").
+export function dashboardEmBarras(publicoOrg: string) {
+  return temVariante(publicoOrg, "fb");
+}
+
 // Empresa que não usa "Farming" na Base de leads (ex.: Banker - Consorcio).
 export function semFarming(publicoOrg: string) {
   return temVariante(publicoOrg, "sf");

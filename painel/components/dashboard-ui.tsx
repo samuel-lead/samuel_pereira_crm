@@ -8,7 +8,8 @@ import {
   IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Calls, Faturamento, Receita, ehImobiliario } from "@/lib/terminologia";
+import { Calls, Faturamento, Receita, ehImobiliario, dashboardEmBarras } from "@/lib/terminologia";
+import { FunilBarras } from "@/components/funil-barras";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -253,6 +254,19 @@ export function SecaoPeriodo({
         </p>
       </div>
 
+      {dashboardEmBarras(publicoOrg) && !ehImobiliario(publicoOrg) ? (
+        <FunilBarras
+          metricas={metricas}
+          metricasAnteriores={metricasAnteriores}
+          metas={metas}
+          leadsNovos={leadsNovosValor}
+          noShowPct={noShowPct}
+          pisoLeads={pisoLeads}
+          pisoReunioes={pisoReunioes}
+          publicoOrg={publicoOrg}
+        />
+      ) : (
+      <>
       <div className="flex flex-wrap divide-x divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
         <CardNumero
           titulo="Leads novos"
@@ -350,6 +364,8 @@ export function SecaoPeriodo({
             />
           </div>
         </div>
+      )}
+      </>
       )}
 
       <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
