@@ -11,6 +11,10 @@ export default function NovoImovelPage() {
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-md">
           <ImovelForm acao={criarImovel} textoBotao="Salvar imóvel" cancelarHref="/imoveis" />
         </div>
+        <p className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+          <b>Tem apartamentos (unidades)?</b> Salve o empreendimento primeiro. Depois, na lista de Imóveis, clique no
+          botão <b>Unidades</b> dele pra importar a tabela de preços (PDF, Excel ou CSV).
+        </p>
       </main>
     </>
   );

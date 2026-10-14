@@ -121,10 +121,13 @@ export default async function ImoveisPage({
             {imoveis.map((imovel) => {
               const statusInfo = ROTULO_STATUS[imovel.status] ?? ROTULO_STATUS.disponivel;
               return (
-                <Link
+                <div
                   key={imovel.id}
+                  className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white shadow-sm transition hover:shadow-md"
+                >
+                <Link
                   href={`/imoveis/${imovel.id}`}
-                  className="flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+                  className="flex min-w-0 flex-1 items-center justify-between gap-4 p-4"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -151,6 +154,13 @@ export default async function ImoveisPage({
                     )}
                   </div>
                 </Link>
+                <Link
+                  href={`/imoveis/${imovel.id}/unidades`}
+                  className="mr-4 shrink-0 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                >
+                  Unidades
+                </Link>
+                </div>
               );
             })}
           </div>
