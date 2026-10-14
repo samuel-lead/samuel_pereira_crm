@@ -192,10 +192,10 @@ export function FunilBarras({
           <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Conversão total</p>
         </div>
         {ant && (
-          <p className="text-right text-[11px] text-neutral-400">
-            Os selos mostram o crescimento
+          <p className="text-right text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+            Porcentagem comparada
             <br />
-            sobre o período anterior
+            com o período anterior
           </p>
         )}
       </div>
