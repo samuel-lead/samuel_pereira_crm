@@ -14,7 +14,7 @@ import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { EditarMotivoRepescagem } from "@/components/editar-motivo-repescagem";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeLapis } from "@/components/icons";
-import { Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
+import { Reuniao, Sdr, Receita, ehImobiliario } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -285,7 +285,7 @@ export function LeadModalConteudo({
               })}
             </p>
             <p className="text-sm text-green-700">
-              Receita:{" "}
+              {Receita(publicoOrg)}:{" "}
               {lead.receita_venda?.toLocaleString("pt-BR", {
                 style: "currency",
                 currency: "BRL",

@@ -28,7 +28,7 @@ import { AvatarLead } from "@/components/avatar-lead";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
-import { Reuniao, reuniao, RepescagemFutura, ehImobiliario } from "@/lib/terminologia";
+import { Reuniao, reuniao, RepescagemFutura, Receita, ehImobiliario } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
@@ -1157,7 +1157,7 @@ export function KanbanBoard({
                             )}
                             {mostrarValor && lead.receita_venda != null && (
                               <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                                Receita: {formatarMoeda(lead.receita_venda)}
+                                {Receita(publicoOrg)}: {formatarMoeda(lead.receita_venda)}
                               </span>
                             )}
                             {mostrarValor && lead.produto && (

@@ -7,7 +7,7 @@ import { ImovelSelect } from "@/components/imovel-select";
 import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { IconeCalendario, IconeMoeda, IconeClientePagante, IconeTag } from "@/components/icons";
-import { ehImobiliario } from "@/lib/terminologia";
+import { ehImobiliario, Receita } from "@/lib/terminologia";
 
 // Rótulo com um selo de ícone na frente — Samuel pediu pra destacar mais
 // esses 4 campos ("bonito, elegante, impossível de ignorar"). Mesmo
@@ -190,7 +190,7 @@ export function MarcarVendidoForm({
           ) : (
             <CampoMoeda
               name="receita_venda"
-              label="Receita recebida (R$)"
+              label={`${Receita(publicoOrg)} recebida (R$)`}
               Icone={IconeClientePagante}
               placeholder="Deixe em branco se o pagamento ainda não caiu"
             />

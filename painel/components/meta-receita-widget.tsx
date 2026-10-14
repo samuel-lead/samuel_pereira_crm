@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { definirMetaReceita, type EstadoMeta } from "@/lib/metas/actions";
 import { IconeLapis } from "@/components/icons";
-import { Faturamento, ehImobiliario } from "@/lib/terminologia";
+import { Faturamento, Receita, receita as rotuloReceita, ehImobiliario } from "@/lib/terminologia";
 
 const estadoInicial: EstadoMeta = { erro: null };
 
@@ -35,7 +35,7 @@ export function MetaReceitaWidget({
 }) {
   const [estado, acaoFormulario] = useActionState(definirMetaReceita, estadoInicial);
   const [editando, setEditando] = useState(podeEditar && metaReceita === null);
-  const rotuloMeta = `Meta de ${ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "receita"} do mês`;
+  const rotuloMeta = `Meta de ${ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : rotuloReceita(publicoOrg)} do mês`;
 
   useEffect(() => {
     if (estado !== estadoInicial && !estado.erro) {
@@ -154,7 +154,7 @@ export function MetaReceitaWidget({
           <span className="text-lg">🔔</span>
           <h2 className="text-sm font-bold text-amber-900">
             O mês de {nomeDoMesAtual()} virou — defina a meta de{" "}
-            {ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "receita"} do mês
+            {ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : rotuloReceita(publicoOrg)} do mês
           </h2>
         </div>
         <p className="mb-3 text-sm text-amber-800">

@@ -6,7 +6,7 @@ import { ProdutoSelect } from "@/components/produto-select";
 import { ImovelSelect } from "@/components/imovel-select";
 import { CampoComissaoVenda } from "@/components/campo-comissao-venda";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
-import { ehImobiliario } from "@/lib/terminologia";
+import { ehImobiliario, Receita } from "@/lib/terminologia";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 
@@ -160,7 +160,7 @@ export function EditarVendaForm({
           valorFixoInicial={comissaoValorFixo ?? null}
         />
       ) : (
-        <CampoMoeda name="receita_venda" label="Receita recebida (R$)" valorInicial={receitaVenda} />
+        <CampoMoeda name="receita_venda" label={`${Receita(publicoOrg)} recebida (R$)`} valorInicial={receitaVenda} />
       )}
       <div>
         <label className="mb-1 block text-xs font-medium text-green-800">

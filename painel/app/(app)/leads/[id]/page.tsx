@@ -18,7 +18,7 @@ import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
-import { Reuniao, Sdr, ehImobiliario } from "@/lib/terminologia";
+import { Reuniao, Sdr, Receita, ehImobiliario } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
@@ -435,7 +435,7 @@ export default async function EditarLeadPage({
                 })}
               </p>
               <p className="text-sm text-green-700">
-                Receita:{" "}
+                {Receita(publicoOrg)}:{" "}
                 {leadTipado.receita_venda?.toLocaleString("pt-BR", {
                   style: "currency",
                   currency: "BRL",

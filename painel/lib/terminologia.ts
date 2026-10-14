@@ -115,5 +115,15 @@ export function TituloEvolucao(publicoOrg: string) {
 // de Faturamento()/VGV, mas preserva a palavra "Receita" pra mentoria (em
 // vez de "Faturamento"), que é como esse gráfico específico sempre falou.
 export function RotuloReceitaEvolucao(publicoOrg: string) {
-  return ehImobiliario(publicoOrg) ? "VGV" : "Receita";
+  return ehImobiliario(publicoOrg) ? "VGV" : Receita(publicoOrg);
+}
+
+// Empresa que chama "Receita" de "Comissão" (ex.: Banker - Consorcio, onde
+// o que entra é a comissão da venda) — sufixo ":com", ver middleware.
+export function Receita(publicoOrg: string) {
+  return temVariante(publicoOrg, "com") ? "Comissão" : "Receita";
+}
+
+export function receita(publicoOrg: string) {
+  return temVariante(publicoOrg, "com") ? "comissão" : "receita";
 }

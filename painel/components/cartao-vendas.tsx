@@ -1,4 +1,4 @@
-import { ehImobiliario, faturamento as rotuloFaturamento } from "@/lib/terminologia";
+import { ehImobiliario, faturamento as rotuloFaturamento, receita as rotuloReceita } from "@/lib/terminologia";
 
 // Sem centavos aqui — é um resumo rápido, não a tela de editar o valor da
 // venda. "R$ 27.000,03" só polui a leitura sem fazer diferença nenhuma.
@@ -39,7 +39,7 @@ export function CartaoVendas({
           </p>
           {!ehImobiliario(publicoOrg) && (
             <p className="mt-0.5 truncate text-[10px] leading-tight text-neutral-400">
-              {formatarMoeda(receita)} receita
+              {formatarMoeda(receita)} {rotuloReceita(publicoOrg)}
             </p>
           )}
           {vendas > 0 && (

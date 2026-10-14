@@ -9,7 +9,7 @@ import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
 import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
-import { Sdr, Faturamento, ehImobiliario, semCloser } from "@/lib/terminologia";
+import { Sdr, Faturamento, Receita, ehImobiliario, semCloser } from "@/lib/terminologia";
 
 type LeadVendido = {
   id: string;
@@ -169,7 +169,7 @@ export default async function VendasPage({
 
           <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
             <IconeMoeda className="h-3.5 w-3.5" />
-            Receita total em vendas
+            {Receita(publicoOrg)} total em vendas
           </p>
           <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
             {formatarMoeda(totalReceita)}
@@ -194,7 +194,7 @@ export default async function VendasPage({
                 <th className="px-4 py-3 font-medium">Produto</th>
                 <th className="px-4 py-3 font-medium">Valor da venda</th>
                 {!ehImobiliario(publicoOrg) && (
-                  <th className="px-4 py-3 font-medium">Receita</th>
+                  <th className="px-4 py-3 font-medium">{Receita(publicoOrg)}</th>
                 )}
                 <th className="px-4 py-3 font-medium">{Sdr(publicoOrg)}</th>
                 {!semCloser(publicoOrg) && (

@@ -181,7 +181,7 @@ export async function updateSession(request: NextRequest) {
     } else {
       const { data: usuarioDoBanco } = await supabase
         .from("usuarios")
-        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming)")
+        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming, chama_receita_de_comissao)")
         .eq("id", user.id)
         .single();
 
@@ -193,6 +193,7 @@ export async function updateSession(request: NextRequest) {
         chama_sdr_de_vendedor?: boolean;
         sem_closer?: boolean;
         sem_farming?: boolean;
+        chama_receita_de_comissao?: boolean;
       };
       const orgInfo = usuarioDoBanco?.orgs as OrgInfo | OrgInfo[] | null;
       const org = Array.isArray(orgInfo) ? orgInfo[0] : orgInfo;
@@ -201,13 +202,14 @@ export async function updateSession(request: NextRequest) {
       // Vocabulário próprio de algumas empresas (ex.: Banker - Consorcio)
       // vai junto do público como sufixos: ":of" = "Oportunidades Futuras"
       // no lugar de "Repescagem futura de ICP"; ":vend" = "Vendedor" no
-      // lugar de "SDR"; "":solo" = empresa sem Closer; ":sf" = sem Farming na Base. Só lib/terminologia.ts entende — o resto do sistema
+      // lugar de "SDR"; "":solo" = empresa sem Closer; "":sf" = sem Farming na Base; ":com" = "Comissão" no lugar de "Receita". Só lib/terminologia.ts entende — o resto do sistema
       // continua comparando só com "imobiliario".
       if (publicoOrg) {
         if (org?.nome_oportunidades_futuras) publicoOrg += ":of";
         if (org?.chama_sdr_de_vendedor) publicoOrg += ":vend";
         if (org?.sem_closer) publicoOrg += ":solo";
         if (org?.sem_farming) publicoOrg += ":sf";
+        if (org?.chama_receita_de_comissao) publicoOrg += ":com";
       }
 
       if (usuarioDoBanco) {

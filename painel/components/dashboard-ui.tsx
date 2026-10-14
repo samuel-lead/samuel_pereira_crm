@@ -8,7 +8,7 @@ import {
   IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Calls, Faturamento, ehImobiliario } from "@/lib/terminologia";
+import { Calls, Faturamento, Receita, ehImobiliario } from "@/lib/terminologia";
 
 export type MetasConfig = {
   piso_leads_dia: number;
@@ -235,7 +235,7 @@ export function SecaoPeriodo({
 
         <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
           <IconeMoeda className="h-3.5 w-3.5" />
-          {ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "Receita"}
+          {ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : Receita(publicoOrg)}
         </p>
         <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
           {formatarMoeda(ehImobiliario(publicoOrg) ? metricas.faturamento : metricas.receita)}
@@ -337,7 +337,7 @@ export function SecaoPeriodo({
               Icone={IconeEstrela}
             />
             <CardComparativo
-              titulo={ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : "Receita"}
+              titulo={ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : Receita(publicoOrg)}
               valorFormatado={formatarMoeda(
                 ehImobiliario(publicoOrg) ? metricas.faturamento : metricas.receita
               )}
