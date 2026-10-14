@@ -1052,7 +1052,7 @@ export async function calcularBonusPorSdr(
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
-    supabase.from("usuarios").select("id, funcao").eq("org_id", orgId),
+    supabase.from("usuarios").select("id, funcao, dias_reposicao").eq("org_id", orgId),
     // Vendas do período (pela data da venda) — receita e faturamento do SDR
     // também seguem o SDR original do lead.
     supabase
@@ -1065,6 +1065,11 @@ export async function calcularBonusPorSdr(
       .lt("vendido_em", fimISO),
   ]);
   const funcaoPorUsuario = new Map((funcoesData ?? []).map((u) => [u.id, u.funcao as string | null]));
+  // Sábados/domingos que o SDR trabalhou pra repor uma folga na semana: NÃO
+  // contam como fim de semana no bônus (Samuel, 15/10/26). "AAAA-MM-DD".
+  const diasReposicaoPorUsuario = new Map(
+    (funcoesData ?? []).map((u) => [u.id, new Set((u.dias_reposicao as string[] | null) ?? [])])
+  );
 
   const leadsDasCalls = [
     ...new Set([
@@ -1111,9 +1116,12 @@ export async function calcularBonusPorSdr(
         : m.faturamento;
 
       const realizadas = realizadasNoPeriodo.map((r) => ({
-        noFimDeSemana: [0, 6].includes(
-          diaDaSemana(primeiraReuniaoPorLead.get(r.lead_id)?.marcada_em ?? r.marcada_em)
-        ),
+        noFimDeSemana: (() => {
+          const marcadaEm = primeiraReuniaoPorLead.get(r.lead_id)?.marcada_em ?? r.marcada_em;
+          const diaBr = new Date(new Date(marcadaEm).getTime() - FUSO_BRASIL_MS).toISOString().slice(0, 10);
+          if (diasReposicaoPorUsuario.get(m.usuarioId)?.has(diaBr)) return false;
+          return [0, 6].includes(diaDaSemana(marcadaEm));
+        })(),
         qualificada: r.qualificada !== false,
         venda: r.resultado === "vendeu" || (r.leads as unknown as { status: string }).status === "vendido",
       }));
