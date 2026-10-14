@@ -1,3 +1,5 @@
+import { semFarming } from "@/lib/terminologia";
+
 export const CORES_NIVEL: Record<
   number,
   {
@@ -157,6 +159,12 @@ export const MOTIVOS_BASE = [
   { valor: "desqualificado", nome: "Desqualificado (sem perfil pro momento)" },
   { valor: "farming", nome: "Farming" },
 ] as const;
+
+// Motivos de Base que a empresa usa — a Banker - Consorcio, por exemplo,
+// não usa "Farming" (ver lib/terminologia.ts, semFarming).
+export function motivosBaseDaOrg(publicoOrg: string) {
+  return semFarming(publicoOrg) ? MOTIVOS_BASE.filter((m) => m.valor !== "farming") : MOTIVOS_BASE;
+}
 
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
 // do nível 8 (Oportunidades), pro lead que já fez a reunião (ICP

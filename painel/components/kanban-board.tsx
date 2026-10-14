@@ -7,7 +7,7 @@ import {
   rotuloNivel,
   nivelDeveApareceNoMenu,
   ORDEM_OPORTUNIDADE_FUTURA,
-  MOTIVOS_BASE,
+  motivosBaseDaOrg,
   type NivelResumo,
 } from "@/lib/niveis";
 import { moverLeadNivel, reativarLead, marcarProximoContato } from "@/lib/leads/actions";
@@ -462,7 +462,7 @@ function SeletorMoverParaMobile({
           value={motivoBase}
           onChange={setMotivoBase}
           abrirAoMontar
-          options={MOTIVOS_BASE.map((m) => ({ value: m.valor, label: m.nome }))}
+          options={motivosBaseDaOrg(publicoOrg).map((m) => ({ value: m.valor, label: m.nome }))}
         />
         {motivoBase === "desqualificado" && (
           <textarea

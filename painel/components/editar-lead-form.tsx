@@ -10,11 +10,18 @@ import { MenuSelect } from "@/components/menu-select";
 import {
   rotuloNivel,
   NIVEIS_REATIVACAO,
-  MOTIVOS_BASE,
+  motivosBaseDaOrg,
   nivelDeveApareceNoMenu,
   type NivelResumo,
 } from "@/lib/niveis";
-import { reuniao, Reuniao, Sdr, ehImobiliario, RepescagemFutura } from "@/lib/terminologia";
+import {
+  reuniao,
+  Reuniao,
+  Sdr,
+  ehImobiliario,
+  semCloserNaoImobiliario,
+  RepescagemFutura,
+} from "@/lib/terminologia";
 import { IconeCalendario, IconeReativar } from "@/components/icons";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
@@ -767,6 +774,7 @@ export function EditarLeadForm({
                 />
               </div>
 
+              {!semCloserNaoImobiliario(publicoOrg) && (
               <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="closer_id">
                   {rotuloDeQuemFaz(publicoOrg)} (quem vai fazer a {reuniao(publicoOrg)})
@@ -781,6 +789,7 @@ export function EditarLeadForm({
                   incluirAdmins={ehImobiliario(publicoOrg)}
                 />
               </div>
+              )}
 
               {reuniaoAnteriorPendente && reuniaoAnteriorSumiuPredefinido && (
                 <>
@@ -836,6 +845,7 @@ export function EditarLeadForm({
           )}
 
           {!vaiEntrarEmReuniaoMarcada &&
+            !semCloserNaoImobiliario(publicoOrg) &&
             nivelSelecionado === NIVEL_REUNIAO_MARCADA &&
             String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA && (
               <div className="mt-2 space-y-1 rounded-md border border-green-200 bg-green-50 p-3">
@@ -1057,7 +1067,7 @@ export function EditarLeadForm({
                 value={motivoBaseSelecionado}
                 onChange={setMotivoBaseSelecionado}
                 placeholder="Selecione o motivo..."
-                options={MOTIVOS_BASE.map((motivo) => ({
+                options={motivosBaseDaOrg(publicoOrg).map((motivo) => ({
                   value: motivo.valor,
                   label: motivo.nome,
                 }))}

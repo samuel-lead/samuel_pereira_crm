@@ -427,7 +427,7 @@ export default async function VendasPage({
 
             {receitaOrgMes !== null && (
               <div className="w-96">
-                <BaseDropzone />
+                <BaseDropzone publicoOrg={publicoOrg} />
               </div>
             )}
           </div>

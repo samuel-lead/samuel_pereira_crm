@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { moverLeadNivel } from "@/lib/leads/actions";
-import { MOTIVOS_BASE } from "@/lib/niveis";
+import { motivosBaseDaOrg } from "@/lib/niveis";
 import { MenuSelect } from "@/components/menu-select";
 import { IconeAlvo } from "@/components/icons";
 
@@ -24,7 +24,7 @@ function amanhaIso() {
 // não move, "Desqualificado" também pede o detalhe). Se o lead estiver em
 // "Reunião marcada", o servidor recusa (a reunião ficaria perdida) —
 // mesma regra de sempre, o erro aparece aqui dentro.
-export function BaseDropzone() {
+export function BaseDropzone({ publicoOrg = "mentoria" }: { publicoOrg?: string }) {
   const [dropInfo, setDropInfo] = useState<{ leadId: string; nivelOrigem: number } | null>(null);
   const [sobre, setSobre] = useState(false);
   const [motivoBase, setMotivoBase] = useState("");
@@ -122,7 +122,7 @@ export function BaseDropzone() {
             value={motivoBase}
             onChange={setMotivoBase}
             abrirAoMontar
-            options={MOTIVOS_BASE.map((m) => ({ value: m.valor, label: m.nome }))}
+            options={motivosBaseDaOrg(publicoOrg).map((m) => ({ value: m.valor, label: m.nome }))}
           />
           {motivoBase === "desqualificado" && (
             <textarea

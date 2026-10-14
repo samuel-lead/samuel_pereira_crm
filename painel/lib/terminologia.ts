@@ -47,6 +47,23 @@ function temVariante(publicoOrg: string, variante: string) {
   return publicoOrg.split(":").slice(1).includes(variante);
 }
 
+// Empresa sem Closer: só existe o SDR (aqui "Vendedor"), que qualifica,
+// marca e faz a reunião. Imobiliário também não tem Closer, mas ele já é
+// tratado à parte em vários lugares — por isso `semCloserNaoImobiliario`
+// existe pra quem só quer pegar o caso de mentoria/serviço sem Closer.
+export function semCloser(publicoOrg: string) {
+  return ehImobiliario(publicoOrg) || temVariante(publicoOrg, "solo");
+}
+
+// Empresa que não usa "Farming" na Base de leads (ex.: Banker - Consorcio).
+export function semFarming(publicoOrg: string) {
+  return temVariante(publicoOrg, "sf");
+}
+
+export function semCloserNaoImobiliario(publicoOrg: string) {
+  return !ehImobiliario(publicoOrg) && temVariante(publicoOrg, "solo");
+}
+
 export function Sdr(publicoOrg: string) {
   if (ehImobiliario(publicoOrg)) return "Corretor";
   return temVariante(publicoOrg, "vend") ? "Vendedor" : "SDR";

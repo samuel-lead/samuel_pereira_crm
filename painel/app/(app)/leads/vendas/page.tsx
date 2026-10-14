@@ -9,7 +9,7 @@ import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
 import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
-import { Sdr, Faturamento, ehImobiliario } from "@/lib/terminologia";
+import { Sdr, Faturamento, ehImobiliario, semCloser } from "@/lib/terminologia";
 
 type LeadVendido = {
   id: string;
@@ -197,7 +197,7 @@ export default async function VendasPage({
                   <th className="px-4 py-3 font-medium">Receita</th>
                 )}
                 <th className="px-4 py-3 font-medium">{Sdr(publicoOrg)}</th>
-                {!ehImobiliario(publicoOrg) && (
+                {!semCloser(publicoOrg) && (
                   <th className="px-4 py-3 font-medium">Closer</th>
                 )}
                 <th className="px-4 py-3 font-medium">Entrou em</th>
@@ -207,7 +207,7 @@ export default async function VendasPage({
             <tbody>
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={ehImobiliario(publicoOrg) ? 8 : 10} className="px-4 py-10 text-center text-sm text-neutral-400">
+                  <td colSpan={ehImobiliario(publicoOrg) ? 8 : semCloser(publicoOrg) ? 9 : 10} className="px-4 py-10 text-center text-sm text-neutral-400">
                     Nenhum cliente encontrado
                   </td>
                 </tr>
@@ -248,7 +248,7 @@ export default async function VendasPage({
                     <td className="px-4 py-3 text-neutral-600">
                       {sdrPorLead.has(lead.id) ? nomePorUsuario.get(sdrPorLead.get(lead.id)!) ?? "—" : "—"}
                     </td>
-                    {!ehImobiliario(publicoOrg) && (
+                    {!semCloser(publicoOrg) && (
                       <td className="px-4 py-3 text-neutral-600">
                         {lead.responsavel_id ? nomePorUsuario.get(lead.responsavel_id) ?? "—" : "—"}
                       </td>

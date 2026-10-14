@@ -587,7 +587,7 @@ export default async function LeadsPage({
 
             {receitaOrgMes !== null && (
               <div className="w-96">
-                <BaseDropzone />
+                <BaseDropzone publicoOrg={publicoOrg} />
               </div>
             )}
           </div>
