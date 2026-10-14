@@ -64,6 +64,7 @@ export function Sidebar({
   cargo = "Membro",
   funcao = null,
   publicoOrg = "mentoria",
+  bonusSdrAtivo = true,
   abertoMobile = false,
   onFecharMobile,
 }: {
@@ -74,6 +75,7 @@ export function Sidebar({
   cargo?: string;
   funcao?: string | null;
   publicoOrg?: string;
+  bonusSdrAtivo?: boolean;
   abertoMobile?: boolean;
   onFecharMobile?: () => void;
 }) {
@@ -88,6 +90,8 @@ export function Sidebar({
       if (item.somenteMentoria && publicoOrg === "imobiliario") return false;
       // Bônus SDR não existe no imobiliário — vale pra admin também.
       if (item.href === "/bonus-sdr" && publicoOrg === "imobiliario") return false;
+      // Empresas com o bônus desligado também não veem — vale pra admin.
+      if (item.href === "/bonus-sdr" && !bonusSdrAtivo) return false;
       if (isAdmin) return true;
       // Bônus SDR e "Minha rotina" são automáticos pra quem tem função
       // SDR, não dependem das páginas liberadas manualmente — Closer não

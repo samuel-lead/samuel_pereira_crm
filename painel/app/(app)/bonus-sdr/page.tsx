@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
@@ -21,6 +22,17 @@ export default async function BonusSdrPage({
   const { periodo, mesAno, de, ate } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
+
+  // Empresa com o bônus de SDR desligado: a página nem abre (ex.: digitando
+  // o endereço na mão).
+  const { data: orgBonus } = await supabase
+    .from("orgs")
+    .select("bonus_sdr_ativo")
+    .eq("id", usuario!.org_id)
+    .maybeSingle();
+  if (orgBonus?.bonus_sdr_ativo === false) {
+    redirect("/leads");
+  }
 
   const agora = new Date();
   const periodoResolvido =
