@@ -85,18 +85,18 @@ export default async function VendasPage({
   // Mesma conta de sempre: faturamento ÷ vendas (cartao-vendas.tsx,
   // lib/metricas.ts) — não é receita ÷ vendas.
 
-  // Coluna SDR. Na empresa que usa o bônus por call (a do Samuel) vale o SDR
-  // ORIGINAL do lead: quem marcou a PRIMEIRA reunião dele — mesma regra do
-  // Bônus SDR. Se a Julia marcou, o lead pediu pra remarcar e o Samuel marcou
-  // a nova, o SDR continua sendo a Julia. Nas outras empresas continua como
-  // sempre: quem marcou a reunião realizada mais recente.
+  // Coluna SDR. Nos CRMs de serviço/mentoria com Closer (orgs.sdr_original)
+  // vale o SDR ORIGINAL do lead: quem marcou a PRIMEIRA reunião dele — mesma
+  // regra do Bônus SDR. Se a Julia marcou, o lead pediu pra remarcar e o
+  // Samuel marcou a nova, o SDR continua sendo a Julia. Nas demais continua
+  // como sempre: quem marcou a reunião realizada mais recente.
   const leadIds = leads.map((l) => l.id);
-  const { data: configBonus } = await supabase
-    .from("bonus_sdr_config")
-    .select("modelo")
-    .eq("org_id", usuario?.org_id ?? "")
+  const { data: flagsOrg } = await supabase
+    .from("orgs")
+    .select("sdr_original")
+    .eq("id", usuario?.org_id ?? "")
     .maybeSingle();
-  const sdrOriginal = configBonus?.modelo === "por_call";
+  const sdrOriginal = flagsOrg?.sdr_original === true;
 
   const { data: reunioesData } = leadIds.length
     ? await (sdrOriginal

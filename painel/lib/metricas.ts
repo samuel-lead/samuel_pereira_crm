@@ -1110,9 +1110,18 @@ export async function calcularBonusPorSdr(
     }
   }
 
-  // O SDR original só vale pro modelo "por_call" (empresa do Samuel). As
-  // outras empresas continuam creditando quem marcou a reunião que aconteceu.
-  const usarSdrOriginal = config.modelo === "por_call";
+  // SDR ORIGINAL (quem marcou a primeira reunião do lead) vale pros CRMs de
+  // serviço/mentoria com Closer (orgs.sdr_original — Samuel, 15/10/26). Nas
+  // demais o crédito continua com quem marcou a reunião que aconteceu.
+  const { data: orgFlags } = await supabase
+    .from("orgs")
+    .select("sdr_original")
+    .eq("id", orgId)
+    .maybeSingle();
+  const usarSdrOriginal = orgFlags?.sdr_original === true;
+  // O no-show só dos resolvidos (realizada/no-show) é a regra da trava do
+  // modelo "por_call"; as outras empresas mantêm a conta de sempre.
+  const noShowPorCall = config.modelo === "por_call";
 
   const bonusPorUsuario = await Promise.all(
     metricasPorUsuario.map(async (m) => {
@@ -1157,11 +1166,11 @@ export async function calcularBonusPorSdr(
       // No modelo "por_call" o no-show também segue o SDR original do lead
       // (mesma regra das calls): a reunião que o Samuel marcou depois de a
       // Julia ter remarcado continua sendo dela.
-      const devidasDele = usarSdrOriginal
+      const devidasDele = noShowPorCall
         ? (devidasDaOrg ?? []).filter((r) => primeiraReuniaoPorLead.get(r.lead_id)?.usuario_id === m.usuarioId)
         : [];
-      const devidasQtd = usarSdrOriginal ? devidasDele.length : m.reunioesDevidas;
-      const realizadasQtd = usarSdrOriginal
+      const devidasQtd = noShowPorCall ? devidasDele.length : m.reunioesDevidas;
+      const realizadasQtd = noShowPorCall
         ? devidasDele.filter((r) => r.status === "realizada").length
         : m.reunioesRealizadas;
       const noShowPercentual = devidasQtd > 0 ? 1 - realizadasQtd / devidasQtd : null;
@@ -1185,12 +1194,13 @@ export async function calcularBonusPorSdr(
         bonusPorVendaFimDeSemana = nVendaFimDeSemana * config.valor_por_call_venda_fim_semana;
         bonusPorVenda = bonusPorVendaSemana + bonusPorVendaFimDeSemana;
       } else {
+        const realizadasParaFaixa = usarSdrOriginal ? realizadasNoPeriodo.length : m.reunioesRealizadas;
         bonusPorCallRealizada =
-          m.reunioesRealizadas >= config.calls_tier3_qtd
+          realizadasParaFaixa >= config.calls_tier3_qtd
             ? config.calls_tier3_valor
-            : m.reunioesRealizadas >= config.calls_tier2_qtd
+            : realizadasParaFaixa >= config.calls_tier2_qtd
               ? config.calls_tier2_valor
-              : m.reunioesRealizadas >= config.calls_tier1_qtd
+              : realizadasParaFaixa >= config.calls_tier1_qtd
                 ? config.calls_tier1_valor
                 : 0;
         bonusFimDeSemana = callsMarcadasNoFimDeSemana * config.valor_call_fim_semana;
@@ -1233,6 +1243,8 @@ export async function calcularBonusPorSdr(
 
       return {
         ...m,
+        // Calls realizadas creditadas ao SDR original (bate com o bônus).
+        reunioesRealizadas: usarSdrOriginal ? realizadasNoPeriodo.length : m.reunioesRealizadas,
         vendas: vendasDeleQtd,
         receita: receitaDele,
         faturamento: faturamentoDele,
