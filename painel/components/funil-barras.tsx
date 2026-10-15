@@ -180,7 +180,7 @@ export function FunilBarras({
       rotulo: "Vendas",
       valor: metricas.vendas,
       anterior: ant?.vendas,
-      conversao: { nome: "venda", valor: metricas.taxaVenda, minimo: metas.taxa_venda_min },
+      conversao: { nome: "conversão", valor: metricas.taxaVenda, minimo: metas.taxa_venda_min },
     },
   ];
 
