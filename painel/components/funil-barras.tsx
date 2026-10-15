@@ -316,7 +316,7 @@ export function FunilBarras({
         />
         <Medidor
           valor={metricas.taxaVenda}
-          rotulo="Venda"
+          rotulo="Conversão"
           legenda={`meta ${Math.round(metas.taxa_venda_min * 100)}%`}
           bom={metricas.taxaVenda === null ? null : metricas.taxaVenda >= metas.taxa_venda_min}
         />
