@@ -1119,9 +1119,11 @@ export async function calcularBonusPorSdr(
     .eq("id", orgId)
     .maybeSingle();
   const usarSdrOriginal = orgFlags?.sdr_original === true;
-  // O no-show só dos resolvidos (realizada/no-show) é a regra da trava do
-  // modelo "por_call"; as outras empresas mantêm a conta de sempre.
-  const noShowPorCall = config.modelo === "por_call";
+  // Trava de no-show (Samuel, 15/10/26): vale nos CRMs de serviço com Closer
+  // (mesmo grupo do SDR original). Conta só reunião já resolvida (realizada
+  // ou no-show), creditada ao SDR original — a que o closer esqueceu de
+  // atualizar não pesa contra o SDR.
+  const noShowPorCall = usarSdrOriginal;
 
   const bonusPorUsuario = await Promise.all(
     metricasPorUsuario.map(async (m) => {
@@ -1174,6 +1176,9 @@ export async function calcularBonusPorSdr(
         ? devidasDele.filter((r) => r.status === "realizada").length
         : m.reunioesRealizadas;
       const noShowPercentual = devidasQtd > 0 ? 1 - realizadasQtd / devidasQtd : null;
+      if (noShowPorCall) {
+        travadoPorNoShow = noShowPercentual !== null && noShowPercentual > config.no_show_maximo;
+      }
 
       if (config.modelo === "por_call") {
         // Só conta call realizada E qualificada (venda é sempre qualificada).
@@ -1239,6 +1244,14 @@ export async function calcularBonusPorSdr(
         } else {
           bonusPorFaturamento = 0;
         }
+      }
+
+      // Modelo por faixas (60/80/100 calls): no-show acima do limite também
+      // derruba todos os bônus do mês.
+      if (config.modelo !== "por_call" && travadoPorNoShow) {
+        bonusPorCallRealizada = 0;
+        bonusFimDeSemana = 0;
+        bonusPorFaturamento = 0;
       }
 
       return {

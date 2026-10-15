@@ -1,7 +1,7 @@
 import type { BonusSdr, BonusSdrConfig } from "@/lib/metricas";
 import { BONUS_SDR_CONFIG_PADRAO } from "@/lib/metricas";
 import { IconeEstrela, IconeCalendario, IconeCheck, IconeAlerta, IconeMoeda } from "@/components/icons";
-import { Calls, calls, call, Call } from "@/lib/terminologia";
+import { Calls, calls, call, Call, Sdr } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -83,11 +83,15 @@ export function BonusSdrTabela({
   periodo,
   publicoOrg = "mentoria",
   config = BONUS_SDR_CONFIG_PADRAO,
+  travaNoShow = false,
 }: {
   dados: BonusSdr[];
   periodo?: string;
   publicoOrg?: string;
   config?: BonusSdrConfig;
+  // No-show acima do limite derruba todos os bônus (empresas de serviço com
+  // Closer); no modelo por call a trava já é parte do modelo.
+  travaNoShow?: boolean;
 }) {
   const totalEquipe = dados.reduce((soma, d) => soma + d.totalBonus, 0);
 
@@ -237,10 +241,12 @@ export function BonusSdrTabela({
         )}
       </div>
 
-      {config.modelo === "por_call" && (
+      {(config.modelo === "por_call" || travaNoShow) && (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          Observação: se o no-show do mês passar de {Math.round(config.no_show_maximo * 100)}%, o SDR perde todos
-          os bônus, inclusive o das {calls(publicoOrg)} realizadas qualificadas.
+          Observação: se o no-show do mês passar de {Math.round(config.no_show_maximo * 100)}%,{" "}
+          {config.modelo === "por_call"
+            ? `o SDR perde todos os bônus, inclusive o das ${calls(publicoOrg)} realizadas qualificadas.`
+            : `o ${Sdr(publicoOrg)} perde todos os bônus do mês.`}
         </p>
       )}
 
@@ -343,7 +349,7 @@ export function BonusSdrTabela({
                 valor={linha.bonusPorFaturamento}
               />
             </div>
-            {config.modelo === "por_call" && linha.travadoPorNoShow && (
+            {(config.modelo === "por_call" || travaNoShow) && linha.travadoPorNoShow && (
               <p className="mt-2 text-xs font-medium text-red-600">
                 No-show de {formatarPercentual(linha.noShowPercentual)}, acima do limite de{" "}
                 {Math.round(config.no_show_maximo * 100)}%: o bônus por {call(publicoOrg)} não vale neste mês.

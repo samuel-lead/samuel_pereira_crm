@@ -44,6 +44,12 @@ export default async function BonusSdrPage({
           ? (periodoResolvido.subtitulo ?? periodoResolvido.titulo)
           : periodoResolvido.titulo;
 
+  const { data: flagsOrg } = await supabase
+    .from("orgs")
+    .select("sdr_original")
+    .eq("id", usuario!.org_id)
+    .maybeSingle();
+
   const [bonus, { data: configData }] = await Promise.all([
     calcularBonusPorSdr(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     supabase.from("bonus_sdr_config").select("*").eq("org_id", usuario!.org_id).maybeSingle(),
@@ -70,6 +76,7 @@ export default async function BonusSdrPage({
           periodo={rotuloPeriodo}
           publicoOrg={usuario!.publico_org}
           config={config}
+          travaNoShow={flagsOrg?.sdr_original === true}
         />
       </main>
     </>
