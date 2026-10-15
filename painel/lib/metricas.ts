@@ -1445,10 +1445,11 @@ export async function calcularResumoAno(
 }
 
 
-// Conversão por SAFRA (como os CRMs grandes fazem): das calls com pitch DO
-// PERÍODO, quantos leads já viraram venda até hoje — não importa em que mês a
-// venda fechou. Assim a taxa nunca passa de 100% nem mistura datas (Samuel,
-// 15/10/26). Conta leads (um lead com duas calls entra uma vez só).
+// Conversão por SAFRA DENTRO DO PERÍODO (Samuel, 15/10/26): das calls com
+// pitch do período, quantos leads viraram venda DENTRO desse mesmo período.
+// Venda de call de um período anterior não entra (não infla) e um período já
+// fechado nunca muda depois. Conta leads (um lead com duas calls entra uma
+// vez só).
 export async function calcularSafraVendas(
   supabase: SupabaseServerClient,
   orgId: string,
@@ -1457,19 +1458,27 @@ export async function calcularSafraVendas(
 ): Promise<{ comPitch: number; vendidos: number }> {
   const { data } = await supabase
     .from("reunioes")
-    .select("lead_id, leads!inner(arquivado_em, status, proposta_valor)")
+    .select("lead_id, leads!inner(arquivado_em, status, proposta_valor, vendido_em)")
     .eq("org_id", orgId)
     .eq("status", "realizada")
     .is("leads.arquivado_em", null)
     .gte("agendada_para", inicio.toISOString())
     .lt("agendada_para", fim.toISOString());
 
-  const leads = new Map<string, { status: string; proposta_valor: number | null }>();
+  type LeadSafra = { status: string; proposta_valor: number | null; vendido_em: string | null };
+  const leads = new Map<string, LeadSafra>();
   for (const r of data ?? []) {
-    const lead = r.leads as unknown as { status: string; proposta_valor: number | null };
+    const lead = r.leads as unknown as LeadSafra;
     // Só call com pitch de verdade: lead com proposta registrada ou já vendido.
     if (lead.proposta_valor != null || lead.status === "vendido") leads.set(r.lead_id, lead);
   }
   const lista = [...leads.values()];
-  return { comPitch: lista.length, vendidos: lista.filter((l) => l.status === "vendido").length };
+  const vendidosNoPeriodo = lista.filter(
+    (l) =>
+      l.status === "vendido" &&
+      l.vendido_em !== null &&
+      new Date(l.vendido_em) >= inicio &&
+      new Date(l.vendido_em) < fim
+  );
+  return { comPitch: lista.length, vendidos: vendidosNoPeriodo.length };
 }

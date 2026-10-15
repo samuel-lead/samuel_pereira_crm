@@ -143,7 +143,7 @@ export function FunilBarras({
   metricasAnteriores?: Metricas;
   metas: MetasConfig;
   leadsNovos: number;
-  // Das calls com pitch do período, quantos leads já viraram venda.
+  // Das calls com pitch do período, quantos leads viraram venda no mesmo período.
   safraVenda?: { comPitch: number; vendidos: number };
   noShowPct: number;
   pisoLeads: number;
@@ -192,7 +192,7 @@ export function FunilBarras({
         nome: "conversão",
         valor: taxaConversao,
         minimo: metas.taxa_venda_min,
-        legenda: safraVenda ? "das calls com pitch, quantas viraram venda" : undefined,
+        legenda: safraVenda ? "das calls com pitch do período, quantas viraram venda no período" : undefined,
       },
     },
   ];
