@@ -28,6 +28,7 @@ import {
   calcularReceitaOrg,
   calcularFaturamentoOrg,
   calcularNegociacoesAbertas,
+  calcularSafraVendas,
   buscarMetaReceitaMes,
   inicioDoMes,
 } from "@/lib/metricas";
@@ -38,7 +39,7 @@ import { numerarNiveis } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -227,6 +228,10 @@ export default async function DashboardPage({
 
   const metas = metasData as MetasConfig | null;
   const publicoOrg = usuario!.publico_org;
+  // Conversão por safra: só pro funil em barras (empresa do Samuel).
+  const safraVenda = dashboardEmBarras(publicoOrg)
+    ? await calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
+    : undefined;
 
   const todosNiveis = (niveisData ?? []) as { ordem: number; nome: string; numerado: boolean; destacado: boolean }[];
   const nomePorNivel = new Map(todosNiveis.map((n) => [n.ordem, n.nome]));
@@ -350,6 +355,7 @@ export default async function DashboardPage({
             metas={metas}
             publicoOrg={publicoOrg}
             leadsNovos={metricas.leadsTrabalhadosDeclarados}
+            safraVenda={safraVenda}
             acao={
               souAdmin ? (
                 <CopiarResultadoSemanaButton

@@ -78,7 +78,7 @@ type Etapa = {
   nota?: string;
   piso?: number;
   // Conversão desde a etapa de cima (null = sem dado).
-  conversao?: { nome: string; valor: number | null; minimo?: number };
+  conversao?: { nome: string; valor: number | null; minimo?: number; legenda?: string };
 };
 
 function Medidor({
@@ -133,6 +133,7 @@ export function FunilBarras({
   metricasAnteriores,
   metas,
   leadsNovos,
+  safraVenda,
   noShowPct,
   pisoLeads,
   pisoReunioes,
@@ -142,12 +143,19 @@ export function FunilBarras({
   metricasAnteriores?: Metricas;
   metas: MetasConfig;
   leadsNovos: number;
+  // Das calls com pitch do período, quantos leads já viraram venda.
+  safraVenda?: { comPitch: number; vendidos: number };
   noShowPct: number;
   pisoLeads: number;
   pisoReunioes: number;
   publicoOrg?: string;
 }) {
   const ant = metricasAnteriores;
+  const taxaConversao = safraVenda
+    ? safraVenda.comPitch > 0
+      ? safraVenda.vendidos / safraVenda.comPitch
+      : null
+    : metricas.taxaVenda;
   const taxaPitch =
     metricas.reunioesRealizadas > 0 ? metricas.reunioesComPitch / metricas.reunioesRealizadas : null;
 
@@ -180,7 +188,12 @@ export function FunilBarras({
       rotulo: "Vendas",
       valor: metricas.vendas,
       anterior: ant?.vendas,
-      conversao: { nome: "conversão", valor: metricas.taxaVenda, minimo: metas.taxa_venda_min },
+      conversao: {
+        nome: "conversão",
+        valor: taxaConversao,
+        minimo: metas.taxa_venda_min,
+        legenda: safraVenda ? "das calls com pitch, quantas viraram venda" : undefined,
+      },
     },
   ];
 
@@ -250,6 +263,9 @@ export function FunilBarras({
                   {etapa.conversao.minimo !== undefined && (
                     <span className="text-neutral-400">/ mín. {Math.round(etapa.conversao.minimo * 100)}%</span>
                   )}
+                  {etapa.conversao.legenda && (
+                    <span className="hidden text-neutral-400 sm:inline">· {etapa.conversao.legenda}</span>
+                  )}
                   {i === indiceGargalo && (
                     <span className="rounded border border-red-300 bg-red-50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-red-600 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-400">
                       ▼ Gargalo · maior perda
@@ -315,10 +331,10 @@ export function FunilBarras({
           bom={noShowPct / 100 <= noShowMax}
         />
         <Medidor
-          valor={metricas.taxaVenda}
+          valor={taxaConversao}
           rotulo="Conversão"
           legenda={`meta ${Math.round(metas.taxa_venda_min * 100)}%`}
-          bom={metricas.taxaVenda === null ? null : metricas.taxaVenda >= metas.taxa_venda_min}
+          bom={taxaConversao === null ? null : taxaConversao >= metas.taxa_venda_min}
         />
       </div>
     </div>

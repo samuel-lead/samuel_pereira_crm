@@ -184,6 +184,7 @@ export function SecaoPeriodo({
   acao,
   publicoOrg = "mentoria",
   leadsNovos,
+  safraVenda,
 }: {
   titulo: string;
   subtitulo?: string;
@@ -198,6 +199,8 @@ export function SecaoPeriodo({
   // lead de período passado que teve reunião agora. Se não vier, cai de
   // volta pro leadsTrabalhados normal.
   leadsNovos?: number;
+  // Conversão por safra (só o funil em barras usa).
+  safraVenda?: { comPitch: number; vendidos: number };
 }) {
   const pisoLeads = metas.piso_leads_dia * metricas.diasUteis;
   // Imobiliário não tem cadência diária de visita — o piso é sempre por
@@ -260,6 +263,7 @@ export function SecaoPeriodo({
           metricasAnteriores={metricasAnteriores}
           metas={metas}
           leadsNovos={leadsNovosValor}
+          safraVenda={safraVenda}
           noShowPct={noShowPct}
           pisoLeads={pisoLeads}
           pisoReunioes={pisoReunioes}

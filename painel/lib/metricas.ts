@@ -1443,3 +1443,33 @@ export async function calcularResumoAno(
 
   return resultado;
 }
+
+
+// Conversão por SAFRA (como os CRMs grandes fazem): das calls com pitch DO
+// PERÍODO, quantos leads já viraram venda até hoje — não importa em que mês a
+// venda fechou. Assim a taxa nunca passa de 100% nem mistura datas (Samuel,
+// 15/10/26). Conta leads (um lead com duas calls entra uma vez só).
+export async function calcularSafraVendas(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<{ comPitch: number; vendidos: number }> {
+  const { data } = await supabase
+    .from("reunioes")
+    .select("lead_id, leads!inner(arquivado_em, status, proposta_valor)")
+    .eq("org_id", orgId)
+    .eq("status", "realizada")
+    .is("leads.arquivado_em", null)
+    .gte("agendada_para", inicio.toISOString())
+    .lt("agendada_para", fim.toISOString());
+
+  const leads = new Map<string, { status: string; proposta_valor: number | null }>();
+  for (const r of data ?? []) {
+    const lead = r.leads as unknown as { status: string; proposta_valor: number | null };
+    // Só call com pitch de verdade: lead com proposta registrada ou já vendido.
+    if (lead.proposta_valor != null || lead.status === "vendido") leads.set(r.lead_id, lead);
+  }
+  const lista = [...leads.values()];
+  return { comPitch: lista.length, vendidos: lista.filter((l) => l.status === "vendido").length };
+}
