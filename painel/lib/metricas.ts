@@ -824,7 +824,7 @@ export async function calcularMetricasPorUsuario(
 
   const lista = usuarios ?? [];
 
-  return Promise.all(
+  const resultado = await Promise.all(
     lista.map(async (usuario) => {
       const metricas = await calcularMetricas(supabase, usuario.id, inicio, fim, opcoes);
       return {
@@ -835,6 +835,74 @@ export async function calcularMetricasPorUsuario(
       };
     })
   );
+
+  // SDR ORIGINAL (orgs.sdr_original, Samuel 15/10/26): calls realizadas,
+  // pitch, vendas e receita de cada SDR contam pelos leads em que ele marcou
+  // a PRIMEIRA reunião — e não pela reunião que de fato aconteceu (que pode
+  // ter sido marcada por outra pessoa depois de um reagendamento).
+  const { data: flagsOrg } = await supabase
+    .from("orgs")
+    .select("sdr_original")
+    .eq("id", orgId)
+    .maybeSingle();
+  if (flagsOrg?.sdr_original !== true) return resultado;
+
+  const inicioISO = inicio.toISOString();
+  const fimISO = fim.toISOString();
+  const [{ data: realizadasOrg }, { data: vendidosOrg }] = await Promise.all([
+    supabase
+      .from("reunioes")
+      .select("lead_id, leads!inner(arquivado_em, status, proposta_valor)")
+      .eq("org_id", orgId)
+      .eq("status", "realizada")
+      .is("leads.arquivado_em", null)
+      .gte("agendada_para", inicioISO)
+      .lt("agendada_para", fimISO),
+    supabase
+      .from("leads")
+      .select("id, receita_venda, valor_venda")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicioISO)
+      .lt("vendido_em", fimISO),
+  ]);
+
+  const idsLeads = [
+    ...new Set([...(realizadasOrg ?? []).map((r) => r.lead_id), ...(vendidosOrg ?? []).map((l) => l.id)]),
+  ];
+  const sdrOriginalPorLead = new Map<string, string>();
+  if (idsLeads.length > 0) {
+    const { data: todasReunioes } = await supabase
+      .from("reunioes")
+      .select("lead_id, usuario_id")
+      .in("lead_id", idsLeads)
+      .order("marcada_em", { ascending: true });
+    for (const r of todasReunioes ?? []) {
+      if (!sdrOriginalPorLead.has(r.lead_id)) sdrOriginalPorLead.set(r.lead_id, r.usuario_id);
+    }
+  }
+
+  return resultado.map((m) => {
+    const realizadasDele = (realizadasOrg ?? []).filter((r) => sdrOriginalPorLead.get(r.lead_id) === m.usuarioId);
+    const comPitch = realizadasDele.filter((r) => {
+      const lead = r.leads as unknown as { status: string; proposta_valor: number | null };
+      return lead.proposta_valor != null || lead.status === "vendido";
+    }).length;
+    const vendasDele = (vendidosOrg ?? []).filter((l) => sdrOriginalPorLead.get(l.id) === m.usuarioId);
+    const receita = vendasDele.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+    const faturamento = vendasDele.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+    return {
+      ...m,
+      reunioesRealizadas: realizadasDele.length,
+      reunioesComPitch: comPitch,
+      vendas: vendasDele.length,
+      receita,
+      faturamento,
+      ticketMedio: vendasDele.length > 0 ? faturamento / vendasDele.length : null,
+      taxaVenda: comPitch > 0 ? vendasDele.length / comPitch : null,
+    };
+  });
 }
 
 export type MetricasCloser = {
