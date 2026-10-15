@@ -257,7 +257,7 @@ export function SecaoPeriodo({
         </p>
       </div>
 
-      {dashboardEmBarras(publicoOrg) && !ehImobiliario(publicoOrg) ? (
+      {dashboardEmBarras(publicoOrg) ? (
         <FunilBarras
           metricas={metricas}
           metricasAnteriores={metricasAnteriores}
@@ -374,7 +374,7 @@ export function SecaoPeriodo({
 
       {/* No funil em barras as taxas já estão nos medidores do próprio cartão
           (Samuel pediu pra tirar essa lista de baixo). */}
-      {!(dashboardEmBarras(publicoOrg) && !ehImobiliario(publicoOrg)) && (
+      {!dashboardEmBarras(publicoOrg) && (
       <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
           Taxas

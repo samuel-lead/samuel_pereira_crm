@@ -228,7 +228,7 @@ export default async function DashboardPage({
 
   const metas = metasData as MetasConfig | null;
   const publicoOrg = usuario!.publico_org;
-  // Conversão por safra: só pro funil em barras (empresa do Samuel).
+  // Conversão do funil em barras: vendas fechadas dentro do período.
   const safraVenda = dashboardEmBarras(publicoOrg)
     ? await calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
     : undefined;

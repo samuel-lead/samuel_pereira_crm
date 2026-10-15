@@ -1,6 +1,6 @@
 import type { Metricas } from "@/lib/metricas";
 import type { MetasConfig } from "@/components/dashboard-ui";
-import { Calls } from "@/lib/terminologia";
+import { Calls, calls, ehImobiliario } from "@/lib/terminologia";
 
 // Funil em barras da Visão geral: cada etapa mostra o resultado do período e,
 // do lado, quanto cresceu (ou caiu) em relação ao período anterior; entre as
@@ -156,6 +156,7 @@ export function FunilBarras({
       ? safraVenda.vendidos / safraVenda.comPitch
       : null
     : metricas.taxaVenda;
+  const imob = ehImobiliario(publicoOrg);
   const taxaPitch =
     metricas.reunioesRealizadas > 0 ? metricas.reunioesComPitch / metricas.reunioesRealizadas : null;
 
@@ -179,10 +180,10 @@ export function FunilBarras({
       conversao: { nome: "comparecimento", valor: metricas.taxaComparecimento, minimo: metas.taxa_comparecimento_min },
     },
     {
-      rotulo: `${Calls(publicoOrg)} com pitch`,
+      rotulo: imob ? `${Calls(publicoOrg)} com proposta` : `${Calls(publicoOrg)} com pitch`,
       valor: metricas.reunioesComPitch,
       anterior: ant?.reunioesComPitch,
-      conversao: { nome: "pitch", valor: taxaPitch },
+      conversao: { nome: imob ? "proposta" : "pitch", valor: taxaPitch },
     },
     {
       rotulo: "Vendas",
@@ -192,7 +193,9 @@ export function FunilBarras({
         nome: "conversão",
         valor: taxaConversao,
         minimo: metas.taxa_venda_min,
-        legenda: safraVenda ? "das calls com pitch do período, quantas viraram venda no período" : undefined,
+        legenda: safraVenda
+          ? `das ${calls(publicoOrg)} com ${imob ? "proposta" : "pitch"} do período, quantas viraram venda no período`
+          : undefined,
       },
     },
   ];
