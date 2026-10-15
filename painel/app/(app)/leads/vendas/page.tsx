@@ -85,21 +85,36 @@ export default async function VendasPage({
   // Mesma conta de sempre: faturamento ÷ vendas (cartao-vendas.tsx,
   // lib/metricas.ts) — não é receita ÷ vendas.
 
-  // SDR que fez a reunião que resultou na venda — não é o mesmo que
-  // "Responsável", que é quem tá com o lead agora (pode já ter passado
-  // pro closer). Pega a reunião realizada mais recente de cada lead.
+  // Coluna SDR. Na empresa que usa o bônus por call (a do Samuel) vale o SDR
+  // ORIGINAL do lead: quem marcou a PRIMEIRA reunião dele — mesma regra do
+  // Bônus SDR. Se a Julia marcou, o lead pediu pra remarcar e o Samuel marcou
+  // a nova, o SDR continua sendo a Julia. Nas outras empresas continua como
+  // sempre: quem marcou a reunião realizada mais recente.
   const leadIds = leads.map((l) => l.id);
-  const { data: reunioesRealizadasData } = leadIds.length
-    ? await supabase
-        .from("reunioes")
-        .select("lead_id, usuario_id, agendada_para")
-        .in("lead_id", leadIds)
-        .eq("status", "realizada")
-        .order("agendada_para", { ascending: false })
-    : { data: [] as { lead_id: string; usuario_id: string; agendada_para: string }[] };
+  const { data: configBonus } = await supabase
+    .from("bonus_sdr_config")
+    .select("modelo")
+    .eq("org_id", usuario?.org_id ?? "")
+    .maybeSingle();
+  const sdrOriginal = configBonus?.modelo === "por_call";
+
+  const { data: reunioesData } = leadIds.length
+    ? await (sdrOriginal
+        ? supabase
+            .from("reunioes")
+            .select("lead_id, usuario_id")
+            .in("lead_id", leadIds)
+            .order("marcada_em", { ascending: true })
+        : supabase
+            .from("reunioes")
+            .select("lead_id, usuario_id")
+            .in("lead_id", leadIds)
+            .eq("status", "realizada")
+            .order("agendada_para", { ascending: false }))
+    : { data: [] as { lead_id: string; usuario_id: string }[] };
 
   const sdrPorLead = new Map<string, string>();
-  for (const reuniao of reunioesRealizadasData ?? []) {
+  for (const reuniao of reunioesData ?? []) {
     if (!sdrPorLead.has(reuniao.lead_id)) {
       sdrPorLead.set(reuniao.lead_id, reuniao.usuario_id);
     }
