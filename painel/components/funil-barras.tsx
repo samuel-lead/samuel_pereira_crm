@@ -158,7 +158,7 @@ export function FunilBarras({
       anterior: ant?.leadsTrabalhados,
     },
     {
-      rotulo: `${Calls(publicoOrg)} marcadas`,
+      rotulo: `${Calls(publicoOrg)} agendadas`,
       valor: metricas.reunioesMarcadas,
       anterior: ant?.reunioesMarcadas,
       piso: pisoReunioes,
