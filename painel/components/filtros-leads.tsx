@@ -109,6 +109,7 @@ export function FiltrosLeads({
   imoveis,
   imovelInicial,
   baseHref = "/leads",
+  esconderUsuarios = false,
 }: {
   usuarios: { id: string; nome: string }[];
   origens: string[];
@@ -118,6 +119,8 @@ export function FiltrosLeads({
   imoveis?: { id: string; nome: string }[];
   imovelInicial?: string;
   baseHref?: string;
+  // Base de leads só tem o filtro de Funil (Samuel pediu só esse).
+  esconderUsuarios?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -140,12 +143,14 @@ export function FiltrosLeads({
 
   return (
     <div className="flex items-center gap-2">
-      <DropdownFiltro
-        rotulo="Usuários"
-        valorSelecionado={usuarioInicial ?? ""}
-        opcoes={usuarios.map((usuario) => ({ valor: usuario.id, texto: usuario.nome }))}
-        aoSelecionar={(valor) => router.push(construirUrl(valor, origemInicial ?? ""))}
-      />
+      {!esconderUsuarios && (
+        <DropdownFiltro
+          rotulo="Usuários"
+          valorSelecionado={usuarioInicial ?? ""}
+          opcoes={usuarios.map((usuario) => ({ valor: usuario.id, texto: usuario.nome }))}
+          aoSelecionar={(valor) => router.push(construirUrl(valor, origemInicial ?? ""))}
+        />
+      )}
       <DropdownFiltro
         rotulo="Funil"
         alinhar="direita"

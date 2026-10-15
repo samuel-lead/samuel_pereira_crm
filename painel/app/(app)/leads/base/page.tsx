@@ -2,6 +2,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { BuscaLeads } from "@/components/busca-leads";
+import { FiltrosLeads } from "@/components/filtros-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 import { removerAcento } from "@/lib/texto";
 import { NIVEIS_REATIVACAO, numerarNiveis, type NivelResumo } from "@/lib/niveis";
@@ -41,9 +42,9 @@ function calcularMotivo(
 export default async function BasePage({
   searchParams,
 }: {
-  searchParams: Promise<{ busca?: string }>;
+  searchParams: Promise<{ busca?: string; origem?: string }>;
 }) {
-  const { busca: buscaFiltro } = await searchParams;
+  const { busca: buscaFiltro, origem: origemFiltro } = await searchParams;
   const supabase = await createClient();
   const { usuario: usuarioAtual } = await usuarioAutenticado();
   const souAdmin = usuarioAtual?.papel === "admin";
@@ -59,15 +60,35 @@ export default async function BasePage({
     .is("arquivado_em", null)
     .order("entrou_nivel_em", { ascending: false });
 
+  if (origemFiltro) {
+    consulta = consulta.eq("origem", origemFiltro);
+  }
+
   if (buscaFiltro) {
     consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
   }
 
-  const [{ data: leadsData }, { data: usuariosData }, { data: niveisData }] = await Promise.all([
+  const [
+    { data: leadsData },
+    { data: usuariosData },
+    { data: niveisData },
+    { data: origensData },
+  ] = await Promise.all([
     consulta,
     supabase.from("usuarios").select("id, nome, foto_url, funcao, papel"),
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
+    // Funis que existem na Base (não só os que o filtro atual deixou passar).
+    supabase
+      .from("leads")
+      .select("origem")
+      .eq("nivel_ordem", 9)
+      .neq("status", "vendido")
+      .is("arquivado_em", null)
+      .not("origem", "is", null),
   ]);
+  const origens = Array.from(
+    new Set((origensData ?? []).map((lead) => lead.origem as string))
+  ).sort();
   const todosNiveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const niveisReativacao = todosNiveis.filter((nivel) => NIVEIS_REATIVACAO.includes(nivel.ordem));
@@ -113,7 +134,21 @@ export default async function BasePage({
   return (
     <>
       <BarraFixaKanban>
-        <PageHeader titulo="Base de leads" acao={<BuscaLeads />} />
+        <PageHeader
+          titulo="Base de leads"
+          acao={
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+              <BuscaLeads />
+              <FiltrosLeads
+                usuarios={[]}
+                origens={origens}
+                origemInicial={origemFiltro}
+                baseHref="/leads/base"
+                esconderUsuarios
+              />
+            </div>
+          }
+        />
 
         <div className="border-b border-neutral-200 px-6 py-4">
           <p className="text-sm text-neutral-500">
