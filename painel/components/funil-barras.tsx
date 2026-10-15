@@ -258,7 +258,7 @@ export function FunilBarras({
                 </div>
               )}
               <div className="flex items-center gap-3">
-                <div className="w-[6.5rem] shrink-0 text-right sm:w-32">
+                <div className="w-[6.5rem] shrink-0 text-left sm:w-32">
                   <p className="text-[10px] font-bold uppercase leading-tight tracking-wide text-neutral-600 dark:text-neutral-300">
                     {etapa.rotulo}
                   </p>
@@ -269,11 +269,15 @@ export function FunilBarras({
                     style={{ width: `${largura}%` }}
                   />
                 </div>
-                <div className="flex w-24 shrink-0 items-center justify-end gap-2 sm:w-28">
-                  <span className="text-base font-extrabold tabular-nums text-neutral-900 dark:text-white">
+                {/* Duas colunas fixas: os números ficam alinhados pela direita e os
+                    selos começam todos no mesmo ponto, não importa o tamanho. */}
+                <div className="grid shrink-0 grid-cols-[2.5rem_5.75rem] items-center gap-2 sm:grid-cols-[3rem_6rem]">
+                  <span className="text-right text-base font-extrabold tabular-nums text-neutral-900 dark:text-white">
                     {etapa.valor}
                   </span>
-                  <SeloCrescimento atual={etapa.valor} anterior={etapa.anterior} />
+                  <span className="justify-self-start">
+                    <SeloCrescimento atual={etapa.valor} anterior={etapa.anterior} />
+                  </span>
                 </div>
               </div>
               {etapa.piso !== undefined && (
