@@ -1005,9 +1005,9 @@ export type BonusSdr = MetricasUsuario & {
   callsQualificadas: number;
   callsNaoQualificadas: number;
   callsDeVenda: number;
-  // Calls realizadas e qualificadas SEM venda, por dia em que foram marcadas.
-  callsSemVendaSemana: number;
-  callsSemVendaFimDeSemana: number;
+  // Calls realizadas e qualificadas do período, por dia em que foram marcadas.
+  callsQualificadasSemana: number;
+  callsQualificadasFimDeSemana: number;
   callsFimDeSemana: number;
   travadoPorNoShow: boolean;
   bonusPorCallRealizada: number;
@@ -1213,13 +1213,16 @@ export async function calcularBonusPorSdr(
         ? vendasDele.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0)
         : m.faturamento;
 
+      // Call marcada no sábado/domingo conta como "fim de semana" — menos nos
+      // dias de reposição (o SDR folgou na semana e trabalhou nesse sábado).
+      const ehFimDeSemana = (marcadaEm: string) => {
+        const diaBr = new Date(new Date(marcadaEm).getTime() - FUSO_BRASIL_MS).toISOString().slice(0, 10);
+        if (diasReposicaoPorUsuario.get(m.usuarioId)?.has(diaBr)) return false;
+        return [0, 6].includes(diaDaSemana(marcadaEm));
+      };
+
       const realizadas = realizadasNoPeriodo.map((r) => ({
-        noFimDeSemana: (() => {
-          const marcadaEm = primeiraReuniaoPorLead.get(r.lead_id)?.marcada_em ?? r.marcada_em;
-          const diaBr = new Date(new Date(marcadaEm).getTime() - FUSO_BRASIL_MS).toISOString().slice(0, 10);
-          if (diasReposicaoPorUsuario.get(m.usuarioId)?.has(diaBr)) return false;
-          return [0, 6].includes(diaDaSemana(marcadaEm));
-        })(),
+        noFimDeSemana: ehFimDeSemana(primeiraReuniaoPorLead.get(r.lead_id)?.marcada_em ?? r.marcada_em),
         qualificada: r.qualificada !== false,
         venda: r.resultado === "vendeu" || (r.leads as unknown as { status: string }).status === "vendido",
       }));
@@ -1232,6 +1235,8 @@ export async function calcularBonusPorSdr(
       let bonusPorVenda = 0;
       let bonusPorVendaSemana = 0;
       let bonusPorVendaFimDeSemana = 0;
+      let nVendasSemana = 0;
+      let nVendasFimDeSemana = 0;
       let travadoPorNoShow = false;
       // No modelo "por_call" o no-show também segue o SDR original do lead
       // (mesma regra das calls): a reunião que o Samuel marcou depois de a
@@ -1249,22 +1254,30 @@ export async function calcularBonusPorSdr(
       }
 
       if (config.modelo === "por_call") {
-        // Só conta call realizada E qualificada (venda é sempre qualificada).
-        // Call marcada no fim de semana paga o valor de fim de semana.
-        // Cada call vale UM só valor: se virou venda paga o valor de venda
-        // NO LUGAR do da call — não soma (Samuel, 08/10/26): R$ 50 se foi
-        // marcada de segunda a sexta, R$ 100 se foi marcada no sábado/domingo.
-        // Sem venda, paga o valor da call (R$ 20).
+        // 1) TODA call realizada e qualificada paga o valor da call NO MÊS EM
+        //    QUE ACONTECE (R$ 20; R$ 40 se foi marcada no sábado/domingo) —
+        //    tenha vendido ou não.
+        // 2) Quando a venda fecha (no mês da venda, mesmo que a call seja de
+        //    outro mês), o SDR recebe só a DIFERENÇA até o valor de venda:
+        //    R$ 50 - R$ 20 = R$ 30 (semana) ou R$ 100 - R$ 40 = R$ 60 (fim de
+        //    semana). Assim o mês fechado nunca muda depois (Samuel, 15/10/26).
         travadoPorNoShow = noShowPercentual !== null && noShowPercentual > config.no_show_maximo;
         const validas = realizadas.filter((r) => r.qualificada || r.venda);
-        const nVendaSemana = validas.filter((r) => r.venda && !r.noFimDeSemana).length;
-        const nVendaFimDeSemana = validas.filter((r) => r.venda && r.noFimDeSemana).length;
-        const nFimDeSemana = validas.filter((r) => !r.venda && r.noFimDeSemana).length;
-        const nSemana = validas.length - nVendaSemana - nVendaFimDeSemana - nFimDeSemana;
+        const nFimDeSemana = validas.filter((r) => r.noFimDeSemana).length;
+        const nSemana = validas.length - nFimDeSemana;
         bonusPorCallRealizada = nSemana * config.valor_por_call;
         bonusFimDeSemana = nFimDeSemana * config.valor_call_fim_semana;
-        bonusPorVendaSemana = nVendaSemana * config.valor_por_call_venda;
-        bonusPorVendaFimDeSemana = nVendaFimDeSemana * config.valor_por_call_venda_fim_semana;
+
+        const vendasFds = vendasDele.filter((l) => {
+          const primeira = primeiraReuniaoPorLead.get(l.id);
+          return primeira ? ehFimDeSemana(primeira.marcada_em) : false;
+        }).length;
+        const vendasSem = vendasDele.length - vendasFds;
+        nVendasSemana = vendasSem;
+        nVendasFimDeSemana = vendasFds;
+        bonusPorVendaSemana = vendasSem * Math.max(0, config.valor_por_call_venda - config.valor_por_call);
+        bonusPorVendaFimDeSemana =
+          vendasFds * Math.max(0, config.valor_por_call_venda_fim_semana - config.valor_call_fim_semana);
         bonusPorVenda = bonusPorVendaSemana + bonusPorVendaFimDeSemana;
       } else {
         const realizadasParaFaixa = usarSdrOriginal ? realizadasNoPeriodo.length : m.reunioesRealizadas;
@@ -1337,8 +1350,8 @@ export async function calcularBonusPorSdr(
         callsQualificadas: realizadas.filter((r) => r.qualificada || r.venda).length,
         callsNaoQualificadas: realizadas.filter((r) => !r.qualificada && !r.venda).length,
         callsDeVenda: realizadas.filter((r) => r.venda).length,
-        callsSemVendaSemana: realizadas.filter((r) => !r.venda && r.qualificada && !r.noFimDeSemana).length,
-        callsSemVendaFimDeSemana: realizadas.filter((r) => !r.venda && r.qualificada && r.noFimDeSemana).length,
+        callsQualificadasSemana: realizadas.filter((r) => (r.qualificada || r.venda) && !r.noFimDeSemana).length,
+        callsQualificadasFimDeSemana: realizadas.filter((r) => (r.qualificada || r.venda) && r.noFimDeSemana).length,
         callsFimDeSemana: callsMarcadasNoFimDeSemana,
         travadoPorNoShow,
         bonusPorCallRealizada,
@@ -1346,8 +1359,8 @@ export async function calcularBonusPorSdr(
         bonusPorVenda,
         bonusPorVendaSemana,
         bonusPorVendaFimDeSemana,
-        vendasSemana: realizadas.filter((r) => r.venda && !r.noFimDeSemana).length,
-        vendasFimDeSemana: realizadas.filter((r) => r.venda && r.noFimDeSemana).length,
+        vendasSemana: nVendasSemana,
+        vendasFimDeSemana: nVendasFimDeSemana,
         bonusPorFaturamento,
         totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda + bonusPorFaturamento,
       };
