@@ -46,8 +46,23 @@ export default function LoginPage() {
         <span className="text-sm text-slate-400">Entre para gerenciar seu time de vendas</span>
       </div>
 
+      {/* O navegador pinta o campo de cinza-azulado quando preenche sozinho
+          (e mais ainda se o painel estiver em modo escuro) — isso deixava o
+          texto digitado quase sem contraste. Força fundo branco e letra
+          preta nos dois casos. */}
+      <style>{`
+        .campo-login:-webkit-autofill,
+        .campo-login:-webkit-autofill:hover,
+        .campo-login:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+          -webkit-text-fill-color: #0a0a0a;
+          caret-color: #0a0a0a;
+        }
+      `}</style>
+
       <form
         onSubmit={entrar}
+        style={{ colorScheme: "light" }}
         className="relative z-10 w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-[#ffffff] p-8 shadow-2xl"
       >
         <div className="space-y-1">
@@ -58,9 +73,11 @@ export default function LoginPage() {
             id="email"
             type="email"
             required
+            autoComplete="email"
+            placeholder="seu@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-[#d4d4d4] bg-[#ffffff] px-3 py-2.5 text-sm text-[#171717] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+            className="campo-login w-full rounded-lg border border-[#a3a3a3] bg-[#ffffff] px-3 py-3 text-base font-medium text-[#0a0a0a] outline-none transition placeholder:font-normal placeholder:text-[#737373] focus:border-blue-600 focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
 
@@ -72,9 +89,11 @@ export default function LoginPage() {
             id="senha"
             type="password"
             required
+            autoComplete="current-password"
+            placeholder="Sua senha"
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
-            className="w-full rounded-lg border border-[#d4d4d4] bg-[#ffffff] px-3 py-2.5 text-sm text-[#171717] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+            className="campo-login w-full rounded-lg border border-[#a3a3a3] bg-[#ffffff] px-3 py-3 text-base font-medium text-[#0a0a0a] outline-none transition placeholder:font-normal placeholder:text-[#737373] focus:border-blue-600 focus:ring-2 focus:ring-blue-500/40"
           />
         </div>
 
