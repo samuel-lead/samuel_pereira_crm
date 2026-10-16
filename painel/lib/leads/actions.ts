@@ -100,7 +100,7 @@ async function contextoUsuario() {
 
   const { data: usuario, error } = await supabase
     .from("usuarios")
-    .select("id, org_id, papel, funcao, orgs(publico)")
+    .select("id, org_id, papel, funcao, super_admin, orgs(publico)")
     .eq("id", user.id)
     .single();
 
@@ -2278,6 +2278,34 @@ export async function arquivarLead(
 // "Reativar", que manda ele direto pra Novos Leads (sem precisar
 // escolher nível, diferente da reativação de Base/Repescagem, porque
 // aqui a pessoa já tinha sido tirada do funil inteiro, não só pausada).
+// Samuel (dono da plataforma) marca que já pegou indicação dessa pessoa —
+// ela sai dos lembretes de indicação do WhatsApp (ver migration
+// leads_indicacao_pega). Só ele, porque os lembretes são só dele.
+export async function marcarIndicacaoPega(
+  leadId: string,
+  pega: boolean
+): Promise<string | null> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  if (usuario.super_admin !== true) {
+    return "Só o dono da plataforma pode marcar isso.";
+  }
+
+  const { data, error } = await supabase
+    .from("leads")
+    .update({ indicacao_pega_em: pega ? new Date().toISOString() : null })
+    .eq("id", leadId)
+    .select("id");
+
+  if (error) return error.message;
+  // RLS que bloqueia o update responde sem erro e sem linha — confere.
+  if (!data || data.length === 0) return "Não consegui salvar. Tente de novo.";
+
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
+  return null;
+}
+
 export async function reativarLeadExcluido(leadId: string): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -2436,6 +2464,7 @@ export type DetalhesLead = {
     foto_url: string | null;
     origem: string | null;
     quem_indicou: string | null;
+    indicacao_pega_em: string | null;
     produto: string | null;
     nivel_ordem: number;
     criterio_problema: string | null;
@@ -2506,6 +2535,8 @@ export type DetalhesLead = {
   // Só relevante no imobiliário — lista pro seletor "Imóvel de interesse".
   imoveis: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
   souAdmin: boolean;
+  // Dono da plataforma (Samuel) — só ele vê o botão "Indicação já pega".
+  souDonoPlataforma: boolean;
   // Só pra mostrar o botão de "Script de ligação"/"Pré-qualificação" no
   // card — esses roteiros são coisa de SDR, não de Closer nem admin sem
   // função (ver components/botao-documento-externo.tsx).
@@ -2559,7 +2590,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor"
       )
       .eq("id", leadId)
       .single(),
@@ -2654,6 +2685,7 @@ export async function buscarDetalhesDoLead(
       produtos,
       imoveis: imoveisData ?? [],
       souAdmin,
+      souDonoPlataforma: usuario.super_admin === true,
       souSdr,
       publicoOrg: usuario.publico_org,
       podeEditar,

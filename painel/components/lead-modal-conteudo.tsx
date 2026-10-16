@@ -7,6 +7,7 @@ import { EditarLeadForm, type EstadoRodapeSalvarLead } from "@/components/editar
 import { EditarVendaForm } from "@/components/editar-venda-form";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
+import { IndicacaoPegaButton } from "@/components/indicacao-pega-button";
 import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
@@ -113,6 +114,7 @@ export function LeadModalConteudo({
     produtos,
     imoveis,
     souAdmin,
+    souDonoPlataforma,
     publicoOrg,
     podeEditar,
     podeReivindicar,
@@ -447,6 +449,10 @@ export function LeadModalConteudo({
             </ul>
           )}
         </div>
+
+        {souDonoPlataforma && !lead.arquivado_em && (
+          <IndicacaoPegaButton leadId={lead.id} jaPegou={!!lead.indicacao_pega_em} />
+        )}
 
         {podeEditar && lead.arquivado_em && (
           <ReativarLeadExcluidoButton leadId={lead.id} />
