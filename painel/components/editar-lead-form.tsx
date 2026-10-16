@@ -4,7 +4,6 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { atualizarLead, reativarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ImovelSelect } from "@/components/imovel-select";
-import { ehIndicacaoCloser } from "@/lib/texto";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
@@ -330,8 +329,9 @@ export function EditarLeadForm({
   const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
   const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
-  // Indicação do Closer: o nome de quem indicou fica em destaque (aparece no card).
-  const destacarQuemIndicou = ehIndicacaoCloser(origemAtual);
+  // Toda origem de indicação: o campo "Quem indicou" fica em destaque (o nome
+  // aparece no card do lead).
+  const destacarQuemIndicou = ehIndicacao;
   const [motivoBaseSelecionado, setMotivoBaseSelecionado] = useState(lead.motivo_base ?? "");
   const [motivoRepescagemFutura, setMotivoRepescagemFutura] = useState(
     lead.motivo_repescagem_futura ?? ""

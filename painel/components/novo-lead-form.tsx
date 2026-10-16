@@ -6,7 +6,6 @@ import { criarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { ImovelSelect } from "@/components/imovel-select";
-import { ehIndicacaoCloser } from "@/lib/texto";
 import { IconePessoaMais } from "@/components/icons";
 
 const estadoInicial: EstadoFormulario = { erro: null };
@@ -26,8 +25,9 @@ export function NovoLeadForm({
   const [estado, acaoFormulario, pendente] = useActionState(criarLead, estadoInicial);
   const [origemAtual, setOrigemAtual] = useState("");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
-  // Indicação do Closer: o nome de quem indicou fica em destaque (aparece no card).
-  const destacarQuemIndicou = ehIndicacaoCloser(origemAtual);
+  // Toda origem de indicação: o campo "Quem indicou" fica em destaque (o nome
+  // aparece no card do lead).
+  const destacarQuemIndicou = ehIndicacao;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
