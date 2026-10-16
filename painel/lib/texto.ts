@@ -79,14 +79,15 @@ export function ehIndicacaoCloser(origem: string | null | undefined): boolean {
   return texto.includes("closer") && texto.includes("indica");
 }
 
-// Texto da origem nos cards: a indicação do Closer aparece só como "Closer"
-// e, em qualquer origem de indicação, o nome de quem indicou vem entre
-// parênteses na frente — quando a pessoa preencheu.
+// Texto da origem nos cards: a indicação do Closer sempre aparece escrita
+// "Closer pegou indicação" (Samuel pediu) e, em qualquer origem de
+// indicação, o nome de quem indicou vem entre parênteses na frente —
+// quando a pessoa preencheu.
 export function origemParaCard(
   origem: string,
   quemIndicou: string | null | undefined
 ): string {
-  const rotulo = ehIndicacaoCloser(origem) ? "Closer" : origem;
+  const rotulo = ehIndicacaoCloser(origem) ? "Closer pegou indicação" : origem;
   const quem = quemIndicou?.trim();
   if (quem && removerAcento(origem).includes("indica")) return `${rotulo} (${quem})`;
   return rotulo;
