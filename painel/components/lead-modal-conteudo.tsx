@@ -349,6 +349,12 @@ export function LeadModalConteudo({
           )
         )}
 
+        {/* Logo abaixo de Vendas/Proposta, no topo da coluna da direita
+            (Samuel pediu em 16/10/26). */}
+        {souDonoPlataforma && !lead.arquivado_em && (
+          <IndicacaoPegaButton leadId={lead.id} jaPegou={!!lead.indicacao_pega_em} />
+        )}
+
         {podeEditar && (
           <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center gap-2.5">
@@ -449,10 +455,6 @@ export function LeadModalConteudo({
             </ul>
           )}
         </div>
-
-        {souDonoPlataforma && !lead.arquivado_em && (
-          <IndicacaoPegaButton leadId={lead.id} jaPegou={!!lead.indicacao_pega_em} />
-        )}
 
         {podeEditar && lead.arquivado_em && (
           <ReativarLeadExcluidoButton leadId={lead.id} />
