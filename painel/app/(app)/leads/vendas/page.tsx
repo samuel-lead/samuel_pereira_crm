@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { IndicacaoPegaToggle } from "@/components/indicacao-pega-toggle";
 import { LinkLead } from "@/components/link-lead";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { AvatarLead } from "@/components/avatar-lead";
@@ -286,15 +287,7 @@ export default async function VendasPage({
                     </td>
                     {mostrarIndicacaoPega && (
                       <td className="px-4 py-3">
-                        {lead.indicacao_pega_em ? (
-                          <span className="rounded-md bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
-                            Sim
-                          </span>
-                        ) : (
-                          <span className="rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-500">
-                            Não
-                          </span>
-                        )}
+                        <IndicacaoPegaToggle leadId={lead.id} jaPegou={!!lead.indicacao_pega_em} />
                       </td>
                     )}
                   </tr>
