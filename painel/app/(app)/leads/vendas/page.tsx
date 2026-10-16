@@ -23,6 +23,7 @@ type LeadVendido = {
   declarado_em: string;
   vendido_em: string | null;
   responsavel_id: string | null;
+  indicacao_pega_em: string | null;
 };
 
 function formatarMoeda(valor: number) {
@@ -49,6 +50,8 @@ export default async function VendasPage({
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
   const publicoOrg = usuario?.publico_org ?? "mentoria";
+  // "Indicação pega" é do Samuel (dono da plataforma) — só ele vê a coluna.
+  const mostrarIndicacaoPega = usuario?.super_admin === true;
 
   const agora = new Date();
   // Sem nenhum filtro escolhido, cai no mês atual — não faz sentido abrir
@@ -60,7 +63,7 @@ export default async function VendasPage({
   let consulta = supabase
     .from("leads")
     .select(
-      "id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, declarado_em, vendido_em, responsavel_id"
+      "id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, declarado_em, vendido_em, responsavel_id, indicacao_pega_em"
     )
     .eq("status", "vendido")
     .is("arquivado_em", null)
@@ -217,12 +220,15 @@ export default async function VendasPage({
                 )}
                 <th className="px-4 py-3 font-medium">Entrou em</th>
                 <th className="px-4 py-3 font-medium">Vendido em</th>
+                {mostrarIndicacaoPega && (
+                  <th className="px-4 py-3 font-medium">Indicação pega</th>
+                )}
               </tr>
             </thead>
             <tbody>
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={ehImobiliario(publicoOrg) ? 8 : semCloser(publicoOrg) ? 9 : 10} className="px-4 py-10 text-center text-sm text-neutral-400">
+                  <td colSpan={(ehImobiliario(publicoOrg) ? 8 : semCloser(publicoOrg) ? 9 : 10) + (mostrarIndicacaoPega ? 1 : 0)} className="px-4 py-10 text-center text-sm text-neutral-400">
                     Nenhum cliente encontrado
                   </td>
                 </tr>
@@ -278,6 +284,19 @@ export default async function VendasPage({
                         produto={lead.produto}
                       />
                     </td>
+                    {mostrarIndicacaoPega && (
+                      <td className="px-4 py-3">
+                        {lead.indicacao_pega_em ? (
+                          <span className="rounded-md bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                            Sim
+                          </span>
+                        ) : (
+                          <span className="rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-500">
+                            Não
+                          </span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
