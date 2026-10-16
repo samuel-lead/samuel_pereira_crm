@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calls } from "@/lib/terminologia";
+import { Calls, relatorioSemCalls } from "@/lib/terminologia";
 
 function montarRelatorio(
   periodoLabel: string,
@@ -13,8 +13,12 @@ function montarRelatorio(
   return [
     `🗓️Período: ${periodoLabel}`,
     "",
-    `➡ ${Calls(publicoOrg)} marcadas: ${callsMarcadas}`,
-    `➡ ${Calls(publicoOrg)} reagendadas: ${callsReagendadas}`,
+    ...(relatorioSemCalls(publicoOrg)
+      ? []
+      : [
+          `➡ ${Calls(publicoOrg)} marcadas: ${callsMarcadas}`,
+          `➡ ${Calls(publicoOrg)} reagendadas: ${callsReagendadas}`,
+        ]),
     `➡ Prospecções feitas no IG? `,
     `➡ Ligações feitas? ${ligacoesFeitas}`,
     `➡ Atualizou CRM? `,

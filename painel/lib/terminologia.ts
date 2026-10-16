@@ -74,6 +74,14 @@ export function semFarming(publicoOrg: string) {
   return temVariante(publicoOrg, "sf");
 }
 
+// Relatório copiado pelos vendedores sem as linhas de "calls marcadas" e
+// "reagendadas" — não faz sentido pra Banker - Consorcio (vende por ligação,
+// sem call). Identifica a empresa pelos sufixos ":com" + ":sf", que só ela
+// tem (Samuel pediu em 16/10/26).
+export function relatorioSemCalls(publicoOrg: string) {
+  return temVariante(publicoOrg, "com") && temVariante(publicoOrg, "sf");
+}
+
 export function semCloserNaoImobiliario(publicoOrg: string) {
   return !ehImobiliario(publicoOrg) && temVariante(publicoOrg, "solo");
 }
