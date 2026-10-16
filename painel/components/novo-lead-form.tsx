@@ -6,6 +6,7 @@ import { criarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { ImovelSelect } from "@/components/imovel-select";
+import { ehIndicacaoCloser } from "@/lib/texto";
 import { IconePessoaMais } from "@/components/icons";
 
 const estadoInicial: EstadoFormulario = { erro: null };
@@ -25,6 +26,8 @@ export function NovoLeadForm({
   const [estado, acaoFormulario, pendente] = useActionState(criarLead, estadoInicial);
   const [origemAtual, setOrigemAtual] = useState("");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
+  // Indicação do Closer: o nome de quem indicou fica em destaque (aparece no card).
+  const destacarQuemIndicou = ehIndicacaoCloser(origemAtual);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
@@ -115,16 +118,34 @@ export function NovoLeadForm({
         )}
 
         {ehIndicacao && (
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-neutral-700" htmlFor="quem_indicou">
-              Quem indicou?
+          <div
+            className={`space-y-1 ${
+              destacarQuemIndicou
+                ? "rounded-lg border-2 border-amber-400 bg-amber-50 p-3 dark:border-amber-500 dark:bg-amber-950/30"
+                : ""
+            }`}
+          >
+            <label
+              className={`text-sm font-medium ${
+                destacarQuemIndicou ? "font-bold text-amber-800 dark:text-amber-300" : "text-neutral-700"
+              }`}
+              htmlFor="quem_indicou"
+            >
+              {destacarQuemIndicou ? "⚠️ Escreva quem indicou" : "Quem indicou?"}
             </label>
+            {destacarQuemIndicou && (
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                O nome de quem indicou aparece no card do lead, na frente da origem.
+              </p>
+            )}
             <textarea
               id="quem_indicou"
               name="quem_indicou"
               rows={3}
               placeholder="Nome de quem indicou, características, se já é cliente..."
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className={`w-full rounded-md border px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
+                destacarQuemIndicou ? "border-amber-400 bg-white" : "border-neutral-300"
+              }`}
             />
             <p className="text-xs text-neutral-400">
               Isso vai ficar registrado nas notas do lead.

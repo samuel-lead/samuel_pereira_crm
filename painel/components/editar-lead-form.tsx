@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { atualizarLead, reativarLead, type EstadoFormulario } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
 import { ImovelSelect } from "@/components/imovel-select";
+import { ehIndicacaoCloser } from "@/lib/texto";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
@@ -329,6 +330,8 @@ export function EditarLeadForm({
   const [reuniaoAnteriorSumiu, setReuniaoAnteriorSumiu] = useState("");
   const [origemAtual, setOrigemAtual] = useState(lead.origem ?? "");
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
+  // Indicação do Closer: o nome de quem indicou fica em destaque (aparece no card).
+  const destacarQuemIndicou = ehIndicacaoCloser(origemAtual);
   const [motivoBaseSelecionado, setMotivoBaseSelecionado] = useState(lead.motivo_base ?? "");
   const [motivoRepescagemFutura, setMotivoRepescagemFutura] = useState(
     lead.motivo_repescagem_futura ?? ""
@@ -604,10 +607,26 @@ export function EditarLeadForm({
         )}
 
         {ehIndicacao && (
-          <div className="space-y-1">
-            <label className={labelClasse} htmlFor="quem_indicou">
-              Quem indicou?
+          <div
+            className={`space-y-1 ${
+              destacarQuemIndicou
+                ? "rounded-lg border-2 border-amber-400 bg-amber-50 p-3 dark:border-amber-500 dark:bg-amber-950/30"
+                : ""
+            }`}
+          >
+            <label
+              className={`${labelClasse} ${
+                destacarQuemIndicou ? "font-bold text-amber-800 dark:text-amber-300" : ""
+              }`}
+              htmlFor="quem_indicou"
+            >
+              {destacarQuemIndicou ? "⚠️ Escreva quem indicou" : "Quem indicou?"}
             </label>
+            {destacarQuemIndicou && (
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                O nome de quem indicou aparece no card do lead, na frente da origem.
+              </p>
+            )}
             <textarea
               id="quem_indicou"
               name="quem_indicou"
@@ -615,7 +634,7 @@ export function EditarLeadForm({
               value={quemIndicouAtual}
               onChange={(e) => setQuemIndicouAtual(e.target.value)}
               placeholder="Nome de quem indicou, características, se já é cliente..."
-              className={campoClasse}
+              className={`${campoClasse} ${destacarQuemIndicou ? "border-amber-400 bg-white" : ""}`}
             />
             <p className="text-xs text-neutral-400">
               Fica salvo aqui — não precisa digitar de novo da próxima vez.

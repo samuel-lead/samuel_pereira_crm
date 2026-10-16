@@ -7,7 +7,7 @@ import { AvatarLead } from "@/components/avatar-lead";
 import { ResponsavelSelect } from "@/components/responsavel-select";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasDesde } from "@/lib/datas";
-import { formatarTelefone, handleInstagram, linkInstagram } from "@/lib/texto";
+import { formatarTelefone, handleInstagram, linkInstagram, origemParaCard } from "@/lib/texto";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
 import { reativarLead } from "@/lib/leads/actions";
@@ -118,6 +118,7 @@ export type LeadBase = {
   instagram?: string | null;
   foto_url: string | null;
   origem: string | null;
+  quem_indicou?: string | null;
   responsavel_id: string | null;
   entrou_nivel_em: string;
   proposta_valor: number | null;
@@ -317,7 +318,7 @@ export function BaseLeadsBoard({
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
                           {lead.origem && (
                             <span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">
-                              {lead.origem}
+                              {origemParaCard(lead.origem, lead.quem_indicou)}
                             </span>
                           )}
                           {lead.proposta_valor != null && (

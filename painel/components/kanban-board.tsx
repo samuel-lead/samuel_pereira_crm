@@ -13,7 +13,7 @@ import {
 import { moverLeadNivel, reativarLead, marcarProximoContato } from "@/lib/leads/actions";
 import { linkWhatsApp, abrirWhatsApp } from "@/lib/whatsapp";
 import { diasUteisDesde } from "@/lib/datas";
-import { formatarTelefone, handleInstagram, linkInstagram } from "@/lib/texto";
+import { formatarTelefone, handleInstagram, linkInstagram, origemParaCard } from "@/lib/texto";
 import {
   IconeWhatsapp,
   IconeInstagram,
@@ -47,6 +47,7 @@ type LeadResumo = {
   instagram?: string | null;
   foto_url?: string | null;
   origem: string | null;
+  quem_indicou?: string | null;
   nivel_ordem: number;
   responsavel_id: string | null;
   declarado_em?: string;
@@ -1089,7 +1090,7 @@ export function KanbanBoard({
                           {lead.origem && (
                             <p className="flex items-start gap-1.5 text-[13px] text-neutral-500">
                               <IconeTag className="mt-0.5 h-3 w-3 shrink-0" />
-                              Origem: {lead.origem}
+                              Origem: {origemParaCard(lead.origem, lead.quem_indicou)}
                             </p>
                           )}
                           {ehImobiliario(publicoOrg) && lead.imovel && (

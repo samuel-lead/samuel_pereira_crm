@@ -69,3 +69,25 @@ export function handleInstagram(valor: string): string {
 export function linkInstagram(valor: string): string {
   return `https://instagram.com/${handleInstagram(valor)}`;
 }
+
+// Origem de indicação feita pelo Closer ("Closer pegou indicação",
+// "Indicação Closer"...). Nessa origem o nome de quem indicou é o dado mais
+// importante do lead — por isso o formulário destaca o campo e o card mostra.
+export function ehIndicacaoCloser(origem: string | null | undefined): boolean {
+  if (!origem) return false;
+  const texto = removerAcento(origem);
+  return texto.includes("closer") && texto.includes("indica");
+}
+
+// Texto da origem nos cards: a indicação do Closer aparece só como "Closer"
+// e, em qualquer origem de indicação, o nome de quem indicou vem entre
+// parênteses na frente — quando a pessoa preencheu.
+export function origemParaCard(
+  origem: string,
+  quemIndicou: string | null | undefined
+): string {
+  const rotulo = ehIndicacaoCloser(origem) ? "Closer" : origem;
+  const quem = quemIndicou?.trim();
+  if (quem && removerAcento(origem).includes("indica")) return `${rotulo} (${quem})`;
+  return rotulo;
+}
