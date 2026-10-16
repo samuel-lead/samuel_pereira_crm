@@ -350,8 +350,11 @@ export function LeadModalConteudo({
         )}
 
         {/* Logo abaixo de Vendas/Proposta, no topo da coluna da direita
-            (Samuel pediu em 16/10/26). */}
-        {souDonoPlataforma && !lead.arquivado_em && (
+            (Samuel pediu em 16/10/26) — e só aparece quando o lead já teve
+            reunião realizada. */}
+        {souDonoPlataforma &&
+          !lead.arquivado_em &&
+          reunioes.some((r) => r.status === "realizada") && (
           <IndicacaoPegaButton leadId={lead.id} jaPegou={!!lead.indicacao_pega_em} />
         )}
 
