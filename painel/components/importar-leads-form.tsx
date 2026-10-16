@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { importarLeads, type ResultadoImportacao } from "@/lib/leads/actions";
 import { sdr } from "@/lib/terminologia";
 import { analisarCsv, xlsxParaLinhas } from "@/lib/planilha";
@@ -78,6 +79,7 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
   const [arrastando, setArrastando] = useState(false);
   const [avisoArquivo, setAvisoArquivo] = useState<string | null>(null);
   const inputArquivoRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const enviandoRef = useRef(false);
   const jaImportou = estado.total > 0;
 
@@ -135,6 +137,16 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
 
     setTexto(listaConvertida);
     setArquivoNome(arquivo.name);
+  }
+
+  // Desistiu da importação: limpa a lista e o arquivo e volta pro funil —
+  // nada foi gravado até clicar em "Importar lista".
+  function cancelarImportacao() {
+    setTexto("");
+    setArquivoNome(null);
+    setAvisoArquivo(null);
+    if (inputArquivoRef.current) inputArquivoRef.current.value = "";
+    router.push("/leads");
   }
 
   function aoSoltarArquivo(evento: React.DragEvent<HTMLDivElement>) {
@@ -257,13 +269,23 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={pendente}
-          className="w-full rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-        >
-          {pendente ? "Importando..." : "Importar lista"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={cancelarImportacao}
+            disabled={pendente}
+            className="rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50 disabled:opacity-60"
+          >
+            Cancelar importação
+          </button>
+          <button
+            type="submit"
+            disabled={pendente}
+            className="flex-1 rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+          >
+            {pendente ? "Importando..." : "Importar lista"}
+          </button>
+        </div>
       </form>
     </div>
   );
