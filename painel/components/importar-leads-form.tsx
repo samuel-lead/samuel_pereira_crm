@@ -3,7 +3,14 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { importarLeads, type ResultadoImportacao } from "@/lib/leads/actions";
+import {
+  importarLeads,
+  conferirListaImportacao,
+  type ResultadoImportacao,
+  type ItemPreviaImportacao,
+} from "@/lib/leads/actions";
+import { OrigemSelect } from "@/components/origem-select";
+import { lerContatosVcf } from "@/lib/vcf";
 import { sdr } from "@/lib/terminologia";
 import { analisarCsv, xlsxParaLinhas } from "@/lib/planilha";
 
@@ -72,16 +79,27 @@ function csvParaLista(textoCsv: string) {
   return linhasParaLista(analisarCsv(textoCsv));
 }
 
-export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: string }) {
+export function ImportarLeadsForm({
+  publicoOrg = "mentoria",
+  origens = [],
+}: {
+  publicoOrg?: string;
+  origens?: { id: string; nome: string }[];
+}) {
+  const router = useRouter();
   const [estado, acaoFormulario, pendente] = useActionState(importarLeads, estadoInicial);
   const [texto, setTexto] = useState("");
   const [arquivoNome, setArquivoNome] = useState<string | null>(null);
   const [arrastando, setArrastando] = useState(false);
   const [avisoArquivo, setAvisoArquivo] = useState<string | null>(null);
+  const [origemAtual, setOrigemAtual] = useState("Prospecção fria");
+  const [previa, setPrevia] = useState<ItemPreviaImportacao[] | null>(null);
+  const [conferindo, setConferindo] = useState(false);
+  const [erroPrevia, setErroPrevia] = useState<string | null>(null);
   const inputArquivoRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
   const enviandoRef = useRef(false);
   const jaImportou = estado.total > 0;
+  const ehIndicacao = origemAtual.toLowerCase().includes("indica");
 
   useEffect(() => {
     if (pendente) {
@@ -93,19 +111,42 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
       if (!estado.erro && estado.criados > 0) {
         setTexto("");
         setArquivoNome(null);
+        setPrevia(null);
       }
     }
   }, [pendente, estado]);
 
+  // Mexeu na lista depois de conferir: a prévia antiga deixou de valer.
+  function aoMudarTexto(novo: string) {
+    setTexto(novo);
+    setPrevia(null);
+    setErroPrevia(null);
+  }
+
   async function processarArquivo(arquivo: File) {
     setAvisoArquivo(null);
+    setPrevia(null);
+    setErroPrevia(null);
 
     const nomeMinusculo = arquivo.name.toLowerCase();
 
     if (nomeMinusculo.endsWith(".xls")) {
       setAvisoArquivo(
-        'Esse formato antigo (.xls) eu ainda não leio — só .xlsx e .csv. Abre no Excel ou Google Planilhas e exporta como .xlsx ou CSV.'
+        'Esse formato antigo (.xls) eu ainda não leio — só .xlsx, .csv e .vcf. Abre no Excel ou Google Planilhas e exporta como .xlsx ou CSV.'
       );
+      return;
+    }
+
+    // Contatos exportados do WhatsApp/celular: nome + telefone de cada um,
+    // sem o "Corretor -" colado no nome e sem repetir quem veio duas vezes.
+    if (nomeMinusculo.endsWith(".vcf")) {
+      const contatos = lerContatosVcf(await arquivo.text());
+      if (contatos.length === 0) {
+        setAvisoArquivo("Não encontrei nenhum contato com telefone nesse arquivo .vcf.");
+        return;
+      }
+      setTexto(contatos.map((c) => `${c.nome}\t${c.telefone}`).join("\n"));
+      setArquivoNome(arquivo.name);
       return;
     }
 
@@ -139,12 +180,30 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
     setArquivoNome(arquivo.name);
   }
 
+  async function conferirLista() {
+    setErroPrevia(null);
+    setConferindo(true);
+    try {
+      const resultado = await conferirListaImportacao(texto);
+      if (resultado.erro) {
+        setErroPrevia(resultado.erro);
+        return;
+      }
+      setPrevia(resultado.itens);
+    } catch {
+      setErroPrevia("Não consegui conferir a lista agora. Tente de novo.");
+    } finally {
+      setConferindo(false);
+    }
+  }
+
   // Desistiu da importação: limpa a lista e o arquivo e volta pro funil —
-  // nada foi gravado até clicar em "Importar lista".
+  // nada foi gravado até clicar em "Importar".
   function cancelarImportacao() {
     setTexto("");
     setArquivoNome(null);
     setAvisoArquivo(null);
+    setPrevia(null);
     if (inputArquivoRef.current) inputArquivoRef.current.value = "";
     router.push("/leads");
   }
@@ -161,14 +220,20 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
     if (arquivo) processarArquivo(arquivo);
   }
 
+  const novos = previa?.filter((i) => i.situacao === "novo") ?? [];
+  const jaExistem = previa?.filter((i) => i.situacao === "ja_existe") ?? [];
+  const repetidos = previa?.filter((i) => i.situacao === "repetido_na_lista") ?? [];
+  const invalidos = previa?.filter((i) => i.situacao === "invalido") ?? [];
+
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4">
         <h2 className="text-base font-semibold text-neutral-900">Importar leads</h2>
         <p className="mt-1 text-xs text-neutral-500">
-          Arraste uma planilha (.xlsx ou .csv), ou cole a lista à mão — um
-          lead por linha. Cada um entra direto na coluna &quot;Leads&quot;,
-          sem responsável, pronto pro {sdr(publicoOrg)} pegar e começar a abordar.
+          Arraste uma planilha (.xlsx ou .csv) ou uma lista de contatos (.vcf),
+          ou cole a lista à mão — um lead por linha. Cada um entra direto na
+          coluna &quot;Leads&quot;, sem responsável, pronto pro {sdr(publicoOrg)} pegar
+          e começar a abordar.
         </p>
       </div>
 
@@ -192,12 +257,14 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
           <input
             ref={inputArquivoRef}
             type="file"
-            accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            accept=".xlsx,.csv,.vcf,text/csv,text/vcard,text/x-vcard,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={aoSelecionarArquivo}
             className="hidden"
           />
           <p className="text-sm font-medium text-neutral-700">
-            {arquivoNome ? `📄 ${arquivoNome}` : "Arraste a planilha (.xlsx ou .csv) aqui ou clique pra selecionar"}
+            {arquivoNome
+              ? `📄 ${arquivoNome}`
+              : "Arraste a planilha (.xlsx, .csv) ou os contatos (.vcf) aqui, ou clique pra selecionar"}
           </p>
           <p className="text-xs text-neutral-400">Colunas: nome, telefone</p>
         </div>
@@ -218,7 +285,7 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
             required
             rows={12}
             value={texto}
-            onChange={(evento) => setTexto(evento.target.value)}
+            onChange={(evento) => aoMudarTexto(evento.target.value)}
             placeholder={"Nome da empresa, telefone\nOutra empresa, telefone"}
             className="w-full rounded-md border border-neutral-300 px-3 py-2 font-mono text-xs text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
@@ -231,16 +298,78 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700" htmlFor="origem">
+          <label className="text-sm font-medium text-neutral-700">
             Origem (pra todos os leads dessa lista)
           </label>
+          <OrigemSelect origens={origens} valorInicial="Prospecção fria" onChange={setOrigemAtual} />
+        </div>
+
+        <div
+          className={`space-y-1 ${
+            ehIndicacao
+              ? "rounded-lg border-2 border-amber-400 bg-amber-50 p-3 dark:border-amber-500 dark:bg-amber-950/30"
+              : ""
+          }`}
+        >
+          <label
+            className={`text-sm font-medium ${
+              ehIndicacao ? "font-bold text-amber-800 dark:text-amber-300" : "text-neutral-700"
+            }`}
+            htmlFor="quem_indicou"
+          >
+            {ehIndicacao ? "⚠️ Escreva quem indicou" : "Quem indicou? (opcional)"}
+          </label>
+          {ehIndicacao && (
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+              O nome aparece no card de cada lead dessa lista, na frente da origem.
+            </p>
+          )}
           <input
-            id="origem"
-            name="origem"
-            defaultValue="Prospecção fria"
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            id="quem_indicou"
+            name="quem_indicou"
+            placeholder="Nome de quem indicou essa lista"
+            className={`w-full rounded-md border px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
+              ehIndicacao ? "border-amber-400 bg-white" : "border-neutral-300"
+            }`}
           />
         </div>
+
+        {previa && (
+          <div className="space-y-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+            <p className="font-semibold">
+              {novos.length} lead{novos.length === 1 ? "" : "s"} vão entrar
+              {jaExistem.length + repetidos.length > 0 &&
+                ` · ${jaExistem.length + repetidos.length} serão ignorado${
+                  jaExistem.length + repetidos.length === 1 ? "" : "s"
+                }`}
+              {invalidos.length > 0 && ` · ${invalidos.length} sem nome`}
+            </p>
+            {jaExistem.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-amber-800">Já existem no CRM:</p>
+                <ul className="mt-1 space-y-0.5 text-xs text-amber-800">
+                  {jaExistem.map((item, indice) => (
+                    <li key={`${item.telefone}-${indice}`}>
+                      {item.nome}
+                      {item.nomeExistente && item.nomeExistente !== item.nome
+                        ? ` (já cadastrado como ${item.nomeExistente})`
+                        : ""}
+                      {item.excluido ? " — estava excluído" : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {repetidos.length > 0 && (
+              <p className="text-xs text-amber-800">
+                {repetidos.length} repetido{repetidos.length === 1 ? "" : "s"} dentro da própria
+                lista (entra só uma vez).
+              </p>
+            )}
+          </div>
+        )}
+
+        {erroPrevia && <p className="text-xs text-red-600">{erroPrevia}</p>}
 
         {jaImportou && (
           <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
@@ -278,13 +407,28 @@ export function ImportarLeadsForm({ publicoOrg = "mentoria" }: { publicoOrg?: st
           >
             Cancelar importação
           </button>
-          <button
-            type="submit"
-            disabled={pendente}
-            className="flex-1 rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-          >
-            {pendente ? "Importando..." : "Importar lista"}
-          </button>
+          {previa ? (
+            <button
+              type="submit"
+              disabled={pendente || novos.length === 0}
+              className="flex-1 rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+            >
+              {pendente
+                ? "Importando..."
+                : novos.length === 0
+                  ? "Nenhum lead novo para importar"
+                  : `Importar ${novos.length} lead${novos.length === 1 ? "" : "s"}`}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={conferirLista}
+              disabled={conferindo || !texto.trim()}
+              className="flex-1 rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+            >
+              {conferindo ? "Conferindo..." : "Conferir lista"}
+            </button>
+          )}
         </div>
       </form>
     </div>

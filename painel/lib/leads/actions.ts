@@ -560,12 +560,124 @@ function pareceTelefone(texto: string): boolean {
   return texto.replace(/\D/g, "").length >= 8;
 }
 
-// Importação em massa pro SDR prospectar (ex.: lista de prospecção fria) —
-// cada linha "Nome, Telefone" vira um lead direto na coluna "Leads"
-// (nivel_ordem 0), sem responsável, pronto pra alguém reivindicar e
-// começar a abordar. Insere um por um (não em lote só) porque precisa
-// contar quantos foram criados/ignorados por telefone duplicado, pra dar
-// o resumo pra quem importou.
+type LinhaImportacao = {
+  nome: string | null;
+  telefone: string | null;
+  origemLinha: string | null;
+};
+
+// Transforma o texto da lista em linhas "nome / telefone / origem". Usada
+// tanto na prévia quanto na importação de verdade, pra as duas sempre
+// entenderem a lista do mesmo jeito.
+function interpretarLinhasImportacao(lista: string): LinhaImportacao[] {
+  return lista
+    .split("\n")
+    .map((linha) => linha.trim())
+    .filter(Boolean)
+    .map((linha) => {
+      const partes = dividirLinhaImportacao(linha)
+        .map((parte) => parte.trim())
+        .filter(Boolean);
+      // Linha com uma coluna só que parece telefone (lista de contato sem
+      // nome) — em vez de repetir o número no campo Nome, deixa "Sem nome"
+      // escrito ali (Samuel pediu), com o telefone certinho no campo dele.
+      const soTelefone = partes.length === 1 && pareceTelefone(partes[0]);
+      const nome = soTelefone ? "Sem nome" : (partes[0] ?? null);
+      const telefoneDigitado = soTelefone ? partes[0] : partes[1];
+      return {
+        nome: nome || null,
+        telefone: telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null,
+        origemLinha: partes[2] || null,
+      };
+    });
+}
+
+// Mesmo número escrito de jeitos diferentes (com e sem o 9 extra) tem que
+// contar como um só: pra 55 + DDD + número compara DDD + 8 últimos dígitos.
+function chaveTelefone(telefone: string): string {
+  return telefone.startsWith("55") && telefone.length >= 12
+    ? `${telefone.slice(2, 4)}-${telefone.slice(-8)}`
+    : telefone;
+}
+
+type ExistenteNoCrm = { nome: string; excluido: boolean };
+
+// Pergunta ao banco quais desses telefones já estão na empresa (inclusive
+// leads excluídos) — ver migration conferir_telefones_leads.
+async function telefonesQueJaExistem(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  telefones: string[]
+): Promise<Map<string, ExistenteNoCrm>> {
+  const existentes = new Map<string, ExistenteNoCrm>();
+  const unicos = Array.from(new Set(telefones));
+  for (let inicio = 0; inicio < unicos.length; inicio += 500) {
+    const { data } = await supabase.rpc("conferir_telefones_leads", {
+      p_telefones: unicos.slice(inicio, inicio + 500),
+    });
+    for (const linha of (data ?? []) as { telefone: string; nome: string; excluido: boolean }[]) {
+      const jaTem = existentes.get(chaveTelefone(linha.telefone));
+      // Prefere mostrar o lead que NÃO está excluído, se houver os dois.
+      if (!jaTem || (jaTem.excluido && !linha.excluido)) {
+        existentes.set(chaveTelefone(linha.telefone), { nome: linha.nome, excluido: linha.excluido });
+      }
+    }
+  }
+  return existentes;
+}
+
+export type ItemPreviaImportacao = {
+  nome: string;
+  telefone: string | null;
+  situacao: "novo" | "ja_existe" | "repetido_na_lista" | "invalido";
+  nomeExistente?: string;
+  excluido?: boolean;
+};
+
+// Prévia da importação: diz, linha por linha, quem vai entrar e quem já
+// existe — sem gravar nada (Samuel pediu: ver antes de confirmar).
+export async function conferirListaImportacao(
+  lista: string
+): Promise<{ erro: string | null; itens: ItemPreviaImportacao[] }> {
+  const { supabase } = await contextoUsuario();
+
+  const linhas = interpretarLinhasImportacao(lista);
+  const telefones = linhas.map((l) => l.telefone).filter((t): t is string => !!t);
+  const existentes = await telefonesQueJaExistem(supabase, telefones);
+
+  const vistosNaLista = new Set<string>();
+  const itens: ItemPreviaImportacao[] = linhas.map((linha) => {
+    if (!linha.nome) {
+      return { nome: "(sem nome)", telefone: linha.telefone, situacao: "invalido" };
+    }
+    if (linha.telefone) {
+      const chave = chaveTelefone(linha.telefone);
+      const existente = existentes.get(chave);
+      if (existente) {
+        return {
+          nome: linha.nome,
+          telefone: linha.telefone,
+          situacao: "ja_existe",
+          nomeExistente: existente.nome,
+          excluido: existente.excluido,
+        };
+      }
+      if (vistosNaLista.has(chave)) {
+        return { nome: linha.nome, telefone: linha.telefone, situacao: "repetido_na_lista" };
+      }
+      vistosNaLista.add(chave);
+    }
+    return { nome: linha.nome, telefone: linha.telefone, situacao: "novo" };
+  });
+
+  return { erro: null, itens };
+}
+
+// Importação em massa — cada linha "Nome, Telefone" vira um lead direto na
+// coluna "Leads" (nivel_ordem 0), sem responsável, pronto pra alguém
+// reivindicar e começar a abordar. Insere um por um (não em lote só)
+// porque precisa contar quantos foram criados/ignorados, pra dar o resumo
+// pra quem importou. Quem já existe no CRM (mesmo número, com ou sem o 9
+// extra, mesmo excluído) e repetido dentro da própria lista é ignorado.
 export async function importarLeads(
   _estadoAnterior: ResultadoImportacao,
   formData: FormData
@@ -575,47 +687,53 @@ export async function importarLeads(
   const lista = String(formData.get("lista") ?? "");
   const origemPadrao =
     String(formData.get("origem") ?? "").trim() || "Prospecção fria";
+  const quemIndicou = String(formData.get("quem_indicou") ?? "").trim();
 
-  const linhas = lista
-    .split("\n")
-    .map((linha) => linha.trim())
-    .filter(Boolean);
+  const linhas = interpretarLinhasImportacao(lista);
+  const existentes = await telefonesQueJaExistem(
+    supabase,
+    linhas.map((l) => l.telefone).filter((t): t is string => !!t)
+  );
 
   let criados = 0;
   let duplicados = 0;
   let invalidos = 0;
+  const vistosNaLista = new Set<string>();
+  const notas: { lead_id: string; conteudo: string }[] = [];
 
   for (const linha of linhas) {
-    const partes = dividirLinhaImportacao(linha)
-      .map((parte) => parte.trim())
-      .filter(Boolean);
-    // Linha com uma coluna só que parece telefone (lista de contato sem
-    // nome) — em vez de repetir o número no campo Nome, deixa "Sem nome"
-    // escrito ali (Samuel pediu), com o telefone certinho no campo dele.
-    const soTelefone = partes.length === 1 && pareceTelefone(partes[0]);
-    const nome = soTelefone ? "Sem nome" : partes[0];
-    const telefoneDigitado = soTelefone ? partes[0] : partes[1];
-    const origemLinha = partes[2] || origemPadrao;
-
-    if (!nome) {
+    if (!linha.nome) {
       invalidos++;
       continue;
     }
 
-    const telefone = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
+    if (linha.telefone) {
+      const chave = chaveTelefone(linha.telefone);
+      if (existentes.has(chave) || vistosNaLista.has(chave)) {
+        duplicados++;
+        continue;
+      }
+      vistosNaLista.add(chave);
+    }
 
-    const { error } = await supabase.from("leads").insert({
-      org_id: usuario.org_id,
-      usuario_id: usuario.id,
-      nome,
-      telefone_e164: telefone,
-      origem: origemLinha,
-      nivel_ordem: NIVEL_LEADS,
-      responsavel_id: null,
-    });
+    const origemLinha = linha.origemLinha || origemPadrao;
+    const { data: novoLead, error } = await supabase
+      .from("leads")
+      .insert({
+        org_id: usuario.org_id,
+        usuario_id: usuario.id,
+        nome: linha.nome,
+        telefone_e164: linha.telefone,
+        origem: origemLinha,
+        quem_indicou: quemIndicou || null,
+        nivel_ordem: NIVEL_LEADS,
+        responsavel_id: null,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
-      if (error.code === "23505") {
+    if (error || !novoLead) {
+      if (error?.code === "23505") {
         duplicados++;
       } else {
         invalidos++;
@@ -625,6 +743,26 @@ export async function importarLeads(
 
     criados++;
     await garantirOrigem(supabase, usuario.org_id, origemLinha);
+
+    if (quemIndicou && origemLinha.toLowerCase().includes("indica")) {
+      notas.push({ lead_id: novoLead.id, conteudo: `Indicação — quem indicou: ${quemIndicou}` });
+    }
+  }
+
+  // Mesma nota que o cadastro de um lead só já grava (criarLead).
+  if (notas.length > 0) {
+    await supabase.from("interacoes").insert(
+      notas.map((nota) => ({
+        org_id: usuario.org_id,
+        usuario_id: usuario.id,
+        lead_id: nota.lead_id,
+        tipo: "nota",
+        canal: "manual",
+        conteudo: nota.conteudo,
+        ocorreu_em: new Date().toISOString(),
+        origem: "declarado",
+      }))
+    );
   }
 
   revalidatePath("/leads");
