@@ -397,6 +397,15 @@ export function BonusSdrTabela({
                 />
               )}
             </div>
+            {linha.diasReposicao.length > 0 && (
+              <p className="mt-2 rounded-md bg-blue-50 px-3 py-2 text-xs font-medium text-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
+                {linha.diasReposicao.length === 1 ? "Sábado de reposição" : "Sábados de reposição"}:{" "}
+                {linha.diasReposicao.join(" e ")}. {linha.nome.split(" ")[0]} folgou na semana e trabalhou
+                {linha.diasReposicao.length === 1 ? " nesse dia" : " nesses dias"} para repor — por isso{" "}
+                {linha.diasReposicao.length === 1 ? "ele vale" : "eles valem"} como dia de semana normal e{" "}
+                <b>não conta bônus de fim de semana</b>.
+              </p>
+            )}
             {(config.modelo === "por_call" || travaNoShow) && linha.travadoPorNoShow && (
               <p className="mt-2 text-xs font-medium text-red-600">
                 No-show de {formatarPercentual(linha.noShowPercentual)}, acima do limite de{" "}

@@ -1022,6 +1022,9 @@ export type BonusSdr = MetricasUsuario & {
   vendasFimDeSemana: number;
   bonusPorFaturamento: number;
   totalBonus: number;
+  // Sábados/domingos de reposição (folga na semana) que caem no período —
+  // valem como dia de semana no bônus. Formato "dd/mm". Só pra deixar claro na tela.
+  diasReposicao: string[];
 };
 
 export type BonusSdrConfig = {
@@ -1363,6 +1366,13 @@ export async function calcularBonusPorSdr(
         vendasFimDeSemana: nVendasFimDeSemana,
         bonusPorFaturamento,
         totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda + bonusPorFaturamento,
+        diasReposicao: [...(diasReposicaoPorUsuario.get(m.usuarioId) ?? [])]
+          .filter((dia) => {
+            const meioDia = new Date(`${dia}T12:00:00-03:00`);
+            return meioDia >= inicio && meioDia < fim;
+          })
+          .sort()
+          .map((dia) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}`),
       };
     })
   );
