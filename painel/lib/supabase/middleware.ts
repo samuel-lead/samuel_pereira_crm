@@ -101,8 +101,12 @@ export async function updateSession(request: NextRequest) {
   // pros arquivos de verificação de domínio que o Google gera (tipo
   // google<hash>.html, servidos direto da raiz do site): sem isso o robô
   // do Google (que nunca está logado) cai no /login e a verificação falha.
+  // /whatsapp é o link das campanhas que sorteia o vendedor — quem clica
+  // no anúncio nunca está logado.
   const ehPaginaPublicaFixa =
-    pathname === "/privacidade" || /^\/google[a-z0-9]+\.html$/i.test(pathname);
+    pathname === "/privacidade" ||
+    pathname === "/whatsapp" ||
+    /^\/google[a-z0-9]+\.html$/i.test(pathname);
   if (ehPaginaPublicaFixa) {
     return supabaseResponse;
   }
