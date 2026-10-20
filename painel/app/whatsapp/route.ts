@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 // Link único das campanhas: sousamuelpereira.com.br/whatsapp
-// Cada visitante cai direto no WhatsApp de UM dos vendedores, sorteado na
-// hora — ninguém precisa distribuir lead na mão. É sorteio (não fila), então
-// com poucos leads um vendedor pode receber dois seguidos; com volume a
-// divisão fica praticamente igual entre todos.
+// Cada visitante cai direto no WhatsApp de UM dos vendedores, em fila exata
+// (1, 2, 3, 1, 2, 3…) — ninguém precisa distribuir lead na mão. Quem é o
+// próximo da vez fica guardado no banco (tabela rodizio_links).
 //
 // Pra tirar alguém do sorteio (férias, lotado), mude "ativo" pra false.
 // Número sempre com 55 + DDD + número, só dígitos.
@@ -23,9 +23,31 @@ const MENSAGEM = "Oi, vim pelo anúncio. Quero saber mais sobre o consórcio.";
 // uma vez só.
 export const dynamic = "force-dynamic";
 
-export function GET(request: NextRequest) {
+// Pede pro banco o próximo número da fila. Espera no máximo 1,5s — se o
+// banco estiver fora ou lento, devolve null e o link cai pro sorteio.
+async function proximoDaVez(): Promise<number | null> {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { persistSession: false } }
+    );
+    const { data, error } = await supabase
+      .rpc("proximo_rodizio", { p_chave: "whatsapp" })
+      .abortSignal(AbortSignal.timeout(1500));
+    if (error || typeof data !== "number") return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(request: NextRequest) {
   const ativos = VENDEDORES.filter((v) => v.ativo);
-  const escolhido = ativos[Math.floor(Math.random() * ativos.length)];
+  const vez = await proximoDaVez();
+  // Se o banco não respondeu, sorteia — o lead nunca fica sem vendedor.
+  const indice = vez === null ? Math.floor(Math.random() * ativos.length) : vez % ativos.length;
+  const escolhido = ativos[indice];
 
   // ?c=reels vira "(reels)" no fim da mensagem — o vendedor sabe de qual
   // campanha o lead veio.
