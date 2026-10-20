@@ -44,7 +44,12 @@ async function proximoDaVez(): Promise<number | null> {
 
 export async function GET(request: NextRequest) {
   const ativos = VENDEDORES.filter((v) => v.ativo);
-  const vez = await proximoDaVez();
+  // Robô de prévia de link (WhatsApp, Instagram, Google) também abre o link
+  // quando alguém compartilha — não é lead, então não anda a fila (senão
+  // "roubava" a vez de um vendedor).
+  const agente = request.headers.get("user-agent") ?? "";
+  const ehRobo = /bot|crawler|spider|facebookexternalhit|whatsapp|preview/i.test(agente);
+  const vez = ehRobo ? null : await proximoDaVez();
   // Se o banco não respondeu, sorteia — o lead nunca fica sem vendedor.
   const indice = vez === null ? Math.floor(Math.random() * ativos.length) : vez % ativos.length;
   const escolhido = ativos[indice];
@@ -55,6 +60,12 @@ export async function GET(request: NextRequest) {
   const texto = campanha ? `${MENSAGEM} (${campanha})` : MENSAGEM;
 
   const destino = `https://wa.me/${escolhido.numero}?text=${encodeURIComponent(texto)}`;
+
+  // Uma linha por clique nos Logs da Vercel — busca "[whatsapp]" pra ver
+  // pra qual vendedor cada lead foi.
+  console.log(
+    `[whatsapp] ${ehRobo ? "ROBO" : "LEAD"} vendedor=${escolhido.nome} numero=${escolhido.numero} campanha=${campanha || "-"}`
+  );
 
   // Em vez de mandar direto pro WhatsApp, mostra uma tela de frações de
   // segundo ("Abrindo o WhatsApp…") que avisa o Pixel do Meta antes de sair — sem
