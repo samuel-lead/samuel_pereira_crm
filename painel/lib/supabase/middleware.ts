@@ -54,6 +54,13 @@ function paginaDaRota(pathname: string): string | null {
 }
 
 export async function updateSession(request: NextRequest) {
+  // /whatsapp é o link das campanhas que distribui o lead pro vendedor —
+  // quem clica no anúncio nunca está logado e cada milissegundo conta. Sai
+  // antes de qualquer checagem de login (que pode ir até o Supabase).
+  if (request.nextUrl.pathname === "/whatsapp") {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -101,12 +108,8 @@ export async function updateSession(request: NextRequest) {
   // pros arquivos de verificação de domínio que o Google gera (tipo
   // google<hash>.html, servidos direto da raiz do site): sem isso o robô
   // do Google (que nunca está logado) cai no /login e a verificação falha.
-  // /whatsapp é o link das campanhas que sorteia o vendedor — quem clica
-  // no anúncio nunca está logado.
   const ehPaginaPublicaFixa =
-    pathname === "/privacidade" ||
-    pathname === "/whatsapp" ||
-    /^\/google[a-z0-9]+\.html$/i.test(pathname);
+    pathname === "/privacidade" || /^\/google[a-z0-9]+\.html$/i.test(pathname);
   if (ehPaginaPublicaFixa) {
     return supabaseResponse;
   }

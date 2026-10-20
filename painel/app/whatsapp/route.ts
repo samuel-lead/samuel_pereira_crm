@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
 
   const destino = `https://wa.me/${escolhido.numero}?text=${encodeURIComponent(texto)}`;
 
-  // Em vez de mandar direto pro WhatsApp, mostra uma tela rápida
-  // ("Abrindo o WhatsApp…") que avisa o Pixel do Meta antes de sair — sem
+  // Em vez de mandar direto pro WhatsApp, mostra uma tela de frações de
+  // segundo ("Abrindo o WhatsApp…") que avisa o Pixel do Meta antes de sair — sem
   // isso o Meta não sabe quem chegou até aqui e não consegue otimizar o
   // anúncio. O JSON.stringify + troca do "<" impede que o texto da campanha
   // (?c=...) quebre o script da página.
@@ -71,28 +71,29 @@ export async function GET(request: NextRequest) {
 <title>Abrindo o WhatsApp…</title>
 <noscript><meta http-equiv="refresh" content="0;url=${destino.replace(/"/g, "&quot;")}"></noscript>
 <script>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${PIXEL_ID}');
-fbq('track', 'PageView');
-fbq('track', 'Contact');
-// Sai assim que o aviso de "Contact" chega no Meta (celular rápido: menos
-// de meio segundo). Se a internet estiver lenta, sai em 1,5s de qualquer
-// jeito — o lead nunca fica preso esperando o pixel.
+// Pixel "leve": em vez de baixar o código inteiro do Meta (100KB+, lento
+// no 4G), manda só os dois avisos (PageView e Contact) direto pro Meta —
+// uma requisição pequena cada. O fbclid que o Meta põe no link do anúncio
+// vai junto (fbc), pra ele saber de qual anúncio a pessoa veio.
 (function () {
   var foi = false;
   function ir() { if (foi) return; foi = true; window.location.replace(${destinoJs}); }
-  setTimeout(ir, 1500);
+  // Nunca espera mais que 0,4s — se o Meta demorar, o lead sai igual.
+  setTimeout(ir, 400);
   try {
-    new PerformanceObserver(function (lista) {
-      lista.getEntries().forEach(function (e) {
-        if (e.name.indexOf('facebook.com/tr') !== -1 && e.name.indexOf('ev=Contact') !== -1) setTimeout(ir, 100);
-      });
-    }).observe({ type: 'resource', buffered: true });
-  } catch (err) {}
+    var agora = Date.now();
+    var fbclid = new URLSearchParams(location.search).get('fbclid');
+    var base = 'https://www.facebook.com/tr?id=${PIXEL_ID}' +
+      '&dl=' + encodeURIComponent(location.href) +
+      '&rl=' + encodeURIComponent(document.referrer) +
+      '&ts=' + agora +
+      '&fbp=' + encodeURIComponent('fb.1.' + agora + '.' + Math.floor(Math.random() * 1e10)) +
+      (fbclid ? '&fbc=' + encodeURIComponent('fb.1.' + agora + '.' + fbclid) : '');
+    new Image().src = base + '&ev=PageView';
+    var contato = new Image();
+    contato.onload = contato.onerror = function () { setTimeout(ir, 30); };
+    contato.src = base + '&ev=Contact';
+  } catch (err) { ir(); }
 })();
 </script>
 <style>
