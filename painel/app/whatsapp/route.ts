@@ -97,8 +97,9 @@ export async function GET(request: NextRequest) {
 })();
 </script>
 <style>
-body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#111}
-a{color:#128c7e;font-size:14px}
+body{margin:0;padding:0 24px;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#111;text-align:center}
+p{margin:0;font-size:26px;font-weight:600}
+a{color:#128c7e;font-size:19px}
 </style>
 </head>
 <body>
