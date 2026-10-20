@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
-import { ORDEM_OPORTUNIDADE_FUTURA, numerarNiveis, NIVEIS_REATIVACAO, type NivelResumo } from "@/lib/niveis";
+import {
+  ORDEM_OPORTUNIDADE_FUTURA,
+  numerarNiveis,
+  NIVEIS_REATIVACAO,
+  motivosBaseDaOrg,
+  type NivelResumo,
+} from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
 import { reuniao, Reuniao, usaComissaoDoVendedor } from "@/lib/terminologia";
@@ -1816,6 +1822,107 @@ export async function editarMotivoRepescagem(
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);
   return { erro: null };
+}
+
+// Samuel pediu (20/10/26): cancelar a venda de um lead. A venda sai de
+// Clientes e das contas de faturamento/bônus, o lead vai pra Base (na coluna
+// que a pessoa escolher, com o dia do próximo contato) e o motivo do
+// cancelamento fica registrado — no card da Base, numa nota e no histórico.
+// Nada é apagado: os dados da venda cancelada ficam escritos na nota.
+export async function cancelarVenda(
+  leadId: string,
+  motivoCancelamento: string,
+  motivoBase: string,
+  proximoContatoBase: string
+): Promise<string | null> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) return erroPermissao;
+
+  const motivo = motivoCancelamento.trim();
+  if (!motivo) return "Escreva o motivo do cancelamento da venda.";
+
+  if (!motivosBaseDaOrg(usuario.publico_org).some((m) => m.valor === motivoBase)) {
+    return "Escolha para qual coluna da Base o lead vai.";
+  }
+
+  const dia = validarDiaProximoContatoBase(proximoContatoBase);
+  if ("erro" in dia) return dia.erro;
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("nome, status, nivel_ordem, valor_venda, receita_venda, produto, vendido_em, unidade_id")
+    .eq("id", leadId)
+    .single();
+
+  if (!lead) return "Lead não encontrado.";
+  if (lead.status !== "vendido") return "Esse lead não está com venda registrada.";
+
+  const { data: atualizado, error } = await supabase
+    .from("leads")
+    .update({
+      status: "ativo",
+      valor_venda: null,
+      receita_venda: null,
+      venda_comissao_tipo: null,
+      venda_comissao_valor: null,
+      vendido_em: null,
+      produto: null,
+      unidade_id: null,
+      imovel_captacao: false,
+      nivel_ordem: NIVEL_BASE,
+      oportunidade_futura: false,
+      motivo_repescagem_futura: null,
+      entrou_nivel_em: new Date().toISOString(),
+      motivo_base: motivoBase,
+      motivo_base_detalhe: `Venda cancelada: ${motivo}`,
+      voltar_da_base_em: dia.iso,
+    })
+    .eq("id", leadId)
+    .select("id");
+
+  if (error) return mensagemAmigavel(error.code, error.message);
+  // RLS que bloqueia responde sem erro e sem linha — confere.
+  if (!atualizado || atualizado.length === 0) return "Não consegui cancelar a venda. Tente de novo.";
+
+  // A unidade do imóvel volta a ficar disponível (imobiliário).
+  await atualizarUnidadesDaVenda(supabase, leadId, null, lead.unidade_id);
+
+  await supabase.from("nivel_historico").insert({
+    org_id: usuario.org_id,
+    lead_id: leadId,
+    de_ordem: lead.nivel_ordem,
+    para_ordem: NIVEL_BASE,
+    motivo: `Venda cancelada: ${motivo}`,
+    automatico: false,
+    usuario_id: usuario.id,
+  });
+
+  const formatarReais = (valor: number | null) =>
+    valor == null
+      ? "não informado"
+      : valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const dataVenda = lead.vendido_em
+    ? new Date(lead.vendido_em).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
+    : "data não informada";
+
+  await supabase.from("interacoes").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    tipo: "nota",
+    canal: "manual",
+    conteudo: `Venda cancelada. Motivo: ${motivo}. Era: ${formatarReais(lead.valor_venda)} (${formatarReais(lead.receita_venda)} de receita)${lead.produto ? `, produto ${lead.produto}` : ""}, vendida em ${dataVenda}.`,
+    ocorreu_em: new Date().toISOString(),
+    origem: "declarado",
+  });
+
+  revalidatePath("/leads");
+  revalidatePath("/leads/base");
+  revalidatePath("/leads/vendas");
+  revalidatePath(`/leads/${leadId}`);
+  return null;
 }
 
 export async function editarVenda(

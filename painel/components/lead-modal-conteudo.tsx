@@ -5,6 +5,7 @@ import { RegistrarNotaForm } from "@/components/registrar-nota-form";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { EditarLeadForm, type EstadoRodapeSalvarLead } from "@/components/editar-lead-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
+import { CancelarVendaButton } from "@/components/cancelar-venda-button";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { IndicacaoPegaButton } from "@/components/indicacao-pega-button";
@@ -314,6 +315,11 @@ export function LeadModalConteudo({
                   comissaoPercentual={percentualVenda}
                   comissaoValorFixo={valorFixoVenda}
                 />
+              </div>
+            )}
+            {podeEditar && (
+              <div className="mt-3">
+                <CancelarVendaButton leadId={lead.id} nome={lead.nome} publicoOrg={publicoOrg} />
               </div>
             )}
           </div>
