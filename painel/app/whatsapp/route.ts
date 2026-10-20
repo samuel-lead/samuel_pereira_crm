@@ -9,7 +9,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // Pra tirar alguém do sorteio (férias, lotado), mude "ativo" pra false.
 // Número sempre com 55 + DDD + número, só dígitos.
 const VENDEDORES = [
-  { nome: "Vendedor 1", numero: "556296089125", ativo: true },
+  { nome: "Vendedor 1", numero: "556291838526", ativo: true },
   { nome: "Vendedor 2", numero: "556291768393", ativo: true },
   { nome: "Vendedor 3", numero: "556293386772", ativo: true },
 ];
