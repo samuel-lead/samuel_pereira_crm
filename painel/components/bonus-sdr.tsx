@@ -94,6 +94,23 @@ export function BonusSdrTabela({
   travaNoShow?: boolean;
 }) {
   const totalEquipe = dados.reduce((soma, d) => soma + d.totalBonus, 0);
+  // Empresa sem a regra de fim de semana (valores iguais aos de semana) e/ou
+  // sem bônus de receita (faixas zeradas), ex.: a Veend. Some da tela tudo o
+  // que não existe pra ela (Samuel, 20/10/26).
+  const porCall = config.modelo === "por_call";
+  const semFimDeSemana =
+    porCall &&
+    config.valor_call_fim_semana === config.valor_por_call &&
+    config.valor_por_call_venda_fim_semana === config.valor_por_call_venda;
+  const semReceita =
+    porCall &&
+    config.faturamento_tier1_bonus === 0 &&
+    config.faturamento_tier2_bonus === 0 &&
+    config.faturamento_tier3_bonus === 0;
+  const numeroReceita = semFimDeSemana ? 3 : 4;
+  const qtdCartoes = 2 + (semFimDeSemana ? 0 : 1) + (semReceita ? 0 : 1);
+  const colunasCartoes =
+    qtdCartoes === 4 ? "lg:grid-cols-4" : qtdCartoes === 3 ? "lg:grid-cols-3" : "lg:grid-cols-2";
 
   return (
     <div className="space-y-6">
@@ -137,7 +154,7 @@ export function BonusSdrTabela({
             didático e sem quebrar), formato "bateu isso → ganha aquilo". */}
         {config.modelo === "por_call" ? (
           <div className="relative space-y-3">
-            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+            <div className={`grid grid-cols-2 gap-2.5 ${colunasCartoes}`}>
               <div className="rounded-xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
                   1 · {Call(publicoOrg)} realizada e qualificada
@@ -160,12 +177,15 @@ export function BonusSdrTabela({
                 <p className="mt-1 text-2xl font-black tabular-nums text-white">
                   {moedaCurta(config.valor_por_call_venda)}
                 </p>
-                <p className="mt-0.5 text-xs text-green-100">Marcada de segunda a sexta</p>
+                {!semFimDeSemana && (
+                  <p className="mt-0.5 text-xs text-green-100">Marcada de segunda a sexta</p>
+                )}
                 <p className="mt-1 text-[11px] text-green-200">
                   Quando a venda fecha, recebe a diferença:{" "}
                   <b className="text-white">+{moedaCurta(Math.max(0, config.valor_por_call_venda - config.valor_por_call))}</b>
                 </p>
               </div>
+              {!semFimDeSemana && (
               <div className="rounded-xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
                   3 · Venda de {call(publicoOrg)}
@@ -181,9 +201,11 @@ export function BonusSdrTabela({
                   </b>
                 </p>
               </div>
+              )}
+              {!semReceita && (
               <div className="rounded-xl bg-white/10 p-3.5 ring-1 ring-white/15 backdrop-blur-sm">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-green-200">
-                  4 · Receita do mês
+                  {numeroReceita} · Receita do mês
                 </p>
                 <ul className="mt-1.5 space-y-1 text-xs text-green-100">
                   {[
@@ -202,21 +224,24 @@ export function BonusSdrTabela({
                 </ul>
                 <p className="mt-1 text-[11px] text-green-200">Maior faixa que bateu, não soma</p>
               </div>
+              )}
             </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-2">
+            <div className={`grid gap-2.5 ${semReceita ? "" : "sm:grid-cols-2"}`}>
               <div className="rounded-xl bg-black/15 p-3.5 text-xs leading-relaxed text-green-50 ring-1 ring-white/10">
                 <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-green-200">
                   Como a venda entra: só a diferença
                 </p>
-                {`A ${call(publicoOrg)} paga ${moedaCurta(config.valor_por_call)} (${moedaCurta(config.valor_call_fim_semana)} no fim de semana) no mês em que acontece, mesmo sem venda. Quando a venda dessa ${call(publicoOrg)} fecha, o ${Sdr(publicoOrg)} recebe só a diferença até ${moedaCurta(config.valor_por_call_venda)} (${moedaCurta(config.valor_por_call_venda_fim_semana)} no fim de semana), no mês em que a venda fechar, mesmo que a ${call(publicoOrg)} tenha sido em outro mês. Ex.: ${call(publicoOrg)} em setembro paga ${moedaCurta(config.valor_por_call)} em setembro; a venda fecha em outubro e paga +${moedaCurta(Math.max(0, config.valor_por_call_venda - config.valor_por_call))} em outubro. Nunca soma o valor da venda inteiro por cima do da ${call(publicoOrg)}.`}
+                {`A ${call(publicoOrg)} paga ${moedaCurta(config.valor_por_call)}${semFimDeSemana ? "" : ` (${moedaCurta(config.valor_call_fim_semana)} no fim de semana)`} no mês em que acontece, mesmo sem venda. Quando a venda dessa ${call(publicoOrg)} fecha, o ${Sdr(publicoOrg)} recebe só a diferença até ${moedaCurta(config.valor_por_call_venda)}${semFimDeSemana ? "" : ` (${moedaCurta(config.valor_por_call_venda_fim_semana)} no fim de semana)`}, no mês em que a venda fechar, mesmo que a ${call(publicoOrg)} tenha sido em outro mês. Ex.: ${call(publicoOrg)} em setembro paga ${moedaCurta(config.valor_por_call)} em setembro; a venda fecha em outubro e paga +${moedaCurta(Math.max(0, config.valor_por_call_venda - config.valor_por_call))} em outubro. Nunca soma o valor da venda inteiro por cima do da ${call(publicoOrg)}.`}
               </div>
+              {!semReceita && (
               <div className="rounded-xl bg-black/15 p-3.5 text-xs leading-relaxed text-green-50 ring-1 ring-white/10">
                 <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wider text-green-200">
                   Bônus de venda e receita não somam
                 </p>
                 {`O bônus de cada ${call(publicoOrg)} (1) sempre vale. Já a diferença das vendas (2 e 3) e o bônus de receita (4) não somam: no mês recebe só o maior dos dois. Ex.: receita ${moedaCurta(config.faturamento_tier1_bonus)} e diferenças de vendas somando R$ 300 = ganha só os ${moedaCurta(config.faturamento_tier1_bonus)} da receita (além do bônus de cada ${call(publicoOrg)}).`}
               </div>
+              )}
             </div>
           </div>
         ) : (
@@ -329,21 +354,31 @@ export function BonusSdrTabela({
             <div className="mt-3 divide-y divide-neutral-100 rounded-lg border border-neutral-100 bg-neutral-50/60">
               <LinhaBonus
                 label={
-                  config.modelo === "por_call"
-                    ? `Bônus por ${call(publicoOrg)} realizada e qualificada, marcada de segunda a sexta (${linha.callsQualificadasSemana})`
+                  porCall
+                    ? semFimDeSemana
+                      ? `Bônus por ${call(publicoOrg)} realizada e qualificada (${linha.callsQualificadasSemana + linha.callsQualificadasFimDeSemana})`
+                      : `Bônus por ${call(publicoOrg)} realizada e qualificada, marcada de segunda a sexta (${linha.callsQualificadasSemana})`
                     : `Bônus por ${calls(publicoOrg)} realizadas`
                 }
-                valor={linha.bonusPorCallRealizada}
+                valor={semFimDeSemana ? linha.bonusPorCallRealizada + linha.bonusFimDeSemana : linha.bonusPorCallRealizada}
               />
-              <LinhaBonus
-                label={
-                  config.modelo === "por_call"
-                    ? `Bônus por ${call(publicoOrg)} realizada e qualificada, marcada no sábado ou domingo (${linha.callsQualificadasFimDeSemana})`
-                    : `Bônus por ${call(publicoOrg)} realizada que foi marcada no fim de semana`
-                }
-                valor={linha.bonusFimDeSemana}
-              />
-              {config.modelo === "por_call" && (
+              {!semFimDeSemana && (
+                <LinhaBonus
+                  label={
+                    porCall
+                      ? `Bônus por ${call(publicoOrg)} realizada e qualificada, marcada no sábado ou domingo (${linha.callsQualificadasFimDeSemana})`
+                      : `Bônus por ${call(publicoOrg)} realizada que foi marcada no fim de semana`
+                  }
+                  valor={linha.bonusFimDeSemana}
+                />
+              )}
+              {porCall && semFimDeSemana && (
+                <LinhaBonus
+                  label={`Venda fechada no mês: diferença de ${moedaCurta(Math.max(0, config.valor_por_call_venda - config.valor_por_call))} por venda (${linha.vendasSemana + linha.vendasFimDeSemana})`}
+                  valor={linha.bonusPorVendaSemana + linha.bonusPorVendaFimDeSemana}
+                />
+              )}
+              {porCall && !semFimDeSemana && (
                 <>
                   <LinhaBonus
                     label={`Venda fechada no mês, ${call(publicoOrg)} de segunda a sexta: diferença de ${moedaCurta(Math.max(0, config.valor_por_call_venda - config.valor_por_call))} por venda (${linha.vendasSemana})`}
@@ -355,10 +390,12 @@ export function BonusSdrTabela({
                   />
                 </>
               )}
-              <LinhaBonus
-                label={config.modelo === "por_call" ? "Bônus por receita" : "Bônus por faturamento"}
-                valor={linha.bonusPorFaturamento}
-              />
+              {!semReceita && (
+                <LinhaBonus
+                  label={porCall ? "Bônus por receita" : "Bônus por faturamento"}
+                  valor={linha.bonusPorFaturamento}
+                />
+              )}
             </div>
             {(config.modelo === "por_call" || travaNoShow) && linha.travadoPorNoShow && (
               <p className="mt-2 text-xs font-medium text-red-600">
