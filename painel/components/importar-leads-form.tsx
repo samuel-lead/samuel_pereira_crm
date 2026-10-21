@@ -24,42 +24,69 @@ const estadoInicial: ResultadoImportacao = {
   total: 0,
 };
 
-// Separadas em dois grupos (não é só "parece cabeçalho", é "qual coluna é
-// qual") — sem isso, um arquivo exportado como "WhatsApp, Name" (telefone
-// primeiro, nome depois — é assim que o WhatsApp exporta contato) fazia o
-// número virar Nome e o nome virar Telefone. Samuel pegou isso ao vivo:
-// 178 leads entraram com o telefone como nome e o nome (sem dígito
-// nenhum) virando telefone vazio, todos colidindo como "duplicado" entre
-// si.
-const CABECALHOS_NOME = ["nome", "name", "empresa", "razao social", "razão social"];
-const CABECALHOS_TELEFONE = ["telefone", "fone", "celular", "whatsapp", "phone", "número", "numero"];
-const PALAVRAS_CABECALHO = [...CABECALHOS_NOME, ...CABECALHOS_TELEFONE, "origem"];
+// Palavras que aparecem no cabeçalho de uma planilha de leads. A comparação é
+// por PALAVRA inteira dentro de cada célula ("Nome Fantasia" tem a palavra
+// "nome"), senão cabeçalho com mais de uma palavra virava um lead de verdade
+// (foi o que aconteceu na Inove Gôndolas: "Nome Fantasia" entrou como lead).
+const PALAVRAS_NOME = ["nome", "name", "empresa", "fantasia"];
+const PALAVRAS_TELEFONE = ["telefone", "fone", "celular", "whatsapp", "phone", "numero", "número"];
+const PALAVRAS_ORIGEM = ["origem"];
+const PALAVRAS_OUTRAS_COLUNAS = ["razao", "razão", "social", "cnpj", "email", "e-mail", "cidade", "estado", "uf", "endereco", "endereço"];
+
+function palavrasDaCelula(celula: string) {
+  return celula
+    .toLowerCase()
+    .split(/[^a-zà-úç0-9-]+/i)
+    .filter(Boolean);
+}
+
+function celulaTemPalavra(celula: string, lista: string[]) {
+  return palavrasDaCelula(celula).some((p) => lista.includes(p));
+}
 
 function linhaPareceCabecalho(celulas: string[]) {
-  const primeira = (celulas[0] ?? "").trim().toLowerCase();
-  return PALAVRAS_CABECALHO.includes(primeira);
+  // Só é cabeçalho se as células forem curtas (títulos de coluna) e alguma
+  // tiver uma palavra de coluna conhecida — um nome de empresa comprido na
+  // primeira linha não vira cabeçalho só por ter "empresa" no meio.
+  const todasCurtas = celulas.every((c) => c.trim().length <= 40);
+  return (
+    todasCurtas &&
+    celulas.some(
+      (c) =>
+        celulaTemPalavra(c, PALAVRAS_NOME) ||
+        celulaTemPalavra(c, PALAVRAS_TELEFONE) ||
+        celulaTemPalavra(c, PALAVRAS_ORIGEM) ||
+        celulaTemPalavra(c, PALAVRAS_OUTRAS_COLUNAS)
+    )
+  );
 }
 
 // Compartilhada entre o CSV (analisarCsv) e o .xlsx (xlsxParaLinhas) — os
 // dois terminam nesse mesmo formato de "linhas de células" antes de virar
-// texto pro campo da lista. Se a primeira linha for cabeçalho, usa ela
-// pra descobrir em qual coluna está o nome e em qual está o telefone —
-// nunca assume que a ordem é sempre "nome, telefone" (ver comentário dos
-// CABECALHOS_* acima).
+// texto pro campo da lista. Se a primeira linha for cabeçalho, usa ela pra
+// descobrir em qual coluna está o nome, o telefone e (se existir) a origem.
+//
+// Só essas colunas seguem pra lista. As OUTRAS (Razão Social, CNPJ...) são
+// descartadas: antes elas iam coladas atrás do telefone e a terceira virava
+// a ORIGEM de cada lead (na Inove Gôndolas, 600 leads ficaram com a razão
+// social da empresa como origem). Também não some mais com a célula vazia do
+// telefone — isso empurrava o CNPJ pra dentro do campo de telefone.
 function linhasParaLista(linhas: string[][]) {
   if (linhas.length === 0) return "";
 
   let dados = linhas;
   let indiceNome = 0;
   let indiceTelefone = 1;
+  let indiceOrigem = -1;
 
   const primeiraLinha = linhas[0];
   if (linhaPareceCabecalho(primeiraLinha)) {
-    const celulas = primeiraLinha.map((c) => c.trim().toLowerCase());
-    const posNome = celulas.findIndex((c) => CABECALHOS_NOME.includes(c));
-    const posTelefone = celulas.findIndex((c) => CABECALHOS_TELEFONE.includes(c));
+    const posNome = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_NOME));
+    const posTelefone = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_TELEFONE));
+    const posOrigem = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_ORIGEM));
     if (posNome !== -1) indiceNome = posNome;
     if (posTelefone !== -1) indiceTelefone = posTelefone;
+    if (posOrigem !== -1) indiceOrigem = posOrigem;
     dados = linhas.slice(1);
   }
 
@@ -68,12 +95,12 @@ function linhasParaLista(linhas: string[][]) {
     .map((linha) => {
       const nome = (linha[indiceNome] ?? "").trim();
       const telefone = (linha[indiceTelefone] ?? "").trim();
-      const resto = linha
-        .filter((_, indice) => indice !== indiceNome && indice !== indiceTelefone)
-        .map((celula) => celula.trim())
-        .filter(Boolean);
-      return [nome, telefone, ...resto].filter(Boolean).join("\t");
+      const origem = indiceOrigem !== -1 ? (linha[indiceOrigem] ?? "").trim() : "";
+      // Telefone vazio vira só o nome (sem coluna vazia no meio).
+      if (!telefone) return nome;
+      return origem ? [nome, telefone, origem].join("\t") : [nome, telefone].join("\t");
     })
+    .filter(Boolean)
     .join("\n");
 }
 
@@ -176,7 +203,15 @@ export function ImportarLeadsForm({
       return;
     }
 
-    const textoArquivo = await arquivo.text();
+    // CSV exportado do Excel costuma vir em Windows-1252 (acentos viram "�"
+    // se lido como UTF-8). Tenta UTF-8 e, se falhar, lê como Windows-1252.
+    const bytes = await arquivo.arrayBuffer();
+    let textoArquivo: string;
+    try {
+      textoArquivo = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch {
+      textoArquivo = new TextDecoder("windows-1252").decode(bytes);
+    }
     const listaConvertida = csvParaLista(textoArquivo);
 
     if (!listaConvertida) {
