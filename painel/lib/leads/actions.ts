@@ -12,7 +12,7 @@ import {
 } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
-import { reuniao, Reuniao, usaComissaoDoVendedor } from "@/lib/terminologia";
+import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg } from "@/lib/terminologia";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -106,7 +106,9 @@ async function contextoUsuario() {
 
   const { data: usuario, error } = await supabase
     .from("usuarios")
-    .select("id, org_id, papel, funcao, super_admin, orgs(publico)")
+    .select(
+      "id, org_id, papel, funcao, super_admin, orgs(publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming, chama_receita_de_comissao, dashboard_em_barras, mercado_gondolas)"
+    )
     .eq("id", user.id)
     .single();
 
@@ -114,10 +116,22 @@ async function contextoUsuario() {
     throw new Error("Usuário não encontrado");
   }
 
-  const orgInfo = usuario.orgs as { publico?: string } | { publico?: string }[] | null;
-  const publicoOrg = (Array.isArray(orgInfo) ? orgInfo[0]?.publico : orgInfo?.publico) ?? "mentoria";
+  type OrgCrua = Parameters<typeof montarPublicoOrg>[1] & { publico?: string };
+  const orgInfo = usuario.orgs as OrgCrua | OrgCrua[] | null;
+  const org = Array.isArray(orgInfo) ? orgInfo[0] : orgInfo;
+  const publicoOrg = org?.publico ?? "mentoria";
 
-  return { supabase, usuario: { ...usuario, publico_org: publicoOrg } };
+  return {
+    supabase,
+    usuario: {
+      ...usuario,
+      publico_org: publicoOrg,
+      // Com os sufixos de vocabulário da empresa — só pra o que vai pra tela
+      // (ex.: card do lead). A comparação de regra de negócio segue com a
+      // versão sem sufixo acima.
+      publico_org_completo: montarPublicoOrg(publicoOrg, org),
+    },
+  };
 }
 
 type UsuarioContexto = { id: string; org_id: string; papel: string };
@@ -2959,7 +2973,7 @@ export async function buscarDetalhesDoLead(
       souAdmin,
       souDonoPlataforma: usuario.super_admin === true,
       souSdr,
-      publicoOrg: usuario.publico_org,
+      publicoOrg: usuario.publico_org_completo,
       podeEditar,
       podeReivindicar,
       nomeResponsavel,

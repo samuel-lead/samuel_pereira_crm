@@ -1,6 +1,33 @@
 // Público imobiliário usa "Visita" onde o resto do sistema fala "Reunião"
 // ou "Call" — no mercado de imóveis não existe esse vocabulário, só visita.
 // Mentoria/serviço continua exatamente como sempre foi.
+// Monta o "público" com os sufixos de vocabulário próprio da empresa (":of",
+// ":vend", ":solo", ":sf", ":com", ":fb", ":gond") — mesma conta que o
+// middleware faz pro resto do app. Usado onde só se tem os dados crus da
+// empresa (ex.: o card do lead, que busca pela server action).
+export function montarPublicoOrg(
+  publico: string,
+  org: {
+    nome_oportunidades_futuras?: boolean | null;
+    chama_sdr_de_vendedor?: boolean | null;
+    sem_closer?: boolean | null;
+    sem_farming?: boolean | null;
+    chama_receita_de_comissao?: boolean | null;
+    dashboard_em_barras?: boolean | null;
+    mercado_gondolas?: boolean | null;
+  } | null
+): string {
+  let resultado = publico;
+  if (org?.nome_oportunidades_futuras) resultado += ":of";
+  if (org?.chama_sdr_de_vendedor) resultado += ":vend";
+  if (org?.sem_closer) resultado += ":solo";
+  if (org?.sem_farming) resultado += ":sf";
+  if (org?.chama_receita_de_comissao) resultado += ":com";
+  if (org?.dashboard_em_barras) resultado += ":fb";
+  if (org?.mercado_gondolas) resultado += ":gond";
+  return resultado;
+}
+
 export function ehImobiliario(publicoOrg: string) {
   return publicoOrg === "imobiliario";
 }
