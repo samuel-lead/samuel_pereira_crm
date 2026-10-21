@@ -1707,7 +1707,7 @@ export async function marcarVendido(
   let receita: number | null;
   let comissaoTipoVenda: "percentual" | "fixo" | null = null;
   let comissaoValorVenda: number | null = null;
-  if (usaComissaoDoVendedor(usuario.publico_org)) {
+  if (usaComissaoDoVendedor(usuario.publico_org_completo)) {
     const { data: corretor } = await supabase
       .from("usuarios")
       .select("comissao_tipo, comissao_percentual, comissao_valor_fixo")
@@ -1884,7 +1884,7 @@ export async function cancelarVenda(
   const motivo = motivoCancelamento.trim();
   if (!motivo) return "Escreva o motivo do cancelamento da venda.";
 
-  if (!motivosBaseDaOrg(usuario.publico_org).some((m) => m.valor === motivoBase)) {
+  if (!motivosBaseDaOrg(usuario.publico_org_completo).some((m) => m.valor === motivoBase)) {
     return "Escolha para qual coluna da Base o lead vai.";
   }
 
@@ -2001,7 +2001,7 @@ export async function editarVenda(
   let receita: number | null;
   let comissaoTipoVenda: "percentual" | "fixo" | null = null;
   let comissaoValorVenda: number | null = null;
-  if (usaComissaoDoVendedor(usuario.publico_org)) {
+  if (usaComissaoDoVendedor(usuario.publico_org_completo)) {
     const { data: leadAtual } = await supabase
       .from("leads")
       .select("responsavel_id")
