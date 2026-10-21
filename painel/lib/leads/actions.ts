@@ -695,6 +695,23 @@ export async function importarLeads(
     String(formData.get("origem") ?? "").trim() || "Prospecção fria";
   const quemIndicou = String(formData.get("quem_indicou") ?? "").trim();
 
+  // Responsável dos leads importados (opcional). Admin escolhe qualquer
+  // pessoa da empresa; quem não é admin só pode escolher a si mesmo — qualquer
+  // outro valor vira "sem responsável" (fila de novos leads).
+  let responsavelId: string | null = String(formData.get("responsavel_id") ?? "").trim() || null;
+  if (responsavelId) {
+    if (usuario.papel !== "admin") {
+      if (responsavelId !== usuario.id) responsavelId = null;
+    } else {
+      const { data: dessaEmpresa } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("id", responsavelId)
+        .maybeSingle();
+      if (!dessaEmpresa) responsavelId = null;
+    }
+  }
+
   const linhas = interpretarLinhasImportacao(lista);
   const existentes = await telefonesQueJaExistem(
     supabase,
@@ -733,7 +750,7 @@ export async function importarLeads(
         origem: origemLinha,
         quem_indicou: quemIndicou || null,
         nivel_ordem: NIVEL_LEADS,
-        responsavel_id: null,
+        responsavel_id: responsavelId,
       })
       .select("id")
       .single();
@@ -753,6 +770,16 @@ export async function importarLeads(
     if (quemIndicou && origemLinha.toLowerCase().includes("indica")) {
       notas.push({ lead_id: novoLead.id, conteudo: `Indicação — quem indicou: ${quemIndicou}` });
     }
+  }
+
+  // Um aviso resumo (e não um por lead) pra quem recebeu os leads — o aviso
+  // individual é travado em lote no banco (ver notificar_lead_atribuido).
+  if (responsavelId && responsavelId !== usuario.id && criados > 0) {
+    await supabase.rpc("avisar_leads_importados", {
+      p_responsavel_id: responsavelId,
+      p_quantidade: criados,
+      p_origem: origemPadrao,
+    });
   }
 
   // Mesma nota que o cadastro de um lead só já grava (criarLead).

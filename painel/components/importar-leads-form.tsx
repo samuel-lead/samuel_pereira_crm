@@ -10,6 +10,8 @@ import {
   type ItemPreviaImportacao,
 } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
+import { ResponsavelSelect } from "@/components/responsavel-select";
+import { MenuSelect } from "@/components/menu-select";
 import { lerContatosVcf } from "@/lib/vcf";
 import { sdr } from "@/lib/terminologia";
 import { analisarCsv, xlsxParaLinhas } from "@/lib/planilha";
@@ -82,9 +84,15 @@ function csvParaLista(textoCsv: string) {
 export function ImportarLeadsForm({
   publicoOrg = "mentoria",
   origens = [],
+  usuarios = [],
+  souAdmin = false,
+  usuarioId = "",
 }: {
   publicoOrg?: string;
   origens?: { id: string; nome: string }[];
+  usuarios?: { id: string; nome: string; funcao?: string | null; papel?: string | null }[];
+  souAdmin?: boolean;
+  usuarioId?: string;
 }) {
   const router = useRouter();
   const [estado, acaoFormulario, pendente] = useActionState(importarLeads, estadoInicial);
@@ -302,6 +310,35 @@ export function ImportarLeadsForm({
             Origem (pra todos os leads dessa lista)
           </label>
           <OrigemSelect origens={origens} valorInicial="Prospecção fria" onChange={setOrigemAtual} />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-neutral-700">
+            Responsável pelos leads <span className="font-normal text-neutral-400">(opcional)</span>
+          </label>
+          {souAdmin ? (
+            <ResponsavelSelect
+              usuarios={usuarios}
+              funcaoFiltro="sdr"
+              incluirAdmins
+              permiteVazio
+              placeholder="Sem responsável (fila de novos leads)"
+            />
+          ) : (
+            <MenuSelect
+              name="responsavel_id"
+              defaultValue=""
+              placeholder="Sem responsável (fila de novos leads)"
+              options={[
+                { value: "", label: "— Sem responsável (fila de novos leads) —" },
+                { value: usuarioId, label: "Eu" },
+              ]}
+            />
+          )}
+          <p className="text-xs text-neutral-400">
+            Todos os leads dessa lista ficam com essa pessoa. Se deixar sem
+            responsável, caem na fila de novos leads para alguém pegar.
+          </p>
         </div>
 
         <div
