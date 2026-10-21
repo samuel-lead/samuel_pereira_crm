@@ -19,6 +19,7 @@ import {
   Reuniao,
   Sdr,
   ehImobiliario,
+  ehGondolas,
   semCloserNaoImobiliario,
   RepescagemFutura,
 } from "@/lib/terminologia";
@@ -1104,9 +1105,11 @@ export function EditarLeadForm({
                     rows={3}
                     defaultValue={lead.motivo_base_detalhe ?? ""}
                     placeholder={
-                      ehImobiliario(publicoOrg)
-                        ? "Ex.: só queria saber o preço por curiosidade, sem orçamento pra comprar agora — não é o perfil do imóvel."
-                        : "Ex.: não tem equipe de vendas hoje, só corretor autônomo — não é o perfil da mentoria agora."
+                      ehGondolas(publicoOrg)
+                        ? "Ex.: loja pequena, sem previsão de reforma nem verba — não é o perfil agora."
+                        : ehImobiliario(publicoOrg)
+                          ? "Ex.: só queria saber o preço por curiosidade, sem orçamento pra comprar agora — não é o perfil do imóvel."
+                          : "Ex.: não tem equipe de vendas hoje, só corretor autônomo — não é o perfil da mentoria agora."
                     }
                     className={campoClasse}
                   />
@@ -1125,15 +1128,26 @@ export function EditarLeadForm({
 
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_problema">
-                Me conte sobre o lead — qual é o perfil dele?
+                {ehGondolas(publicoOrg)
+                  ? "Me conte sobre a loja — como é o negócio dele?"
+                  : "Me conte sobre o lead — qual é o perfil dele?"}
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {[
-                  "Situação hoje",
-                  "O que já tentou",
-                  ehImobiliario(publicoOrg) ? "Que tipo de imóvel deseja" : "Onde quer chegar",
-                  "Autonomia de decisão",
-                ].map((dica) => (
+                {(ehGondolas(publicoOrg)
+                  ? [
+                      "Tipo de loja",
+                      "Tamanho da loja",
+                      "Quantas gôndolas precisa",
+                      "Loja nova ou reforma",
+                      "Quem decide a compra",
+                    ]
+                  : [
+                      "Situação hoje",
+                      "O que já tentou",
+                      ehImobiliario(publicoOrg) ? "Que tipo de imóvel deseja" : "Onde quer chegar",
+                      "Autonomia de decisão",
+                    ]
+                ).map((dica) => (
                   <span
                     key={dica}
                     className="rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs text-neutral-600"
@@ -1154,9 +1168,11 @@ export function EditarLeadForm({
 
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_urgencia">
-                {ehImobiliario(publicoOrg)
-                  ? "Tem urgência em comprar o imóvel?"
-                  : "Tem urgência em resolver"}
+                {ehGondolas(publicoOrg)
+                  ? "Quando precisa das gôndolas?"
+                  : ehImobiliario(publicoOrg)
+                    ? "Tem urgência em comprar o imóvel?"
+                    : "Tem urgência em resolver"}
               </label>
               <MenuSelect
                 id="criterio_urgencia"
@@ -1164,20 +1180,31 @@ export function EditarLeadForm({
                 value={criterioUrgenciaAtual}
                 onChange={setCriterioUrgenciaAtual}
                 buscar={false}
-                options={[
-                  { value: "desconhecida", label: "Ainda não sei" },
-                  { value: "alta", label: "Alta" },
-                  { value: "media", label: "Média" },
-                  { value: "baixa", label: "Baixa" },
-                ]}
+                options={
+                  ehGondolas(publicoOrg)
+                    ? [
+                        { value: "desconhecida", label: "Ainda não sei" },
+                        { value: "alta", label: "Alta — loja nova ou reforma em andamento" },
+                        { value: "media", label: "Média — vai comprar nos próximos meses" },
+                        { value: "baixa", label: "Baixa — só pesquisando preço" },
+                      ]
+                    : [
+                        { value: "desconhecida", label: "Ainda não sei" },
+                        { value: "alta", label: "Alta" },
+                        { value: "media", label: "Média" },
+                        { value: "baixa", label: "Baixa" },
+                      ]
+                }
               />
             </div>
 
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_capacidade">
-                {ehImobiliario(publicoOrg)
-                  ? "Consegue pagar o imóvel desejado?"
-                  : "Consegue pagar a solução"}
+                {ehGondolas(publicoOrg)
+                  ? "Tem verba para investir nas gôndolas?"
+                  : ehImobiliario(publicoOrg)
+                    ? "Consegue pagar o imóvel desejado?"
+                    : "Consegue pagar a solução"}
               </label>
               <MenuSelect
                 id="criterio_capacidade"
@@ -1185,12 +1212,21 @@ export function EditarLeadForm({
                 value={criterioCapacidadeAtual}
                 onChange={setCriterioCapacidadeAtual}
                 buscar={false}
-                options={[
-                  { value: "desconhecida", label: "Ainda não sei" },
-                  { value: "sim", label: "Sim" },
-                  { value: "parcial", label: "Parcial" },
-                  { value: "nao", label: "Não" },
-                ]}
+                options={
+                  ehGondolas(publicoOrg)
+                    ? [
+                        { value: "desconhecida", label: "Ainda não sei" },
+                        { value: "sim", label: "Sim — tem verba" },
+                        { value: "parcial", label: "Parcial — precisa de prazo ou parcelas" },
+                        { value: "nao", label: "Não — sem verba agora" },
+                      ]
+                    : [
+                        { value: "desconhecida", label: "Ainda não sei" },
+                        { value: "sim", label: "Sim" },
+                        { value: "parcial", label: "Parcial" },
+                        { value: "nao", label: "Não" },
+                      ]
+                }
               />
             </div>
           </fieldset>

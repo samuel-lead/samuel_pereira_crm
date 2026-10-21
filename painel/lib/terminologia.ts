@@ -69,6 +69,12 @@ export function dashboardEmBarras(publicoOrg: string) {
   return true;
 }
 
+// Empresa do mercado de gôndolas (Inove Gôndolas): o card do lead usa
+// perguntas de perfil/urgência/capacidade próprias desse mercado.
+export function ehGondolas(publicoOrg: string) {
+  return temVariante(publicoOrg, "gond");
+}
+
 // Empresa que não usa "Farming" na Base de leads (ex.: Banker - Consorcio).
 export function semFarming(publicoOrg: string) {
   return temVariante(publicoOrg, "sf");
