@@ -15,6 +15,7 @@ export function montarPublicoOrg(
     chama_receita_de_comissao?: boolean | null;
     dashboard_em_barras?: boolean | null;
     mercado_gondolas?: boolean | null;
+    metas_so_taxas?: boolean | null;
   } | null
 ): string {
   let resultado = publico;
@@ -25,6 +26,7 @@ export function montarPublicoOrg(
   if (org?.chama_receita_de_comissao) resultado += ":com";
   if (org?.dashboard_em_barras) resultado += ":fb";
   if (org?.mercado_gondolas) resultado += ":gond";
+  if (org?.metas_so_taxas) resultado += ":mt";
   return resultado;
 }
 
@@ -100,6 +102,12 @@ export function dashboardEmBarras(publicoOrg: string) {
 // perguntas de perfil/urgência/capacidade próprias desse mercado.
 export function ehGondolas(publicoOrg: string) {
   return temVariante(publicoOrg, "gond");
+}
+
+// Empresa cujas metas são só as taxas de comparecimento e de venda: sem piso
+// de leads/reuniões por dia e sem meta de taxa de agendamento (Inove Gôndolas).
+export function metasSoTaxas(publicoOrg: string) {
+  return temVariante(publicoOrg, "mt");
 }
 
 // Empresa que não usa "Farming" na Base de leads (ex.: Banker - Consorcio).

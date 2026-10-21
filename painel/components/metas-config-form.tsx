@@ -5,7 +5,7 @@ import {
   atualizarMetasConfig,
   type EstadoMetasConfig,
 } from "@/lib/configuracoes/actions";
-import { reunioes, ehImobiliario } from "@/lib/terminologia";
+import { reunioes, ehImobiliario, metasSoTaxas } from "@/lib/terminologia";
 
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
@@ -49,9 +49,27 @@ export function MetasConfigForm({
     }
   }, [pendente, estado]);
 
+  // Empresa só com as taxas de comparecimento e venda (Inove Gôndolas): some
+  // o piso de leads/reuniões e a taxa de agendamento. Os valores guardados
+  // seguem junto, escondidos, só pra o salvar continuar valendo.
+  const soTaxas = metasSoTaxas(publicoOrg);
+
   return (
     <form action={acaoFormulario} className="space-y-4">
+      {soTaxas && (
+        <>
+          <input type="hidden" name="piso_leads_dia" value={metas.piso_leads_dia} />
+          <input type="hidden" name="piso_reunioes_dia" value={metas.piso_reunioes_dia} />
+          <input
+            type="hidden"
+            name="taxa_agendamento_min"
+            value={Math.round(Number(metas.taxa_agendamento_min) * 1000) / 10}
+          />
+        </>
+      )}
       <div className="grid grid-cols-2 gap-4">
+        {!soTaxas && (
+        <>
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="piso_leads_dia">
             Piso de leads/dia
@@ -96,6 +114,8 @@ export function MetasConfigForm({
             className={campoClasse}
           />
         </div>
+        </>
+        )}
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="taxa_comparecimento_min">
             Taxa de comparecimento mín. (%)

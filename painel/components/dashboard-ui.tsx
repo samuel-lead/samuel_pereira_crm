@@ -8,7 +8,7 @@ import {
   IconeEstrela,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Calls, Faturamento, Receita, ehImobiliario, dashboardEmBarras } from "@/lib/terminologia";
+import { Calls, Faturamento, Receita, ehImobiliario, dashboardEmBarras, metasSoTaxas } from "@/lib/terminologia";
 import { FunilBarras } from "@/components/funil-barras";
 
 export type MetasConfig = {
@@ -202,15 +202,18 @@ export function SecaoPeriodo({
   // Conversão por safra (só o funil em barras usa).
   safraVenda?: { comPitch: number; vendidos: number };
 }) {
-  const pisoLeads = metas.piso_leads_dia * metricas.diasUteis;
+  const soTaxas = metasSoTaxas(publicoOrg);
+  const pisoLeads = soTaxas ? null : metas.piso_leads_dia * metricas.diasUteis;
   // Imobiliário não tem cadência diária de visita — o piso é sempre por
   // semana (fixo, ex.: 4), não por dia útil. Pra período menor que uma
   // semana (ex.: "Hoje"), mostra o piso proporcional: divide pelos ~5 dias
   // úteis de uma semana e multiplica pelos dias úteis já passados no
   // período (Samuel pediu essa conta: "4 ÷ dias úteis da semana").
-  const pisoReunioes = ehImobiliario(publicoOrg)
-    ? Math.round(metas.piso_reunioes_dia * (metricas.diasUteis / 5) * 10) / 10
-    : metas.piso_reunioes_dia * metricas.diasUteis;
+  const pisoReunioes = soTaxas
+    ? null
+    : ehImobiliario(publicoOrg)
+      ? Math.round(metas.piso_reunioes_dia * (metricas.diasUteis / 5) * 10) / 10
+      : metas.piso_reunioes_dia * metricas.diasUteis;
   const leadsNovosValor = leadsNovos ?? metricas.leadsTrabalhados;
   // Segunda leitura da mesma taxa, olhando só reunião de lead que TAMBÉM
   // entrou nesse período (não é toda reunião marcada — isso incluiria
@@ -275,7 +278,7 @@ export function SecaoPeriodo({
         <CardNumero
           titulo="Leads novos"
           valor={leadsNovosValor}
-          meta={pisoLeads}
+          meta={pisoLeads ?? 0}
           esquema="violeta"
           Icone={IconeAlvo}
         />
@@ -288,7 +291,7 @@ export function SecaoPeriodo({
         <CardNumero
           titulo={`${Calls(publicoOrg)} marcadas`}
           valor={metricas.reunioesMarcadas}
-          meta={pisoReunioes}
+          meta={pisoReunioes ?? 0}
           esquema="ceu"
           Icone={IconeCalendario}
         />

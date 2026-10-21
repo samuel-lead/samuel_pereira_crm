@@ -107,7 +107,7 @@ async function contextoUsuario() {
   const { data: usuario, error } = await supabase
     .from("usuarios")
     .select(
-      "id, org_id, papel, funcao, super_admin, orgs(publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming, chama_receita_de_comissao, dashboard_em_barras, mercado_gondolas)"
+      "id, org_id, papel, funcao, super_admin, orgs(publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming, chama_receita_de_comissao, dashboard_em_barras, mercado_gondolas, metas_so_taxas)"
     )
     .eq("id", user.id)
     .single();

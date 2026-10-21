@@ -1,6 +1,6 @@
 import type { Metricas } from "@/lib/metricas";
 import type { MetasConfig } from "@/components/dashboard-ui";
-import { Calls, calls, ehImobiliario } from "@/lib/terminologia";
+import { Calls, calls, ehImobiliario, metasSoTaxas } from "@/lib/terminologia";
 
 // Funil em barras da Visão geral: cada etapa mostra o resultado do período e,
 // do lado, quanto cresceu (ou caiu) em relação ao período anterior; entre as
@@ -146,8 +146,9 @@ export function FunilBarras({
   // Das calls com pitch do período, quantos leads viraram venda no mesmo período.
   safraVenda?: { comPitch: number; vendidos: number };
   noShowPct: number;
-  pisoLeads: number;
-  pisoReunioes: number;
+  // null = a empresa não tem piso (Inove Gôndolas: só as taxas).
+  pisoLeads: number | null;
+  pisoReunioes: number | null;
   publicoOrg?: string;
 }) {
   const ant = metricasAnteriores;
@@ -157,6 +158,7 @@ export function FunilBarras({
       : null
     : metricas.taxaVenda;
   const imob = ehImobiliario(publicoOrg);
+  const soTaxas = metasSoTaxas(publicoOrg);
   const taxaPitch =
     metricas.reunioesRealizadas > 0 ? metricas.reunioesComPitch / metricas.reunioesRealizadas : null;
 
@@ -170,8 +172,12 @@ export function FunilBarras({
       rotulo: `${Calls(publicoOrg)} agendadas`,
       valor: metricas.reunioesMarcadas,
       anterior: ant?.reunioesMarcadas,
-      piso: pisoReunioes,
-      conversao: { nome: "agendamento", valor: metricas.taxaAgendamento, minimo: metas.taxa_agendamento_min },
+      piso: pisoReunioes ?? undefined,
+      conversao: {
+        nome: "agendamento",
+        valor: metricas.taxaAgendamento,
+        minimo: soTaxas ? undefined : metas.taxa_agendamento_min,
+      },
     },
     {
       rotulo: `${Calls(publicoOrg)} realizadas`,
@@ -238,7 +244,7 @@ export function FunilBarras({
               Leads novos que chegaram
             </p>
             <div className="mt-1">
-              <SeloPiso valor={leadsNovos} piso={pisoLeads} />
+              {pisoLeads !== null && <SeloPiso valor={leadsNovos} piso={pisoLeads} />}
             </div>
           </div>
         </div>
@@ -316,8 +322,16 @@ export function FunilBarras({
         <Medidor
           valor={metricas.taxaAgendamento}
           rotulo="Agendamento"
-          legenda={`meta ${Math.round(metas.taxa_agendamento_min * 100)}% · ${metricas.reunioesMarcadas} de ${metricas.leadsTrabalhados}`}
-          bom={metricas.taxaAgendamento === null ? null : metricas.taxaAgendamento >= metas.taxa_agendamento_min}
+          legenda={
+            soTaxas
+              ? `${metricas.reunioesMarcadas} de ${metricas.leadsTrabalhados}`
+              : `meta ${Math.round(metas.taxa_agendamento_min * 100)}% · ${metricas.reunioesMarcadas} de ${metricas.leadsTrabalhados}`
+          }
+          bom={
+            soTaxas || metricas.taxaAgendamento === null
+              ? null
+              : metricas.taxaAgendamento >= metas.taxa_agendamento_min
+          }
         />
         <Medidor
           valor={metricas.taxaComparecimento}

@@ -188,7 +188,7 @@ export async function updateSession(request: NextRequest) {
     } else {
       const { data: usuarioDoBanco } = await supabase
         .from("usuarios")
-        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming, chama_receita_de_comissao, dashboard_em_barras, mercado_gondolas)")
+        .select("org_id, nome, papel, funcao, paginas_permitidas, foto_url, super_admin, orgs(status, publico, nome_oportunidades_futuras, chama_sdr_de_vendedor, sem_closer, sem_farming, chama_receita_de_comissao, dashboard_em_barras, mercado_gondolas, metas_so_taxas)")
         .eq("id", user.id)
         .single();
 
@@ -203,6 +203,7 @@ export async function updateSession(request: NextRequest) {
         chama_receita_de_comissao?: boolean;
         dashboard_em_barras?: boolean;
         mercado_gondolas?: boolean;
+        metas_so_taxas?: boolean;
       };
       const orgInfo = usuarioDoBanco?.orgs as OrgInfo | OrgInfo[] | null;
       const org = Array.isArray(orgInfo) ? orgInfo[0] : orgInfo;
@@ -221,6 +222,7 @@ export async function updateSession(request: NextRequest) {
         if (org?.chama_receita_de_comissao) publicoOrg += ":com";
         if (org?.dashboard_em_barras) publicoOrg += ":fb";
         if (org?.mercado_gondolas) publicoOrg += ":gond";
+        if (org?.metas_so_taxas) publicoOrg += ":mt";
       }
 
       if (usuarioDoBanco) {
