@@ -146,9 +146,9 @@ export function FunilBarras({
   // Das calls com pitch do período, quantos leads viraram venda no mesmo período.
   safraVenda?: { comPitch: number; vendidos: number };
   noShowPct: number;
-  // null = a empresa não tem piso (Inove Gôndolas: só as taxas).
+  // pisoLeads null = a empresa não tem piso de leads (Inove Gôndolas).
   pisoLeads: number | null;
-  pisoReunioes: number | null;
+  pisoReunioes: number;
   publicoOrg?: string;
 }) {
   const ant = metricasAnteriores;
@@ -172,7 +172,7 @@ export function FunilBarras({
       rotulo: `${Calls(publicoOrg)} agendadas`,
       valor: metricas.reunioesMarcadas,
       anterior: ant?.reunioesMarcadas,
-      piso: pisoReunioes ?? undefined,
+      piso: pisoReunioes,
       conversao: {
         nome: "agendamento",
         valor: metricas.taxaAgendamento,

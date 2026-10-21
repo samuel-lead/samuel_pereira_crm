@@ -104,8 +104,9 @@ export function ehGondolas(publicoOrg: string) {
   return temVariante(publicoOrg, "gond");
 }
 
-// Empresa cujas metas são só as taxas de comparecimento e de venda: sem piso
-// de leads/reuniões por dia e sem meta de taxa de agendamento (Inove Gôndolas).
+// Empresa sem piso de LEADS por dia e sem meta de taxa de agendamento — ficam
+// o piso de reuniões por dia e as taxas de comparecimento e de venda
+// (Inove Gôndolas, Samuel 21/10/26).
 export function metasSoTaxas(publicoOrg: string) {
   return temVariante(publicoOrg, "mt");
 }

@@ -209,11 +209,9 @@ export function SecaoPeriodo({
   // semana (ex.: "Hoje"), mostra o piso proporcional: divide pelos ~5 dias
   // úteis de uma semana e multiplica pelos dias úteis já passados no
   // período (Samuel pediu essa conta: "4 ÷ dias úteis da semana").
-  const pisoReunioes = soTaxas
-    ? null
-    : ehImobiliario(publicoOrg)
-      ? Math.round(metas.piso_reunioes_dia * (metricas.diasUteis / 5) * 10) / 10
-      : metas.piso_reunioes_dia * metricas.diasUteis;
+  const pisoReunioes = ehImobiliario(publicoOrg)
+    ? Math.round(metas.piso_reunioes_dia * (metricas.diasUteis / 5) * 10) / 10
+    : metas.piso_reunioes_dia * metricas.diasUteis;
   const leadsNovosValor = leadsNovos ?? metricas.leadsTrabalhados;
   // Segunda leitura da mesma taxa, olhando só reunião de lead que TAMBÉM
   // entrou nesse período (não é toda reunião marcada — isso incluiria
@@ -291,7 +289,7 @@ export function SecaoPeriodo({
         <CardNumero
           titulo={`${Calls(publicoOrg)} marcadas`}
           valor={metricas.reunioesMarcadas}
-          meta={pisoReunioes ?? 0}
+          meta={pisoReunioes}
           esquema="ceu"
           Icone={IconeCalendario}
         />

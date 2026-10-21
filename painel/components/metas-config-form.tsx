@@ -59,7 +59,6 @@ export function MetasConfigForm({
       {soTaxas && (
         <>
           <input type="hidden" name="piso_leads_dia" value={metas.piso_leads_dia} />
-          <input type="hidden" name="piso_reunioes_dia" value={metas.piso_reunioes_dia} />
           <input
             type="hidden"
             name="taxa_agendamento_min"
@@ -69,7 +68,6 @@ export function MetasConfigForm({
       )}
       <div className="grid grid-cols-2 gap-4">
         {!soTaxas && (
-        <>
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="piso_leads_dia">
             Piso de leads/dia
@@ -84,6 +82,7 @@ export function MetasConfigForm({
             className={campoClasse}
           />
         </div>
+        )}
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="piso_reunioes_dia">
             Piso de {reunioes(publicoOrg)}/{ehImobiliario(publicoOrg) ? "semana" : "dia"}
@@ -98,6 +97,7 @@ export function MetasConfigForm({
             className={campoClasse}
           />
         </div>
+        {!soTaxas && (
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="taxa_agendamento_min">
             Taxa de agendamento mín. (%)
@@ -114,7 +114,6 @@ export function MetasConfigForm({
             className={campoClasse}
           />
         </div>
-        </>
         )}
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="taxa_comparecimento_min">
