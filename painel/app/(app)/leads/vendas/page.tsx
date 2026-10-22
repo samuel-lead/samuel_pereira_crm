@@ -10,6 +10,7 @@ import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
 import { resolverPeriodo } from "@/lib/periodo";
 import { removerAcento } from "@/lib/texto";
+import { buscarTodas } from "@/lib/supabase/paginar";
 import { Sdr, Faturamento, Receita, ehImobiliario, semCloser } from "@/lib/terminologia";
 
 type LeadVendido = {
@@ -61,26 +62,30 @@ export default async function VendasPage({
     resolverPeriodo({ periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro }, agora) ??
     resolverPeriodo({ periodo: "mes" }, agora)!;
 
-  let consulta = supabase
-    .from("leads")
-    .select(
-      "id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, declarado_em, vendido_em, responsavel_id, indicacao_pega_em"
-    )
-    .eq("status", "vendido")
-    .is("arquivado_em", null)
-    .order("vendido_em", { ascending: false });
+  // Em pedaços de 1000 (o Supabase corta em 1000 linhas por consulta, calado).
+  const montarConsulta = (de: number, ate: number) => {
+    let consulta = supabase
+      .from("leads")
+      .select(
+        "id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, declarado_em, vendido_em, responsavel_id, indicacao_pega_em"
+      )
+      .eq("status", "vendido")
+      .is("arquivado_em", null);
 
-  if (periodoResolvido) {
-    consulta = consulta
-      .gte("vendido_em", periodoResolvido.inicio.toISOString())
-      .lt("vendido_em", periodoResolvido.fim.toISOString());
-  }
-  if (buscaFiltro) {
-    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
-  }
+    if (periodoResolvido) {
+      consulta = consulta
+        .gte("vendido_em", periodoResolvido.inicio.toISOString())
+        .lt("vendido_em", periodoResolvido.fim.toISOString());
+    }
+    if (buscaFiltro) {
+      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+    }
+
+    return consulta.order("vendido_em", { ascending: false }).order("id").range(de, ate);
+  };
 
   const [{ data: leadsData }, { data: usuariosData }] = await Promise.all([
-    consulta,
+    buscarTodas(montarConsulta),
     supabase.from("usuarios").select("id, nome").order("nome"),
   ]);
 

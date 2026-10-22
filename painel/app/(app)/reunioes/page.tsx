@@ -14,6 +14,7 @@ import { CartaoVendas } from "@/components/cartao-vendas";
 import Link from "next/link";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import { removerAcento } from "@/lib/texto";
+import { buscarTodas } from "@/lib/supabase/paginar";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 import { RepescagemFutura, ehImobiliario } from "@/lib/terminologia";
 import {
@@ -103,28 +104,35 @@ export default async function VendasPage({
   const ehImob = ehImobiliario(usuarioAtual?.publico_org ?? "mentoria");
   const imovelFiltro = ehImob ? imovelFiltroBruto : undefined;
 
-  let consulta = supabase
-    .from("leads")
-    .select(
-      "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, reativado_da_base_em, reativado_origem, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
-    )
-    .is("arquivado_em", null)
-    .neq("status", "vendido")
-    .in("nivel_ordem", NIVEIS_VENDAS)
-    .order("entrou_nivel_em", { ascending: false });
+  // Em pedaços de 1000 (o Supabase corta em 1000 linhas por consulta, calado).
+  const montarConsulta = (de: number, ate: number) => {
+    let consulta = supabase
+      .from("leads")
+      .select(
+        "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, oportunidade_futura, reativado_da_base_em, reativado_origem, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
+      )
+      .is("arquivado_em", null)
+      .neq("status", "vendido")
+      .in("nivel_ordem", NIVEIS_VENDAS);
 
-  if (usuarioFiltro) {
-    consulta = consulta.eq("responsavel_id", usuarioFiltro);
-  }
-  if (origemFiltro) {
-    consulta = consulta.eq("origem", origemFiltro);
-  }
-  if (imovelFiltro) {
-    consulta = consulta.eq("imovel_id", imovelFiltro);
-  }
-  if (buscaFiltro) {
-    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
-  }
+    if (usuarioFiltro) {
+      consulta = consulta.eq("responsavel_id", usuarioFiltro);
+    }
+    if (origemFiltro) {
+      consulta = consulta.eq("origem", origemFiltro);
+    }
+    if (imovelFiltro) {
+      consulta = consulta.eq("imovel_id", imovelFiltro);
+    }
+    if (buscaFiltro) {
+      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+    }
+
+    return consulta
+      .order("entrou_nivel_em", { ascending: false })
+      .order("id")
+      .range(de, ate);
+  };
 
   const [
     { data: niveisData },
@@ -134,15 +142,19 @@ export default async function VendasPage({
     { data: imoveisData },
   ] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
-    consulta,
+    buscarTodas(montarConsulta),
     supabase.from("usuarios").select("id, nome, foto_url, funcao, papel").order("nome"),
-    supabase
-      .from("leads")
-      .select("origem")
-      .is("arquivado_em", null)
-      .neq("status", "vendido")
-      .in("nivel_ordem", NIVEIS_VENDAS)
-      .not("origem", "is", null),
+    buscarTodas<{ origem: string | null }>((de, ate) =>
+      supabase
+        .from("leads")
+        .select("origem")
+        .is("arquivado_em", null)
+        .neq("status", "vendido")
+        .in("nivel_ordem", NIVEIS_VENDAS)
+        .not("origem", "is", null)
+        .order("id")
+        .range(de, ate)
+    ),
     ehImob
       ? supabase.from("imoveis").select("id, titulo").is("arquivado_em", null).order("titulo")
       : Promise.resolve({ data: null }),

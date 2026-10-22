@@ -4,6 +4,7 @@ import { BuscaLeads } from "@/components/busca-leads";
 import { LinkLead } from "@/components/link-lead";
 import { corDoNivel, numerarNiveis, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
 import { removerAcento } from "@/lib/texto";
+import { buscarTodas } from "@/lib/supabase/paginar";
 
 type LeadExcluido = {
   id: string;
@@ -34,19 +35,23 @@ export default async function LeadsExcluidosPage({
   const { busca: buscaFiltro } = await searchParams;
   const supabase = await createClient();
 
-  let consulta = supabase
-    .from("leads")
-    .select("id, nome, telefone_e164, origem, nivel_ordem, arquivado_em")
-    .not("arquivado_em", "is", null)
-    .order("arquivado_em", { ascending: false });
+  // Em pedaços de 1000 (o Supabase corta em 1000 linhas por consulta, calado).
+  const montarConsulta = (de: number, ate: number) => {
+    let consulta = supabase
+      .from("leads")
+      .select("id, nome, telefone_e164, origem, nivel_ordem, arquivado_em")
+      .not("arquivado_em", "is", null);
 
-  if (buscaFiltro) {
-    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
-  }
+    if (buscaFiltro) {
+      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+    }
+
+    return consulta.order("arquivado_em", { ascending: false }).order("id").range(de, ate);
+  };
 
   const [{ data: niveisData }, { data: leadsData }] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
-    consulta,
+    buscarTodas(montarConsulta),
   ]);
 
   const niveis = (niveisData ?? []) as NivelResumo[];
