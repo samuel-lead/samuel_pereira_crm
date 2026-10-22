@@ -22,6 +22,16 @@ import { ehGondolas, ehImobiliario, Reuniao } from "@/lib/terminologia";
 const NIVEIS_SEM_PRE_QUALIFICACAO = [4, 7, 8];
 const NIVEL_REUNIAO_MARCADA = 4;
 
+// A reunião realizada mais recente foi marcada como não qualificada? (só
+// mentoria/consultoria — imobiliário não tem essa pergunta.)
+function leadNaoQualificado(dados: DetalhesLead): boolean {
+  if (ehImobiliario(dados.publicoOrg)) return false;
+  const ultima = dados.reunioes
+    .filter((r) => r.status === "realizada")
+    .sort((a, b) => new Date(b.agendada_para).getTime() - new Date(a.agendada_para).getTime())[0];
+  return !!ultima && ultima.qualificada === false;
+}
+
 // Pop-up que abre por cima da tela atual ao clicar num lead, sem trocar
 // de rota — não usa nenhuma técnica de rota do Next.js (foi exatamente
 // uma rota interceptada que causou aquele 404 real em produção antes;
@@ -174,9 +184,20 @@ export function ModalLead({
                     marcar o próximo contato e abrir o script sem rolar a
                     página. Mesmo cabeçalho pros dois públicos — pré-
                     qualificação continua exclusiva de mentoria (ver abaixo). */}
-                {dados.podeEditar && (
+                {(dados.podeEditar || leadNaoQualificado(dados)) && (
                   <div className="flex flex-wrap items-center gap-2">
-                    {dados.lead.status !== "vendido" && (
+                    {/* Samuel pediu (22/10/26): "Lead não qualificado" bem
+                        destacado aqui no topo, ao lado dos botões, em vez de
+                        só aparecer escondido na linha do tempo. Só vale pra
+                        reunião realizada (mesma regra de lá) e não existe no
+                        imobiliário. */}
+                    {leadNaoQualificado(dados) && (
+                      <span className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700">
+                        <span className="h-2.5 w-2.5 rounded-full bg-red-600" aria-hidden />
+                        Lead não qualificado
+                      </span>
+                    )}
+                    {dados.podeEditar && dados.lead.status !== "vendido" && (
                       <ProximoContatoBotao
                         leadId={dados.lead.id}
                         proximoContatoEm={dados.lead.proximo_follow_em}
@@ -185,7 +206,7 @@ export function ModalLead({
                     {/* "Reunião marcada pra..." saiu do lado direito do card
                         e veio pro topo, junto dos outros — Samuel pediu
                         explicitamente pra tirar de lá. */}
-                    {dados.lead.nivel_ordem === NIVEL_REUNIAO_MARCADA && dados.reuniaoAtiva && (
+                    {dados.podeEditar && dados.lead.nivel_ordem === NIVEL_REUNIAO_MARCADA && dados.reuniaoAtiva && (
                       <ReagendarReuniaoBotao
                         leadId={dados.lead.id}
                         reuniaoId={dados.reuniaoAtiva.id}
@@ -193,10 +214,13 @@ export function ModalLead({
                         rotulo={Reuniao(dados.publicoOrg)}
                       />
                     )}
-                    <div className="w-fit">
-                      <RegistrarLigacaoButton leadId={dados.lead.id} variante="destaque" />
-                    </div>
-                    {!ehImobiliario(dados.publicoOrg) &&
+                    {dados.podeEditar && (
+                      <div className="w-fit">
+                        <RegistrarLigacaoButton leadId={dados.lead.id} variante="destaque" />
+                      </div>
+                    )}
+                    {dados.podeEditar &&
+                      !ehImobiliario(dados.publicoOrg) &&
                       (dados.souAdmin || dados.souSdr) &&
                       !NIVEIS_SEM_PRE_QUALIFICACAO.includes(dados.lead.nivel_ordem) && (
                       <div className="w-fit">
