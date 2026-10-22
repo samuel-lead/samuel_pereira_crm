@@ -130,7 +130,7 @@ Deno.serve(async (req: Request) => {
   const [{ data: leadData }, { data: usuarios }, resultadoToken] = await Promise.all([
     supabaseUsuario
       .from("leads")
-      .select("nome, email, telefone_e164, criterio_problema, criterio_urgencia, criterio_capacidade")
+      .select("nome, email, telefone_e164, imovel_id, criterio_problema, criterio_urgencia, criterio_capacidade")
       .eq("id", reuniaoData.lead_id as string)
       .single(),
     supabaseUsuario
@@ -154,20 +154,54 @@ Deno.serve(async (req: Request) => {
 
   const nomeCloser = usuarios?.find((u) => u.id === reuniaoData.closer_id)?.nome;
 
+  // Imobiliário (Samuel, 22/10/26): é VISITA a um imóvel, não call — sem link
+  // do Meet, com o imóvel no título e o endereço no local do evento.
+  const { data: orgData } = await supabaseAdmin
+    .from("orgs")
+    .select("publico")
+    .eq("id", reuniaoData.org_id as string)
+    .single();
+  const ehImobiliario = orgData?.publico === "imobiliario";
+  let imovel: { titulo: string | null; endereco: string | null; bairro: string | null; cidade: string | null } | null = null;
+  if (ehImobiliario && leadData.imovel_id) {
+    const { data: imovelData } = await supabaseAdmin
+      .from("imoveis")
+      .select("titulo, endereco, bairro, cidade")
+      .eq("id", leadData.imovel_id as string)
+      .maybeSingle();
+    imovel = imovelData ?? null;
+  }
+  const enderecoDoImovel = imovel
+    ? [imovel.endereco, imovel.bairro, imovel.cidade].filter(Boolean).join(", ")
+    : "";
+
   const inicio = new Date(reuniaoData.agendada_para as string);
   const fim = new Date(inicio.getTime() + 90 * 60 * 1000);
 
   // Só nome do lead + nome do closer, se tiver — sem inicial de SDR
   // (Samuel pediu pra tirar).
   let titulo = leadData.nome;
-  if (nomeCloser) titulo += ` + ${nomeCloser}`;
+  if (ehImobiliario) {
+    titulo = `Visita — ${leadData.nome}${imovel?.titulo ? ` — ${imovel.titulo}` : ""}`;
+  } else if (nomeCloser) {
+    titulo += ` + ${nomeCloser}`;
+  }
 
-  const descricao = [
-    leadData.criterio_problema || null,
-    `Urgência: ${ROTULOS_URGENCIA[leadData.criterio_urgencia as string] ?? "Ainda não sabe"}`,
-    `Investimento: ${ROTULOS_CAPACIDADE[leadData.criterio_capacidade as string] ?? "Ainda não sabe"}`,
-    leadData.telefone_e164 ? `Telefone: ${leadData.telefone_e164}` : null,
-  ]
+  const descricao = (
+    ehImobiliario
+      ? [
+          imovel?.titulo ? `Imóvel: ${imovel.titulo}` : null,
+          enderecoDoImovel ? `Endereço: ${enderecoDoImovel}` : null,
+          leadData.criterio_problema || null,
+          leadData.telefone_e164 ? `Telefone: ${leadData.telefone_e164}` : null,
+        ]
+      : [
+          leadData.criterio_problema || null,
+          `Urgência: ${ROTULOS_URGENCIA[leadData.criterio_urgencia as string] ?? "Ainda não sabe"}`,
+          `Investimento: ${ROTULOS_CAPACIDADE[leadData.criterio_capacidade as string] ?? "Ainda não sabe"}`,
+          leadData.telefone_e164 ? `Telefone: ${leadData.telefone_e164}` : null,
+        ]
+  )
     .filter(Boolean)
     .join("\n");
 
@@ -181,6 +215,7 @@ Deno.serve(async (req: Request) => {
   const evento: Record<string, unknown> = {
     summary: titulo,
     description: descricao,
+    ...(enderecoDoImovel ? { location: enderecoDoImovel } : {}),
     start: { dateTime: inicio.toISOString() },
     end: { dateTime: fim.toISOString() },
     attendees,
@@ -199,12 +234,15 @@ Deno.serve(async (req: Request) => {
     // Google Meet só entra na criação — o Google não deixa adicionar um
     // conferenceData novo num PATCH que já tinha um antes sem repetir o
     // mesmo conferenceId.
-    evento.conferenceData = {
-      createRequest: {
-        requestId: crypto.randomUUID(),
-        conferenceSolutionKey: { type: "hangoutsMeet" },
-      },
-    };
+    // Visita presencial não precisa de link do Meet.
+    if (!ehImobiliario) {
+      evento.conferenceData = {
+        createRequest: {
+          requestId: crypto.randomUUID(),
+          conferenceSolutionKey: { type: "hangoutsMeet" },
+        },
+      };
+    }
     const url = `https://www.googleapis.com/calendar/v3/calendars/${resultadoToken.calendarId}/events?conferenceDataVersion=1&sendUpdates=all`;
     return fetch(url, {
       method: "POST",
