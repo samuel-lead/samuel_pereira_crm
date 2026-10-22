@@ -69,6 +69,8 @@ type LeadResumo = {
   // Só existe pra lead que veio de uma isca (respondeu o questionário) —
   // "super_qualificado" | "qualificado" | "desqualificado" | null.
   nivelQualificacao?: string | null;
+  // A reunião realizada mais recente foi marcada como "não qualificada".
+  naoQualificado?: boolean;
   // Uma vez reativado da Base, fica marcado pra sempre — não é um estado
   // que "acaba", é um fato histórico que ajuda a entender o lead.
   reativado_da_base_em?: string | null;
@@ -1060,6 +1062,13 @@ export function KanbanBoard({
                           >
                             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
                             {SELO_QUALIFICACAO[lead.nivelQualificacao].texto}
+                          </span>
+                        )}
+
+                        {lead.naoQualificado && (
+                          <span className="mb-2 mr-1.5 inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+                            Lead não qualificado
                           </span>
                         )}
 

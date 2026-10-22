@@ -74,6 +74,7 @@ type LeadResumo = {
   reuniao_agendada_para?: string | null;
   isca_respostas: { nivel_qualificacao: string | null }[] | null;
   jaTeveReuniao?: boolean;
+  naoQualificado?: boolean;
   // Só existe no público imobiliário — vem do leads.imovel_id.
   imovel: { titulo: string; foto_url: string | null } | null;
 };
@@ -235,8 +236,10 @@ export default async function VendasPage({
       // usado pelo "Mover para..." do celular, mesma trava do menu Nível
       // dentro do card (ver nivelDeveApareceNoMenu).
       leadIds.length
-        ? supabase.from("reunioes").select("lead_id").in("lead_id", leadIds)
-        : Promise.resolve({ data: [] as { lead_id: string }[] }),
+        ? supabase.from("reunioes").select("lead_id, status, agendada_para, qualificada").in("lead_id", leadIds)
+        : Promise.resolve({
+            data: [] as { lead_id: string; status: string; agendada_para: string; qualificada: boolean }[],
+          }),
       anexarUltimaAtividade(supabase, leads),
     ]);
 
@@ -251,6 +254,18 @@ export default async function VendasPage({
 
   const leadsComReuniaoRegistrada = new Set((todasReunioesData ?? []).map((r) => r.lead_id));
 
+  // Samuel pediu (22/10/26): o card mostra "Lead não qualificado" quando a
+  // reunião realizada MAIS RECENTE do lead foi marcada assim (mesma regra do
+  // aviso no topo do card aberto). Imobiliário não tem essa pergunta.
+  const ultimaRealizadaPorLead = new Map<string, { agendada_para: string; qualificada: boolean }>();
+  for (const r of todasReunioesData ?? []) {
+    if (r.status !== "realizada") continue;
+    const atual = ultimaRealizadaPorLead.get(r.lead_id);
+    if (!atual || new Date(r.agendada_para) > new Date(atual.agendada_para)) {
+      ultimaRealizadaPorLead.set(r.lead_id, r);
+    }
+  }
+
   const atividadePorLead = new Map(
     leadsComAtividadeBase.map((lead) => [lead.id, lead.ultima_atividade_em])
   );
@@ -259,6 +274,8 @@ export default async function VendasPage({
     reuniao_agendada_para: reuniaoAgendadaPorLead.get(lead.id) ?? null,
     nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
     jaTeveReuniao: leadsComReuniaoRegistrada.has(lead.id),
+    naoQualificado:
+      !ehImobiliario(publicoOrg) && ultimaRealizadaPorLead.get(lead.id)?.qualificada === false,
     ultima_atividade_em: atividadePorLead.get(lead.id) ?? lead.entrou_nivel_em,
   }));
 
