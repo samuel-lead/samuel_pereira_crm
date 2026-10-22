@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calls, relatorioSemCalls } from "@/lib/terminologia";
+import { Calls, ehGondolas, relatorioSemCalls } from "@/lib/terminologia";
 
 function montarRelatorio(
   periodoLabel: string,
@@ -19,7 +19,8 @@ function montarRelatorio(
           `➡ ${Calls(publicoOrg)} marcadas: ${callsMarcadas}`,
           `➡ ${Calls(publicoOrg)} reagendadas: ${callsReagendadas}`,
         ]),
-    `➡ Prospecções feitas no IG? `,
+    // Inove Gôndolas não prospecta pelo Instagram (Samuel, 22/10/26).
+    ...(ehGondolas(publicoOrg) ? [] : [`➡ Prospecções feitas no IG? `]),
     `➡ Ligações feitas? ${ligacoesFeitas}`,
     `➡ Atualizou CRM? `,
   ].join("\n");
