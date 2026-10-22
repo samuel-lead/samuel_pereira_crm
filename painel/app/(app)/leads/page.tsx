@@ -24,6 +24,7 @@ import {
 import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { Calls, ehImobiliario } from "@/lib/terminologia";
 import { removerAcento } from "@/lib/texto";
+import { buscarTodas } from "@/lib/supabase/paginar";
 
 type LeadResumo = {
   id: string;
@@ -76,30 +77,42 @@ export default async function LeadsPage({
   const ehImob = ehImobiliario(usuarioAtual?.publico_org ?? "mentoria");
   const imovelFiltro = ehImob ? imovelFiltroBruto : undefined;
 
-  let consulta = supabase
-    .from("leads")
-    .select(
-      "id, nome, telefone_e164, instagram, foto_url, origem, quem_indicou, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, proximo_follow_em, oportunidade_futura, reativado_da_base_em, reativado_origem, proposta_valor, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
-    )
-    .is("arquivado_em", null)
-    .neq("status", "vendido")
-    .in("nivel_ordem", NIVEIS_PRE_VENDAS)
-    // Mais recente primeiro dentro de cada coluna — assim, quando um card
-    // é movido (arrastado ou editado), ele sobe pro topo da coluna nova.
-    .order("entrou_nivel_em", { ascending: false });
+  // Montada do zero a cada pedaço de 1000 (ver buscarTodas) — sem isso,
+  // empresa com mais de 1000 leads em Pré-vendas via só os 1000 primeiros.
+  const montarConsulta = (de: number, ate: number) => {
+    let consulta = supabase
+      .from("leads")
+      .select(
+        "id, nome, telefone_e164, instagram, foto_url, origem, quem_indicou, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, proximo_follow_em, oportunidade_futura, reativado_da_base_em, reativado_origem, proposta_valor, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
+      )
+      .is("arquivado_em", null)
+      .neq("status", "vendido")
+      .in("nivel_ordem", NIVEIS_PRE_VENDAS);
 
-  if (usuarioFiltro) {
-    consulta = consulta.eq("responsavel_id", usuarioFiltro);
-  }
-  if (origemFiltro) {
-    consulta = consulta.eq("origem", origemFiltro);
-  }
-  if (imovelFiltro) {
-    consulta = consulta.eq("imovel_id", imovelFiltro);
-  }
-  if (buscaFiltro) {
-    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
-  }
+    if (usuarioFiltro) {
+      consulta = consulta.eq("responsavel_id", usuarioFiltro);
+    }
+    if (origemFiltro) {
+      consulta = consulta.eq("origem", origemFiltro);
+    }
+    if (imovelFiltro) {
+      consulta = consulta.eq("imovel_id", imovelFiltro);
+    }
+    if (buscaFiltro) {
+      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+    }
+
+    return (
+      consulta
+        // Mais recente primeiro dentro de cada coluna — assim, quando um card
+        // é movido (arrastado ou editado), ele sobe pro topo da coluna nova.
+        // O id desempata (importação cria vários leads no mesmo instante) —
+        // sem ele, a busca em pedaços podia repetir ou pular lead.
+        .order("entrou_nivel_em", { ascending: false })
+        .order("id")
+        .range(de, ate)
+    );
+  };
 
   const [
     { data: niveisData },
@@ -109,15 +122,19 @@ export default async function LeadsPage({
     { data: imoveisData },
   ] = await Promise.all([
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
-    consulta,
+    buscarTodas(montarConsulta),
     supabase.from("usuarios").select("id, nome, foto_url, funcao, papel").order("nome"),
-    supabase
-      .from("leads")
-      .select("origem")
-      .is("arquivado_em", null)
-      .neq("status", "vendido")
-      .in("nivel_ordem", NIVEIS_PRE_VENDAS)
-      .not("origem", "is", null),
+    buscarTodas((de, ate) =>
+      supabase
+        .from("leads")
+        .select("origem")
+        .is("arquivado_em", null)
+        .neq("status", "vendido")
+        .in("nivel_ordem", NIVEIS_PRE_VENDAS)
+        .not("origem", "is", null)
+        .order("id")
+        .range(de, ate)
+    ),
     ehImob
       ? supabase.from("imoveis").select("id, titulo").is("arquivado_em", null).order("titulo")
       : Promise.resolve({ data: null }),
