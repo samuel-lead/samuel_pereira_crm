@@ -5,6 +5,7 @@ import { BuscaLeads } from "@/components/busca-leads";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 import { removerAcento } from "@/lib/texto";
+import { buscarTodas, emPedacos } from "@/lib/supabase/paginar";
 import { NIVEIS_REATIVACAO, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
 type LeadComHistorico = LeadBase & {
@@ -50,23 +51,31 @@ export default async function BasePage({
   const souAdmin = usuarioAtual?.papel === "admin";
   const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
 
-  let consulta = supabase
-    .from("leads")
-    .select(
-      "id, nome, telefone_e164, instagram, foto_url, origem, quem_indicou, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor, motivo_base, motivo_base_detalhe, voltar_da_base_em"
-    )
-    .eq("nivel_ordem", 9)
-    .neq("status", "vendido")
-    .is("arquivado_em", null)
-    .order("entrou_nivel_em", { ascending: false });
+  // Em pedaços de 1000 (o Supabase corta em 1000 calado) — a Base de uma
+  // empresa com importação grande (ex.: 3.400 leads) aparecia incompleta.
+  const montarConsulta = (de: number, ate: number) => {
+    let consulta = supabase
+      .from("leads")
+      .select(
+        "id, nome, telefone_e164, instagram, foto_url, origem, quem_indicou, responsavel_id, entrou_nivel_em, criterio_problema, criterio_urgencia, criterio_capacidade, proposta_enviada_em, proposta_valor, motivo_base, motivo_base_detalhe, voltar_da_base_em"
+      )
+      .eq("nivel_ordem", 9)
+      .neq("status", "vendido")
+      .is("arquivado_em", null);
 
-  if (origemFiltro) {
-    consulta = consulta.eq("origem", origemFiltro);
-  }
+    if (origemFiltro) {
+      consulta = consulta.eq("origem", origemFiltro);
+    }
 
-  if (buscaFiltro) {
-    consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
-  }
+    if (buscaFiltro) {
+      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+    }
+
+    return consulta
+      .order("entrou_nivel_em", { ascending: false })
+      .order("id")
+      .range(de, ate);
+  };
 
   const [
     { data: leadsData },
@@ -74,17 +83,21 @@ export default async function BasePage({
     { data: niveisData },
     { data: origensData },
   ] = await Promise.all([
-    consulta,
+    buscarTodas(montarConsulta),
     supabase.from("usuarios").select("id, nome, foto_url, funcao, papel"),
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     // Funis que existem na Base (não só os que o filtro atual deixou passar).
-    supabase
-      .from("leads")
-      .select("origem")
-      .eq("nivel_ordem", 9)
-      .neq("status", "vendido")
-      .is("arquivado_em", null)
-      .not("origem", "is", null),
+    buscarTodas<{ origem: string | null }>((de, ate) =>
+      supabase
+        .from("leads")
+        .select("origem")
+        .eq("nivel_ordem", 9)
+        .neq("status", "vendido")
+        .is("arquivado_em", null)
+        .not("origem", "is", null)
+        .order("id")
+        .range(de, ate)
+    ),
   ]);
   const origens = Array.from(
     new Set((origensData ?? []).map((lead) => lead.origem as string))
@@ -96,17 +109,25 @@ export default async function BasePage({
   const leads = (leadsData ?? []) as LeadComHistorico[];
   const leadIds = leads.map((l) => l.id);
 
-  const { data: reunioesData } = leadIds.length
-    ? await supabase
-        .from("reunioes")
-        .select("lead_id, status, agendada_para")
-        .in("lead_id", leadIds)
-        .order("agendada_para", { ascending: false })
-    : { data: [] as { lead_id: string; status: string; agendada_para: string }[] };
+  // .in() com milhares de ids estoura o tamanho do endereço da requisição —
+  // busca em pedaços de 200 ids e junta, ordenando pela data de novo.
+  type ReuniaoBase = { lead_id: string; status: string; agendada_para: string };
+  const reunioesData: ReuniaoBase[] = [];
+  for (const pedaco of emPedacos(leadIds, 200)) {
+    const { data } = await supabase
+      .from("reunioes")
+      .select("lead_id, status, agendada_para")
+      .in("lead_id", pedaco)
+      .order("agendada_para", { ascending: false });
+    reunioesData.push(...((data ?? []) as ReuniaoBase[]));
+  }
+  reunioesData.sort(
+    (a, b) => new Date(b.agendada_para).getTime() - new Date(a.agendada_para).getTime()
+  );
 
   // A mais recente por lead — reunioesData já vem ordenado por data desc.
   const ultimaReuniaoPorLead = new Map<string, string>();
-  for (const reuniao of reunioesData ?? []) {
+  for (const reuniao of reunioesData) {
     if (!ultimaReuniaoPorLead.has(reuniao.lead_id)) {
       ultimaReuniaoPorLead.set(reuniao.lead_id, reuniao.status);
     }

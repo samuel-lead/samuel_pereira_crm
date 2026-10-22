@@ -1,5 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import { UM_DIA_MS, diaDaSemana } from "@/lib/datas";
+import { buscarTodas } from "@/lib/supabase/paginar";
 
 export { inicioDaSemana, inicioDoMes } from "@/lib/datas";
 
@@ -101,14 +102,20 @@ export async function calcularMetricas(
     // Lead que já foi pra Farming não conta como "lead novo" — ele só está
     // ali esperando o dia de falar de novo, não é trabalho novo (Samuel
     // pediu essa exceção explicitamente, só pra coluna Farming da Base).
-    supabase
-      .from("leads")
-      .select("id")
-      .eq("responsavel_id", usuarioId)
-      .is("arquivado_em", null)
-      .or("nivel_ordem.neq.9,motivo_base.neq.farming")
-      .gte("declarado_em", inicioISO)
-      .lt("declarado_em", fimISO),
+    // Em pedaços de 1000 — o Supabase corta em 1000 linhas calado, e uma
+    // importação grande (ex.: 3.400 leads num dia) fazia "leads novos" parar em 1000.
+    buscarTodas<{ id: string }>((de, ate) =>
+      supabase
+        .from("leads")
+        .select("id")
+        .eq("responsavel_id", usuarioId)
+        .is("arquivado_em", null)
+        .or("nivel_ordem.neq.9,motivo_base.neq.farming")
+        .gte("declarado_em", inicioISO)
+        .lt("declarado_em", fimISO)
+        .order("id")
+        .range(de, ate)
+    ),
     // Ligação é diferente: conta pra quem realmente discou, não pra quem é
     // o responsável do lead — por isso continua em usuario_id. Junta com
     // "leads" e exige arquivado_em nulo — sem isso, ligação de um lead já
@@ -335,14 +342,18 @@ export async function calcularMetricasOrg(
   ] = await Promise.all([
     // Mesma exceção da versão por usuário acima: lead em Farming não conta
     // como "lead novo".
-    supabase
-      .from("leads")
-      .select("id")
-      .eq("org_id", orgId)
-      .is("arquivado_em", null)
-      .or("nivel_ordem.neq.9,motivo_base.neq.farming")
-      .gte("declarado_em", inicioISO)
-      .lt("declarado_em", fimISO),
+    buscarTodas<{ id: string }>((de, ate) =>
+      supabase
+        .from("leads")
+        .select("id")
+        .eq("org_id", orgId)
+        .is("arquivado_em", null)
+        .or("nivel_ordem.neq.9,motivo_base.neq.farming")
+        .gte("declarado_em", inicioISO)
+        .lt("declarado_em", fimISO)
+        .order("id")
+        .range(de, ate)
+    ),
     // Junta com "leads" e exige arquivado_em nulo — sem isso, ligação de um
     // lead já excluído (ex.: lead de teste) continuava contando pra sempre.
     supabase
@@ -657,14 +668,18 @@ export async function calcularLeadsPorOrigem(
   const [{ data: declarados }, { data: viaReuniao }] = await Promise.all([
     // Mesma exceção de calcularMetricas/calcularMetricasOrg: lead em
     // Farming não conta como "lead novo".
-    supabase
-      .from("leads")
-      .select("id, origem")
-      .eq("org_id", orgId)
-      .is("arquivado_em", null)
-      .or("nivel_ordem.neq.9,motivo_base.neq.farming")
-      .gte("declarado_em", inicioISO)
-      .lt("declarado_em", fimISO),
+    buscarTodas<{ id: string; origem: string | null }>((de, ate) =>
+      supabase
+        .from("leads")
+        .select("id, origem")
+        .eq("org_id", orgId)
+        .is("arquivado_em", null)
+        .or("nivel_ordem.neq.9,motivo_base.neq.farming")
+        .gte("declarado_em", inicioISO)
+        .lt("declarado_em", fimISO)
+        .order("id")
+        .range(de, ate)
+    ),
     apenasDeclarados
       ? Promise.resolve({ data: [] as { lead_id: string; leads: unknown }[] })
       : supabase
