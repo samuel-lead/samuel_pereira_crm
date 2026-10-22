@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { BuscaLeads } from "@/components/busca-leads";
 import { LinkLead } from "@/components/link-lead";
 import { corDoNivel, numerarNiveis, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
-import { removerAcento } from "@/lib/texto";
+import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 
 type LeadExcluido = {
@@ -43,7 +43,7 @@ export default async function LeadsExcluidosPage({
       .not("arquivado_em", "is", null);
 
     if (buscaFiltro) {
-      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+      consulta = aplicarBuscaLead(consulta, buscaFiltro);
     }
 
     return consulta.order("arquivado_em", { ascending: false }).order("id").range(de, ate);

@@ -23,7 +23,7 @@ import {
 } from "@/lib/metricas";
 import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 import { Calls, ehImobiliario } from "@/lib/terminologia";
-import { removerAcento } from "@/lib/texto";
+import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 
 type LeadResumo = {
@@ -99,7 +99,7 @@ export default async function LeadsPage({
       consulta = consulta.eq("imovel_id", imovelFiltro);
     }
     if (buscaFiltro) {
-      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+      consulta = aplicarBuscaLead(consulta, buscaFiltro);
     }
 
     return (

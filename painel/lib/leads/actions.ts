@@ -485,6 +485,7 @@ export async function criarLead(
   const telefoneDigitado = String(formData.get("telefone") ?? "").trim();
   const telefone = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
   const instagram = String(formData.get("instagram") ?? "").trim() || null;
+  const documentoNovo = String(formData.get("documento") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
   const quemIndicou = String(formData.get("quem_indicou") ?? "").trim();
   const responsavelId =
@@ -518,6 +519,7 @@ export async function criarLead(
       nome,
       telefone_e164: telefone,
       instagram,
+      documento: documentoNovo,
       origem,
       quem_indicou: quemIndicou || null,
       responsavel_id: responsavelId,
@@ -846,6 +848,7 @@ export async function atualizarLead(
   const telefoneDigitado = String(formData.get("telefone") ?? "").trim();
   const telefone = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
   const email = String(formData.get("email") ?? "").trim() || null;
+  const documento = String(formData.get("documento") ?? "").trim() || null;
   const instagram = String(formData.get("instagram") ?? "").trim() || null;
   const origem = String(formData.get("origem") ?? "").trim() || null;
   const imovelId = String(formData.get("imovel_id") ?? "").trim() || null;
@@ -1139,6 +1142,7 @@ export async function atualizarLead(
       nome,
       telefone_e164: telefone,
       email,
+      documento,
       instagram,
       origem,
       quem_indicou: quemIndicou || null,
@@ -2758,6 +2762,7 @@ export type DetalhesLead = {
     nome: string;
     telefone_e164: string | null;
     email: string | null;
+    documento: string | null;
     instagram: string | null;
     foto_url: string | null;
     origem: string | null;
@@ -2888,7 +2893,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor"
+        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor"
       )
       .eq("id", leadId)
       .single(),

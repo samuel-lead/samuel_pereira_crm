@@ -13,7 +13,7 @@ import { StatCell } from "@/components/stat-cell";
 import { CartaoVendas } from "@/components/cartao-vendas";
 import Link from "next/link";
 import { anexarUltimaAtividade } from "@/lib/leads/atividade";
-import { removerAcento } from "@/lib/texto";
+import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
 import { RepescagemFutura, ehImobiliario } from "@/lib/terminologia";
@@ -125,7 +125,7 @@ export default async function VendasPage({
       consulta = consulta.eq("imovel_id", imovelFiltro);
     }
     if (buscaFiltro) {
-      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+      consulta = aplicarBuscaLead(consulta, buscaFiltro);
     }
 
     return consulta

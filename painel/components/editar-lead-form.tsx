@@ -58,6 +58,7 @@ type Lead = {
   nome: string;
   telefone_e164: string | null;
   email: string | null;
+  documento?: string | null;
   instagram: string | null;
   origem: string | null;
   quem_indicou: string | null;
@@ -574,6 +575,19 @@ export function EditarLeadForm({
             type="email"
             value={emailAtual}
             onChange={(e) => setEmailAtual(e.target.value)}
+            className={campoClasse}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className={labelClasse} htmlFor="documento">
+            CPF ou CNPJ
+          </label>
+          <input
+            id="documento"
+            name="documento"
+            placeholder="Só se tiver — serve pra buscar o lead"
+            defaultValue={lead.documento ?? ""}
             className={campoClasse}
           />
         </div>

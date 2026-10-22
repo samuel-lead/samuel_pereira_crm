@@ -9,7 +9,7 @@ import { IconeMoeda } from "@/components/icons";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
 import { resolverPeriodo } from "@/lib/periodo";
-import { removerAcento } from "@/lib/texto";
+import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 import { Sdr, Faturamento, Receita, ehImobiliario, semCloser } from "@/lib/terminologia";
 
@@ -78,7 +78,7 @@ export default async function VendasPage({
         .lt("vendido_em", periodoResolvido.fim.toISOString());
     }
     if (buscaFiltro) {
-      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+      consulta = aplicarBuscaLead(consulta, buscaFiltro);
     }
 
     return consulta.order("vendido_em", { ascending: false }).order("id").range(de, ate);

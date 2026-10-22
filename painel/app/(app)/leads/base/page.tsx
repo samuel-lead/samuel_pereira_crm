@@ -4,7 +4,7 @@ import { BarraFixaKanban } from "@/components/barra-fixa-kanban";
 import { BuscaLeads } from "@/components/busca-leads";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
-import { removerAcento } from "@/lib/texto";
+import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas, emPedacos } from "@/lib/supabase/paginar";
 import { NIVEIS_REATIVACAO, numerarNiveis, type NivelResumo } from "@/lib/niveis";
 
@@ -68,7 +68,7 @@ export default async function BasePage({
     }
 
     if (buscaFiltro) {
-      consulta = consulta.ilike("nome_busca", `%${removerAcento(buscaFiltro)}%`);
+      consulta = aplicarBuscaLead(consulta, buscaFiltro);
     }
 
     return consulta
