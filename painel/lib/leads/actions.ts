@@ -10,7 +10,7 @@ import {
   motivosBaseDaOrg,
   type NivelResumo,
 } from "@/lib/niveis";
-import { garantirOrigem } from "@/lib/origens/actions";
+import { garantirOrigem, pareceOrigemInvalida } from "@/lib/origens/actions";
 import { normalizarTelefone } from "@/lib/telefone";
 import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg } from "@/lib/terminologia";
 
@@ -731,6 +731,10 @@ export async function importarLeads(
     supabase,
     linhas.map((l) => l.telefone).filter((t): t is string => !!t)
   );
+  const { data: origensDaEmpresa } = await supabase.from("origens").select("nome");
+  const origensExistentes = new Set(
+    (origensDaEmpresa ?? []).map((o) => String(o.nome).trim().toLowerCase())
+  );
 
   let criados = 0;
   let duplicados = 0;
@@ -753,7 +757,15 @@ export async function importarLeads(
       vistosNaLista.add(chave);
     }
 
-    const origemLinha = linha.origemLinha || origemPadrao;
+    // A 3ª coluna de uma linha só vale como origem se for uma origem que a
+    // empresa JÁ TEM (ou o texto digitado no campo Origem da tela). Antes
+    // qualquer coluna extra da planilha virava origem e criava lixo no cadastro.
+    const origemLinha =
+      linha.origemLinha &&
+      !pareceOrigemInvalida(linha.origemLinha) &&
+      origensExistentes.has(linha.origemLinha.trim().toLowerCase())
+        ? linha.origemLinha.trim()
+        : origemPadrao;
     const { data: novoLead, error } = await supabase
       .from("leads")
       .insert({
