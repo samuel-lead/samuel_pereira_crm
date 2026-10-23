@@ -7,6 +7,7 @@ import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
 import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
+import { RecebimentosVenda } from "@/components/recebimentos-venda";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
@@ -201,6 +202,17 @@ export default async function EditarLeadPage({
   }
 
   const leadTipado = lead as Lead;
+  const { data: recebimentosData } = await supabase
+    .from("venda_recebimentos")
+    .select("id, valor, recebido_em")
+    .eq("lead_id", leadTipado.id)
+    .is("excluido_em", null)
+    .order("recebido_em", { ascending: true });
+  const recebimentos = (recebimentosData ?? []).map((r) => ({
+    id: r.id as string,
+    valor: Number(r.valor),
+    recebido_em: r.recebido_em as string,
+  }));
   const niveis = (niveisData ?? []) as NivelResumo[];
   const interacoes = (interacoesData ?? []) as Interacao[];
   const reunioes = (reunioesData ?? []) as Reuniao[];
@@ -448,6 +460,12 @@ export default async function EditarLeadPage({
                   {formatarData(leadTipado.vendido_em)}
                 </p>
               )}
+              <RecebimentosVenda
+                leadId={leadTipado.id}
+                recebimentos={recebimentos}
+                publicoOrg={publicoOrg}
+                podeEditar={podeEditar}
+              />
               {podeEditar && (
                 <div className="mt-3">
                   <EditarVendaForm

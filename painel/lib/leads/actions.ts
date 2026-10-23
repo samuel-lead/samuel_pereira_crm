@@ -180,6 +180,38 @@ async function garantirPodeEditar(
   return ERRO_SEM_PERMISSAO;
 }
 
+// Receita = pagamentos com data própria (tabela venda_recebimentos), contada no
+// mês em que o dinheiro caiu (Samuel, 23/10/26). Imobiliário e CRMs com
+// comissão calculada por % (Banker) têm um valor só, calculado na hora da
+// venda: aí a receita é sempre UM pagamento, na data da venda, e este helper
+// o refaz toda vez que a venda é gravada/editada.
+async function gravarRecebimentoUnico(
+  supabase: SupabaseServerClient,
+  usuario: UsuarioContexto,
+  leadId: string,
+  valor: number | null,
+  recebidoEm: string
+) {
+  await supabase
+    .from("venda_recebimentos")
+    .update({ excluido_em: new Date().toISOString() })
+    .eq("lead_id", leadId)
+    .is("excluido_em", null);
+  if (valor != null && valor > 0) {
+    await supabase.from("venda_recebimentos").insert({
+      org_id: usuario.org_id,
+      usuario_id: usuario.id,
+      lead_id: leadId,
+      valor,
+      recebido_em: recebidoEm,
+    });
+  }
+}
+
+function receitaEhPorPagamentos(usuario: { publico_org: string; publico_org_completo: string }) {
+  return !usaComissaoDoVendedor(usuario.publico_org_completo) && usuario.publico_org !== "imobiliario";
+}
+
 function mensagemAmigavel(codigo: string | undefined, mensagemOriginal: string) {
   if (codigo === "23505") {
     return "Já existe um lead com esse telefone.";
@@ -1807,6 +1839,9 @@ export async function marcarVendido(
   // A unidade vendida sai da lista de disponíveis e fica ligada ao lead.
   await atualizarUnidadesDaVenda(supabase, leadId, unidadeId, null);
 
+  // O que já entrou na hora da venda vira o 1º pagamento (data da venda).
+  await gravarRecebimentoUnico(supabase, usuario, leadId, receita, vendidoEm.toISOString());
+
   if (reuniaoAtiva) {
     // Vendeu = a reunião aconteceu de verdade. Sem isso, a reunião ficava
     // "marcada" pra sempre mesmo depois de virar venda — some das contas
@@ -1949,6 +1984,14 @@ export async function cancelarVenda(
   // A unidade do imóvel volta a ficar disponível (imobiliário).
   await atualizarUnidadesDaVenda(supabase, leadId, null, lead.unidade_id);
 
+  // Pagamentos da venda cancelada saem das contas de receita (ficam só
+  // marcados como excluídos — nada é apagado de verdade).
+  await supabase
+    .from("venda_recebimentos")
+    .update({ excluido_em: new Date().toISOString() })
+    .eq("lead_id", leadId)
+    .is("excluido_em", null);
+
   await supabase.from("nivel_historico").insert({
     org_id: usuario.org_id,
     lead_id: leadId,
@@ -2074,7 +2117,9 @@ export async function editarVenda(
     .from("leads")
     .update({
       valor_venda: valor,
-      receita_venda: receita,
+      // Nos CRMs de pagamentos por data, a receita é a soma dos pagamentos
+      // (mantida pelo banco) — editar a venda não mexe nela.
+      ...(receitaEhPorPagamentos(usuario) ? {} : { receita_venda: receita }),
       venda_comissao_tipo: comissaoTipoVenda,
       venda_comissao_valor: comissaoValorVenda,
       produto,
@@ -2090,11 +2135,79 @@ export async function editarVenda(
     return { erro: error.message };
   }
 
+  if (!receitaEhPorPagamentos(usuario)) {
+    await gravarRecebimentoUnico(supabase, usuario, leadId, receita, vendidoEm.toISOString());
+  }
+
   if (usuario.publico_org === "imobiliario") {
     await atualizarUnidadesDaVenda(supabase, leadId, unidadeId, unidadeAntiga);
   }
 
   revalidatePath("/leads/vendas");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
+// Registra um pagamento recebido de uma venda (valor + dia em que caiu) — a
+// receita conta no mês desse dia, não no mês da venda.
+export async function registrarRecebimento(
+  leadId: string,
+  valor: number,
+  dia: string
+): Promise<{ erro: string | null }> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) return { erro: erroPermissao };
+  if (!receitaEhPorPagamentos(usuario)) {
+    return { erro: "Nesse CRM a receita é calculada sozinha a partir da venda." };
+  }
+  if (!Number.isFinite(valor) || valor <= 0) return { erro: "Informe o valor recebido." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return { erro: "Informe o dia em que o dinheiro caiu." };
+
+  const hojeSp = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  if (dia > hojeSp) return { erro: "O dia do pagamento não pode ser no futuro." };
+
+  const { data: lead } = await supabase.from("leads").select("status").eq("id", leadId).single();
+  if (!lead || lead.status !== "vendido") return { erro: "Esse lead não está com venda registrada." };
+
+  const { error } = await supabase.from("venda_recebimentos").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    valor: Math.round(valor * 100) / 100,
+    recebido_em: `${dia}T12:00:00-03:00`,
+  });
+  if (error) return { erro: error.message };
+
+  revalidatePath("/leads/vendas");
+  revalidatePath("/dashboard");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
+// Remove um pagamento registrado errado. Fica só marcado como excluído.
+export async function removerRecebimento(
+  leadId: string,
+  recebimentoId: string
+): Promise<{ erro: string | null }> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) return { erro: erroPermissao };
+
+  const { data, error } = await supabase
+    .from("venda_recebimentos")
+    .update({ excluido_em: new Date().toISOString() })
+    .eq("id", recebimentoId)
+    .eq("lead_id", leadId)
+    .is("excluido_em", null)
+    .select("id");
+  if (error) return { erro: error.message };
+  if (!data || data.length === 0) return { erro: "Não consegui remover esse pagamento." };
+
+  revalidatePath("/leads/vendas");
+  revalidatePath("/dashboard");
   revalidatePath(`/leads/${leadId}`);
   return { erro: null };
 }
@@ -2817,6 +2930,8 @@ export type DetalhesLead = {
     reagendada: boolean;
     qualificada: boolean;
   }[];
+  // Pagamentos já recebidos da venda (só CRMs em que a receita é por pagamento).
+  recebimentos: { id: string; valor: number; recebido_em: string }[];
   nivelHistorico: {
     id: string;
     de_ordem: number;
@@ -2892,6 +3007,7 @@ export async function buscarDetalhesDoLead(
     { data: imoveisData },
     { data: iscaRespostaData },
     { data: googleCalendarConectadoData },
+    { data: recebimentosData },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -2934,11 +3050,22 @@ export async function buscarDetalhesDoLead(
       .eq("lead_id", leadId)
       .maybeSingle(),
     supabase.rpc("google_calendar_esta_conectado"),
+    supabase
+      .from("venda_recebimentos")
+      .select("id, valor, recebido_em")
+      .eq("lead_id", leadId)
+      .is("excluido_em", null)
+      .order("recebido_em", { ascending: true }),
   ]);
 
   if (!lead) {
     return { erro: "Lead não encontrado", dados: null };
   }
+  const recebimentos = (recebimentosData ?? []).map((r) => ({
+    id: r.id as string,
+    valor: Number(r.valor),
+    recebido_em: r.recebido_em as string,
+  }));
 
   const googleCalendarConectado = googleCalendarConectadoData === true;
   const niveis = (niveisData ?? []) as NivelResumo[];
@@ -2985,6 +3112,7 @@ export async function buscarDetalhesDoLead(
       niveis,
       interacoes,
       reunioes,
+      recebimentos,
       nivelHistorico,
       usuarios,
       origens,

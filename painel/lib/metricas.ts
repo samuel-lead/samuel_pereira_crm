@@ -1,10 +1,78 @@
 import type { createClient } from "@/lib/supabase/server";
 import { UM_DIA_MS, diaDaSemana } from "@/lib/datas";
-import { buscarTodas } from "@/lib/supabase/paginar";
+import { buscarTodas, emPedacos } from "@/lib/supabase/paginar";
 
 export { inicioDaSemana, inicioDoMes } from "@/lib/datas";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+// RECEITA = dinheiro que CAIU no período (venda_recebimentos.recebido_em),
+// não a receita das vendas FECHADAS no período (Samuel, 23/10/26: cliente
+// fechou em agosto, pagou em outubro → a receita é de outubro). Faturamento
+// e contagem de vendas continuam pela data da venda.
+type Recebimento = { lead_id: string; valor: number };
+
+async function recebimentosDaOrg(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicioISO: string,
+  fimISO: string
+): Promise<Recebimento[]> {
+  const { data } = await buscarTodas<{ lead_id: string; valor: number | string }>((de, ate) =>
+    supabase
+      .from("venda_recebimentos")
+      .select("lead_id, valor, leads!inner(status, arquivado_em)")
+      .eq("org_id", orgId)
+      .is("excluido_em", null)
+      .eq("leads.status", "vendido")
+      .is("leads.arquivado_em", null)
+      .gte("recebido_em", inicioISO)
+      .lt("recebido_em", fimISO)
+      .order("recebido_em")
+      .order("id")
+      .range(de, ate) as unknown as PromiseLike<{
+      data: { lead_id: string; valor: number | string }[] | null;
+      error: unknown;
+    }>
+  );
+  return data.map((r) => ({ lead_id: r.lead_id, valor: Number(r.valor) }));
+}
+
+function somarRecebimentos(lista: Recebimento[]): number {
+  return lista.reduce((soma, r) => soma + r.valor, 0);
+}
+
+// Receita recebida no período das vendas que a pessoa fechou: SDR (quem
+// marcou a reunião que virou venda) ou Closer. A atribuição não depende da
+// data da venda, só a soma depende da data do pagamento.
+async function receitaRecebidaDe(
+  supabase: SupabaseServerClient,
+  coluna: "usuario_id" | "closer_id",
+  usuarioId: string,
+  inicioISO: string,
+  fimISO: string
+): Promise<number> {
+  const { data: reunioes } = await supabase
+    .from("reunioes")
+    .select("lead_id, leads!inner(status, arquivado_em)")
+    .eq(coluna, usuarioId)
+    .eq("resultado", "vendeu")
+    .eq("leads.status", "vendido")
+    .is("leads.arquivado_em", null);
+  const ids = [...new Set((reunioes ?? []).map((r) => r.lead_id as string))];
+  let total = 0;
+  for (const pedaco of emPedacos(ids, 100)) {
+    const { data } = await supabase
+      .from("venda_recebimentos")
+      .select("valor")
+      .in("lead_id", pedaco)
+      .is("excluido_em", null)
+      .gte("recebido_em", inicioISO)
+      .lt("recebido_em", fimISO);
+    total += (data ?? []).reduce((soma, r) => soma + Number(r.valor), 0);
+  }
+  return total;
+}
 
 const FUSO_BRASIL_MS = 3 * 60 * 60 * 1000; // UTC-3, sem horário de verão
 
@@ -94,6 +162,7 @@ export async function calcularMetricas(
     { count: propostas },
     { count: noShow },
     { data: vendasData },
+    receitaRecebida,
   ] = await Promise.all([
     // Quem TRABALHA o lead é o responsável atual, não quem digitou ele no
     // sistema (usuario_id é só quem criou o registro — às vezes é um admin
@@ -258,6 +327,7 @@ export async function calcularMetricas(
       .is("leads.arquivado_em", null)
       .gte("leads.vendido_em", inicioISO)
       .lt("leads.vendido_em", fimISO),
+    receitaRecebidaDe(supabase, "usuario_id", usuarioId, inicioISO, fimISO),
   ]);
 
   // Receita/faturamento contam TODA venda, não pode sumir do relatório por
@@ -267,10 +337,7 @@ export async function calcularMetricas(
     (r) => r.leads as unknown as { receita_venda: number | null; valor_venda: number | null }
   );
   const vendas = vendasDoSdr.length;
-  const receita = vendasDoSdr.reduce(
-    (soma, l) => soma + Number(l.receita_venda ?? 0),
-    0
-  );
+  const receita = receitaRecebida;
   const faturamento = vendasDoSdr.reduce(
     (soma, l) => soma + Number(l.valor_venda ?? 0),
     0
@@ -339,6 +406,7 @@ export async function calcularMetricasOrg(
     { count: propostas },
     { count: noShow },
     { data: vendasData },
+    recebimentosOrg,
   ] = await Promise.all([
     // Mesma exceção da versão por usuário acima: lead em Farming não conta
     // como "lead novo".
@@ -464,19 +532,17 @@ export async function calcularMetricasOrg(
       .lt("agendada_para", limiteDevidasISO),
     supabase
       .from("leads")
-      .select("receita_venda, valor_venda, proposta_valor")
+      .select("valor_venda, proposta_valor")
       .eq("org_id", orgId)
       .eq("status", "vendido")
       .is("arquivado_em", null)
       .gte("vendido_em", inicioISO)
       .lt("vendido_em", fimISO),
+    recebimentosDaOrg(supabase, orgId, inicioISO, fimISO),
   ]);
 
   const vendas = vendasData?.length ?? 0;
-  const receita = (vendasData ?? []).reduce(
-    (soma, l) => soma + Number(l.receita_venda ?? 0),
-    0
-  );
+  const receita = somarRecebimentos(recebimentosOrg);
   const faturamento = (vendasData ?? []).reduce(
     (soma, l) => soma + Number(l.valor_venda ?? 0),
     0
@@ -530,24 +596,24 @@ export async function calcularVendasHoje(
   inicioHoje: Date,
   amanha: Date
 ): Promise<VendasHoje> {
-  const { data } = await supabase
-    .from("leads")
-    .select("valor_venda, receita_venda")
-    .eq("org_id", orgId)
-    .eq("status", "vendido")
-    .is("arquivado_em", null)
-    .gte("vendido_em", inicioHoje.toISOString())
-    .lt("vendido_em", amanha.toISOString());
+  const [{ data }, recebimentosHoje] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("valor_venda")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicioHoje.toISOString())
+      .lt("vendido_em", amanha.toISOString()),
+    recebimentosDaOrg(supabase, orgId, inicioHoje.toISOString(), amanha.toISOString()),
+  ]);
 
   const vendas = data?.length ?? 0;
   const faturamento = (data ?? []).reduce(
     (soma, l) => soma + Number(l.valor_venda ?? 0),
     0
   );
-  const receita = (data ?? []).reduce(
-    (soma, l) => soma + Number(l.receita_venda ?? 0),
-    0
-  );
+  const receita = somarRecebimentos(recebimentosHoje);
 
   return { vendas, faturamento, receita };
 }
@@ -743,16 +809,9 @@ export async function calcularReceitaOrg(
   inicio: Date,
   fim: Date
 ): Promise<number> {
-  const { data } = await supabase
-    .from("leads")
-    .select("receita_venda")
-    .eq("org_id", orgId)
-    .eq("status", "vendido")
-    .is("arquivado_em", null)
-    .gte("vendido_em", inicio.toISOString())
-    .lt("vendido_em", fim.toISOString());
-
-  return (data ?? []).reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+  return somarRecebimentos(
+    await recebimentosDaOrg(supabase, orgId, inicio.toISOString(), fim.toISOString())
+  );
 }
 
 // Mesma coisa que calcularReceitaOrg, mas somando valor_venda (VGV) em vez
@@ -864,7 +923,7 @@ export async function calcularMetricasPorUsuario(
 
   const inicioISO = inicio.toISOString();
   const fimISO = fim.toISOString();
-  const [{ data: realizadasOrg }, { data: vendidosOrg }] = await Promise.all([
+  const [{ data: realizadasOrg }, { data: vendidosOrg }, recebimentosOrg] = await Promise.all([
     supabase
       .from("reunioes")
       .select("lead_id, leads!inner(arquivado_em, status, proposta_valor)")
@@ -875,16 +934,21 @@ export async function calcularMetricasPorUsuario(
       .lt("agendada_para", fimISO),
     supabase
       .from("leads")
-      .select("id, receita_venda, valor_venda")
+      .select("id, valor_venda")
       .eq("org_id", orgId)
       .eq("status", "vendido")
       .is("arquivado_em", null)
       .gte("vendido_em", inicioISO)
       .lt("vendido_em", fimISO),
+    recebimentosDaOrg(supabase, orgId, inicioISO, fimISO),
   ]);
 
   const idsLeads = [
-    ...new Set([...(realizadasOrg ?? []).map((r) => r.lead_id), ...(vendidosOrg ?? []).map((l) => l.id)]),
+    ...new Set([
+      ...(realizadasOrg ?? []).map((r) => r.lead_id),
+      ...(vendidosOrg ?? []).map((l) => l.id),
+      ...recebimentosOrg.map((r) => r.lead_id),
+    ]),
   ];
   const sdrOriginalPorLead = new Map<string, string>();
   if (idsLeads.length > 0) {
@@ -905,7 +969,9 @@ export async function calcularMetricasPorUsuario(
       return lead.proposta_valor != null || lead.status === "vendido";
     }).length;
     const vendasDele = (vendidosOrg ?? []).filter((l) => sdrOriginalPorLead.get(l.id) === m.usuarioId);
-    const receita = vendasDele.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+    const receita = somarRecebimentos(
+      recebimentosOrg.filter((r) => sdrOriginalPorLead.get(r.lead_id) === m.usuarioId)
+    );
     const faturamento = vendasDele.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
     return {
       ...m,
@@ -960,7 +1026,12 @@ export async function calcularMetricasPorCloser(
 
   return Promise.all(
     lista.map(async (usuario) => {
-      const [{ count: reunioesRealizadas }, { count: reunioesComPitch }, { data: vendasData }] =
+      const [
+        { count: reunioesRealizadas },
+        { count: reunioesComPitch },
+        { data: vendasData },
+        receitaRecebida,
+      ] =
         await Promise.all([
           supabase
             .from("reunioes")
@@ -981,20 +1052,21 @@ export async function calcularMetricasPorCloser(
             .lt("agendada_para", fimISO),
           supabase
             .from("reunioes")
-            .select("leads!inner(receita_venda, valor_venda, status, vendido_em, arquivado_em)")
+            .select("leads!inner(valor_venda, status, vendido_em, arquivado_em)")
             .eq("closer_id", usuario.id)
             .eq("resultado", "vendeu")
             .eq("leads.status", "vendido")
             .is("leads.arquivado_em", null)
             .gte("leads.vendido_em", inicioISO)
             .lt("leads.vendido_em", fimISO),
+          receitaRecebidaDe(supabase, "closer_id", usuario.id, inicioISO, fimISO),
         ]);
 
       const vendasDoCloser = (vendasData ?? []).map(
-        (r) => r.leads as unknown as { receita_venda: number | null; valor_venda: number | null }
+        (r) => r.leads as unknown as { valor_venda: number | null }
       );
       const vendas = vendasDoCloser.length;
-      const receita = vendasDoCloser.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+      const receita = receitaRecebida;
       const faturamento = vendasDoCloser.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
       const comPitch = reunioesComPitch ?? 0;
 
@@ -1135,6 +1207,7 @@ export async function calcularBonusPorSdr(
     { data: funcoesData },
     { data: vendidosNoPeriodo },
     { data: devidasDaOrg },
+    recebimentosOrg,
   ] = await Promise.all([
     supabase
       .from("reunioes")
@@ -1149,7 +1222,7 @@ export async function calcularBonusPorSdr(
     // também seguem o SDR original do lead.
     supabase
       .from("leads")
-      .select("id, receita_venda, valor_venda")
+      .select("id, valor_venda")
       .eq("org_id", orgId)
       .eq("status", "vendido")
       .is("arquivado_em", null)
@@ -1167,6 +1240,7 @@ export async function calcularBonusPorSdr(
       .in("status", ["realizada", "nao_compareceu"])
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", limiteDevidasISO),
+    recebimentosDaOrg(supabase, orgId, inicioISO, fimISO),
   ]);
   const funcaoPorUsuario = new Map((funcoesData ?? []).map((u) => [u.id, u.funcao as string | null]));
   // Sábados/domingos que o SDR trabalhou pra repor uma folga na semana: NÃO
@@ -1180,6 +1254,7 @@ export async function calcularBonusPorSdr(
       ...(realizadasDaOrg ?? []).map((r) => r.lead_id),
       ...(vendidosNoPeriodo ?? []).map((l) => l.id),
       ...(devidasDaOrg ?? []).map((r) => r.lead_id),
+      ...recebimentosOrg.map((r) => r.lead_id),
     ]),
   ];
   const primeiraReuniaoPorLead = new Map<string, { usuario_id: string; marcada_em: string }>();
@@ -1225,7 +1300,9 @@ export async function calcularBonusPorSdr(
       );
       const vendasDeleQtd = usarSdrOriginal ? vendasDele.length : m.vendas;
       const receitaDele = usarSdrOriginal
-        ? vendasDele.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0)
+        ? somarRecebimentos(
+            recebimentosOrg.filter((r) => primeiraReuniaoPorLead.get(r.lead_id)?.usuario_id === m.usuarioId)
+          )
         : m.receita;
       const faturamentoDele = usarSdrOriginal
         ? vendasDele.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0)
@@ -1451,17 +1528,20 @@ export async function calcularResumoAno(
 
     const inicio = new Date(ano, mes - 1, 1);
     const fim = new Date(ano, mes, 1);
-    const { data: vendas } = await supabase
-      .from("leads")
-      .select("valor_venda, receita_venda")
-      .eq("org_id", orgId)
-      .eq("status", "vendido")
-      .is("arquivado_em", null)
-      .gte("vendido_em", inicio.toISOString())
-      .lt("vendido_em", fim.toISOString());
+    const [{ data: vendas }, recebimentosMes] = await Promise.all([
+      supabase
+        .from("leads")
+        .select("valor_venda")
+        .eq("org_id", orgId)
+        .eq("status", "vendido")
+        .is("arquivado_em", null)
+        .gte("vendido_em", inicio.toISOString())
+        .lt("vendido_em", fim.toISOString()),
+      recebimentosDaOrg(supabase, orgId, inicio.toISOString(), fim.toISOString()),
+    ]);
 
     const faturamento = (vendas ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
-    const receita = (vendas ?? []).reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+    const receita = somarRecebimentos(recebimentosMes);
 
     resultado.push({ mes, metaReceita, faturamento, receita });
   }

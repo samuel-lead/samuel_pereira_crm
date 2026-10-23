@@ -171,9 +171,9 @@ export function EditarVendaForm({
           percentualInicial={comissaoPercentual ?? null}
           valorFixoInicial={comissaoValorFixo ?? null}
         />
-      ) : (
+      ) : imobiliario ? (
         <CampoMoeda name="receita_venda" label={`${Receita(publicoOrg)} recebida (R$)`} valorInicial={receitaVenda} />
-      )}
+      ) : null}
       <div>
         <label className="mb-1 block text-xs font-medium text-green-800">
           {imobiliario ? "Imóvel vendido" : "Produto"}

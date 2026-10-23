@@ -11,7 +11,7 @@ import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
 import { resolverPeriodo } from "@/lib/periodo";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
-import { Sdr, Faturamento, Receita, ehImobiliario, semCloser } from "@/lib/terminologia";
+import { Sdr, Faturamento, Receita, ehImobiliario, semCloser, usaComissaoDoVendedor } from "@/lib/terminologia";
 
 type LeadVendido = {
   id: string;
@@ -128,7 +128,29 @@ export default async function VendasPage({
       sdrPorLead.set(reuniao.lead_id, reuniao.usuario_id);
     }
   }
-  const totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+  // Samuel (23/10/26): receita = dinheiro que CAIU no período, não o total das
+  // vendas fechadas nele (venda de agosto paga em outubro é receita de
+  // outubro). Com uma busca ativa, volta a somar só os clientes encontrados.
+  const receitaPorPagamentos =
+    !ehImobiliario(publicoOrg) && !usaComissaoDoVendedor(publicoOrg);
+  let totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+  if (receitaPorPagamentos && !buscaFiltro && usuario) {
+    const { data: recebimentosData } = await buscarTodas<{ valor: number | string }>((de, ate) =>
+      supabase
+        .from("venda_recebimentos")
+        .select("valor, leads!inner(status, arquivado_em)")
+        .eq("org_id", usuario.org_id)
+        .is("excluido_em", null)
+        .eq("leads.status", "vendido")
+        .is("leads.arquivado_em", null)
+        .gte("recebido_em", periodoResolvido.inicio.toISOString())
+        .lt("recebido_em", periodoResolvido.fim.toISOString())
+        .order("recebido_em")
+        .order("id")
+        .range(de, ate)
+    );
+    totalReceita = (recebimentosData ?? []).reduce((soma, r) => soma + Number(r.valor), 0);
+  }
   const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
   const ticketMedio = leads.length > 0 ? totalFaturamento / leads.length : 0;
   const filtroAtivo = Boolean(periodoFiltro || mesAnoFiltro || deFiltro || ateFiltro || buscaFiltro);
@@ -193,7 +215,9 @@ export default async function VendasPage({
 
           <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
             <IconeMoeda className="h-3.5 w-3.5" />
-            {Receita(publicoOrg)} total em vendas
+            {receitaPorPagamentos && !buscaFiltro
+              ? `${Receita(publicoOrg)} recebida no período`
+              : `${Receita(publicoOrg)} total em vendas`}
           </p>
           <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
             {formatarMoeda(totalReceita)}

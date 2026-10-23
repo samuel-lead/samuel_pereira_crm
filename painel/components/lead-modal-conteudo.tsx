@@ -13,6 +13,7 @@ import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { QualificadaReuniao } from "@/components/qualificada-reuniao";
+import { RecebimentosVenda } from "@/components/recebimentos-venda";
 import { EditarMotivoRepescagem } from "@/components/editar-motivo-repescagem";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeLapis } from "@/components/icons";
@@ -109,6 +110,7 @@ export function LeadModalConteudo({
     niveis,
     interacoes,
     reunioes,
+    recebimentos,
     nivelHistorico,
     usuarios,
     origens,
@@ -297,6 +299,12 @@ export function LeadModalConteudo({
             {lead.vendido_em && (
               <p className="mt-1 text-xs text-green-600">{formatarData(lead.vendido_em)}</p>
             )}
+            <RecebimentosVenda
+              leadId={lead.id}
+              recebimentos={recebimentos}
+              publicoOrg={publicoOrg}
+              podeEditar={podeEditar}
+            />
             {podeEditar && (
               <div className="mt-3">
                 <EditarVendaForm
