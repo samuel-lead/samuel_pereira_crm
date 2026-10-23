@@ -1008,12 +1008,20 @@ export function KanbanBoard({
                               : undefined
                             : "Você só visualiza — não é seu lead"
                         }
-                        className={`kanban-card group select-none rounded-xl border-x border-b border-t-[3px] bg-white p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg has-[.botao-agendar-reuniao:hover]:translate-y-0 has-[.botao-agendar-reuniao:hover]:shadow-sm has-[.botao-reativar-oportunidade:hover]:translate-y-0 has-[.botao-reativar-oportunidade:hover]:shadow-sm ${
-                          atrasado ? "border-t-red-400" : "border-t-neutral-200"
-                        } border-neutral-200 ${
+                        className={`kanban-card group select-none rounded-xl border-x border-b border-t-[3px] p-3.5 shadow-sm transition duration-150 hover:-translate-y-1 hover:shadow-lg has-[.botao-agendar-reuniao:hover]:translate-y-0 has-[.botao-agendar-reuniao:hover]:shadow-sm has-[.botao-reativar-oportunidade:hover]:translate-y-0 has-[.botao-reativar-oportunidade:hover]:shadow-sm ${
+                          lead.naoQualificado
+                            ? "border-t-red-600 border-red-300 bg-red-50"
+                            : `bg-white border-neutral-200 ${atrasado ? "border-t-red-400" : "border-t-neutral-200"}`
+                        } ${
                           arrastavel ? "cursor-grab active:cursor-grabbing" : "cursor-pointer opacity-70"
                         }`}
                       >
+                        {lead.naoQualificado && (
+                          <div className="-mx-3.5 -mt-3.5 mb-2.5 flex items-center justify-center gap-1.5 rounded-t-[10px] bg-red-600 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-white" />
+                            Lead não qualificado
+                          </div>
+                        )}
                         {ehImobiliario(publicoOrg) && lead.imovel?.foto_url && (
                           <div className="-mx-3.5 -mt-3.5 mb-2.5 h-24 w-[calc(100%+1.75rem)] overflow-hidden rounded-t-xl bg-neutral-100">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1062,13 +1070,6 @@ export function KanbanBoard({
                           >
                             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
                             {SELO_QUALIFICACAO[lead.nivelQualificacao].texto}
-                          </span>
-                        )}
-
-                        {lead.naoQualificado && (
-                          <span className="mb-2 mr-1.5 inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
-                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
-                            Lead não qualificado
                           </span>
                         )}
 
