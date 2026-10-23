@@ -26,6 +26,9 @@ const NIVEL_REUNIAO_MARCADA = 4;
 // mentoria/consultoria — imobiliário não tem essa pergunta.)
 function leadNaoQualificado(dados: DetalhesLead): boolean {
   if (ehImobiliario(dados.publicoOrg)) return false;
+  // Lead em Repescagem futura está lá justamente por ser qualificado (Samuel,
+  // 23/10/26) — nunca mostra o aviso de não qualificado.
+  if (dados.lead.oportunidade_futura) return false;
   const ultima = dados.reunioes
     .filter((r) => r.status === "realizada")
     .sort((a, b) => new Date(b.agendada_para).getTime() - new Date(a.agendada_para).getTime())[0];

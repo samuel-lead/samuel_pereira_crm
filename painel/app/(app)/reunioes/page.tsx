@@ -275,7 +275,9 @@ export default async function VendasPage({
     nivelQualificacao: lead.isca_respostas?.[0]?.nivel_qualificacao ?? null,
     jaTeveReuniao: leadsComReuniaoRegistrada.has(lead.id),
     naoQualificado:
-      !ehImobiliario(publicoOrg) && ultimaRealizadaPorLead.get(lead.id)?.qualificada === false,
+      !ehImobiliario(publicoOrg) &&
+      !lead.oportunidade_futura &&
+      ultimaRealizadaPorLead.get(lead.id)?.qualificada === false,
     ultima_atividade_em: atividadePorLead.get(lead.id) ?? lead.entrou_nivel_em,
   }));
 
