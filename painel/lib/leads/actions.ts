@@ -10,7 +10,8 @@ import {
   motivosBaseDaOrg,
   type NivelResumo,
 } from "@/lib/niveis";
-import { garantirOrigem, pareceOrigemInvalida } from "@/lib/origens/actions";
+import { garantirOrigem } from "@/lib/origens/actions";
+import { pareceOrigemInvalida } from "@/lib/origens/validacao";
 import { normalizarTelefone } from "@/lib/telefone";
 import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg } from "@/lib/terminologia";
 
