@@ -883,7 +883,7 @@ export async function atualizarLead(
 
   const { data: leadAtual, error: erroAtual } = await supabase
     .from("leads")
-    .select("nivel_ordem, responsavel_id, motivo_base, proposta_valor, instagram, foto_url, quem_indicou")
+    .select("nivel_ordem, responsavel_id, motivo_base, proposta_valor, instagram, foto_url, quem_indicou, status")
     .eq("id", leadId)
     .single();
 
@@ -915,7 +915,10 @@ export async function atualizarLead(
   // (Samuel pegou isso ao vivo). Só o e-mail pode ficar faltando — esse
   // não trava o salvamento, só impede a sincronização com o Google
   // Agenda (ver mais abaixo).
-  if (novoNivel === NIVEL_REUNIAO_MARCADA) {
+  // Venda já fechada (Samuel, 23/10/26): o lead continua parado no nível de
+  // "Reunião marcada" onde estava, mas não está marcando reunião nenhuma —
+  // só corrigindo dado da venda. Não cobra os 3 critérios aqui.
+  if (novoNivel === NIVEL_REUNIAO_MARCADA && leadAtual.status !== "vendido") {
     const faltando: string[] = [];
     if (!criterioProblema) faltando.push("o perfil do lead");
     if (criterioUrgencia === "desconhecida") faltando.push("se tem urgência");
