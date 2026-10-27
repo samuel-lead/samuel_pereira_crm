@@ -2,6 +2,9 @@
 // números no card do lead e o texto sai pronto pra copiar e mandar.
 export type PropostaConsorcio = {
   credito: number | null;
+  // Percentual do lance embutido: 25% ou 50% (padrão 25%). Propostas antigas,
+  // salvas antes dessa escolha, não têm o campo e valem 25%.
+  lance_percentual?: 25 | 50;
   lance_embutido: number | null;
   credito_liberado: number | null;
   prazo_meses: number | null;
@@ -11,6 +14,7 @@ export type PropostaConsorcio = {
 
 export const PROPOSTA_CONSORCIO_VAZIA: PropostaConsorcio = {
   credito: null,
+  lance_percentual: 25,
   lance_embutido: null,
   credito_liberado: null,
   prazo_meses: null,
@@ -30,7 +34,7 @@ export function montarTextoPropostaConsorcio(p: PropostaConsorcio) {
     "━━━━━━━━━━━━━━━━",
     "",
     `💰 Crédito: R$ ${dinheiro(p.credito)}`,
-    `💳 Lance embutido (25%): R$ ${dinheiro(p.lance_embutido)}`,
+    `💳 Lance embutido (${p.lance_percentual ?? 25}%): R$ ${dinheiro(p.lance_embutido)}`,
     "",
     `💰 *Crédito Liberado R$ ${dinheiro(p.credito_liberado)}*`,
     "",
@@ -54,11 +58,14 @@ export function lerPropostaConsorcioDoForm(formData: FormData): PropostaConsorci
   }
   const proposta: PropostaConsorcio = {
     credito: numero("prop_credito"),
+    lance_percentual: String(formData.get("prop_lance_pct") ?? "") === "50" ? 50 : 25,
     lance_embutido: numero("prop_lance"),
     credito_liberado: numero("prop_credito_liberado"),
     prazo_meses: numero("prop_prazo"),
     valor_parcela: numero("prop_parcela"),
     parcelas_apos_contemplacao: numero("prop_parcelas_apos"),
   };
-  return Object.values(proposta).every((v) => v === null) ? null : proposta;
+  // O percentual sempre vem preenchido (25 por padrão) — só conta o que a pessoa digitou.
+  const { lance_percentual: _percentual, ...digitados } = proposta;
+  return Object.values(digitados).every((v) => v === null) ? null : proposta;
 }

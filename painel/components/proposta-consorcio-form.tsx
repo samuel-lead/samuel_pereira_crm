@@ -57,6 +57,8 @@ export function PropostaConsorcioForm({ inicial }: { inicial: PropostaConsorcio 
     raizRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
+  const percentualLance = proposta.lance_percentual ?? 25;
+
   function atualizar<K extends keyof PropostaConsorcio>(campo: K, valor: PropostaConsorcio[K]) {
     setProposta((atual) => ({ ...atual, [campo]: valor }));
   }
@@ -84,12 +86,31 @@ export function PropostaConsorcioForm({ inicial }: { inicial: PropostaConsorcio 
           valor={proposta.credito}
           aoMudar={(v) => atualizar("credito", v)}
         />
-        <CampoDinheiro
-          rotulo="Lance embutido (25%)"
-          nome="prop_lance"
-          valor={proposta.lance_embutido}
-          aoMudar={(v) => atualizar("lance_embutido", v)}
-        />
+        <div>
+          <CampoDinheiro
+            rotulo={`Lance embutido (${percentualLance}%)`}
+            nome="prop_lance"
+            valor={proposta.lance_embutido}
+            aoMudar={(v) => atualizar("lance_embutido", v)}
+          />
+          <div className="mt-1.5 inline-flex overflow-hidden rounded-md border border-green-300 bg-white text-xs font-semibold">
+            {([25, 50] as const).map((opcao) => (
+              <button
+                key={opcao}
+                type="button"
+                onClick={() => atualizar("lance_percentual", opcao)}
+                className={`px-3 py-1 transition ${
+                  percentualLance === opcao
+                    ? "bg-green-600 text-white"
+                    : "text-green-800 hover:bg-green-100"
+                }`}
+              >
+                {opcao}%
+              </button>
+            ))}
+          </div>
+          <input type="hidden" name="prop_lance_pct" value={percentualLance} />
+        </div>
       </div>
 
       <CampoDinheiro
