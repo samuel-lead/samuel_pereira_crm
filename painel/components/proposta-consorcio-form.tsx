@@ -153,9 +153,26 @@ export function PropostaConsorcioForm({ inicial }: { inicial: PropostaConsorcio 
         aoMudar={(v) => atualizar("parcelas_apos_contemplacao", v)}
       />
 
-      <p className="text-xs text-green-800">
-        Situação: <span className="font-semibold">Grupo Em Andamento</span> (sempre fixo)
-      </p>
+      <div>
+        <label className="mb-1 block text-xs font-medium text-green-800" htmlFor="prop_situacao">
+          Situação do grupo
+        </label>
+        <input
+          id="prop_situacao"
+          name="prop_situacao"
+          type="text"
+          list="situacoes-grupo"
+          value={proposta.situacao ?? ""}
+          onChange={(e) => atualizar("situacao", e.target.value)}
+          placeholder="Grupo Em Andamento"
+          className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+        />
+        <datalist id="situacoes-grupo">
+          <option value="Grupo Em Andamento" />
+          <option value="Grupo Novo" />
+          <option value="Grupo Em Formação" />
+        </datalist>
+      </div>
 
       <div>
         <div className="mb-1 flex items-center justify-between">

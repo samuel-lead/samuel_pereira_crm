@@ -10,7 +10,12 @@ export type PropostaConsorcio = {
   prazo_meses: number | null;
   valor_parcela: number | null;
   parcelas_apos_contemplacao: number | null;
+  // Situação do grupo, texto livre (padrão "Grupo Em Andamento"). Propostas
+  // antigas, sem o campo, valem o padrão.
+  situacao?: string;
 };
+
+export const SITUACAO_PADRAO = "Grupo Em Andamento";
 
 export const PROPOSTA_CONSORCIO_VAZIA: PropostaConsorcio = {
   credito: null,
@@ -20,6 +25,7 @@ export const PROPOSTA_CONSORCIO_VAZIA: PropostaConsorcio = {
   prazo_meses: null,
   valor_parcela: null,
   parcelas_apos_contemplacao: null,
+  situacao: SITUACAO_PADRAO,
 };
 
 function dinheiro(valor: number | null) {
@@ -44,7 +50,7 @@ export function montarTextoPropostaConsorcio(p: PropostaConsorcio) {
     `      ▪️ Parcelas Após contemplação Aproximadamente: R$ ${dinheiro(p.parcelas_apos_contemplacao)}.`,
     "",
     "━━━━━━━━━━━━━━━",
-    "🟢 Situação: Grupo Em Andamento",
+    `🟢 Situação: ${p.situacao?.trim() || SITUACAO_PADRAO}`,
   ].join("\n");
 }
 
@@ -64,8 +70,9 @@ export function lerPropostaConsorcioDoForm(formData: FormData): PropostaConsorci
     prazo_meses: numero("prop_prazo"),
     valor_parcela: numero("prop_parcela"),
     parcelas_apos_contemplacao: numero("prop_parcelas_apos"),
+    situacao: String(formData.get("prop_situacao") ?? "").trim() || SITUACAO_PADRAO,
   };
   // O percentual sempre vem preenchido (25 por padrão) — só conta o que a pessoa digitou.
-  const { lance_percentual: _percentual, ...digitados } = proposta;
+  const { lance_percentual: _percentual, situacao: _situacao, ...digitados } = proposta;
   return Object.values(digitados).every((v) => v === null) ? null : proposta;
 }
