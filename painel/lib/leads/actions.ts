@@ -1088,8 +1088,10 @@ export async function atualizarLead(
     motivoBaseForm === "proposta_nao_comprou"
   ) {
     const faltando: string[] = [];
-    if (!criterioProblema) faltando.push("o perfil do lead");
-    if (leadAtual.proposta_valor == null) faltando.push("a proposta (registre acima antes de mover)");
+    if (!semReunioes && !criterioProblema) faltando.push("o perfil do lead");
+    if (!semReunioes && leadAtual.proposta_valor == null) {
+      faltando.push("a proposta (registre acima antes de mover)");
+    }
 
     if (faltando.length > 0) {
       return {
@@ -1749,6 +1751,8 @@ export async function marcarVendido(
     .select("criterio_problema, responsavel_id")
     .eq("id", leadId)
     .single();
+  // Banker (consórcio) não preenche perfil/urgência/capacidade do lead.
+  const semPerfil = funilConsorcio(usuario.publico_org_completo);
 
   // Sem responsável, a venda não entra na conta de ninguém (some do Bônus
   // SDR, mesmo contando no total geral) — trava aqui pra não deixar passar.
@@ -1758,7 +1762,7 @@ export async function marcarVendido(
     };
   }
 
-  if (!leadAtual?.criterio_problema) {
+  if (!semPerfil && !leadAtual?.criterio_problema) {
     return {
       erro: "Preencha o perfil do lead (acima, em \"Sobre o lead\") antes de marcar como vendido.",
     };

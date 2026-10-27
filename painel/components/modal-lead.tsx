@@ -12,7 +12,7 @@ import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
 import { IconeTelefone } from "@/components/icons";
 import { SCRIPT_PRE_QUALIFICACAO, SCRIPT_PRE_QUALIFICACAO_GONDOLAS } from "@/lib/scripts-sdr";
 import { lerLeadDoCache, salvarLeadNoCache } from "@/lib/leads/cache-lead";
-import { ehGondolas, ehImobiliario, Reuniao } from "@/lib/terminologia";
+import { ehGondolas, ehImobiliario, funilConsorcio, Reuniao } from "@/lib/terminologia";
 
 // Mesmos níveis de lib/niveis.ts (4 = Reunião marcada, 7 = Follow após
 // reunião, 8 = Oportunidades pro fim do mês) — Samuel pediu explicitamente
@@ -224,6 +224,9 @@ export function ModalLead({
                     )}
                     {dados.podeEditar &&
                       !ehImobiliario(dados.publicoOrg) &&
+                      // Banker (consórcio) não usa o roteiro de pré-qualificação pra
+                      // marcar call — não tem call (Samuel, 27/10/26).
+                      !funilConsorcio(dados.publicoOrg) &&
                       (dados.souAdmin || dados.souSdr) &&
                       !NIVEIS_SEM_PRE_QUALIFICACAO.includes(dados.lead.nivel_ordem) && (
                       <div className="w-fit">

@@ -410,7 +410,9 @@ export function EditarLeadForm({
   // nota", pra não confundir o SDR achando que precisa preencher isso
   // toda vez que só liga e anota o retorno. Uma vez preenchido, continua
   // aparecendo pra sempre, mesmo o lead indo pra No-show/Base/Oportunidade.
-  const mostrarSobreLead = Number(nivelSelecionado) >= Number(NIVEL_REUNIAO_MARCADA);
+  // Banker (consórcio) não tem "Sobre o lead" (perfil, urgência, capacidade) —
+  // Samuel pediu pra tirar (27/10/26).
+  const mostrarSobreLead = !consorcio && Number(nivelSelecionado) >= Number(NIVEL_REUNIAO_MARCADA);
   // Depois de vendido, o lead saiu do funil de vez — mudar o nível dele
   // não faz mais sentido (não existe "voltar pra qualificação" de quem já
   // fechou). O valor fica travado no que já estava, só sem aparecer.
