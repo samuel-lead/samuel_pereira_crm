@@ -234,7 +234,7 @@ export function CapturaSimplesForm({
           </p>
         )}
         <p className="text-base font-semibold text-[#eef1f6]">
-          Fale agora mesmo com a Ketlyn no WhatsApp.
+          Fale agora mesmo com a Ketlyn no WhatsApp 👇
         </p>
 
         {erro && <p className="text-sm text-red-400">{erro}</p>}
