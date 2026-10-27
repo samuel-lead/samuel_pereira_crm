@@ -253,6 +253,7 @@ export function BaseLeadsBoard({
         (c) =>
           !(semFarming(publicoOrg) && c.chave === "farming") &&
           !(funilConsorcio(publicoOrg) && c.chave === "nao_reagendados") &&
+          !(funilConsorcio(publicoOrg) && c.chave === "qualificou_sumiu") &&
           (funilConsorcio(publicoOrg) || !COLUNAS_SO_CONSORCIO.includes(c.chave))
       ).map((coluna) => {
         const leads = leadsPorMotivo[coluna.chave] ?? [];

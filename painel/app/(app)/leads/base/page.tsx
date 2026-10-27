@@ -7,6 +7,7 @@ import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/bas
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas, emPedacos } from "@/lib/supabase/paginar";
 import { NIVEIS_REATIVACAO, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { funilConsorcio } from "@/lib/terminologia";
 
 type LeadComHistorico = LeadBase & {
   criterio_problema: string | null;
@@ -151,7 +152,12 @@ export default async function BasePage({
   };
 
   for (const lead of leads) {
-    const motivo = calcularMotivo(lead, ultimaReuniaoPorLead.get(lead.id));
+    let motivo = calcularMotivo(lead, ultimaReuniaoPorLead.get(lead.id));
+    // Consórcio não tem as colunas "Não reagendados" e "qualifiquei e sumiu": o
+    // que cair nelas (lead antigo sem motivo salvo) vai pra "não teve interesse".
+    if (funilConsorcio(publicoOrg) && (motivo === "nao_reagendados" || motivo === "qualificou_sumiu")) {
+      motivo = "iniciou_sem_interesse";
+    }
     leadsPorMotivo[motivo].push(lead);
   }
 

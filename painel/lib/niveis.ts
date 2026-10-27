@@ -186,6 +186,8 @@ export function motivosBaseDaOrg(publicoOrg: string) {
     if (semFarming(publicoOrg) && m.valor === "farming") return false;
     // Funil de consórcio não tem reunião: "Não reagendados" não existe (Samuel, 27/10/26).
     if (funilConsorcio(publicoOrg) && m.valor === "nao_reagendados") return false;
+    // Consórcio junta "qualifiquei e sumiu" com "não teve interesse" (Samuel, 27/10/26).
+    if (funilConsorcio(publicoOrg) && m.valor === "qualificou_sumiu") return false;
     // Os três motivos novos só existem pra Banker (consórcio).
     if (!funilConsorcio(publicoOrg) && MOTIVOS_BASE_SO_CONSORCIO.includes(m.valor)) return false;
     return true;
