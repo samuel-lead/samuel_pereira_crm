@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { semFarming, funilConsorcio } from "@/lib/terminologia";
+import { NOME_SEM_INTERESSE_CONSORCIO } from "@/lib/niveis";
 import { IconeWhatsapp, IconeInstagram, IconeReativar, IconeCalendario } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { ResponsavelSelect } from "@/components/responsavel-select";
@@ -265,7 +266,11 @@ export function BaseLeadsBoard({
                   {leads.length}
                 </span>
               </div>
-              <h2 className="text-sm font-semibold text-neutral-800">{coluna.nome}</h2>
+              <h2 className="text-sm font-semibold text-neutral-800">
+                {funilConsorcio(publicoOrg) && coluna.chave === "iniciou_sem_interesse"
+                  ? NOME_SEM_INTERESSE_CONSORCIO
+                  : coluna.nome}
+              </h2>
             </div>
 
             <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-3">

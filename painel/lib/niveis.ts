@@ -176,6 +176,8 @@ export const MOTIVOS_BASE = [
   { valor: "comprou_concorrente", nome: "Comprou em outro lugar ou com outra administradora" },
 ] as const;
 
+export const NOME_SEM_INTERESSE_CONSORCIO = "Iniciei conversa e não teve interesse/sumiu";
+
 const MOTIVOS_BASE_SO_CONSORCIO: string[] = ["sem_condicao_pagar", "comprou_concorrente"];
 
 // Motivos de Base que a empresa usa — a Banker - Consorcio, por exemplo,
@@ -190,7 +192,12 @@ export function motivosBaseDaOrg(publicoOrg: string) {
     // Os dois motivos novos só existem pra Banker (consórcio).
     if (!funilConsorcio(publicoOrg) && MOTIVOS_BASE_SO_CONSORCIO.includes(m.valor)) return false;
     return true;
-  });
+  }).map((m) =>
+    // Na Banker essa coluna também recebe quem sumiu (Samuel, 27/10/26).
+    funilConsorcio(publicoOrg) && m.valor === "iniciou_sem_interesse"
+      ? { valor: m.valor, nome: NOME_SEM_INTERESSE_CONSORCIO }
+      : m
+  );
 }
 
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
