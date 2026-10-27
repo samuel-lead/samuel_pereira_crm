@@ -3,13 +3,32 @@
 import { useState } from "react";
 import { Calls, ehGondolas, relatorioSemCalls } from "@/lib/terminologia";
 
+// Relatório da Banker - Consorcio (Samuel, 27/10/26): é o modelo que o time
+// já usa no grupo, então o texto tem que sair exatamente nesse formato —
+// "Propostas iniciadas" e "Atualizou CRM?" ficam pra pessoa preencher.
+function montarRelatorioBanker(periodoLabel: string, ligacoesFeitas: number, ligacoesAtendidas: number) {
+  return [
+    `🗓️Período: ${periodoLabel}`,
+    "",
+    `➡️ Ligações feitas? ${ligacoesFeitas}`,
+    `➡️ Ligações atendidas: ${ligacoesAtendidas}`,
+    "➡️ Propostas iniciadas: ",
+    "➡️ Atualizou CRM? ",
+  ].join("\n");
+}
+
 function montarRelatorio(
   periodoLabel: string,
   callsMarcadas: number,
   callsReagendadas: number,
   ligacoesFeitas: number,
-  publicoOrg: string
+  ligacoesAtendidas: number,
+  publicoOrg: string,
+  hoje: boolean
 ) {
+  if (relatorioSemCalls(publicoOrg)) {
+    return montarRelatorioBanker(hoje ? "hoje" : periodoLabel, ligacoesFeitas, ligacoesAtendidas);
+  }
   return [
     `🗓️Período: ${periodoLabel}`,
     "",
@@ -31,18 +50,31 @@ export function CopiarRelatorioButton({
   callsMarcadas,
   callsReagendadas,
   ligacoesFeitas,
+  ligacoesAtendidas = 0,
   publicoOrg = "mentoria",
+  hoje = false,
 }: {
   periodoLabel: string;
   callsMarcadas: number;
   callsReagendadas: number;
   ligacoesFeitas: number;
+  ligacoesAtendidas?: number;
   publicoOrg?: string;
+  // Relatório do dia de hoje: a Banker escreve "Período: hoje" em vez da data.
+  hoje?: boolean;
 }) {
   const [copiado, setCopiado] = useState(false);
 
   function aoClicar() {
-    const texto = montarRelatorio(periodoLabel, callsMarcadas, callsReagendadas, ligacoesFeitas, publicoOrg);
+    const texto = montarRelatorio(
+      periodoLabel,
+      callsMarcadas,
+      callsReagendadas,
+      ligacoesFeitas,
+      ligacoesAtendidas,
+      publicoOrg,
+      hoje
+    );
     navigator.clipboard?.writeText(texto).catch(() => {});
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);

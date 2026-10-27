@@ -85,6 +85,8 @@ export type Metricas = {
   // dobrava as consultas da página de Métricas à toa).
   leadsTrabalhadosDeclarados: number;
   ligacoes: number;
+  // Das ligações feitas, quantas foram atendidas (relatório da Banker).
+  ligacoesAtendidas: number;
   reunioesMarcadas: number;
   // Das reuniões marcadas no período, quantas são de lead que TAMBÉM
   // entrou nesse mesmo período (não é lead antigo com reunião nova) —
@@ -152,6 +154,7 @@ export async function calcularMetricas(
   const [
     { data: leadsDeclarados },
     { count: ligacoes },
+    { count: ligacoesAtendidas },
     { data: reunioesDoPeriodo },
     { count: reunioesMarcadasNovas },
     { count: reunioesMarcadasLeadNovo },
@@ -194,6 +197,16 @@ export async function calcularMetricas(
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
       .eq("usuario_id", usuarioId)
       .eq("tipo", "ligacao")
+      .is("excluido_em", null)
+      .is("leads.arquivado_em", null)
+      .gte("ocorreu_em", inicioISO)
+      .lt("ocorreu_em", fimISO),
+    supabase
+      .from("interacoes")
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId)
+      .eq("tipo", "ligacao")
+      .eq("atendida", true)
       .is("excluido_em", null)
       .is("leads.arquivado_em", null)
       .gte("ocorreu_em", inicioISO)
@@ -358,6 +371,7 @@ export async function calcularMetricas(
     leadsTrabalhados: leads,
     leadsTrabalhadosDeclarados: (leadsDeclarados ?? []).length,
     ligacoes: ligacoes ?? 0,
+    ligacoesAtendidas: ligacoesAtendidas ?? 0,
     reunioesMarcadas: marcadas,
     reunioesMarcadasLeadNovo: reunioesMarcadasLeadNovo ?? 0,
     reunioesReagendadas: reunioesReagendadas ?? 0,
@@ -396,6 +410,7 @@ export async function calcularMetricasOrg(
   const [
     { data: leadsDeclarados },
     { count: ligacoes },
+    { count: ligacoesAtendidas },
     { data: reunioesDoPeriodo },
     { count: reunioesMarcadasNovas },
     { count: reunioesMarcadasLeadNovo },
@@ -429,6 +444,16 @@ export async function calcularMetricasOrg(
       .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
       .eq("org_id", orgId)
       .eq("tipo", "ligacao")
+      .is("excluido_em", null)
+      .is("leads.arquivado_em", null)
+      .gte("ocorreu_em", inicioISO)
+      .lt("ocorreu_em", fimISO),
+    supabase
+      .from("interacoes")
+      .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("tipo", "ligacao")
+      .eq("atendida", true)
       .is("excluido_em", null)
       .is("leads.arquivado_em", null)
       .gte("ocorreu_em", inicioISO)
@@ -563,6 +588,7 @@ export async function calcularMetricasOrg(
     leadsTrabalhados: leads,
     leadsTrabalhadosDeclarados: (leadsDeclarados ?? []).length,
     ligacoes: ligacoes ?? 0,
+    ligacoesAtendidas: ligacoesAtendidas ?? 0,
     reunioesMarcadas: marcadas,
     reunioesMarcadasLeadNovo: reunioesMarcadasLeadNovo ?? 0,
     reunioesReagendadas: reunioesReagendadas ?? 0,

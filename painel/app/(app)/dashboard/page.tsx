@@ -39,7 +39,7 @@ import { numerarNiveis } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras, relatorioSemCalls } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -311,19 +311,29 @@ export default async function DashboardPage({
           <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
             <div>
               <h2 className="text-sm font-semibold text-neutral-800">Meu relatório de hoje</h2>
-              <p className="text-xs text-neutral-500">
-                {metricasHoje.reunioesMarcadas}{" "}
-                {metricasHoje.reunioesMarcadas === 1 ? call(publicoOrg) : calls(publicoOrg)} marcada
-                {metricasHoje.reunioesMarcadas === 1 ? "" : "s"} · {metricasHoje.ligacoes} ligaç
-                {metricasHoje.ligacoes === 1 ? "ão" : "ões"}, {formatarDataCurta(agora)}.
-              </p>
+              {relatorioSemCalls(publicoOrg) ? (
+                <p className="text-xs text-neutral-500">
+                  {metricasHoje.ligacoes} ligaç{metricasHoje.ligacoes === 1 ? "ão feita" : "ões feitas"} ·{" "}
+                  {metricasHoje.ligacoesAtendidas} atendida{metricasHoje.ligacoesAtendidas === 1 ? "" : "s"},{" "}
+                  {formatarDataCurta(agora)}.
+                </p>
+              ) : (
+                <p className="text-xs text-neutral-500">
+                  {metricasHoje.reunioesMarcadas}{" "}
+                  {metricasHoje.reunioesMarcadas === 1 ? call(publicoOrg) : calls(publicoOrg)} marcada
+                  {metricasHoje.reunioesMarcadas === 1 ? "" : "s"} · {metricasHoje.ligacoes} ligaç
+                  {metricasHoje.ligacoes === 1 ? "ão" : "ões"}, {formatarDataCurta(agora)}.
+                </p>
+              )}
             </div>
             <CopiarRelatorioButton
               periodoLabel={formatarDataCurta(agora)}
               callsMarcadas={metricasHoje.reunioesMarcadas}
               callsReagendadas={metricasHoje.reunioesReagendadas}
               ligacoesFeitas={metricasHoje.ligacoes}
+              ligacoesAtendidas={metricasHoje.ligacoesAtendidas}
               publicoOrg={publicoOrg}
+              hoje
             />
           </section>
         )}
