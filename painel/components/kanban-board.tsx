@@ -21,6 +21,7 @@ import {
   IconeTelefone,
   IconeTag,
   IconeCalendario,
+  IconeCarta,
   IconeMoeda,
   IconeReativar,
   IconeCasa,
@@ -1250,6 +1251,40 @@ export function KanbanBoard({
                             souAdmin={souAdmin}
                             publicoOrg={publicoOrg}
                           />
+                        ) : funilConsorcio(publicoOrg) ? (
+                          // Consórcio (Banker): dois caminhos. "Enviar simulação" abre o
+                          // card com a proposta preenchível e o nível em "Simulação
+                          // enviada" (o lead continua em Pré-vendas); "Iniciar proposta"
+                          // leva pra "Proposta iniciada" (Vendas). Nenhum dos dois move o
+                          // lead antes de salvar.
+                          permitirMarcarReuniaoRapido && (
+                            <div className="-mx-3.5 -mb-3.5 mt-2.5 flex w-[calc(100%+1.75rem)] overflow-hidden rounded-b-xl border-t border-neutral-200 bg-neutral-50">
+                              {lead.nivel_ordem < 3 && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    abrirLead({ leadId: lead.id, nivelPretendido: 3 });
+                                  }}
+                                  className="botao-agendar-reuniao flex flex-1 items-center justify-center gap-1.5 border-r border-neutral-200 py-3 text-center text-xs font-semibold text-neutral-600 transition hover:bg-blue-600 hover:text-white"
+                                >
+                                  <IconeCarta className="h-3.5 w-3.5" />
+                                  Enviar simulação
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  moverPara(lead.id, lead.nivel_ordem, NIVEL_REUNIAO_MARCADA, false);
+                                }}
+                                className="botao-agendar-reuniao flex flex-1 items-center justify-center gap-1.5 py-3 text-center text-xs font-semibold text-neutral-600 transition hover:bg-blue-600 hover:text-white"
+                              >
+                                <IconeMoeda className="h-3.5 w-3.5" />
+                                Iniciar proposta
+                              </button>
+                            </div>
+                          )
                         ) : (
                           permitirMarcarReuniaoRapido &&
                           !lead.reuniao_agendada_para && (

@@ -29,6 +29,8 @@ import { PropostaConsorcioForm } from "@/components/proposta-consorcio-form";
 import type { PropostaConsorcio } from "@/lib/proposta-consorcio";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
+// Funil de consórcio (Banker): o nível 3 é "Simulação enviada".
+const NIVEL_SIMULACAO_ENVIADA = "3";
 const NIVEL_REUNIAO_MARCADA = "4";
 const NIVEL_NO_SHOW = "5";
 const NIVEL_REAGENDAMENTO = "6";
@@ -787,10 +789,13 @@ export function EditarLeadForm({
 
           {consorcio &&
             !vendido &&
-            (nivelSelecionado === NIVEL_REUNIAO_MARCADA || nivelSelecionado === NIVEL_FOLLOW_POS_REUNIAO) && (
+            (nivelSelecionado === NIVEL_SIMULACAO_ENVIADA ||
+              nivelSelecionado === NIVEL_REUNIAO_MARCADA ||
+              nivelSelecionado === NIVEL_FOLLOW_POS_REUNIAO) && (
               <PropostaConsorcioForm
                 key={`proposta-${lead.id}`}
                 inicial={lead.proposta_consorcio ?? null}
+                soSimulacao={nivelSelecionado === NIVEL_SIMULACAO_ENVIADA}
               />
             )}
 

@@ -47,7 +47,14 @@ function CampoDinheiro({
 
 // Proposta de consórcio (Banker): aparece no card do lead quando ele vai pra
 // "Proposta iniciada" (ou já está nela / em "Aguardando pagamento").
-export function PropostaConsorcioForm({ inicial }: { inicial: PropostaConsorcio | null }) {
+export function PropostaConsorcioForm({
+  inicial,
+  soSimulacao = false,
+}: {
+  inicial: PropostaConsorcio | null;
+  // Nível "Simulação enviada": mesmo bloco, mas o lead continua em Pré-vendas.
+  soSimulacao?: boolean;
+}) {
   const [proposta, setProposta] = useState<PropostaConsorcio>(inicial ?? PROPOSTA_CONSORCIO_VAZIA);
   const [copiado, setCopiado] = useState(false);
   const raizRef = useRef<HTMLDivElement>(null);
@@ -75,7 +82,9 @@ export function PropostaConsorcioForm({ inicial }: { inicial: PropostaConsorcio 
       <div>
         <p className="text-sm font-bold text-green-900">🚘 Consórcio Volkswagen</p>
         <p className="text-xs text-green-800">
-          Preencha a proposta. Ao salvar, o lead vai para a área de Vendas.
+          {soSimulacao
+            ? "Preencha a simulação. Ao salvar, o lead fica em Pré-vendas, em \"Simulação enviada\"."
+            : "Preencha a proposta. Ao salvar, o lead vai para a área de Vendas."}
         </p>
       </div>
 
@@ -176,7 +185,7 @@ export function PropostaConsorcioForm({ inicial }: { inicial: PropostaConsorcio 
 
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-green-800">Texto da proposta</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-green-800">{soSimulacao ? "Texto da simulação" : "Texto da proposta"}</p>
           <button
             type="button"
             onClick={copiar}
