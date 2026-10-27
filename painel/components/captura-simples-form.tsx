@@ -71,7 +71,17 @@ export function CapturaSimplesForm({
         setConcluido(true);
         return;
       }
-      window.location.href = `https://wa.me/${destino}${mensagem ? `?text=${encodeURIComponent(mensagem)}` : ""}`;
+      const linkWhatsapp = `https://wa.me/${destino}${mensagem ? `?text=${encodeURIComponent(mensagem)}` : ""}`;
+      // Com pixel/tag configurado, dá meio segundo pro navegador enviar o
+      // evento "Lead" antes de sair da página — sem isso o envio podia ser
+      // cortado pela troca de página e o anúncio não contava o cadastro.
+      if (metaPixelId || googleTagId) {
+        setTimeout(() => {
+          window.location.href = linkWhatsapp;
+        }, 600);
+      } else {
+        window.location.href = linkWhatsapp;
+      }
     });
   }
 
