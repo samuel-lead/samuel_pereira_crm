@@ -136,8 +136,7 @@ export type MotivoBase =
   | "iniciou_sem_interesse"
   | "farming"
   | "sem_condicao_pagar"
-  | "comprou_concorrente"
-  | "numero_invalido";
+  | "comprou_concorrente";
 
 const COLUNAS: { chave: MotivoBase; nome: string; cor: { header: string; borda: string; badge: string } }[] = [
   {
@@ -186,14 +185,9 @@ const COLUNAS: { chave: MotivoBase; nome: string; cor: { header: string; borda: 
     nome: "Comprou em outro lugar ou com outra administradora",
     cor: { header: "bg-violet-50", borda: "border-violet-200", badge: "bg-violet-200 text-violet-700" },
   },
-  {
-    chave: "numero_invalido",
-    nome: "Número errado ou inválido",
-    cor: { header: "bg-neutral-100", borda: "border-neutral-300", badge: "bg-neutral-300 text-neutral-700" },
-  },
 ];
 
-const COLUNAS_SO_CONSORCIO: MotivoBase[] = ["sem_condicao_pagar", "comprou_concorrente", "numero_invalido"];
+const COLUNAS_SO_CONSORCIO: MotivoBase[] = ["sem_condicao_pagar", "comprou_concorrente"];
 
 function diasNaBase(entrouNivelEm: string) {
   return diasDesde(entrouNivelEm);

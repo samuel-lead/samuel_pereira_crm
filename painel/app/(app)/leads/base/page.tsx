@@ -148,7 +148,6 @@ export default async function BasePage({
     farming: [],
     sem_condicao_pagar: [],
     comprou_concorrente: [],
-    numero_invalido: [],
   };
 
   for (const lead of leads) {

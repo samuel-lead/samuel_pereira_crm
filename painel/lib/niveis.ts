@@ -174,10 +174,9 @@ export const MOTIVOS_BASE = [
   // Só no funil de consórcio (Banker) — ver motivosBaseDaOrg.
   { valor: "sem_condicao_pagar", nome: "Sem condição de pagar agora" },
   { valor: "comprou_concorrente", nome: "Comprou em outro lugar ou com outra administradora" },
-  { valor: "numero_invalido", nome: "Número errado ou inválido" },
 ] as const;
 
-const MOTIVOS_BASE_SO_CONSORCIO: string[] = ["sem_condicao_pagar", "comprou_concorrente", "numero_invalido"];
+const MOTIVOS_BASE_SO_CONSORCIO: string[] = ["sem_condicao_pagar", "comprou_concorrente"];
 
 // Motivos de Base que a empresa usa — a Banker - Consorcio, por exemplo,
 // não usa "Farming" (ver lib/terminologia.ts, semFarming).
@@ -188,7 +187,7 @@ export function motivosBaseDaOrg(publicoOrg: string) {
     if (funilConsorcio(publicoOrg) && m.valor === "nao_reagendados") return false;
     // Consórcio junta "qualifiquei e sumiu" com "não teve interesse" (Samuel, 27/10/26).
     if (funilConsorcio(publicoOrg) && m.valor === "qualificou_sumiu") return false;
-    // Os três motivos novos só existem pra Banker (consórcio).
+    // Os dois motivos novos só existem pra Banker (consórcio).
     if (!funilConsorcio(publicoOrg) && MOTIVOS_BASE_SO_CONSORCIO.includes(m.valor)) return false;
     return true;
   });
