@@ -103,6 +103,15 @@ export async function criarIsca(
     return { erro: "Cola o link do material ou anexa um arquivo" };
   }
 
+  // Empresa imobiliária: o link público é o formulário simples (nome + WhatsApp
+  // + botão do WhatsApp), sem o questionário de mentoria.
+  const { data: orgData } = await supabase
+    .from("orgs")
+    .select("publico")
+    .eq("id", usuario.org_id)
+    .maybeSingle();
+  const formularioSimples = orgData?.publico === "imobiliario";
+
   const slug = slugificar(slugDigitado || nome);
   if (!slug) return { erro: "Esse nome não dá pra virar um link válido — tenta outro" };
   if (SLUGS_RESERVADOS.has(slug)) {
@@ -123,6 +132,7 @@ export async function criarIsca(
       material_url: tipo === "material" ? materialUrl || "pendente" : null,
       whatsapp_contato_e164: whatsappContato,
       whatsapp_mensagem: whatsappMensagem,
+      formulario_simples: formularioSimples,
     })
     .select("id")
     .single();

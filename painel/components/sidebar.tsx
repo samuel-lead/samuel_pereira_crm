@@ -49,7 +49,7 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
     titulo: "Admin",
     itens: [
       { href: "/usuarios", label: "Usuários", Icone: IconeUsuarios, pagina: "admin" },
-      { href: "/iscas", label: "Captura de leads", Icone: IconeIma, pagina: "admin", somenteMentoria: true },
+      { href: "/iscas", label: "Captura de leads", Icone: IconeIma, pagina: "admin" },
       { href: "/leads/excluidos", label: "Excluídos", Icone: IconeLixeira, pagina: "admin" },
       { href: "/configuracoes", label: "Configurações", Icone: IconeConfig, pagina: "admin" },
     ],
@@ -65,6 +65,7 @@ export function Sidebar({
   funcao = null,
   publicoOrg = "mentoria",
   paginasOcultas = [],
+  capturaLeads = false,
   abertoMobile = false,
   onFecharMobile,
 }: {
@@ -76,6 +77,8 @@ export function Sidebar({
   funcao?: string | null;
   publicoOrg?: string;
   paginasOcultas?: string[];
+  // Empresa imobiliária liberada pra ter "Captura de leads" (orgs.captura_leads).
+  capturaLeads?: boolean;
   abertoMobile?: boolean;
   onFecharMobile?: () => void;
 }) {
@@ -88,6 +91,9 @@ export function Sidebar({
       // também, diferente do resto (que admin sempre vê tudo).
       if (item.somenteImobiliario && publicoOrg !== "imobiliario") return false;
       if (item.somenteMentoria && publicoOrg === "imobiliario") return false;
+      // Captura de leads: sempre existiu na mentoria; no imobiliário só nas
+      // empresas liberadas (Ketlyn, 27/10/26).
+      if (item.href === "/iscas" && publicoOrg === "imobiliario" && !capturaLeads) return false;
       // Bônus SDR não existe no imobiliário — vale pra admin também.
       if (item.href === "/bonus-sdr" && publicoOrg === "imobiliario") return false;
       // Páginas que a empresa escondeu (orgs.paginas_ocultas) — vale pra admin.

@@ -26,3 +26,17 @@ export async function bloquearSeOculta(
     redirect("/leads");
   }
 }
+
+// "Captura de leads" no menu sempre existiu nas empresas de mentoria; nas
+// IMOBILIÁRIAS só aparece quando a empresa foi liberada (orgs.captura_leads).
+export async function capturaLeadsLiberada(
+  supabase: SupabaseClient,
+  orgId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("orgs")
+    .select("captura_leads")
+    .eq("id", orgId)
+    .maybeSingle();
+  return data?.captura_leads === true;
+}

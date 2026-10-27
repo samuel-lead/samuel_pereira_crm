@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { IscaCapturaForm } from "@/components/isca-captura-form";
+import { CapturaSimplesForm } from "@/components/captura-simples-form";
 
 // Fonte só dessa página pública (não mexe na fonte do resto do painel) —
 // Samuel achou a fonte padrão feia aqui, Inter é mais legível pra uma
@@ -28,7 +29,7 @@ export async function generateMetadata({
   const supabase = await createClient();
   const { data: isca } = await supabase
     .from("iscas")
-    .select("nome, material_url")
+    .select("nome, material_url, formulario_simples")
     .eq("slug", slug)
     .eq("ativo", true)
     .is("arquivado_em", null)
@@ -36,7 +37,9 @@ export async function generateMetadata({
 
   if (!isca) return { title: "Meu Vendedor" };
 
-  const descricao = isca.material_url
+  const descricao = isca.formulario_simples
+    ? "Preencha seus dados e fale direto no WhatsApp."
+    : isca.material_url
     ? "Preenche seus dados pra liberar o acesso — leva menos de 2 minutos."
     : "Preenche seus dados pra nossa equipe entrar em contato — leva menos de 2 minutos.";
   return {
@@ -61,7 +64,7 @@ export default async function IscaPage({
   const [{ data: isca }, { data: pixels }] = await Promise.all([
     supabase
       .from("iscas")
-      .select("nome, material_url")
+      .select("nome, material_url, formulario_simples, whatsapp_contato_e164, whatsapp_mensagem")
       .eq("slug", slug)
       .eq("ativo", true)
       .is("arquivado_em", null)
@@ -78,6 +81,21 @@ export default async function IscaPage({
     google_tag_id: string | null;
     instagram_url: string | null;
   } | null;
+
+  if (isca.formulario_simples) {
+    return (
+      <div className={`min-h-screen overflow-x-hidden bg-[#0b0e13] ${fonte.className}`}>
+        <CapturaSimplesForm
+          slug={slug}
+          titulo={isca.nome}
+          whatsappContatoE164={isca.whatsapp_contato_e164}
+          whatsappMensagem={isca.whatsapp_mensagem}
+          metaPixelId={idsPixel?.meta_pixel_id ?? null}
+          googleTagId={idsPixel?.google_tag_id ?? null}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen overflow-x-hidden bg-[#0b0e13] ${fonte.className}`}>
