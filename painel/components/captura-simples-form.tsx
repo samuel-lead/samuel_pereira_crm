@@ -12,6 +12,18 @@ declare global {
   }
 }
 
+// Número sem DDD (8 ou 9 dígitos, ex.: "99161-2661") vira com o DDD de quem
+// recebe os leads (o da Ketlyn, 62) — o resto (com/sem 55, com/sem o 9 extra,
+// parênteses, traços) o normalizarTelefone já resolve. Samuel (27/10/26):
+// o formulário não pode dar erro por causa do jeito de digitar.
+function normalizarComDddPadrao(valor: string, dddPadrao: string | null): string {
+  const digitos = valor.replace(/\D/g, "");
+  if (dddPadrao && (digitos.length === 8 || digitos.length === 9)) {
+    return normalizarTelefone(`${dddPadrao}${digitos}`);
+  }
+  return normalizarTelefone(valor);
+}
+
 const RESPOSTAS_VAZIAS = {
   instagram: "",
   tempoMercado: "",
@@ -49,7 +61,9 @@ export function CapturaSimplesForm({
     "idle" | "checando" | "existe" | "nao_existe" | "indefinido"
   >("idle");
 
-  const numeroNormalizado = normalizarTelefone(telefone);
+  const dddPadrao = whatsappContatoE164?.startsWith("55") ? whatsappContatoE164.slice(2, 4) : null;
+  const semDdd = /^\d{8,9}$/.test(telefone.replace(/\D/g, "")) && telefone.replace(/\D/g, "").length <= 9;
+  const numeroNormalizado = normalizarComDddPadrao(telefone, dddPadrao);
   const formatoOk = telefoneValido(numeroNormalizado);
 
   // Enquanto a pessoa digita, confere com o Z-API se o número existe de
@@ -96,13 +110,13 @@ export function CapturaSimplesForm({
 
     if (!podeEnviar) return;
     if (!nome.trim()) return setErro("Preenche seu nome");
-    const numero = normalizarTelefone(telefone);
+    const numero = numeroNormalizado;
     if (!telefone.trim() || !telefoneValido(numero)) {
       return setErro("Confere seu WhatsApp — precisa ser um número com DDD, tipo (62) 99999-9999");
     }
 
     iniciarEnvio(async () => {
-      const resposta = await registrarLeadIsca(slug, { nome, telefone, ...RESPOSTAS_VAZIAS });
+      const resposta = await registrarLeadIsca(slug, { nome, telefone: numeroNormalizado, ...RESPOSTAS_VAZIAS });
       if (resposta.erro) {
         setErro(resposta.erro);
         return;
@@ -221,6 +235,9 @@ export function CapturaSimplesForm({
           />
         </div>
 
+        {semDdd && formatoOk && dddPadrao && (statusWhats === "existe" || statusWhats === "nao_existe" || statusWhats === "indefinido") && (
+          <p className="text-sm text-[#c4cad3]">Sem DDD? Vamos usar o ({dddPadrao}).</p>
+        )}
         {telefone.trim() && !formatoOk && (
           <p className="text-sm text-[#c4cad3]">Digite o número com DDD, tipo (62) 99999-9999.</p>
         )}
