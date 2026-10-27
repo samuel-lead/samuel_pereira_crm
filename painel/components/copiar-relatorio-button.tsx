@@ -23,11 +23,10 @@ function montarRelatorio(
   callsReagendadas: number,
   ligacoesFeitas: number,
   ligacoesAtendidas: number,
-  publicoOrg: string,
-  hoje: boolean
+  publicoOrg: string
 ) {
   if (relatorioSemCalls(publicoOrg)) {
-    return montarRelatorioBanker(hoje ? "hoje" : periodoLabel, ligacoesFeitas, ligacoesAtendidas);
+    return montarRelatorioBanker(periodoLabel, ligacoesFeitas, ligacoesAtendidas);
   }
   return [
     `🗓️Período: ${periodoLabel}`,
@@ -52,7 +51,6 @@ export function CopiarRelatorioButton({
   ligacoesFeitas,
   ligacoesAtendidas = 0,
   publicoOrg = "mentoria",
-  hoje = false,
 }: {
   periodoLabel: string;
   callsMarcadas: number;
@@ -60,8 +58,6 @@ export function CopiarRelatorioButton({
   ligacoesFeitas: number;
   ligacoesAtendidas?: number;
   publicoOrg?: string;
-  // Relatório do dia de hoje: a Banker escreve "Período: hoje" em vez da data.
-  hoje?: boolean;
 }) {
   const [copiado, setCopiado] = useState(false);
 
@@ -72,8 +68,7 @@ export function CopiarRelatorioButton({
       callsReagendadas,
       ligacoesFeitas,
       ligacoesAtendidas,
-      publicoOrg,
-      hoje
+      publicoOrg
     );
     navigator.clipboard?.writeText(texto).catch(() => {});
     setCopiado(true);

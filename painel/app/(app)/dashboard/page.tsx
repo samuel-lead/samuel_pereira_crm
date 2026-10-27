@@ -333,7 +333,6 @@ export default async function DashboardPage({
               ligacoesFeitas={metricasHoje.ligacoes}
               ligacoesAtendidas={metricasHoje.ligacoesAtendidas}
               publicoOrg={publicoOrg}
-              hoje
             />
           </section>
         )}
