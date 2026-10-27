@@ -45,7 +45,7 @@ export function montarTextoPropostaConsorcio(p: PropostaConsorcio) {
     `💰 *Crédito Liberado R$ ${dinheiro(p.credito_liberado)}*`,
     "",
     "📆 Plano de pagamento:",
-    `      ▪️ ${p.prazo_meses ?? ""} Meses`,
+    `      ▪️ Prazo: ${p.prazo_meses ?? ""}`,
     `      ▪️ Valor da Parcela: *R$ ${dinheiro(p.valor_parcela)}*`,
     `      ▪️ Parcelas Após contemplação Aproximadamente: R$ ${dinheiro(p.parcelas_apos_contemplacao)}.`,
     "",
