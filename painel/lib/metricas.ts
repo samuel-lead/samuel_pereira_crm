@@ -895,9 +895,42 @@ export async function calcularNegociacoesAbertas(
   return { quantidade, valor };
 }
 
+// Funil de consórcio (Banker): "propostas iniciadas" = quantas vezes um lead
+// ENTROU no nível "Proposta iniciada" (4) no período, por quem moveu. Lead
+// excluído não conta. Só vale pra empresa sem reunião — nas demais o nível 4
+// é "Reunião marcada".
+export async function contarPropostasIniciadasPorUsuario(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<Map<string, number>> {
+  const { data } = await buscarTodas<{ usuario_id: string | null }>((de, ate) =>
+    supabase
+      .from("nivel_historico")
+      .select("usuario_id, leads!inner(arquivado_em)")
+      .eq("org_id", orgId)
+      .eq("para_ordem", 4)
+      .neq("de_ordem", 4)
+      .is("leads.arquivado_em", null)
+      .gte("ocorreu_em", inicio.toISOString())
+      .lt("ocorreu_em", fim.toISOString())
+      .order("id")
+      .range(de, ate)
+  );
+  const porUsuario = new Map<string, number>();
+  for (const linha of data ?? []) {
+    if (!linha.usuario_id) continue;
+    porUsuario.set(linha.usuario_id, (porUsuario.get(linha.usuario_id) ?? 0) + 1);
+  }
+  return porUsuario;
+}
+
 export type MetricasUsuario = Metricas & {
   usuarioId: string;
   nome: string;
+  // Só preenchido no funil de consórcio (ver contarPropostasIniciadasPorUsuario).
+  propostasIniciadas?: number;
   // Só quem é puramente Closer (nem SDR, nem admin) fica de fora do
   // botão "Copiar" — ele não faz o check-in diário de prospecção/ligação.
   // Admin que também é Closer continua podendo copiar (Samuel pediu).

@@ -82,6 +82,7 @@ export function PerformanceSdr({
                     callsReagendadas={linha.reunioesReagendadas}
                     ligacoesFeitas={linha.ligacoes}
                     ligacoesAtendidas={linha.ligacoesAtendidas}
+                    propostasIniciadas={linha.propostasIniciadas}
                     publicoOrg={publicoOrg}
                   />
                 )}

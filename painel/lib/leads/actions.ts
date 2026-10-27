@@ -13,7 +13,7 @@ import {
 import { garantirOrigem } from "@/lib/origens/actions";
 import { pareceOrigemInvalida } from "@/lib/origens/validacao";
 import { normalizarTelefone } from "@/lib/telefone";
-import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg } from "@/lib/terminologia";
+import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio } from "@/lib/terminologia";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -257,6 +257,9 @@ async function sincronizarReuniao(
     // 8 por baixo, mas não exige reunião registrada — só a "Oportunidades"
     // normal exige (Samuel pediu essa distinção explicitamente).
     querFutura?: boolean;
+    // Funil de consórcio (Banker): não existe reunião — mudar de nível só
+    // muda o nível, nunca cria nem fecha reunião.
+    semReunioes?: boolean;
   }
 ): Promise<{ erro: string | null; transferirParaCloserId?: string | null }> {
   const {
@@ -273,7 +276,10 @@ async function sincronizarReuniao(
     reuniaoAnteriorSumiu,
     publicoOrg = "mentoria",
     querFutura = false,
+    semReunioes = false,
   } = params;
+
+  if (semReunioes) return { erro: null };
 
   // Trava 1: sair de "Reunião marcada" só pode ir pra No-show, Precisa
   // reagendar, Follow ou Oportunidades — são os únicos caminhos que fecham
@@ -940,6 +946,9 @@ export async function atualizarLead(
       : leadAtual.responsavel_id;
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
+  // Banker (consórcio) não tem reunião: níveis 4 e 7 são "Proposta iniciada"
+  // e "Aguardando assinatura", sem data, sem closer, sem travas de reunião.
+  const semReunioes = funilConsorcio(usuario.publico_org_completo);
 
   // Nenhuma reunião pode ficar marcada sem os 3 critérios de qualificação
   // preenchidos (regra do CLAUDE.md) — vale sempre que o nível FINAL é
@@ -951,7 +960,7 @@ export async function atualizarLead(
   // Venda já fechada (Samuel, 23/10/26): o lead continua parado no nível de
   // "Reunião marcada" onde estava, mas não está marcando reunião nenhuma —
   // só corrigindo dado da venda. Não cobra os 3 critérios aqui.
-  if (novoNivel === NIVEL_REUNIAO_MARCADA && leadAtual.status !== "vendido") {
+  if (!semReunioes && novoNivel === NIVEL_REUNIAO_MARCADA && leadAtual.status !== "vendido") {
     const faltando: string[] = [];
     if (!criterioProblema) faltando.push("o perfil do lead");
     if (criterioUrgencia === "desconhecida") faltando.push("se tem urgência");
@@ -1052,6 +1061,7 @@ export async function atualizarLead(
   // por isso travava mesmo o menu deixando escolher (Samuel pegou isso ao
   // vivo com o lead "Norton").
   if (
+    !semReunioes &&
     nivelMudou &&
     (novoNivel === NIVEL_FOLLOW_POS_REUNIAO ||
       (novoNivel === NIVEL_REUNIAO_FEITA && !oportunidadeFutura))
@@ -1099,6 +1109,7 @@ export async function atualizarLead(
   // não trava o lead de mudar de nível. Samuel pegou isso ao vivo: reunião
   // marcada, não aconteceu, e não dava pra mandar pra Repescagem futura.
   if (
+    !semReunioes &&
     nivelMudou &&
     leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA &&
     (novoNivel === NIVEL_FOLLOW_POS_REUNIAO || novoNivel === NIVEL_REUNIAO_FEITA)
@@ -1152,12 +1163,17 @@ export async function atualizarLead(
             : undefined,
       publicoOrg: usuario.publico_org,
       querFutura: oportunidadeFutura,
+      semReunioes,
     });
     if (resultadoSincronizacao.erro) {
       return { erro: resultadoSincronizacao.erro };
     }
     transferirParaCloserId = resultadoSincronizacao.transferirParaCloserId;
-  } else if (novoNivel === NIVEL_REUNIAO_MARCADA && leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA) {
+  } else if (
+    !semReunioes &&
+    novoNivel === NIVEL_REUNIAO_MARCADA &&
+    leadAtual.nivel_ordem === NIVEL_REUNIAO_MARCADA
+  ) {
     // Lead já estava em "Reunião marcada" (não mudou de nível agora) —
     // o campo de Closer só aparece na hora da transição por padrão, então
     // isso aqui é o que permite definir/trocar o closer depois que a
@@ -1275,7 +1291,7 @@ export async function atualizarLead(
   // nível é "Reunião marcada"; só o e-mail é opcional. Best-effort — se
   // a Google Agenda falhar aqui, não trava o salvamento do lead (que já
   // foi feito com sucesso).
-  if (novoNivel === NIVEL_REUNIAO_MARCADA && email) {
+  if (!semReunioes && novoNivel === NIVEL_REUNIAO_MARCADA && email) {
     const { data: reuniaoAtiva } = await supabase
       .from("reunioes")
       .select("id")
@@ -1373,6 +1389,12 @@ export async function moverLeadNivel(
   // marcação `oportunidade_futura`, o nivel_ordem continua 8.
   const querFutura = novoNivel === ORDEM_OPORTUNIDADE_FUTURA;
   const nivelReal = querFutura ? NIVEL_REUNIAO_FEITA : novoNivel;
+  const semReunioes = funilConsorcio(usuario.publico_org_completo);
+
+  // Funil de consórcio só tem os níveis 0-4, 7 e 9 (+ Repescagem futura).
+  if (semReunioes && !querFutura && (nivelReal === 5 || nivelReal === 6 || nivelReal === 8)) {
+    return "Esse nível não existe no funil de consórcio.";
+  }
 
   if (leadAtual.nivel_ordem === nivelReal && leadAtual.oportunidade_futura === querFutura) {
     return null;
@@ -1450,6 +1472,7 @@ export async function moverLeadNivel(
     reuniaoQualificada: leadQualificado === false ? false : undefined,
     publicoOrg: usuario.publico_org,
     querFutura,
+    semReunioes,
   });
   if (erroReuniao) {
     return erroReuniao;

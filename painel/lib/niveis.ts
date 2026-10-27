@@ -1,4 +1,4 @@
-import { semFarming } from "@/lib/terminologia";
+import { semFarming, funilConsorcio } from "@/lib/terminologia";
 
 export const CORES_NIVEL: Record<
   number,
@@ -141,6 +141,19 @@ export const NIVEIS_VENDAS = [4, 7, 8];
 // arrastar pra uma coluna.
 export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
 
+// Funil de consórcio não tem reunião: sem as colunas de No-show e "Precisa
+// reagendar" no Pré-vendas, e sem "Oportunidades" (ordem 8) no Vendas — o
+// lead em "Repescagem futura" continua existindo (é a coluna sintética).
+export function colunasPreVendasDaOrg(publicoOrg: string) {
+  return funilConsorcio(publicoOrg) ? [0, 1, 2, 3] : COLUNAS_PRE_VENDAS;
+}
+
+// Níveis do Vendas que viram coluna própria (a ordem 8 só vira coluna fora
+// do funil de consórcio; "Repescagem futura" é montada à parte).
+export function colunasVendasDaOrg(publicoOrg: string) {
+  return funilConsorcio(publicoOrg) ? [4, 7] : NIVEIS_VENDAS;
+}
+
 // Níveis pra onde dá pra reativar um lead direto do card na Base, sem
 // passar por mais nada — os que não exigem reunião nenhuma registrada
 // ainda. "Reunião marcada" pra frente fica de fora de propósito: precisa
@@ -217,9 +230,19 @@ export function rotuloNivelCurto(nivel: NivelResumo, numeroVisivel: number | und
 export function nivelDeveApareceNoMenu(
   nivelAtual: number,
   jaTeveReuniao: boolean,
-  ordemDestino: number
+  ordemDestino: number,
+  publicoOrg = "mentoria"
 ): boolean {
   if (ordemDestino === nivelAtual) return true;
+
+  // Funil de consórcio: sem reunião, sem No-show/reagendar/Oportunidades.
+  // Pré-vendas segue mão única; "Proposta iniciada" (4) e "Aguardando
+  // assinatura" (7) podem ser escolhidas de qualquer lugar.
+  if (funilConsorcio(publicoOrg)) {
+    if (ordemDestino === 5 || ordemDestino === 6 || ordemDestino === 8) return false;
+    if (ordemDestino <= 3 && ordemDestino < nivelAtual) return false;
+    return true;
+  }
 
   // Novos Leads → Sem conversa → Em qualificação → Topou reunião é uma
   // progressão de mão única: se o lead já está em qualquer um desses

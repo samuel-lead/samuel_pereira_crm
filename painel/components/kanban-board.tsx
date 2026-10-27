@@ -21,6 +21,7 @@ import {
   IconeTelefone,
   IconeTag,
   IconeCalendario,
+  IconeMoeda,
   IconeReativar,
   IconeCasa,
 } from "@/components/icons";
@@ -28,7 +29,7 @@ import { AvatarLead } from "@/components/avatar-lead";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
-import { Reuniao, reuniao, RepescagemFutura, Receita, ehImobiliario } from "@/lib/terminologia";
+import { Reuniao, reuniao, RepescagemFutura, Receita, ehImobiliario, funilConsorcio } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
@@ -264,11 +265,15 @@ function BotaoReativarOportunidade({
             value: String(n.ordem),
             label: rotuloNivel(n, numerosVisiveis.get(n.ordem)),
           })),
-          {
-            value: NIVEL_REUNIAO_MARCADA_REATIVAR,
-            label: `${Reuniao(publicoOrg)} marcada`,
-            indentado: true,
-          },
+          ...(funilConsorcio(publicoOrg)
+            ? []
+            : [
+                {
+                  value: NIVEL_REUNIAO_MARCADA_REATIVAR,
+                  label: `${Reuniao(publicoOrg)} marcada`,
+                  indentado: true,
+                },
+              ]),
         ]}
       />
       {nivel && souAdmin && (
@@ -543,13 +548,15 @@ function SeletorMoverParaMobile({
           // não dá pra escolher direto nesse select simples, por isso nem
           // aparece aqui (mesma razão do menu Nível no card ter um botão
           // "Agendar reunião" à parte pra isso).
-          if (n.ordem === NIVEL_REUNIAO_MARCADA) return false;
+          // No funil de consórcio não tem data nem closer: "Proposta
+          // iniciada" é um nível comum, escolhido direto aqui.
+          if (n.ordem === NIVEL_REUNIAO_MARCADA && !funilConsorcio(publicoOrg)) return false;
           // Nível 8 sempre passa aqui, mesmo sem reunião — o flatMap logo
           // abaixo decide entre mostrar só a "Repescagem futura" ou as
           // duas, porque nascem da mesma linha (mesmo tratamento do menu
           // Nível no card).
           if (n.ordem === NIVEL_REUNIAO_FEITA) return true;
-          return nivelDeveApareceNoMenu(lead.nivel_ordem, lead.jaTeveReuniao ?? false, n.ordem);
+          return nivelDeveApareceNoMenu(lead.nivel_ordem, lead.jaTeveReuniao ?? false, n.ordem, publicoOrg);
         })
         .flatMap((n) => {
           const numero = numerosVisiveis.get(n.ordem);
@@ -565,7 +572,7 @@ function SeletorMoverParaMobile({
 
           // "Oportunidades" normal exige reunião registrada — sem isso só
           // sobra a "Repescagem futura", que não exige.
-          const opcoes = lead.jaTeveReuniao
+          const opcoes = lead.jaTeveReuniao && !funilConsorcio(publicoOrg)
             ? [
                 <option key={n.ordem} value={n.ordem}>
                   {rotulo}
@@ -740,7 +747,8 @@ export function KanbanBoard({
     ordem: number,
     temReuniaoPendente: boolean
   ) {
-    if (ordem === NIVEL_REUNIAO_MARCADA) {
+    const semReunioes = funilConsorcio(publicoOrg);
+    if (ordem === NIVEL_REUNIAO_MARCADA && !semReunioes) {
       await abrirParaMarcarReuniao(leadId, temReuniaoPendente);
       return;
     }
@@ -770,6 +778,7 @@ export function KanbanBoard({
     // exceção de sempre: não exige reunião). Samuel pegou isso ao vivo:
     // reunião marcada, não aconteceu, e o card recusava ir pra lá.
     if (
+      !semReunioes &&
       nivelOrigem === NIVEL_REUNIAO_MARCADA &&
       (ordem === NIVEL_FOLLOW_POS_REUNIAO ||
         ordem === NIVEL_REUNIAO_FEITA ||
@@ -1241,14 +1250,26 @@ export function KanbanBoard({
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                // Consórcio: não tem reunião pra agendar — o botão leva o
+                                // lead direto pra "Proposta iniciada", sem perguntar data.
+                                if (funilConsorcio(publicoOrg)) {
+                                  moverPara(lead.id, lead.nivel_ordem, NIVEL_REUNIAO_MARCADA, false);
+                                  return;
+                                }
                                 abrirParaMarcarReuniao(lead.id, lead.temReuniaoAnteriorPendente ?? false);
                               }}
                               className="botao-agendar-reuniao -mx-3.5 -mb-3.5 mt-2.5 flex w-[calc(100%+1.75rem)] items-center justify-center gap-1.5 rounded-b-xl border-t border-neutral-200 bg-neutral-50 py-3 text-center text-xs font-semibold text-neutral-600 transition hover:bg-blue-600 hover:text-white"
                             >
-                              <IconeCalendario className="h-3.5 w-3.5" />
-                              {lead.nivel_ordem === NIVEL_NO_SHOW || lead.nivel_ordem === NIVEL_REAGENDAMENTO
-                                ? `Reagendar ${reuniao(publicoOrg)}`
-                                : `Agendar ${reuniao(publicoOrg)}`}
+                              {funilConsorcio(publicoOrg) ? (
+                                <IconeMoeda className="h-3.5 w-3.5" />
+                              ) : (
+                                <IconeCalendario className="h-3.5 w-3.5" />
+                              )}
+                              {funilConsorcio(publicoOrg)
+                                ? "Iniciar proposta"
+                                : lead.nivel_ordem === NIVEL_NO_SHOW || lead.nivel_ordem === NIVEL_REAGENDAMENTO
+                                  ? `Reagendar ${reuniao(publicoOrg)}`
+                                  : `Agendar ${reuniao(publicoOrg)}`}
                             </button>
                           )
                         )}

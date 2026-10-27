@@ -21,8 +21,8 @@ import {
   calcularVendasHoje,
   inicioDoMes,
 } from "@/lib/metricas";
-import { NIVEIS_PRE_VENDAS, COLUNAS_PRE_VENDAS, numerarNiveis, type NivelResumo } from "@/lib/niveis";
-import { Calls, ehImobiliario } from "@/lib/terminologia";
+import { NIVEIS_PRE_VENDAS, colunasPreVendasDaOrg, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { Calls, ehImobiliario, funilConsorcio } from "@/lib/terminologia";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 
@@ -151,7 +151,7 @@ export default async function LeadsPage({
   const todosNiveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const nivelPorOrdem = new Map(todosNiveis.map((nivel) => [nivel.ordem, nivel]));
-  const niveis = COLUNAS_PRE_VENDAS.map((ordem) => nivelPorOrdem.get(ordem)).filter(
+  const niveis = colunasPreVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria").map((ordem) => nivelPorOrdem.get(ordem)).filter(
     (nivel): nivel is NivelResumo => !!nivel
   );
   const leads = (leadsData ?? []) as unknown as LeadResumo[];
@@ -562,14 +562,14 @@ export default async function LeadsPage({
                   }
                 />
               )}
-              {callsMarcadasHoje !== null && (
+              {callsMarcadasHoje !== null && !funilConsorcio(publicoOrg) && (
                 <StatCell
                   label={`${Calls(publicoOrg)} marcadas hoje`}
                   value={callsMarcadasHoje}
                   sub={souAdmin ? "Time todo" : undefined}
                 />
               )}
-              {callsRealizadasHoje !== null && (
+              {callsRealizadasHoje !== null && !funilConsorcio(publicoOrg) && (
                 <StatCell
                   label={`${Calls(publicoOrg)} realizadas hoje`}
                   value={callsRealizadasHoje}

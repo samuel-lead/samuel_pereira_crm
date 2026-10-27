@@ -22,6 +22,7 @@ import {
   calcularVendasPorCanal,
   calcularVendasPorProduto,
   calcularMetricasPorUsuario,
+  contarPropostasIniciadasPorUsuario,
   calcularMetricasPorCloser,
   calcularLeadsPorOrigem,
   calcularResumoAno,
@@ -39,7 +40,7 @@ import { numerarNiveis } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras, relatorioSemCalls } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras, relatorioSemCalls, funilConsorcio } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -228,6 +229,30 @@ export default async function DashboardPage({
 
   const metas = metasData as MetasConfig | null;
   const publicoOrg = usuario!.publico_org;
+
+  // Funil de consórcio (Banker): "propostas iniciadas" = leads que entraram
+  // em "Proposta iniciada" no período. Alimenta o relatório copiável do
+  // vendedor (hoje) e o botão Copiar da tabela de desempenho (período).
+  let propostasIniciadasHoje = 0;
+  let performanceSdr = performancePeriodoSdr;
+  if (funilConsorcio(publicoOrg)) {
+    const [hojePorUsuario, periodoPorUsuario] = await Promise.all([
+      souAdmin
+        ? Promise.resolve(new Map<string, number>())
+        : contarPropostasIniciadasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
+      contarPropostasIniciadasPorUsuario(
+        supabase,
+        usuario!.org_id,
+        periodoResolvido.inicio,
+        periodoResolvido.fim
+      ),
+    ]);
+    propostasIniciadasHoje = hojePorUsuario.get(usuario!.id) ?? 0;
+    performanceSdr = performancePeriodoSdr.map((linha) => ({
+      ...linha,
+      propostasIniciadas: periodoPorUsuario.get(linha.usuarioId) ?? 0,
+    }));
+  }
   // Conversão do funil em barras: vendas fechadas dentro do período.
   const safraVenda = dashboardEmBarras(publicoOrg)
     ? await calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
@@ -332,6 +357,7 @@ export default async function DashboardPage({
               callsReagendadas={metricasHoje.reunioesReagendadas}
               ligacoesFeitas={metricasHoje.ligacoes}
               ligacoesAtendidas={metricasHoje.ligacoesAtendidas}
+              propostasIniciadas={propostasIniciadasHoje}
               publicoOrg={publicoOrg}
             />
           </section>
@@ -400,7 +426,7 @@ export default async function DashboardPage({
         {ehImobiliario(publicoOrg) ? (
           <PerformanceCorretor
             titulo={`Performance por ${Sdr(publicoOrg)} — ${periodoResolvido.titulo.toLowerCase()}`}
-            dados={performancePeriodoSdr}
+            dados={performanceSdr}
             periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
             publicoOrg={publicoOrg}
           />
@@ -408,14 +434,14 @@ export default async function DashboardPage({
           // Empresa sem Closer (ex.: Banker - Consorcio): só o ranking do
           // Vendedor, sem o ranking de Closer.
           <PerformanceSdr
-            dados={performancePeriodoSdr}
+            dados={performanceSdr}
             periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
             publicoOrg={publicoOrg}
           />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             <PerformanceSdr
-              dados={performancePeriodoSdr}
+              dados={performanceSdr}
               periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
               publicoOrg={publicoOrg}
             />

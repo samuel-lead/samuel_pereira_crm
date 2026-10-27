@@ -27,6 +27,7 @@ import {
 } from "@/lib/metricas";
 import {
   NIVEIS_VENDAS,
+  colunasVendasDaOrg,
   NIVEIS_REATIVACAO,
   NIVEL_OPORTUNIDADE_FUTURA,
   ORDEM_OPORTUNIDADE_FUTURA,
@@ -173,7 +174,7 @@ export default async function VendasPage({
   const todosNiveis = (niveisData ?? []) as NivelResumo[];
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const niveis = [
-    ...todosNiveis.filter((nivel) => NIVEIS_VENDAS.includes(nivel.ordem)),
+    ...todosNiveis.filter((nivel) => colunasVendasDaOrg(publicoOrg).includes(nivel.ordem)),
     { ...NIVEL_OPORTUNIDADE_FUTURA, nome: RepescagemFutura(publicoOrg) },
   ];
   const niveisReativacao = todosNiveis.filter((nivel) => NIVEIS_REATIVACAO.includes(nivel.ordem));

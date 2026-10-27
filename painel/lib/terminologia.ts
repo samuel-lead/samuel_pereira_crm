@@ -124,6 +124,15 @@ export function relatorioSemCalls(publicoOrg: string) {
   return temVariante(publicoOrg, "com") && temVariante(publicoOrg, "sf");
 }
 
+// Funil de consórcio (Banker - Consorcio, Samuel 27/10/26): vende por
+// ligação, não existe reunião. Os níveis 4 e 7 viram "Proposta iniciada" e
+// "Aguardando assinatura" (só o nome muda no banco), e as colunas de
+// reunião (No-show, Precisa reagendar, Oportunidades) somem. Mesma
+// identificação do relatório sem calls (sufixos ":com" + ":sf").
+export function funilConsorcio(publicoOrg: string) {
+  return relatorioSemCalls(publicoOrg);
+}
+
 export function semCloserNaoImobiliario(publicoOrg: string) {
   return !ehImobiliario(publicoOrg) && temVariante(publicoOrg, "solo");
 }

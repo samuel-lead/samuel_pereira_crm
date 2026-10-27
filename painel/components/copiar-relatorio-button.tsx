@@ -5,14 +5,19 @@ import { Calls, ehGondolas, relatorioSemCalls } from "@/lib/terminologia";
 
 // Relatório da Banker - Consorcio (Samuel, 27/10/26): é o modelo que o time
 // já usa no grupo, então o texto tem que sair exatamente nesse formato —
-// "Propostas iniciadas" e "Atualizou CRM?" ficam pra pessoa preencher.
-function montarRelatorioBanker(periodoLabel: string, ligacoesFeitas: number, ligacoesAtendidas: number) {
+// "Atualizou CRM?" fica pra pessoa preencher.
+function montarRelatorioBanker(
+  periodoLabel: string,
+  ligacoesFeitas: number,
+  ligacoesAtendidas: number,
+  propostasIniciadas: number
+) {
   return [
     `🗓️Período: ${periodoLabel}`,
     "",
     `➡️ Ligações feitas? ${ligacoesFeitas}`,
     `➡️ Ligações atendidas: ${ligacoesAtendidas}`,
-    "➡️ Propostas iniciadas: ",
+    `➡️ Propostas iniciadas: ${propostasIniciadas}`,
     "➡️ Atualizou CRM? ",
   ].join("\n");
 }
@@ -23,10 +28,11 @@ function montarRelatorio(
   callsReagendadas: number,
   ligacoesFeitas: number,
   ligacoesAtendidas: number,
+  propostasIniciadas: number,
   publicoOrg: string
 ) {
   if (relatorioSemCalls(publicoOrg)) {
-    return montarRelatorioBanker(periodoLabel, ligacoesFeitas, ligacoesAtendidas);
+    return montarRelatorioBanker(periodoLabel, ligacoesFeitas, ligacoesAtendidas, propostasIniciadas);
   }
   return [
     `🗓️Período: ${periodoLabel}`,
@@ -50,6 +56,7 @@ export function CopiarRelatorioButton({
   callsReagendadas,
   ligacoesFeitas,
   ligacoesAtendidas = 0,
+  propostasIniciadas = 0,
   publicoOrg = "mentoria",
 }: {
   periodoLabel: string;
@@ -57,6 +64,7 @@ export function CopiarRelatorioButton({
   callsReagendadas: number;
   ligacoesFeitas: number;
   ligacoesAtendidas?: number;
+  propostasIniciadas?: number;
   publicoOrg?: string;
 }) {
   const [copiado, setCopiado] = useState(false);
@@ -68,6 +76,7 @@ export function CopiarRelatorioButton({
       callsReagendadas,
       ligacoesFeitas,
       ligacoesAtendidas,
+      propostasIniciadas,
       publicoOrg
     );
     navigator.clipboard?.writeText(texto).catch(() => {});
