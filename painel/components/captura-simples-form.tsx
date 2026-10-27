@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Script from "next/script";
 import { registrarLeadIsca } from "@/lib/iscas/actions";
 import { normalizarTelefone, telefoneValido } from "@/lib/telefone";
@@ -45,11 +45,56 @@ export function CapturaSimplesForm({
   const [erro, setErro] = useState<string | null>(null);
   const [concluido, setConcluido] = useState(false);
   const [enviando, iniciarEnvio] = useTransition();
+  const [statusWhats, setStatusWhats] = useState<
+    "idle" | "checando" | "existe" | "nao_existe" | "indefinido"
+  >("idle");
+
+  const numeroNormalizado = normalizarTelefone(telefone);
+  const formatoOk = telefoneValido(numeroNormalizado);
+
+  // Enquanto a pessoa digita, confere com o Z-API se o número existe de
+  // verdade no WhatsApp (mesma checagem do formulário de iscas). Samuel
+  // pediu (27/10/26): o botão verde só libera com nome preenchido e número
+  // confirmado. Se o Z-API não responder (status "indefinido"), não prende a
+  // pessoa — libera mesmo assim, pra não perder lead por falha nossa.
+  useEffect(() => {
+    if (!formatoOk) {
+      setStatusWhats("idle");
+      return;
+    }
+
+    setStatusWhats("checando");
+    const controlador = new AbortController();
+    const espera = setTimeout(() => {
+      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/checar-whatsapp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telefone: numeroNormalizado }),
+        signal: controlador.signal,
+      })
+        .then((r) => r.json())
+        .then((dados: { existe: boolean | null }) => {
+          setStatusWhats(dados.existe === true ? "existe" : dados.existe === false ? "nao_existe" : "indefinido");
+        })
+        .catch((e) => {
+          if (e?.name !== "AbortError") setStatusWhats("indefinido");
+        });
+    }, 600);
+
+    return () => {
+      clearTimeout(espera);
+      controlador.abort();
+    };
+  }, [numeroNormalizado, formatoOk]);
+
+  const podeEnviar =
+    nome.trim().length > 0 && formatoOk && (statusWhats === "existe" || statusWhats === "indefinido");
 
   function enviar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
 
+    if (!podeEnviar) return;
     if (!nome.trim()) return setErro("Preenche seu nome");
     const numero = normalizarTelefone(telefone);
     if (!telefone.trim() || !telefoneValido(numero)) {
@@ -176,12 +221,24 @@ export function CapturaSimplesForm({
           />
         </div>
 
+        {telefone.trim() && !formatoOk && (
+          <p className="text-sm text-[#c4cad3]">Digite o número com DDD, tipo (62) 99999-9999.</p>
+        )}
+        {statusWhats === "checando" && (
+          <p className="text-sm text-[#c4cad3]">Verificando seu WhatsApp...</p>
+        )}
+        {statusWhats === "existe" && <p className="text-sm text-[#4ade80]">✓ WhatsApp confirmado</p>}
+        {statusWhats === "nao_existe" && (
+          <p className="text-sm text-red-400">
+            Esse número não tem WhatsApp. Confere se digitou certinho.
+          </p>
+        )}
         {erro && <p className="text-sm text-red-400">{erro}</p>}
 
         <button
           type="submit"
-          disabled={enviando}
-          className="inline-flex w-full items-center justify-center gap-2.5 rounded-lg bg-[#22c55e] px-4 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#16a34a] disabled:opacity-60"
+          disabled={enviando || !podeEnviar}
+          className="inline-flex w-full items-center justify-center gap-2.5 rounded-lg bg-[#22c55e] px-4 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#16a34a] disabled:cursor-not-allowed disabled:bg-[#2a3441] disabled:text-[#6b7280] disabled:hover:bg-[#2a3441]"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.12h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.21 8.21 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.55-3.7 8.21-8.24 8.21Zm4.52-6.16c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.24-.64.81-.78.97-.14.17-.29.19-.53.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.14-.24-.01-.38.11-.5.11-.11.25-.29.37-.43.12-.14.16-.24.25-.41.08-.16.04-.31-.02-.43-.06-.13-.56-1.35-.77-1.84-.2-.48-.41-.42-.56-.43h-.48c-.16 0-.42.06-.65.31-.22.24-.85.83-.85 2.03s.87 2.35.99 2.51c.12.17 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.1.16 1.52.1.46-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.07-.11-.23-.17-.48-.29Z" />
