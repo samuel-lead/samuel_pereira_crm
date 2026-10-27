@@ -294,6 +294,9 @@ export async function registrarLeadIsca(
   });
 
   if (error) {
+    // Fica no log da Vercel: antes o motivo real do erro sumia e ninguém
+    // conseguia descobrir por que um cadastro falhou.
+    console.error("[isca] falha ao cadastrar", { slug, erro: error.message });
     return {
       erro: "Não deu pra concluir seu cadastro — confere os dados e tenta de novo.",
       sucesso: false,

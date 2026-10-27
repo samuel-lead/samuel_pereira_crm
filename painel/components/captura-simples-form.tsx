@@ -102,7 +102,7 @@ export function CapturaSimplesForm({
   }, [numeroNormalizado, formatoOk]);
 
   const podeEnviar =
-    nome.trim().length > 0 && formatoOk && (statusWhats === "existe" || statusWhats === "indefinido");
+    nome.trim().length > 0 && formatoOk && statusWhats !== "checando";
 
   function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -247,7 +247,7 @@ export function CapturaSimplesForm({
         {statusWhats === "existe" && <p className="text-sm text-[#4ade80]">✓ WhatsApp confirmado</p>}
         {statusWhats === "nao_existe" && (
           <p className="text-sm text-red-400">
-            Esse número não tem WhatsApp. Confere se digitou certinho.
+            Não conseguimos confirmar o WhatsApp desse número. Confere se digitou certinho.
           </p>
         )}
         <p className="text-base font-semibold text-[#eef1f6]">

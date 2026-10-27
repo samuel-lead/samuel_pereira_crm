@@ -174,7 +174,9 @@ export function IscaCapturaForm({
   const telefoneInvalido =
     passo.tipo === "texto" &&
     passo.chave === "telefone" &&
-    (!textoAtual.trim() || !telefoneValido(normalizarTelefone(textoAtual)) || statusWhats === "nao_existe");
+    (!textoAtual.trim() || !telefoneValido(normalizarTelefone(textoAtual)));
+  // A checagem "tem WhatsApp?" só avisa, nunca trava: o Z-API erra às
+  // vezes e um lead real ficava sem conseguir se cadastrar (Samuel, 27/10/26).
 
   // Carrega o Pixel do Meta e a tag do Google só se a empresa tiver
   // configurado (Configurações → Pixels de rastreamento). Só inicializa
@@ -552,7 +554,7 @@ export function IscaCapturaForm({
             {passo.chave === "telefone" &&
               telefoneValido(normalizarTelefone(textoAtual)) &&
               statusWhats === "nao_existe" && (
-                <p className="text-xs text-[#f87171]">❌ Esse número não tem WhatsApp — confere de novo</p>
+                <p className="text-xs text-[#f87171]">⚠️ Não conseguimos confirmar WhatsApp nesse número — confere se digitou certo</p>
               )}
 
             {erro && <p className="text-sm text-[#f87171]">{erro}</p>}
