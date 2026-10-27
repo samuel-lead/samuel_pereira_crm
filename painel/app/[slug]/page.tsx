@@ -38,7 +38,7 @@ export async function generateMetadata({
   if (!isca) return { title: "Meu Vendedor" };
 
   const descricao = isca.formulario_simples
-    ? "Preencha seus dados e fale direto no WhatsApp."
+    ? "Preencha os dados para saber mais informações do imóvel."
     : isca.material_url
     ? "Preenche seus dados pra liberar o acesso — leva menos de 2 minutos."
     : "Preenche seus dados pra nossa equipe entrar em contato — leva menos de 2 minutos.";

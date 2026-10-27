@@ -184,7 +184,7 @@ export function CapturaSimplesForm({
       <div className="mb-6 h-1 w-16 rounded-full bg-[#4ade80]" />
       <h1 className="break-words text-2xl font-bold leading-snug text-[#eef1f6]">{titulo}</h1>
       <p className="mt-2 text-base text-[#c4cad3]">
-        Preencha seus dados e fale direto comigo no WhatsApp.
+        Preencha os dados para saber mais informações do imóvel.
       </p>
 
       <form onSubmit={enviar} className="mt-8 space-y-5">
@@ -233,6 +233,10 @@ export function CapturaSimplesForm({
             Esse número não tem WhatsApp. Confere se digitou certinho.
           </p>
         )}
+        <p className="text-base font-semibold text-[#eef1f6]">
+          Fale agora mesmo com a Ketlyn no WhatsApp.
+        </p>
+
         {erro && <p className="text-sm text-red-400">{erro}</p>}
 
         <button
