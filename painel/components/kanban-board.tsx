@@ -752,6 +752,13 @@ export function KanbanBoard({
       await abrirParaMarcarReuniao(leadId, temReuniaoPendente);
       return;
     }
+    // Consórcio: "Proposta iniciada" não move na hora — abre o card do lead
+    // com o nível já escolhido e a proposta pra preencher; o lead só vai pra
+    // Vendas quando a pessoa salva (Samuel, 27/10/26).
+    if (ordem === NIVEL_REUNIAO_MARCADA && semReunioes) {
+      abrirLead({ leadId, marcarReuniao: true });
+      return;
+    }
 
     // "Repescagem futura de ICP" sempre pede o motivo, venha o lead de
     // onde vier — mesma trava obrigatória de atualizarLead. Sem isso dava
@@ -1250,8 +1257,9 @@ export function KanbanBoard({
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Consórcio: não tem reunião pra agendar — o botão leva o
-                                // lead direto pra "Proposta iniciada", sem perguntar data.
+                                // Consórcio: não tem reunião pra agendar — o botão abre o
+                                // card do lead pra preencher a proposta; salvar leva o lead
+                                // pra "Proposta iniciada".
                                 if (funilConsorcio(publicoOrg)) {
                                   moverPara(lead.id, lead.nivel_ordem, NIVEL_REUNIAO_MARCADA, false);
                                   return;

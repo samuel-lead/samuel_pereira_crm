@@ -19,6 +19,7 @@ import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import type { PropostaConsorcio } from "@/lib/proposta-consorcio";
 import { Reuniao, Sdr, Receita, ehImobiliario } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -59,6 +60,7 @@ type Lead = {
   unidade_id: string | null;
   imovel_captacao: boolean;
   venda_comissao_tipo: string | null;
+  proposta_consorcio: PropostaConsorcio | null;
   venda_comissao_valor: number | null;
 };
 
@@ -155,7 +157,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio"
       )
       .eq("id", id)
       .single(),

@@ -25,6 +25,8 @@ import {
   funilConsorcio,
 } from "@/lib/terminologia";
 import { IconeCalendario, IconeReativar } from "@/components/icons";
+import { PropostaConsorcioForm } from "@/components/proposta-consorcio-form";
+import type { PropostaConsorcio } from "@/lib/proposta-consorcio";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 
 const NIVEL_REUNIAO_MARCADA = "4";
@@ -75,6 +77,8 @@ type Lead = {
   motivo_repescagem_futura: string | null;
   status: string;
   imovel_id: string | null;
+  // Proposta de consórcio (Banker) — só preenchida no funil de consórcio.
+  proposta_consorcio?: PropostaConsorcio | null;
 };
 
 const campoClasse =
@@ -778,6 +782,15 @@ export function EditarLeadForm({
             )}
           </div>
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
+
+          {consorcio &&
+            !vendido &&
+            (nivelSelecionado === NIVEL_REUNIAO_MARCADA || nivelSelecionado === NIVEL_FOLLOW_POS_REUNIAO) && (
+              <PropostaConsorcioForm
+                key={`proposta-${lead.id}`}
+                inicial={lead.proposta_consorcio ?? null}
+              />
+            )}
 
           {temNivelBloqueadoPorReuniaoMarcada && (
             <p className="text-xs text-neutral-400">

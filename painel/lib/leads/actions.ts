@@ -14,6 +14,7 @@ import { garantirOrigem } from "@/lib/origens/actions";
 import { pareceOrigemInvalida } from "@/lib/origens/validacao";
 import { normalizarTelefone } from "@/lib/telefone";
 import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio } from "@/lib/terminologia";
+import { lerPropostaConsorcioDoForm, type PropostaConsorcio } from "@/lib/proposta-consorcio";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -1215,6 +1216,12 @@ export async function atualizarLead(
       // que o lembrete sobrevivesse à movimentação — só registrar
       // nota/ligação ou cancelar manualmente é que cumpre ele de verdade).
       ...(nivelMudou ? { entrou_nivel_em: new Date().toISOString() } : {}),
+      // Proposta de consórcio (Banker): só grava quando o bloco da proposta
+      // estava na tela (senão o formulário nem manda esses campos, e apagaria
+      // o que já estava salvo).
+      ...(semReunioes && formData.get("prop_consorcio_presente") === "1"
+        ? { proposta_consorcio: lerPropostaConsorcioDoForm(formData) }
+        : {}),
     })
     .eq("id", leadId);
 
@@ -2934,6 +2941,7 @@ export type DetalhesLead = {
     imovel_captacao: boolean;
     venda_comissao_tipo: string | null;
     venda_comissao_valor: number | null;
+    proposta_consorcio: PropostaConsorcio | null;
   };
   niveis: NivelResumo[];
   interacoes: {
@@ -3036,7 +3044,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor"
+        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio"
       )
       .eq("id", leadId)
       .single(),
