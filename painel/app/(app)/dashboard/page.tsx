@@ -82,8 +82,8 @@ export default async function DashboardPage({
 
   const [
     metricasHoje,
-    metricas,
-    metricasAnteriores,
+    metricasPeriodo,
+    metricasAnterioresPeriodo,
     vendasPorCanal,
     vendasPorProduto,
     performancePeriodoSdr,
@@ -231,14 +231,16 @@ export default async function DashboardPage({
   const publicoOrg = usuario!.publico_org;
 
   // Funil de consórcio (Banker): "propostas iniciadas" = leads que entraram
-  // em "Proposta iniciada" no período. Alimenta o relatório copiável do
-  // vendedor (hoje) e o botão Copiar da tabela de desempenho (período).
+  // em "Proposta iniciada" no período. Substitui as reuniões marcadas nos
+  // cartões, no ranking e no relatório copiável do vendedor.
   let propostasIniciadasHoje = 0;
   let performanceSdr = performancePeriodoSdr;
+  let metricas = metricasPeriodo;
+  let metricasAnteriores = metricasAnterioresPeriodo;
   if (funilConsorcio(publicoOrg)) {
-    const [hojePorUsuario, periodoPorUsuario] = await Promise.all([
+    const [hoje, periodoAtual, periodoAnterior] = await Promise.all([
       souAdmin
-        ? Promise.resolve(new Map<string, number>())
+        ? Promise.resolve({ porUsuario: new Map<string, number>(), total: 0 })
         : contarPropostasIniciadasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
       contarPropostasIniciadasPorUsuario(
         supabase,
@@ -246,12 +248,20 @@ export default async function DashboardPage({
         periodoResolvido.inicio,
         periodoResolvido.fim
       ),
+      contarPropostasIniciadasPorUsuario(
+        supabase,
+        usuario!.org_id,
+        anteriorResolvido.inicio,
+        anteriorResolvido.fim
+      ),
     ]);
-    propostasIniciadasHoje = hojePorUsuario.get(usuario!.id) ?? 0;
+    propostasIniciadasHoje = hoje.porUsuario.get(usuario!.id) ?? 0;
     performanceSdr = performancePeriodoSdr.map((linha) => ({
       ...linha,
-      propostasIniciadas: periodoPorUsuario.get(linha.usuarioId) ?? 0,
+      propostasIniciadas: periodoAtual.porUsuario.get(linha.usuarioId) ?? 0,
     }));
+    metricas = { ...metricasPeriodo, propostasIniciadas: periodoAtual.total };
+    metricasAnteriores = { ...metricasAnterioresPeriodo, propostasIniciadas: periodoAnterior.total };
   }
   // Conversão do funil em barras: vendas fechadas dentro do período.
   const safraVenda = dashboardEmBarras(publicoOrg)
@@ -450,14 +460,16 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <ReunioesAtrasadas reunioes={reunioesAtrasadas} publicoOrg={publicoOrg} />
-          <ProximasReunioes
-            reunioes={proximasReunioes}
-            publicoOrg={publicoOrg}
-            total={proximasReunioes.length}
-          />
-        </div>
+        {!funilConsorcio(publicoOrg) && (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ReunioesAtrasadas reunioes={reunioesAtrasadas} publicoOrg={publicoOrg} />
+            <ProximasReunioes
+              reunioes={proximasReunioes}
+              publicoOrg={publicoOrg}
+              total={proximasReunioes.length}
+            />
+          </div>
+        )}
 
         <section>
           <h2 className="mb-3 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-neutral-900">

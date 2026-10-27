@@ -87,6 +87,8 @@ export type Metricas = {
   ligacoes: number;
   // Das ligações feitas, quantas foram atendidas (relatório da Banker).
   ligacoesAtendidas: number;
+  // Só preenchido no funil de consórcio (Banker) — ver contarPropostasIniciadasPorUsuario.
+  propostasIniciadas?: number;
   reunioesMarcadas: number;
   // Das reuniões marcadas no período, quantas são de lead que TAMBÉM
   // entrou nesse mesmo período (não é lead antigo com reunião nova) —
@@ -904,7 +906,7 @@ export async function contarPropostasIniciadasPorUsuario(
   orgId: string,
   inicio: Date,
   fim: Date
-): Promise<Map<string, number>> {
+): Promise<{ porUsuario: Map<string, number>; total: number }> {
   const { data } = await buscarTodas<{ usuario_id: string | null }>((de, ate) =>
     supabase
       .from("nivel_historico")
@@ -923,14 +925,12 @@ export async function contarPropostasIniciadasPorUsuario(
     if (!linha.usuario_id) continue;
     porUsuario.set(linha.usuario_id, (porUsuario.get(linha.usuario_id) ?? 0) + 1);
   }
-  return porUsuario;
+  return { porUsuario, total: (data ?? []).length };
 }
 
 export type MetricasUsuario = Metricas & {
   usuarioId: string;
   nome: string;
-  // Só preenchido no funil de consórcio (ver contarPropostasIniciadasPorUsuario).
-  propostasIniciadas?: number;
   // Só quem é puramente Closer (nem SDR, nem admin) fica de fora do
   // botão "Copiar" — ele não faz o check-in diário de prospecção/ligação.
   // Admin que também é Closer continua podendo copiar (Samuel pediu).

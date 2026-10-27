@@ -262,6 +262,20 @@ export default async function LeadsPage({
         .lt("agendada_para", amanha.toISOString())
     : null;
 
+  // Funil de consórcio (Banker): no lugar de "calls marcadas/realizadas
+  // hoje", conta quantos leads entraram em "Proposta iniciada" hoje.
+  const consultaPropostasIniciadasHoje =
+    user && funilConsorcio(publicoOrg)
+      ? supabase
+          .from("nivel_historico")
+          .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+          .eq("para_ordem", 4)
+          .neq("de_ordem", 4)
+          .is("leads.arquivado_em", null)
+          .gte("ocorreu_em", inicioHoje.toISOString())
+          .lt("ocorreu_em", amanha.toISOString())
+      : null;
+
   function filtrarPorEscopo<T extends { eq: (coluna: string, valor: string) => T }>(
     consulta: T
   ) {
@@ -315,6 +329,7 @@ export default async function LeadsPage({
     vendasHoje,
     { data: reunioesAgendadaData },
     { data: todasReunioesData },
+    { count: propostasIniciadasHoje },
   ] = await Promise.all([
     consultaLeadsNovosHoje ? filtrarPorEscopo(consultaLeadsNovosHoje) : { count: null },
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
@@ -337,6 +352,9 @@ export default async function LeadsPage({
     orgId ? calcularVendasHoje(supabase, orgId, inicioHoje, amanha) : Promise.resolve(null),
     consultaReuniaoAgendada ?? Promise.resolve({ data: [] as { lead_id: string; agendada_para: string }[] }),
     consultaTodasReunioes ?? Promise.resolve({ data: [] as { lead_id: string }[] }),
+    consultaPropostasIniciadasHoje
+      ? filtrarPorEscopo(consultaPropostasIniciadasHoje)
+      : { count: null },
   ]);
 
   const leadsComReuniaoRegistrada = new Set((todasReunioesData ?? []).map((r) => r.lead_id));
@@ -560,6 +578,13 @@ export default async function LeadsPage({
                       {ligacoesAtendidasHoje ?? 0} atendida{(ligacoesAtendidasHoje ?? 0) === 1 ? "" : "s"} · {ligacoesNaoAtendidasHoje ?? 0} não atendida{(ligacoesNaoAtendidasHoje ?? 0) === 1 ? "" : "s"}
                     </span>
                   }
+                />
+              )}
+              {propostasIniciadasHoje !== null && funilConsorcio(publicoOrg) && (
+                <StatCell
+                  label="Propostas iniciadas hoje"
+                  value={propostasIniciadasHoje ?? 0}
+                  sub={souAdmin ? "Time todo" : undefined}
                 />
               )}
               {callsMarcadasHoje !== null && !funilConsorcio(publicoOrg) && (

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Metricas, NegociacoesAbertas } from "@/lib/metricas";
-import { Reunioes, Faturamento, Receita } from "@/lib/terminologia";
+import { Reunioes, Faturamento, Receita, funilConsorcio } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", {
@@ -29,6 +29,35 @@ function montarRelatorio(
     metricas.reunioesDevidas > 0 ? metricas.noShow / metricas.reunioesDevidas : null;
   const faturamentoVirouCaixa =
     metricas.faturamento > 0 ? metricas.receita / metricas.faturamento : null;
+
+  // Funil de consórcio (Banker): sem reunião — propostas iniciadas, ligações
+  // e vendas no lugar de agendamento/comparecimento/no-show.
+  if (funilConsorcio(publicoOrg)) {
+    const propostas = metricas.propostasIniciadas ?? 0;
+    const taxaProposta = metricas.leadsTrabalhados > 0 ? propostas / metricas.leadsTrabalhados : null;
+    const taxaVendaProposta = propostas > 0 ? metricas.vendas / propostas : null;
+    return [
+      "📊 Resultado do período",
+      `🗓️ Período: ${periodo}`,
+      "",
+      `➡ Leads novos: ${metricas.leadsTrabalhados}`,
+      `➡ Ligações feitas: ${metricas.ligacoes}`,
+      `➡ Ligações atendidas: ${metricas.ligacoesAtendidas}`,
+      `➡ Propostas iniciadas: ${propostas}`,
+      `➡ Vendas: ${metricas.vendas}`,
+      "",
+      "📈 Taxas",
+      `➡ Taxa de proposta iniciada: ${formatarPercentual(taxaProposta)}`,
+      `➡ Taxa de venda sobre proposta: ${formatarPercentual(taxaVendaProposta)}`,
+      "",
+      "💰 Fechamento",
+      `➡ ${Receita(publicoOrg)}: ${formatarMoeda(metricas.receita)}`,
+      `➡ ${Faturamento(publicoOrg)}: ${formatarMoeda(metricas.faturamento)}`,
+      `➡ Ticket médio: ${metricas.ticketMedio !== null ? formatarMoeda(metricas.ticketMedio) : "—"}`,
+      `➡ Negociações em aberto: ${negociacoes.quantidade}`,
+      `➡ Valor em negociação: ${formatarMoeda(negociacoes.valor)}`,
+    ].join("\n");
+  }
 
   return [
     "📊 Resultado do período",

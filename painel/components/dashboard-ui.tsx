@@ -6,9 +6,10 @@ import {
   IconeMoeda,
   IconeCarta,
   IconeEstrela,
+  IconeTelefone,
 } from "@/components/icons";
 import type { Metricas } from "@/lib/metricas";
-import { Calls, Faturamento, Receita, ehImobiliario, dashboardEmBarras, metasSoTaxas } from "@/lib/terminologia";
+import { Calls, Faturamento, Receita, ehImobiliario, dashboardEmBarras, metasSoTaxas, funilConsorcio } from "@/lib/terminologia";
 import { FunilBarras } from "@/components/funil-barras";
 
 export type MetasConfig = {
@@ -203,6 +204,15 @@ export function SecaoPeriodo({
   safraVenda?: { comPitch: number; vendidos: number };
 }) {
   const soTaxas = metasSoTaxas(publicoOrg);
+  // Funil de consórcio (Banker): sem reunião. A meta diária de "reuniões" (3)
+  // vira meta de PROPOSTAS INICIADAS por dia, e as taxas passam a ser
+  // lead → proposta e proposta → venda (Samuel, 27/10/26).
+  const consorcio = funilConsorcio(publicoOrg);
+  const propostasIniciadas = metricas.propostasIniciadas ?? 0;
+  const propostasIniciadasAnt = metricasAnteriores?.propostasIniciadas ?? 0;
+  const taxaProposta =
+    metricas.leadsTrabalhados > 0 ? propostasIniciadas / metricas.leadsTrabalhados : null;
+  const taxaVendaSobreProposta = propostasIniciadas > 0 ? metricas.vendas / propostasIniciadas : null;
   const pisoLeads = soTaxas ? null : metas.piso_leads_dia * metricas.diasUteis;
   // Imobiliário não tem cadência diária de visita — o piso é sempre por
   // semana (fixo, ex.: 4), não por dia útil. Pra período menor que uma
@@ -286,32 +296,64 @@ export function SecaoPeriodo({
           esquema="violeta"
           Icone={IconeCarta}
         />
-        <CardNumero
-          titulo={`${Calls(publicoOrg)} marcadas`}
-          valor={metricas.reunioesMarcadas}
-          meta={pisoReunioes}
-          esquema="ceu"
-          Icone={IconeCalendario}
-        />
-        <CardNumero
-          titulo={`${Calls(publicoOrg)} realizadas`}
-          valor={metricas.reunioesRealizadas}
-          esquema="esmeralda"
-          Icone={IconeCheck}
-        />
-        <CardNumero
-          titulo={`${Calls(publicoOrg)} com pitch`}
-          valor={metricas.reunioesComPitch}
-          esquema="ceu"
-          Icone={IconeCarta}
-        />
-        <CardNumero
-          titulo="No-show"
-          valor={noShowPct}
-          formatoPercentual
-          esquema="rosa"
-          Icone={IconeAlerta}
-        />
+        {consorcio ? (
+          <>
+            <CardNumero
+              titulo="Propostas iniciadas"
+              valor={propostasIniciadas}
+              meta={pisoReunioes}
+              esquema="ceu"
+              Icone={IconeCarta}
+            />
+            <CardNumero
+              titulo="Ligações feitas"
+              valor={metricas.ligacoes}
+              esquema="esmeralda"
+              Icone={IconeTelefone}
+            />
+            <CardNumero
+              titulo="Ligações atendidas"
+              valor={metricas.ligacoesAtendidas}
+              esquema="ceu"
+              Icone={IconeCheck}
+            />
+            <CardNumero
+              titulo="Vendas"
+              valor={metricas.vendas}
+              esquema="rosa"
+              Icone={IconeEstrela}
+            />
+          </>
+        ) : (
+          <>
+            <CardNumero
+              titulo={`${Calls(publicoOrg)} marcadas`}
+              valor={metricas.reunioesMarcadas}
+              meta={pisoReunioes}
+              esquema="ceu"
+              Icone={IconeCalendario}
+            />
+            <CardNumero
+              titulo={`${Calls(publicoOrg)} realizadas`}
+              valor={metricas.reunioesRealizadas}
+              esquema="esmeralda"
+              Icone={IconeCheck}
+            />
+            <CardNumero
+              titulo={`${Calls(publicoOrg)} com pitch`}
+              valor={metricas.reunioesComPitch}
+              esquema="ceu"
+              Icone={IconeCarta}
+            />
+            <CardNumero
+              titulo="No-show"
+              valor={noShowPct}
+              formatoPercentual
+              esquema="rosa"
+              Icone={IconeAlerta}
+            />
+          </>
+        )}
       </div>
 
       {metricasAnteriores && (
@@ -327,27 +369,55 @@ export function SecaoPeriodo({
               esquema="azul"
               Icone={IconeAlvo}
             />
-            <CardComparativo
-              titulo={`${Calls(publicoOrg)} agendadas`}
-              valorFormatado={String(metricas.reunioesMarcadas)}
-              variacaoPct={variacao(metricas.reunioesMarcadas, metricasAnteriores.reunioesMarcadas)}
-              esquema="azul"
-              Icone={IconeCalendario}
-            />
-            <CardComparativo
-              titulo={`${Calls(publicoOrg)} realizadas`}
-              valorFormatado={String(metricas.reunioesRealizadas)}
-              variacaoPct={variacao(metricas.reunioesRealizadas, metricasAnteriores.reunioesRealizadas)}
-              esquema="verde"
-              Icone={IconeCheck}
-            />
-            <CardComparativo
-              titulo={`${Calls(publicoOrg)} com pitch`}
-              valorFormatado={String(metricas.reunioesComPitch)}
-              variacaoPct={variacao(metricas.reunioesComPitch, metricasAnteriores.reunioesComPitch)}
-              esquema="azul"
-              Icone={IconeCarta}
-            />
+            {consorcio ? (
+              <>
+                <CardComparativo
+                  titulo="Propostas iniciadas"
+                  valorFormatado={String(propostasIniciadas)}
+                  variacaoPct={variacao(propostasIniciadas, propostasIniciadasAnt)}
+                  esquema="azul"
+                  Icone={IconeCarta}
+                />
+                <CardComparativo
+                  titulo="Ligações feitas"
+                  valorFormatado={String(metricas.ligacoes)}
+                  variacaoPct={variacao(metricas.ligacoes, metricasAnteriores.ligacoes)}
+                  esquema="verde"
+                  Icone={IconeTelefone}
+                />
+                <CardComparativo
+                  titulo="Ligações atendidas"
+                  valorFormatado={String(metricas.ligacoesAtendidas)}
+                  variacaoPct={variacao(metricas.ligacoesAtendidas, metricasAnteriores.ligacoesAtendidas)}
+                  esquema="azul"
+                  Icone={IconeCheck}
+                />
+              </>
+            ) : (
+              <>
+                <CardComparativo
+                  titulo={`${Calls(publicoOrg)} agendadas`}
+                  valorFormatado={String(metricas.reunioesMarcadas)}
+                  variacaoPct={variacao(metricas.reunioesMarcadas, metricasAnteriores.reunioesMarcadas)}
+                  esquema="azul"
+                  Icone={IconeCalendario}
+                />
+                <CardComparativo
+                  titulo={`${Calls(publicoOrg)} realizadas`}
+                  valorFormatado={String(metricas.reunioesRealizadas)}
+                  variacaoPct={variacao(metricas.reunioesRealizadas, metricasAnteriores.reunioesRealizadas)}
+                  esquema="verde"
+                  Icone={IconeCheck}
+                />
+                <CardComparativo
+                  titulo={`${Calls(publicoOrg)} com pitch`}
+                  valorFormatado={String(metricas.reunioesComPitch)}
+                  variacaoPct={variacao(metricas.reunioesComPitch, metricasAnteriores.reunioesComPitch)}
+                  esquema="azul"
+                  Icone={IconeCarta}
+                />
+              </>
+            )}
             <CardComparativo
               titulo="Vendas"
               valorFormatado={String(metricas.vendas)}
@@ -380,28 +450,47 @@ export function SecaoPeriodo({
         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
           Taxas
         </p>
-        <BarraTaxa
-          nome="Agendamento (só leads novos)"
-          valor={taxaAgendamentoLeadsNovos}
-          minimo={metas.taxa_agendamento_min}
-          detalhe={`${metricas.reunioesMarcadasLeadNovo} de ${leadsNovosValor} leads novos, este mês.`}
-        />
-        <BarraTaxa
-          nome="Agendamento (leads novos e antigos)"
-          valor={metricas.taxaAgendamento}
-          minimo={metas.taxa_agendamento_min}
-          detalhe={`${metricas.reunioesMarcadas} de ${metricas.leadsTrabalhados} trabalhados este mês, incluindo lead do período anterior e que chegou nesse mês.`}
-        />
-        <BarraTaxa
-          nome="Comparecimento"
-          valor={metricas.taxaComparecimento}
-          minimo={metas.taxa_comparecimento_min}
-        />
-        <BarraTaxa
-          nome="Venda"
-          valor={metricas.taxaVenda}
-          minimo={metas.taxa_venda_min}
-        />
+        {consorcio ? (
+          <>
+            <BarraTaxa
+              nome="Proposta iniciada"
+              valor={taxaProposta}
+              minimo={metas.taxa_agendamento_min}
+              detalhe={`${propostasIniciadas} proposta${propostasIniciadas === 1 ? "" : "s"} iniciada${propostasIniciadas === 1 ? "" : "s"} de ${metricas.leadsTrabalhados} leads trabalhados no período.`}
+            />
+            <BarraTaxa
+              nome="Venda"
+              valor={taxaVendaSobreProposta}
+              minimo={metas.taxa_venda_min}
+              detalhe={`${metricas.vendas} venda${metricas.vendas === 1 ? "" : "s"} de ${propostasIniciadas} proposta${propostasIniciadas === 1 ? "" : "s"} iniciada${propostasIniciadas === 1 ? "" : "s"}.`}
+            />
+          </>
+        ) : (
+          <>
+            <BarraTaxa
+              nome="Agendamento (só leads novos)"
+              valor={taxaAgendamentoLeadsNovos}
+              minimo={metas.taxa_agendamento_min}
+              detalhe={`${metricas.reunioesMarcadasLeadNovo} de ${leadsNovosValor} leads novos, este mês.`}
+            />
+            <BarraTaxa
+              nome="Agendamento (leads novos e antigos)"
+              valor={metricas.taxaAgendamento}
+              minimo={metas.taxa_agendamento_min}
+              detalhe={`${metricas.reunioesMarcadas} de ${metricas.leadsTrabalhados} trabalhados este mês, incluindo lead do período anterior e que chegou nesse mês.`}
+            />
+            <BarraTaxa
+              nome="Comparecimento"
+              valor={metricas.taxaComparecimento}
+              minimo={metas.taxa_comparecimento_min}
+            />
+            <BarraTaxa
+              nome="Venda"
+              valor={metricas.taxaVenda}
+              minimo={metas.taxa_venda_min}
+            />
+          </>
+        )}
       </div>
       )}
     </section>

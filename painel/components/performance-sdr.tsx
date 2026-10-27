@@ -1,6 +1,6 @@
 import type { MetricasUsuario } from "@/lib/metricas";
 import { CopiarRelatorioButton } from "@/components/copiar-relatorio-button";
-import { Calls, Sdr } from "@/lib/terminologia";
+import { Calls, Sdr, funilConsorcio } from "@/lib/terminologia";
 import { corPosicaoRanking } from "@/lib/ranking";
 
 function formatarPercentual(valor: number | null) {
@@ -26,15 +26,22 @@ export function PerformanceSdr({
   publicoOrg?: string;
 }) {
   const tituloResolvido = titulo ?? `Ranking ${Sdr(publicoOrg)}`;
-  const ranking = [...dados].sort((a, b) => b.reunioesRealizadas - a.reunioesRealizadas);
-  const maiorRealizadas = Math.max(1, ...ranking.map((l) => l.reunioesRealizadas));
+  // Funil de consórcio (Banker): sem reunião, o ranking é por propostas
+  // iniciadas no período.
+  const consorcio = funilConsorcio(publicoOrg);
+  const valorPrincipal = (l: MetricasUsuario) =>
+    consorcio ? (l.propostasIniciadas ?? 0) : l.reunioesRealizadas;
+  const ranking = [...dados].sort((a, b) => valorPrincipal(b) - valorPrincipal(a));
+  const maiorRealizadas = Math.max(1, ...ranking.map(valorPrincipal));
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
       <div className="border-b-2 border-neutral-300 px-4 py-3 dark:border-neutral-700">
         <h2 className="text-lg font-extrabold tracking-tight text-neutral-900">{tituloResolvido}</h2>
         <p className="mt-0.5 text-xs text-neutral-500">
-          Top {Sdr(publicoOrg)} por {Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · {periodo}
+          {consorcio
+            ? `Top ${Sdr(publicoOrg)} por propostas iniciadas · ${periodo}`
+            : `Top ${Sdr(publicoOrg)} por ${Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · ${periodo}`}
         </p>
       </div>
 
@@ -59,19 +66,29 @@ export function PerformanceSdr({
                       {linha.nome}
                     </p>
                     <p className="shrink-0 text-base font-extrabold text-neutral-900">
-                      {linha.reunioesRealizadas}{" "}
-                      <span className="text-xs font-medium text-neutral-400">realizadas</span>
+                      {valorPrincipal(linha)}{" "}
+                      <span className="text-xs font-medium text-neutral-400">
+                        {consorcio ? "propostas iniciadas" : "realizadas"}
+                      </span>
                     </p>
                   </div>
                   <p className="text-xs text-neutral-400">
-                    {linha.reunioesMarcadas} marcadas · {linha.leadsTrabalhados} leads novos · {linha.ligacoes} ligações
-                    {noShowPct !== null && ` · ${noShowPct}% no-show`}
+                    {consorcio ? (
+                      <>
+                        {linha.leadsTrabalhados} leads novos · {linha.ligacoes} ligações · {linha.ligacoesAtendidas} atendidas
+                      </>
+                    ) : (
+                      <>
+                        {linha.reunioesMarcadas} marcadas · {linha.leadsTrabalhados} leads novos · {linha.ligacoes} ligações
+                        {noShowPct !== null && ` · ${noShowPct}% no-show`}
+                      </>
+                    )}
                     {` · ${linha.vendas} venda${linha.vendas === 1 ? "" : "s"}`}
                   </p>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                     <div
                       className="h-full rounded-full bg-green-600"
-                      style={{ width: `${Math.max(4, (linha.reunioesRealizadas / maiorRealizadas) * 100)}%` }}
+                      style={{ width: `${Math.max(4, (valorPrincipal(linha) / maiorRealizadas) * 100)}%` }}
                     />
                   </div>
                 </div>
