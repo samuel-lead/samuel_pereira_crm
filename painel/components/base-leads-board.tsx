@@ -134,7 +134,10 @@ export type MotivoBase =
   | "nao_iniciou_conversa"
   | "qualificou_sumiu"
   | "iniciou_sem_interesse"
-  | "farming";
+  | "farming"
+  | "sem_condicao_pagar"
+  | "comprou_concorrente"
+  | "numero_invalido";
 
 const COLUNAS: { chave: MotivoBase; nome: string; cor: { header: string; borda: string; badge: string } }[] = [
   {
@@ -172,7 +175,25 @@ const COLUNAS: { chave: MotivoBase; nome: string; cor: { header: string; borda: 
     nome: "Farming",
     cor: { header: "bg-emerald-50", borda: "border-emerald-200", badge: "bg-emerald-200 text-emerald-700" },
   },
+  // Só na Banker (consórcio).
+  {
+    chave: "sem_condicao_pagar",
+    nome: "Sem condição de pagar agora",
+    cor: { header: "bg-orange-50", borda: "border-orange-200", badge: "bg-orange-200 text-orange-700" },
+  },
+  {
+    chave: "comprou_concorrente",
+    nome: "Comprou em outro lugar ou com outra administradora",
+    cor: { header: "bg-violet-50", borda: "border-violet-200", badge: "bg-violet-200 text-violet-700" },
+  },
+  {
+    chave: "numero_invalido",
+    nome: "Número errado ou inválido",
+    cor: { header: "bg-neutral-100", borda: "border-neutral-300", badge: "bg-neutral-300 text-neutral-700" },
+  },
 ];
+
+const COLUNAS_SO_CONSORCIO: MotivoBase[] = ["sem_condicao_pagar", "comprou_concorrente", "numero_invalido"];
 
 function diasNaBase(entrouNivelEm: string) {
   return diasDesde(entrouNivelEm);
@@ -231,7 +252,8 @@ export function BaseLeadsBoard({
       {COLUNAS.filter(
         (c) =>
           !(semFarming(publicoOrg) && c.chave === "farming") &&
-          !(funilConsorcio(publicoOrg) && c.chave === "nao_reagendados")
+          !(funilConsorcio(publicoOrg) && c.chave === "nao_reagendados") &&
+          (funilConsorcio(publicoOrg) || !COLUNAS_SO_CONSORCIO.includes(c.chave))
       ).map((coluna) => {
         const leads = leadsPorMotivo[coluna.chave] ?? [];
         return (
