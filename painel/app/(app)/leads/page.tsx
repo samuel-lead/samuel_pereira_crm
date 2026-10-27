@@ -19,6 +19,7 @@ import {
   calcularReceitaOrg,
   calcularFaturamentoOrg,
   calcularVendasHoje,
+  contarPropostasIniciadasPorUsuario,
   inicioDoMes,
 } from "@/lib/metricas";
 import { NIVEIS_PRE_VENDAS, colunasPreVendasDaOrg, numerarNiveis, type NivelResumo } from "@/lib/niveis";
@@ -262,20 +263,6 @@ export default async function LeadsPage({
         .lt("agendada_para", amanha.toISOString())
     : null;
 
-  // Funil de consórcio (Banker): no lugar de "calls marcadas/realizadas
-  // hoje", conta quantos leads entraram em "Proposta iniciada" hoje.
-  const consultaPropostasIniciadasHoje =
-    user && funilConsorcio(publicoOrg)
-      ? supabase
-          .from("nivel_historico")
-          .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
-          .eq("para_ordem", 4)
-          .neq("de_ordem", 4)
-          .is("leads.arquivado_em", null)
-          .gte("ocorreu_em", inicioHoje.toISOString())
-          .lt("ocorreu_em", amanha.toISOString())
-      : null;
-
   function filtrarPorEscopo<T extends { eq: (coluna: string, valor: string) => T }>(
     consulta: T
   ) {
@@ -329,7 +316,7 @@ export default async function LeadsPage({
     vendasHoje,
     { data: reunioesAgendadaData },
     { data: todasReunioesData },
-    { count: propostasIniciadasHoje },
+    propostasIniciadasHojeResultado,
   ] = await Promise.all([
     consultaLeadsNovosHoje ? filtrarPorEscopo(consultaLeadsNovosHoje) : { count: null },
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
@@ -352,10 +339,20 @@ export default async function LeadsPage({
     orgId ? calcularVendasHoje(supabase, orgId, inicioHoje, amanha) : Promise.resolve(null),
     consultaReuniaoAgendada ?? Promise.resolve({ data: [] as { lead_id: string; agendada_para: string }[] }),
     consultaTodasReunioes ?? Promise.resolve({ data: [] as { lead_id: string }[] }),
-    consultaPropostasIniciadasHoje
-      ? filtrarPorEscopo(consultaPropostasIniciadasHoje)
-      : { count: null },
+    // Funil de consórcio (Banker): no lugar de "calls marcadas/realizadas
+    // hoje", conta quantos leads entraram em "Proposta iniciada" hoje
+    // (mesma conta do relatório e do dashboard).
+    user && orgId && funilConsorcio(publicoOrg)
+      ? contarPropostasIniciadasPorUsuario(supabase, orgId, inicioHoje, amanha)
+      : null,
   ]);
+
+  // Propostas iniciadas hoje: o time todo pro admin, só as dele pro vendedor.
+  const propostasIniciadasHoje = propostasIniciadasHojeResultado
+    ? souAdmin
+      ? propostasIniciadasHojeResultado.total
+      : (propostasIniciadasHojeResultado.porUsuario.get(user!.id) ?? 0)
+    : null;
 
   const leadsComReuniaoRegistrada = new Set((todasReunioesData ?? []).map((r) => r.lead_id));
   const leadsComReuniaoPendente = new Set(

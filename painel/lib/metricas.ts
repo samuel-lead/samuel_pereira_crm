@@ -899,33 +899,62 @@ export async function calcularNegociacoesAbertas(
 
 // Funil de consórcio (Banker): "propostas iniciadas" = quantas vezes um lead
 // ENTROU no nível "Proposta iniciada" (4) no período, por quem moveu. Lead
-// excluído não conta. Só vale pra empresa sem reunião — nas demais o nível 4
-// é "Reunião marcada".
+// excluído não conta. Se o lead VOLTA de "Proposta iniciada" pra uma etapa
+// anterior (0 a 3) no mesmo período, aquela proposta é desfeita e sai da
+// conta (clique errado ou de teste). Só vale pra empresa sem reunião — nas
+// demais o nível 4 é "Reunião marcada".
 export async function contarPropostasIniciadasPorUsuario(
   supabase: SupabaseServerClient,
   orgId: string,
   inicio: Date,
   fim: Date
 ): Promise<{ porUsuario: Map<string, number>; total: number }> {
-  const { data } = await buscarTodas<{ usuario_id: string | null }>((de, ate) =>
-    supabase
-      .from("nivel_historico")
-      .select("usuario_id, leads!inner(arquivado_em)")
-      .eq("org_id", orgId)
-      .eq("para_ordem", 4)
-      .neq("de_ordem", 4)
-      .is("leads.arquivado_em", null)
-      .gte("ocorreu_em", inicio.toISOString())
-      .lt("ocorreu_em", fim.toISOString())
-      .order("id")
-      .range(de, ate)
-  );
+  type Linha = { lead_id: string; usuario_id: string | null; ocorreu_em: string };
+  const [{ data: entradas }, { data: saidas }] = await Promise.all([
+    buscarTodas<Linha>((de, ate) =>
+      supabase
+        .from("nivel_historico")
+        .select("lead_id, usuario_id, ocorreu_em, leads!inner(arquivado_em)")
+        .eq("org_id", orgId)
+        .eq("para_ordem", 4)
+        .neq("de_ordem", 4)
+        .is("leads.arquivado_em", null)
+        .gte("ocorreu_em", inicio.toISOString())
+        .lt("ocorreu_em", fim.toISOString())
+        .order("id")
+        .range(de, ate)
+    ),
+    buscarTodas<Linha>((de, ate) =>
+      supabase
+        .from("nivel_historico")
+        .select("lead_id, usuario_id, ocorreu_em")
+        .eq("org_id", orgId)
+        .eq("de_ordem", 4)
+        .lt("para_ordem", 4)
+        .gte("ocorreu_em", inicio.toISOString())
+        .lt("ocorreu_em", fim.toISOString())
+        .order("id")
+        .range(de, ate)
+    ),
+  ]);
+
+  // Cada volta cancela a entrada mais recente anterior dela, do mesmo lead.
+  const restantes = [...(entradas ?? [])].sort((a, b) => a.ocorreu_em.localeCompare(b.ocorreu_em));
+  for (const saida of [...(saidas ?? [])].sort((a, b) => a.ocorreu_em.localeCompare(b.ocorreu_em))) {
+    for (let i = restantes.length - 1; i >= 0; i--) {
+      if (restantes[i].lead_id === saida.lead_id && restantes[i].ocorreu_em <= saida.ocorreu_em) {
+        restantes.splice(i, 1);
+        break;
+      }
+    }
+  }
+
   const porUsuario = new Map<string, number>();
-  for (const linha of data ?? []) {
+  for (const linha of restantes) {
     if (!linha.usuario_id) continue;
     porUsuario.set(linha.usuario_id, (porUsuario.get(linha.usuario_id) ?? 0) + 1);
   }
-  return { porUsuario, total: (data ?? []).length };
+  return { porUsuario, total: restantes.length };
 }
 
 export type MetricasUsuario = Metricas & {
