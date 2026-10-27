@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { semFarming } from "@/lib/terminologia";
+import { semFarming, funilConsorcio } from "@/lib/terminologia";
 import { IconeWhatsapp, IconeInstagram, IconeReativar, IconeCalendario } from "@/components/icons";
 import { AvatarLead } from "@/components/avatar-lead";
 import { ResponsavelSelect } from "@/components/responsavel-select";
@@ -228,7 +228,11 @@ export function BaseLeadsBoard({
   return (
     <div className="relative h-full min-h-0 flex-1">
       <div ref={scrollRef} className="scrollbar-kanban flex h-full gap-5 overflow-x-auto pb-2 pl-1 pr-1">
-      {COLUNAS.filter((c) => !(semFarming(publicoOrg) && c.chave === "farming")).map((coluna) => {
+      {COLUNAS.filter(
+        (c) =>
+          !(semFarming(publicoOrg) && c.chave === "farming") &&
+          !(funilConsorcio(publicoOrg) && c.chave === "nao_reagendados")
+      ).map((coluna) => {
         const leads = leadsPorMotivo[coluna.chave] ?? [];
         return (
           <section

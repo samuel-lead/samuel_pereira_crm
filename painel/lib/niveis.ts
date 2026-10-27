@@ -176,7 +176,12 @@ export const MOTIVOS_BASE = [
 // Motivos de Base que a empresa usa — a Banker - Consorcio, por exemplo,
 // não usa "Farming" (ver lib/terminologia.ts, semFarming).
 export function motivosBaseDaOrg(publicoOrg: string) {
-  return semFarming(publicoOrg) ? MOTIVOS_BASE.filter((m) => m.valor !== "farming") : MOTIVOS_BASE;
+  return MOTIVOS_BASE.filter((m) => {
+    if (semFarming(publicoOrg) && m.valor === "farming") return false;
+    // Funil de consórcio não tem reunião: "Não reagendados" não existe (Samuel, 27/10/26).
+    if (funilConsorcio(publicoOrg) && m.valor === "nao_reagendados") return false;
+    return true;
+  });
 }
 
 // Coluna sintética (não existe na tabela `niveis`): divisão visual dentro
