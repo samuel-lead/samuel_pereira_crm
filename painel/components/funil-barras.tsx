@@ -183,7 +183,19 @@ export function FunilBarras({
       rotulo: `${Calls(publicoOrg)} realizadas`,
       valor: metricas.reunioesRealizadas,
       anterior: ant?.reunioesRealizadas,
-      conversao: { nome: "comparecimento", valor: metricas.taxaComparecimento, minimo: metas.taxa_comparecimento_min },
+      // A taxa NÃO é realizadas ÷ agendadas da barra de cima: as agendadas
+      // são as marcadas no período, a taxa usa as que já deviam acontecer
+      // (sem canceladas nem futuras). Sem essa legenda a conta parecia errada
+      // (Samuel estranhou 16 → 80% com 31 agendadas, 27/10/26).
+      conversao: {
+        nome: "comparecimento",
+        valor: metricas.taxaComparecimento,
+        minimo: metas.taxa_comparecimento_min,
+        legenda:
+          metricas.reunioesDevidas > 0
+            ? `${metricas.reunioesRealizadas} de ${metricas.reunioesDevidas} ${calls(publicoOrg)} que já deviam acontecer (canceladas e futuras não contam)`
+            : undefined,
+      },
     },
     {
       rotulo: imob ? `${Calls(publicoOrg)} com proposta` : `${Calls(publicoOrg)} com pitch`,
