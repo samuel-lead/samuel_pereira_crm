@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { normalizarTelefone } from "@/lib/telefone";
 import { slugificar } from "@/lib/texto";
@@ -254,6 +255,18 @@ export type RespostasIsca = {
   atuacao: string;
 };
 
+// Erro que aconteceu no navegador de quem preenche (a chamada nem chegou ao
+// banco) — fica gravado em isca_erros pra eu conseguir ver o motivo real.
+export async function registrarErroIscaNoNavegador(slug: string, mensagem: string) {
+  const supabase = await createClient();
+  await supabase.rpc("registrar_erro_isca", {
+    p_slug: slug,
+    p_origem: "navegador",
+    p_mensagem: mensagem,
+    p_user_agent: (await headers()).get("user-agent"),
+  });
+}
+
 // Chamada pela página pública (sem login), direto pelo componente cliente
 // (não é um <form action=...> normal — o fluxo é passo a passo, então o
 // próprio componente junta as respostas e chama isso no final). Passa
@@ -297,6 +310,12 @@ export async function registrarLeadIsca(
     // Fica no log da Vercel: antes o motivo real do erro sumia e ninguém
     // conseguia descobrir por que um cadastro falhou.
     console.error("[isca] falha ao cadastrar", { slug, erro: error.message });
+    await supabase.rpc("registrar_erro_isca", {
+      p_slug: slug,
+      p_origem: "banco",
+      p_mensagem: error.message,
+      p_user_agent: (await headers()).get("user-agent"),
+    });
     return {
       erro: "Não deu pra concluir seu cadastro — confere os dados e tenta de novo.",
       sucesso: false,

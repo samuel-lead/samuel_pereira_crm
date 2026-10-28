@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Script from "next/script";
-import { registrarLeadIsca, type RespostasIsca } from "@/lib/iscas/actions";
+import { registrarLeadIsca, registrarErroIscaNoNavegador, type RespostasIsca } from "@/lib/iscas/actions";
 import { normalizarTelefone, telefoneValido } from "@/lib/telefone";
 
 declare global {
@@ -236,7 +236,14 @@ export function IscaCapturaForm({
     }
 
     iniciarEnvio(async () => {
-      const resposta = await registrarLeadIsca(slug, novasRespostas);
+      let resposta;
+      try {
+        resposta = await registrarLeadIsca(slug, novasRespostas);
+      } catch (e) {
+        setErro("Não deu pra concluir seu cadastro — confere os dados e tenta de novo.");
+        registrarErroIscaNoNavegador(slug, String(e)).catch(() => {});
+        return;
+      }
       if (resposta.erro) {
         setErro(resposta.erro);
         return;
