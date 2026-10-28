@@ -159,6 +159,7 @@ export function ReagendarReuniaoBotao({
               defaultValue={agendadaPara}
               min={agoraParaInputLocal()}
               autoFocus
+              calendarioEmLinha
               className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
 

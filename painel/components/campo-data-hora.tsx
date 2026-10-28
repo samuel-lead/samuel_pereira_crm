@@ -138,6 +138,7 @@ export function CampoDataHora({
   autoFocus,
   disabled,
   className,
+  calendarioEmLinha,
 }: {
   name?: string;
   id?: string;
@@ -154,6 +155,11 @@ export function CampoDataHora({
   autoFocus?: boolean;
   disabled?: boolean;
   className?: string;
+  // Dentro de um painel com botões embaixo do campo (Editar reunião, Marcar
+  // próximo contato), o calendário flutuante cobria "Cancelar reunião" etc.
+  // Com isso ele abre no fluxo normal e empurra os botões pra baixo (Samuel,
+  // 28/10/26).
+  calendarioEmLinha?: boolean;
 }) {
   const controlado = value !== undefined;
   const [internoValor, setInternoValor] = useState(defaultValue ?? "");
@@ -308,7 +314,11 @@ export function CampoDataHora({
       {!controlado && name && <input type="hidden" name={name} value={valorAtual} required={required} />}
 
       {aberto && (
-        <div className="absolute z-30 mt-1 w-72 rounded-xl border border-neutral-200 bg-white p-3 shadow-xl">
+        <div
+          className={`rounded-xl border border-neutral-200 bg-white p-3 ${
+            calendarioEmLinha ? "relative mt-2 w-full" : "absolute z-30 mt-1 w-72 shadow-xl"
+          }`}
+        >
           <div className="mb-2 flex items-center justify-between">
             <button
               type="button"
