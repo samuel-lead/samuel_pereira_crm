@@ -99,10 +99,15 @@ export function metaDiariaDaRotina(modelo: string | null | undefined): string {
 }
 
 // Meta do mês mostrada em destaque na tela "Minha rotina" (Samuel, 27/10/26:
-// 40 calls realizadas no mês por SDR). A Banker não trabalha com calls
-// (funil de consórcio sem reunião), então lá não aparece.
-export function metaMensalDaRotina(modelo: string | null | undefined, publicoOrg: string): string | null {
-  if (modelo === "banker") return null;
+// 40 calls realizadas no mês por SDR, em todo CRM de serviço). A Banker não
+// trabalha com calls (funil de consórcio sem reunião) e a Inove Gôndolas
+// também ficou de fora (Samuel pediu) — lá não aparece.
+export function metaMensalDaRotina(
+  modelo: string | null | undefined,
+  publicoOrg: string,
+  mercadoGondolas: boolean | null | undefined
+): string | null {
+  if (modelo === "banker" || mercadoGondolas) return null;
   return `Meta do mês: 40 ${calls(publicoOrg)} realizadas`;
 }
 

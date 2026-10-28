@@ -19,7 +19,7 @@ export default async function RotinaPage() {
   const [concluidasIniciais, equipe, { data: orgRotina }] = await Promise.all([
     buscarRotinaHoje(),
     buscarRotinaEquipe(),
-    (await createClient()).from("orgs").select("rotina_modelo").eq("id", usuario.org_id).maybeSingle(),
+    (await createClient()).from("orgs").select("rotina_modelo, mercado_gondolas").eq("id", usuario.org_id).maybeSingle(),
   ]);
   // Cada empresa tem a sua rotina (orgs.rotina_modelo) — ex.: a Banker.
   const atividades = atividadesDaRotina(orgRotina?.rotina_modelo);
@@ -32,7 +32,7 @@ export default async function RotinaPage() {
           concluidasIniciais={concluidasIniciais}
           atividades={atividades}
           metaDiaria={metaDiariaDaRotina(orgRotina?.rotina_modelo)}
-          metaMensal={metaMensalDaRotina(orgRotina?.rotina_modelo, usuario.publico_org)}
+          metaMensal={metaMensalDaRotina(orgRotina?.rotina_modelo, usuario.publico_org, orgRotina?.mercado_gondolas)}
           publicoOrg={usuario.publico_org}
         />
         {equipe && <RotinaEquipeAdmin equipe={equipe} atividades={atividades} publicoOrg={usuario.publico_org} />}
