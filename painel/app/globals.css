@@ -578,3 +578,23 @@ body {
 html:not(.dark) .destaque-meta {
   animation-name: pulo-meta-claro;
 }
+
+/* Coluna laranja da Base ("Sem condição de pagar agora", só Banker) era a
+   única cor do Kanban sem tratamento no modo escuro: cabeçalho ficava
+   claro e sólido, com o título claro em cima — quase invisível. Mesmo
+   padrão das outras colunas: fundo tingido translúcido + texto claro. */
+.dark .bg-orange-50 {
+  background-color: rgba(234, 88, 12, 0.15);
+}
+
+.dark .bg-orange-200 {
+  background-color: rgba(234, 88, 12, 0.3);
+}
+
+.dark .border-orange-200 {
+  border-color: rgba(234, 88, 12, 0.4);
+}
+
+.dark .text-orange-700 {
+  color: #fdba74;
+}
