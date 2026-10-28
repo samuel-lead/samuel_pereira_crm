@@ -47,11 +47,13 @@ export function RotinaDiaria({
   concluidasIniciais,
   atividades,
   metaDiaria,
+  metaMensal = null,
   publicoOrg = "mentoria",
 }: {
   concluidasIniciais: string[];
   atividades: readonly AtividadeRotina[];
   metaDiaria: string;
+  metaMensal?: string | null;
   publicoOrg?: string;
 }) {
   const ATIVIDADES = atividades.map((a) => ({ ...a, Icone: ICONES[a.id] ?? IconeCheck }));
@@ -95,6 +97,11 @@ export function RotinaDiaria({
         <p className="text-sm font-medium text-neutral-700">
           {metaDiaria}
         </p>
+        {metaMensal && (
+          <p className="mt-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
+            {metaMensal}
+          </p>
+        )}
       </div>
 
       <div className="ml-auto w-full max-w-2xl flex-1 space-y-4">

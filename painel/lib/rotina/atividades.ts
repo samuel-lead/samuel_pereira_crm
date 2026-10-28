@@ -1,3 +1,5 @@
+import { calls } from "@/lib/terminologia";
+
 // Lista única das atividades da rotina do SDR — usada pela tela
 // "Minha rotina" (com ícones) e pelo acompanhamento do admin (sem ícones).
 // Fica fora do componente porque aquele é "use client" e um componente de
@@ -94,6 +96,14 @@ export function metaDiariaDaRotina(modelo: string | null | undefined): string {
   return modelo === "banker"
     ? "Você deve fazer no mínimo 80 prospecções por dia no Instagram, para pegar o WhatsApp do lead e levar para a ligação."
     : "Você deve fazer no mínimo 50 ligações por dia.";
+}
+
+// Meta do mês mostrada em destaque na tela "Minha rotina" (Samuel, 27/10/26:
+// 40 calls realizadas no mês por SDR). A Banker não trabalha com calls
+// (funil de consórcio sem reunião), então lá não aparece.
+export function metaMensalDaRotina(modelo: string | null | undefined, publicoOrg: string): string | null {
+  if (modelo === "banker") return null;
+  return `Meta do mês: 40 ${calls(publicoOrg)} realizadas`;
 }
 
 // Mantido por compatibilidade com quem ainda importa a lista padrão.

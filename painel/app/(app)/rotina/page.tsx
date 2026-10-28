@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
-import { atividadesDaRotina, metaDiariaDaRotina } from "@/lib/rotina/atividades";
+import { atividadesDaRotina, metaDiariaDaRotina, metaMensalDaRotina } from "@/lib/rotina/atividades";
 import { buscarRotinaHoje, buscarRotinaEquipe } from "@/lib/rotina/actions";
 import { PageHeader } from "@/components/page-header";
 import { RotinaDiaria } from "@/components/rotina-diaria";
@@ -32,6 +32,7 @@ export default async function RotinaPage() {
           concluidasIniciais={concluidasIniciais}
           atividades={atividades}
           metaDiaria={metaDiariaDaRotina(orgRotina?.rotina_modelo)}
+          metaMensal={metaMensalDaRotina(orgRotina?.rotina_modelo, usuario.publico_org)}
           publicoOrg={usuario.publico_org}
         />
         {equipe && <RotinaEquipeAdmin equipe={equipe} atividades={atividades} publicoOrg={usuario.publico_org} />}
