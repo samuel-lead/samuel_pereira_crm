@@ -138,7 +138,7 @@ export function CampoDataHora({
   autoFocus,
   disabled,
   className,
-  calendarioEmLinha,
+  calendario = "flutuante",
 }: {
   name?: string;
   id?: string;
@@ -155,11 +155,13 @@ export function CampoDataHora({
   autoFocus?: boolean;
   disabled?: boolean;
   className?: string;
-  // Dentro de um painel com botões embaixo do campo (Editar reunião, Marcar
-  // próximo contato), o calendário flutuante cobria "Cancelar reunião" etc.
-  // Com isso ele abre no fluxo normal e empurra os botões pra baixo (Samuel,
-  // 28/10/26).
-  calendarioEmLinha?: boolean;
+  // Onde o calendário abre. "flutuante" (padrão): por cima do que estiver
+  // embaixo. "linha": no fluxo, empurrando o que está embaixo (serve em
+  // card comum, onde a página rola). "lado": ao lado do painel no desktop
+  // (no celular cai em "linha") — pros painéis presos no topo do modal, onde
+  // o calendário cobria "Cancelar reunião" e, empurrando, os botões saíam da
+  // tela sem jeito de rolar até eles (Samuel, 28/10/26).
+  calendario?: "flutuante" | "linha" | "lado";
 }) {
   const controlado = value !== undefined;
   const [internoValor, setInternoValor] = useState(defaultValue ?? "");
@@ -316,7 +318,11 @@ export function CampoDataHora({
       {aberto && (
         <div
           className={`rounded-xl border border-neutral-200 bg-white p-3 ${
-            calendarioEmLinha ? "relative mt-2 w-full" : "absolute z-30 mt-1 w-72 shadow-xl"
+            calendario === "linha"
+              ? "relative mt-2 w-full"
+              : calendario === "lado"
+              ? "relative mt-2 w-full sm:absolute sm:left-full sm:top-0 sm:z-30 sm:ml-5 sm:mt-0 sm:w-72 sm:shadow-xl"
+              : "absolute z-30 mt-1 w-72 shadow-xl"
           }`}
         >
           <div className="mb-2 flex items-center justify-between">
