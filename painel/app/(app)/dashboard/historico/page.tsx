@@ -96,12 +96,12 @@ function brl(valor: number | null | undefined) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
-// R$ 30,8 mi / R$ 850 mil — pra caber em gráfico e cartão.
+// R$ 30,8 milhões / R$ 850 mil — "milhões" por extenso pra não confundir com "mil".
 function brlCurto(valor: number | null | undefined) {
   if (valor === null || valor === undefined) return "—";
   const abs = Math.abs(valor);
   if (abs >= 1_000_000)
-    return `R$ ${(valor / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mi`;
+    return `R$ ${(valor / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} milhões`;
   if (abs >= 1_000) return `R$ ${Math.round(valor / 1_000).toLocaleString("pt-BR")} mil`;
   return brl(valor);
 }
@@ -493,7 +493,7 @@ function LtvDetalhado({ l }: { l: LtvDetalhe }) {
                     <div className="flex-1">
                       <Barra fracao={c.ltv / maiorCoorte} />
                     </div>
-                    <span className="w-20 text-right tabular-nums">{brlCurto(c.ltv)}</span>
+                    <span className="w-24 text-right tabular-nums">{brlCurto(c.ltv)}</span>
                   </div>
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">{pct(c.recompra)}</td>
@@ -511,6 +511,240 @@ function LtvDetalhado({ l }: { l: LtvDetalhe }) {
   );
 }
 
+// ---------- O que fazer agora (função historico_acoes) ----------
+
+type AcaoCliente = {
+  conta: string;
+  receita: number;
+  pedidos: number;
+  ultimo: string;
+  parado: number;
+  intervalo?: number | null;
+};
+type AcaoLista = { total: number; receita: number | null; lista: AcaoCliente[] };
+type AcaoCanal = {
+  conta: string;
+  receita: number;
+  pedidos: number;
+  ultimo: string;
+  parado: number;
+  receita12m: number;
+  receita12mAnterior: number;
+};
+type Acoes = {
+  fim: string | null;
+  reativar: AcaoLista;
+  segunda: AcaoLista;
+  atrasados: AcaoLista;
+  canais: AcaoCanal[];
+  concentracao: { maiorConta: string | null; pctMaiorConta: number | null; pctTop10Diretos: number | null };
+};
+
+function ListaClientes({
+  itens,
+  total,
+  comIntervalo = false,
+}: {
+  itens: AcaoCliente[];
+  total: number;
+  comIntervalo?: boolean;
+}) {
+  if (itens.length === 0) return null;
+  return (
+    <details className="group mt-3 rounded-lg border border-neutral-200 bg-neutral-50">
+      <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-[#2563eb]">
+        Ver os {num(itens.length)} maiores{total > itens.length ? ` de ${num(total)}` : ""} (por valor já comprado)
+      </summary>
+      <div className="overflow-x-auto px-3 pb-3">
+        <table className="w-full min-w-[560px] text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+              <th className="py-2 pr-3">Cliente</th>
+              <th className="py-2 pr-3 text-right">Já comprou</th>
+              <th className="py-2 pr-3 text-right">Pedidos</th>
+              {comIntervalo && <th className="py-2 pr-3 text-right">Costuma comprar a cada</th>}
+              <th className="py-2 pr-3 text-right">Último pedido</th>
+              <th className="py-2 text-right">Parado há</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-200">
+            {itens.map((c) => (
+              <tr key={c.conta}>
+                <td className="py-1.5 pr-3 font-medium text-neutral-800">{c.conta}</td>
+                <td className="py-1.5 pr-3 text-right tabular-nums">{brl(c.receita)}</td>
+                <td className="py-1.5 pr-3 text-right tabular-nums">{num(c.pedidos)}</td>
+                {comIntervalo && <td className="py-1.5 pr-3 text-right tabular-nums">{meses(c.intervalo)}</td>}
+                <td className="py-1.5 pr-3 text-right tabular-nums text-neutral-600">{mesAno(c.ultimo)}</td>
+                <td className="py-1.5 text-right tabular-nums">{meses(c.parado)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  );
+}
+
+function Acao({
+  numero,
+  titulo,
+  porque,
+  passos,
+  children,
+}: {
+  numero: number;
+  titulo: string;
+  porque: React.ReactNode;
+  passos: React.ReactNode[];
+  children?: React.ReactNode;
+}) {
+  return (
+    <Cartao>
+      <div className="flex gap-3">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2563eb] text-sm font-bold text-white">
+          {numero}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-bold text-neutral-900">{titulo}</h3>
+          <p className="mt-1 text-sm text-neutral-600">
+            <span className="font-semibold text-neutral-800">Por quê: </span>
+            {porque}
+          </p>
+          <div className="mt-2 text-sm text-neutral-700">
+            <span className="font-semibold text-neutral-800">O que fazer:</span>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              {passos.map((p, i) => (
+                <li key={i}>{p}</li>
+              ))}
+            </ul>
+          </div>
+          {children}
+        </div>
+      </div>
+    </Cartao>
+  );
+}
+
+function OQueFazerAgora({ a, l, receitaTotal }: { a: Acoes; l: LtvDetalhe; receitaTotal: number }) {
+  const r = l.resumo;
+  const umaVez = l.frequencia.find((f) => f.faixa === 1);
+  const pctUmaVez = umaVez ? umaVez.contas / (r.contas || 1) : null;
+  const vezes = r.ltvRecorrente && r.ltvUmaVez ? r.ltvRecorrente / r.ltvUmaVez : null;
+  const canaisCaindo = a.canais.filter((c) => c.receita12m < c.receita12mAnterior);
+
+  return (
+    <section>
+      <Titulo
+        sub={`Sugestões tiradas do histórico até ${mesAno(a.fim)}. As listas mostram com quem falar primeiro. São prioridades, não garantia de venda.`}
+      >
+        O que fazer agora
+      </Titulo>
+      <div className="space-y-4">
+        <Acao
+          numero={1}
+          titulo="Garantir a 2ª compra de quem comprou pela primeira vez"
+          porque={
+            <>
+              {pct(pctUmaVez)} dos clientes compram uma vez só e nunca voltam. Quem volta vale{" "}
+              {vezes ? `${num(vezes, 1)}x mais` : "bem mais"} ({brl(r.ltvRecorrente)} contra {brl(r.ltvUmaVez)}), e
+              metade dos que voltam faz a 2ª compra em até {meses(r.ateSegundaMediana)}. Hoje são{" "}
+              <strong>{num(a.segunda.total)} clientes</strong> que compraram pela 1ª vez nos últimos 6 meses — estão
+              na janela.
+            </>
+          }
+          passos={[
+            "Ligar uns 30 dias depois da entrega: perguntar se ficou tudo certo, pedir foto da loja montada.",
+            "Entre 60 e 90 dias: oferecer o complemento (mais módulos, ganchos, acessórios, outra seção da loja).",
+            "Colocar isso como rotina fixa de pós-venda no CRM, com data marcada pra cada cliente novo.",
+          ]}
+        >
+          <ListaClientes itens={a.segunda.lista} total={a.segunda.total} />
+        </Acao>
+
+        <Acao
+          numero={2}
+          titulo="Ligar pra quem passou do tempo normal de comprar"
+          porque={
+            <>
+              <strong>{num(a.atrasados.total)} clientes</strong> que compram com frequência já passaram 1,5x do
+              intervalo de sempre e ainda não fizeram pedido. Ainda não estão perdidos, mas estão esfriando — juntos
+              já compraram {brlCurto(a.atrasados.receita)}.
+            </>
+          }
+          passos={[
+            "Contato ainda esta semana, começando pelos maiores da lista.",
+            "Perguntar de expansão, reforma ou loja nova — é aí que sai pedido de gôndola.",
+            "Se tiver ido pra concorrente, anotar o motivo (preço, prazo, atendimento).",
+          ]}
+        >
+          <ListaClientes itens={a.atrasados.lista} total={a.atrasados.total} comIntervalo />
+        </Acao>
+
+        <Acao
+          numero={3}
+          titulo="Reativar quem já comprou mais de uma vez e parou"
+          porque={
+            <>
+              <strong>{num(a.reativar.total)} clientes</strong> compraram 2 ou mais vezes e estão sem pedido há mais
+              de 1 ano. Juntos já compraram {brlCurto(a.reativar.receita)}. Cliente que já conhece a Inove é mais
+              fácil de trazer de volta do que um cliente novo.
+            </>
+          }
+          passos={[
+            "Começar pelos 30 maiores da lista abaixo — ligação do vendedor, não só mensagem.",
+            "Para o resto, campanha no WhatsApp com novidade ou condição pra quem voltar a comprar.",
+            "Registrar por que parou (fechou a loja, mudou de dono, foi pra concorrente). Quem não tem mais jeito sai da lista.",
+          ]}
+        >
+          <ListaClientes itens={a.reativar.lista} total={a.reativar.total} comIntervalo />
+        </Acao>
+
+        {canaisCaindo.length > 0 && (
+          <Acao
+            numero={4}
+            titulo="Conversar com as redes e revendas que estão comprando menos"
+            porque={
+              <>
+                Nos últimos 12 meses, comparando com os 12 anteriores:{" "}
+                {canaisCaindo.map((c, i) => (
+                  <span key={c.conta}>
+                    {i > 0 && (i === canaisCaindo.length - 1 ? " e " : ", ")}
+                    <strong>{c.conta}</strong> {brlCurto(c.receita12m)} contra {brlCurto(c.receita12mAnterior)} (
+                    <Variacao valor={variacao(c.receita12m, c.receita12mAnterior)} />)
+                  </span>
+                ))}
+                . Juntas, já foram {pct(a.canais.reduce((s, c) => s + c.receita, 0) / (receitaTotal || 1))} de tudo que a empresa vendeu.
+              </>
+            }
+            passos={[
+              "Marcar uma conversa com quem decide em cada uma pra entender a queda (lojas novas paradas, estoque, preço, concorrente).",
+              "Sair da conversa com um plano: próximas lojas, reformas previstas e um calendário de pedidos.",
+              "Acompanhar mês a mês aqui na página, na tabela de vendas por canal.",
+            ]}
+          />
+        )}
+
+        <Acao
+          numero={canaisCaindo.length > 0 ? 5 : 4}
+          titulo="Cuidar de perto dos maiores clientes"
+          porque={
+            <>
+              Os 10% maiores clientes diretos fazem {pct(a.concentracao.pctTop10Diretos)} das vendas, e só a{" "}
+              {a.concentracao.maiorConta} já foi {pct(a.concentracao.pctMaiorConta)} de tudo. Perder um desses pesa
+              muito.
+            </>
+          }
+          passos={[
+            "Cada um dos 40 maiores (tabela \"Maiores clientes\" abaixo) com um vendedor responsável.",
+            "Contato pelo menos uma vez por mês, mesmo sem pedido em vista.",
+            "Ficar de olho na coluna \"Parado há\": passou do tempo de sempre, liga.",
+          ]}
+        />
+      </div>
+    </section>
+  );
+}
+
 export default async function HistoricoVendasPage({
   searchParams,
 }: {
@@ -521,12 +755,14 @@ export default async function HistoricoVendasPage({
   if (!usuario || (usuario.papel !== "admin" && !usuario.super_admin)) redirect("/dashboard");
 
   const supabase = await createClient();
-  const [{ data, error }, { data: dadosLtv, error: erroLtv }] = await Promise.all([
+  const [{ data, error }, { data: dadosLtv, error: erroLtv }, { data: dadosAcoes }] = await Promise.all([
     supabase.rpc("historico_vendas_resumo"),
     supabase.rpc("historico_ltv_detalhe"),
+    supabase.rpc("historico_acoes"),
   ]);
   const h = data as Historico | null;
   const ltv = dadosLtv as LtvDetalhe | null;
+  const acoes = dadosAcoes as Acoes | null;
 
   if (error || erroLtv || !h || !ltv || h.resumo.pedidosTotal === 0) {
     return (
@@ -571,6 +807,8 @@ export default async function HistoricoVendasPage({
           Pedidos fechados da planilha comercial, de {periodoTexto}. &quot;Vendas&quot; aqui é o valor dos
           pedidos fechados no mês (coluna RECEITA da planilha), não o dinheiro que entrou no caixa.
         </p>
+
+        {acoes && <OQueFazerAgora a={acoes} l={ltv} receitaTotal={r.receitaTotal ?? 0} />}
 
         {/* Ano corrente até o último mês com pedido, contra os mesmos meses do ano anterior. */}
         <section>
@@ -658,7 +896,7 @@ export default async function HistoricoVendasPage({
                           <div className="flex-1">
                             <Barra fracao={a.receita / maiorAno} cor={parcial ? "bg-[#93b4f5]" : "bg-[#2563eb]"} />
                           </div>
-                          <span className="w-24 text-right font-semibold tabular-nums text-neutral-900">
+                          <span className="w-32 text-right font-semibold tabular-nums text-neutral-900">
                             {brlCurto(a.receita)}
                           </span>
                         </div>
@@ -727,7 +965,7 @@ export default async function HistoricoVendasPage({
                             <div className="flex-1">
                               <Barra fracao={m.receita / maiorMes} />
                             </div>
-                            <span className="w-24 text-right font-semibold tabular-nums text-neutral-900">
+                            <span className="w-32 text-right font-semibold tabular-nums text-neutral-900">
                               {brlCurto(m.receita)}
                             </span>
                           </div>
@@ -736,7 +974,7 @@ export default async function HistoricoVendasPage({
                               <div className="flex-1">
                                 <Barra fracao={m.receitaAnoAnterior / maiorMes} cor="bg-neutral-300" />
                               </div>
-                              <span className="w-24 text-right text-xs tabular-nums text-neutral-500">
+                              <span className="w-32 text-right text-xs tabular-nums text-neutral-500">
                                 {brlCurto(m.receitaAnoAnterior)}
                               </span>
                             </div>
@@ -895,7 +1133,7 @@ export default async function HistoricoVendasPage({
                         <div className="flex-1">
                           <Barra fracao={v.receita / (h.vendedores[0]?.receita || 1)} />
                         </div>
-                        <span className="w-28 text-right tabular-nums">
+                        <span className="w-36 text-right tabular-nums">
                           {brlCurto(v.receita)}{" "}
                           <span className="text-xs text-neutral-500">({pct(v.receita / totalVend)})</span>
                         </span>
