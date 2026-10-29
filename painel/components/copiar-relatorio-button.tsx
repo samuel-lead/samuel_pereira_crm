@@ -5,9 +5,11 @@ import { Calls, ehGondolas, relatorioSemCalls } from "@/lib/terminologia";
 
 // Relatório da Banker - Consorcio (Samuel, 27/10/26): é o modelo que o time
 // já usa no grupo, então o texto tem que sair exatamente nesse formato —
-// "Atualizou CRM?" fica pra pessoa preencher.
+// Lista pedida em 29/10/26: leads novos, ligações feitas, conversas
+// (ligações atendidas) e propostas iniciadas — sem "Atualizou CRM?".
 function montarRelatorioBanker(
   periodoLabel: string,
+  leadsNovos: number,
   ligacoesFeitas: number,
   ligacoesAtendidas: number,
   propostasIniciadas: number
@@ -15,10 +17,10 @@ function montarRelatorioBanker(
   return [
     `🗓️Período: ${periodoLabel}`,
     "",
-    `➡️ Ligações feitas? ${ligacoesFeitas}`,
-    `➡️ Ligações atendidas: ${ligacoesAtendidas}`,
+    `➡️ Leads novos: ${leadsNovos}`,
+    `➡️ Ligações feitas: ${ligacoesFeitas}`,
+    `➡️ Conversas (ligações atendidas): ${ligacoesAtendidas}`,
     `➡️ Propostas iniciadas: ${propostasIniciadas}`,
-    "➡️ Atualizou CRM? ",
   ].join("\n");
 }
 
@@ -29,10 +31,11 @@ function montarRelatorio(
   ligacoesFeitas: number,
   ligacoesAtendidas: number,
   propostasIniciadas: number,
-  publicoOrg: string
+  publicoOrg: string,
+  leadsNovos: number
 ) {
   if (relatorioSemCalls(publicoOrg)) {
-    return montarRelatorioBanker(periodoLabel, ligacoesFeitas, ligacoesAtendidas, propostasIniciadas);
+    return montarRelatorioBanker(periodoLabel, leadsNovos, ligacoesFeitas, ligacoesAtendidas, propostasIniciadas);
   }
   return [
     `🗓️Período: ${periodoLabel}`,
@@ -57,6 +60,7 @@ export function CopiarRelatorioButton({
   ligacoesFeitas,
   ligacoesAtendidas = 0,
   propostasIniciadas = 0,
+  leadsNovos = 0,
   publicoOrg = "mentoria",
 }: {
   periodoLabel: string;
@@ -65,6 +69,7 @@ export function CopiarRelatorioButton({
   ligacoesFeitas: number;
   ligacoesAtendidas?: number;
   propostasIniciadas?: number;
+  leadsNovos?: number;
   publicoOrg?: string;
 }) {
   const [copiado, setCopiado] = useState(false);
@@ -77,7 +82,8 @@ export function CopiarRelatorioButton({
       ligacoesFeitas,
       ligacoesAtendidas,
       propostasIniciadas,
-      publicoOrg
+      publicoOrg,
+      leadsNovos
     );
     navigator.clipboard?.writeText(texto).catch(() => {});
     setCopiado(true);

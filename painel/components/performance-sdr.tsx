@@ -100,6 +100,7 @@ export function PerformanceSdr({
                     ligacoesFeitas={linha.ligacoes}
                     ligacoesAtendidas={linha.ligacoesAtendidas}
                     propostasIniciadas={linha.propostasIniciadas}
+                    leadsNovos={linha.leadsTrabalhados}
                     publicoOrg={publicoOrg}
                   />
                 )}

@@ -348,8 +348,11 @@ export default async function DashboardPage({
               <h2 className="text-sm font-semibold text-neutral-800">Meu relatório de hoje</h2>
               {relatorioSemCalls(publicoOrg) ? (
                 <p className="text-xs text-neutral-500">
-                  {metricasHoje.ligacoes} ligaç{metricasHoje.ligacoes === 1 ? "ão feita" : "ões feitas"} ·{" "}
-                  {metricasHoje.ligacoesAtendidas} atendida{metricasHoje.ligacoesAtendidas === 1 ? "" : "s"},{" "}
+                  {metricasHoje.leadsTrabalhados} lead{metricasHoje.leadsTrabalhados === 1 ? "" : "s"} novo
+                  {metricasHoje.leadsTrabalhados === 1 ? "" : "s"} · {metricasHoje.ligacoes} ligaç
+                  {metricasHoje.ligacoes === 1 ? "ão feita" : "ões feitas"} · {metricasHoje.ligacoesAtendidas}{" "}
+                  atendida{metricasHoje.ligacoesAtendidas === 1 ? "" : "s"} · {propostasIniciadasHoje} proposta
+                  {propostasIniciadasHoje === 1 ? "" : "s"} iniciada{propostasIniciadasHoje === 1 ? "" : "s"},{" "}
                   {formatarDataCurta(agora)}.
                 </p>
               ) : (
@@ -368,6 +371,7 @@ export default async function DashboardPage({
               ligacoesFeitas={metricasHoje.ligacoes}
               ligacoesAtendidas={metricasHoje.ligacoesAtendidas}
               propostasIniciadas={propostasIniciadasHoje}
+              leadsNovos={metricasHoje.leadsTrabalhados}
               publicoOrg={publicoOrg}
             />
           </section>
