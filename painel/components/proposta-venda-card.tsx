@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RegistrarPropostaForm } from "@/components/registrar-proposta-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
+import { funilConsorcio } from "@/lib/terminologia";
 
 // Proposta e venda não são passos obrigatórios em sequência — às vezes a
 // reunião já fecha na hora, sem proposta nenhuma registrada antes (Samuel
@@ -35,10 +36,19 @@ export function PropostaVendaCard({
   imoveis?: { id: string; titulo: string; bairro: string | null; cidade: string | null }[];
   imovelIdAtual?: string | null;
 }) {
-  const [aba, setAba] = useState<"proposta" | "venda">("proposta");
+  // Consórcio (Banker): a proposta de verdade é o formulário com crédito,
+  // lance e parcelas, ao lado — o valor/data/observação de "proposta na
+  // mesa" daqui não faz sentido nesse mercado (Samuel, 29/10/26). Só Venda.
+  const soVenda = funilConsorcio(publicoOrg);
+  const [aba, setAba] = useState<"proposta" | "venda">(soVenda ? "venda" : "proposta");
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">
+      {soVenda ? (
+        <div className="border-b border-neutral-100 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-green-700">
+          Venda
+        </div>
+      ) : (
       <div className="flex border-b border-neutral-100">
         <button
           type="button"
@@ -63,9 +73,10 @@ export function PropostaVendaCard({
           Venda
         </button>
       </div>
+      )}
 
       <div className="p-4">
-        <div className={aba === "proposta" ? "" : "hidden"}>
+        <div className={aba === "proposta" && !soVenda ? "" : "hidden"}>
           <RegistrarPropostaForm leadId={leadId} propostaAtual={propostaAtual} />
         </div>
         <div className={aba === "venda" ? "" : "hidden"}>
