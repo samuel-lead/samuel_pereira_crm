@@ -735,7 +735,7 @@ function OQueFazerAgora({ a, l, receitaTotal }: { a: Acoes; l: LtvDetalhe; recei
             </>
           }
           passos={[
-            "Cada um dos 40 maiores (tabela \"Maiores clientes\" abaixo) com um vendedor responsável.",
+            "Cada um dos 40 maiores (tabela \"Maiores clientes\", mais acima) com um vendedor responsável.",
             "Contato pelo menos uma vez por mês, mesmo sem pedido em vista.",
             "Ficar de olho na coluna \"Parado há\": passou do tempo de sempre, liga.",
           ]}
@@ -807,8 +807,6 @@ export default async function HistoricoVendasPage({
           Pedidos fechados da planilha comercial, de {periodoTexto}. &quot;Vendas&quot; aqui é o valor dos
           pedidos fechados no mês (coluna RECEITA da planilha), não o dinheiro que entrou no caixa.
         </p>
-
-        {acoes && <OQueFazerAgora a={acoes} l={ltv} receitaTotal={r.receitaTotal ?? 0} />}
 
         {/* Ano corrente até o último mês com pedido, contra os mesmos meses do ano anterior. */}
         <section>
@@ -1147,6 +1145,8 @@ export default async function HistoricoVendasPage({
             </table>
           </Cartao>
         </section>
+
+        {acoes && <OQueFazerAgora a={acoes} l={ltv} receitaTotal={r.receitaTotal ?? 0} />}
 
         <Cartao>
           <h3 className="mb-2 text-sm font-semibold text-neutral-800">Como esses números foram feitos</h3>
