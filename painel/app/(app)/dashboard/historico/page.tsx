@@ -131,15 +131,70 @@ function Variacao({ valor }: { valor: number | null }) {
   );
 }
 
-function Titulo({ children, sub }: { children: React.ReactNode; sub?: React.ReactNode }) {
+// Os 7 blocos do relatório, na ordem. O mesmo nome aparece no índice do topo
+// e no título de cada bloco (Samuel quer bater o olho e achar).
+const SECOES = [
+  { id: "ano-atual", titulo: "" }, // "2026 até agora" — o ano vem dos dados
+  { id: "vendas-por-ano", titulo: "Vendas por ano" },
+  { id: "mes-a-mes", titulo: "Crescimento e queda mês a mês" },
+  { id: "clientes-ltv", titulo: "Clientes e LTV" },
+  { id: "vendedores", titulo: "Vendedores" },
+  { id: "o-que-fazer", titulo: "O que fazer agora" },
+  { id: "como-foi-feito", titulo: "Como esses números foram feitos" },
+];
+
+// Faixa escura com número grande: cada bloco do relatório tem que saltar aos
+// olhos. scroll-mt deixa o título visível abaixo do cabeçalho e do índice
+// fixos quando se clica no índice.
+function Titulo({
+  numero,
+  id,
+  children,
+  sub,
+}: {
+  numero: number;
+  id: string;
+  children: React.ReactNode;
+  sub?: React.ReactNode;
+}) {
   return (
-    <div className="mb-3">
-      <h2 className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-neutral-900">
-        <span className="h-6 w-1.5 shrink-0 rounded-full bg-[#2563eb]" />
+    <div
+      id={id}
+      className="mb-4 scroll-mt-[calc(var(--page-header-altura,64px)+72px)] rounded-xl bg-[#0f172a] px-4 py-4 shadow-md sm:px-5"
+    >
+      <h2 className="flex items-center gap-3 text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2563eb] text-lg font-black text-white">
+          {numero}
+        </span>
         {children}
       </h2>
-      {sub && <p className="mt-1 pl-4 text-sm text-neutral-500">{sub}</p>}
+      {sub && <p className="mt-2 pl-12 text-sm text-slate-300">{sub}</p>}
     </div>
+  );
+}
+
+// Índice fixo no topo: os 7 títulos, clicáveis.
+function IndiceRelatorio({ anoAtual }: { anoAtual: number | null }) {
+  return (
+    <nav
+      aria-label="Partes do relatório"
+      className="sticky top-0 z-10 -mx-6 border-b border-neutral-200 bg-[#f4f5f7]/95 px-6 py-2 backdrop-blur md:top-[var(--page-header-altura,64px)]"
+    >
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {SECOES.map((s, i) => (
+          <a
+            key={s.id}
+            href={`#${s.id}`}
+            className="flex shrink-0 items-center gap-2 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-800 shadow-sm hover:border-[#2563eb] hover:text-[#2563eb]"
+          >
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0f172a] text-[11px] font-bold text-white">
+              {i + 1}
+            </span>
+            {s.titulo || `${anoAtual ?? ""} até agora`}
+          </a>
+        ))}
+      </div>
+    </nav>
   );
 }
 
@@ -635,6 +690,8 @@ function OQueFazerAgora({ a, l, receitaTotal }: { a: Acoes; l: LtvDetalhe; recei
   return (
     <section>
       <Titulo
+        numero={6}
+        id="o-que-fazer"
         sub={`Sugestões tiradas do histórico até ${mesAno(a.fim)}. As listas mostram com quem falar primeiro. São prioridades, não garantia de venda.`}
       >
         O que fazer agora
@@ -808,9 +865,11 @@ export default async function HistoricoVendasPage({
           pedidos fechados no mês (coluna RECEITA da planilha), não o dinheiro que entrou no caixa.
         </p>
 
+        <IndiceRelatorio anoAtual={r.ytdAno} />
+
         {/* Ano corrente até o último mês com pedido, contra os mesmos meses do ano anterior. */}
         <section>
-          <Titulo sub={`Janeiro a ${mesYtd} de ${r.ytdAno}, comparado com o mesmo período de ${(r.ytdAno ?? 0) - 1}.`}>
+          <Titulo numero={1} id="ano-atual" sub={`Janeiro a ${mesYtd} de ${r.ytdAno}, comparado com o mesmo período de ${(r.ytdAno ?? 0) - 1}.`}>
             {r.ytdAno} até agora
           </Titulo>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -861,7 +920,7 @@ export default async function HistoricoVendasPage({
 
         {/* Total do ano + média por mês lado a lado: o total (ex.: R$ 30 mi) é a soma dos 12 meses. */}
         <section>
-          <Titulo sub="Total do ano é a soma de todos os meses. A média por mês ajuda a comparar com o faturamento mensal.">
+          <Titulo numero={2} id="vendas-por-ano" sub="Total do ano é a soma de todos os meses. A média por mês ajuda a comparar com o faturamento mensal.">
             Vendas por ano
           </Titulo>
           <Cartao className="overflow-x-auto">
@@ -919,7 +978,7 @@ export default async function HistoricoVendasPage({
 
         {/* Mês a mês do ano escolhido, contra o mesmo mês do ano anterior. */}
         <section>
-          <Titulo sub="Cada mês comparado com o mesmo mês do ano anterior (barra cinza) e com o mês anterior.">
+          <Titulo numero={3} id="mes-a-mes" sub="Cada mês comparado com o mesmo mês do ano anterior (barra cinza) e com o mês anterior.">
             Crescimento e queda mês a mês
           </Titulo>
           <div className="mb-3 flex flex-wrap gap-2">
@@ -998,7 +1057,7 @@ export default async function HistoricoVendasPage({
 
         {/* Clientes e LTV — só clientes diretos (sem Big Lar, Hiper e Forte, que são rede/revenda). */}
         <section>
-          <Titulo sub="Clientes diretos (fora Big Lar, Hiper Gôndolas e Forte, que são rede ou revenda), período todo.">
+          <Titulo numero={4} id="clientes-ltv" sub="Clientes diretos (fora Big Lar, Hiper Gôndolas e Forte, que são rede ou revenda), período todo.">
             Clientes e LTV
           </Titulo>
           <LtvDetalhado l={ltv} />
@@ -1109,7 +1168,7 @@ export default async function HistoricoVendasPage({
         </section>
 
         <section>
-          <Titulo sub={`Desde janeiro de ${ultimoAno - 2}, pelo nome do vendedor anotado na planilha.`}>
+          <Titulo numero={5} id="vendedores" sub={`Desde janeiro de ${ultimoAno - 2}, pelo nome do vendedor anotado na planilha.`}>
             Vendedores
           </Titulo>
           <Cartao className="overflow-x-auto">
@@ -1148,9 +1207,12 @@ export default async function HistoricoVendasPage({
 
         {acoes && <OQueFazerAgora a={acoes} l={ltv} receitaTotal={r.receitaTotal ?? 0} />}
 
+        <section>
+        <Titulo numero={7} id="como-foi-feito">
+          Como esses números foram feitos
+        </Titulo>
         <Cartao>
-          <h3 className="mb-2 text-sm font-semibold text-neutral-800">Como esses números foram feitos</h3>
-          <ul className="list-disc space-y-1 pl-5 text-xs text-neutral-600">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-600">
             <li>
               Fonte: planilha de pedidos comerciais fechados. {num(r.pedidosTotal)} pedidos com valor, somando{" "}
               {brl(r.receitaTotal)}. {num(r.zerados)} pedidos sem valor (troca, bonificação, cancelado) ficam de fora.
@@ -1174,6 +1236,7 @@ export default async function HistoricoVendasPage({
             </li>
           </ul>
         </Cartao>
+        </section>
       </main>
     </>
   );
