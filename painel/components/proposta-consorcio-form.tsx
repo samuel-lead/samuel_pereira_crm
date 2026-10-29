@@ -70,6 +70,32 @@ export function PropostaConsorcioForm({
     setProposta((atual) => ({ ...atual, [campo]: valor }));
   }
 
+  // Digitou o crédito: o lance embutido (25% do crédito) e o crédito liberado
+  // (crédito menos o lance) saem sozinhos. Continuam editáveis, caso o
+  // vendedor precise ajustar algum valor na mão.
+  function mudarCredito(credito: number | null) {
+    setProposta((atual) => {
+      if (credito === null) return { ...atual, credito, lance_embutido: null, credito_liberado: null };
+      const lance = Math.round(credito * (atual.lance_percentual ?? 25)) / 100;
+      return {
+        ...atual,
+        credito,
+        lance_embutido: lance,
+        credito_liberado: Math.round((credito - lance) * 100) / 100,
+      };
+    });
+  }
+
+  // Mexeu no lance na mão: o crédito liberado acompanha.
+  function mudarLance(lance: number | null) {
+    setProposta((atual) => ({
+      ...atual,
+      lance_embutido: lance,
+      credito_liberado:
+        atual.credito !== null && lance !== null ? Math.round((atual.credito - lance) * 100) / 100 : atual.credito_liberado,
+    }));
+  }
+
   function copiar() {
     navigator.clipboard?.writeText(montarTextoPropostaConsorcio(proposta)).catch(() => {});
     setCopiado(true);
@@ -93,31 +119,15 @@ export function PropostaConsorcioForm({
           rotulo="Crédito"
           nome="prop_credito"
           valor={proposta.credito}
-          aoMudar={(v) => atualizar("credito", v)}
+          aoMudar={mudarCredito}
         />
         <div>
           <CampoDinheiro
             rotulo={`Lance embutido (${percentualLance}%)`}
             nome="prop_lance"
             valor={proposta.lance_embutido}
-            aoMudar={(v) => atualizar("lance_embutido", v)}
+            aoMudar={mudarLance}
           />
-          <div className="mt-1.5 inline-flex overflow-hidden rounded-md border border-green-300 bg-white text-xs font-semibold">
-            {([25, 50] as const).map((opcao) => (
-              <button
-                key={opcao}
-                type="button"
-                onClick={() => atualizar("lance_percentual", opcao)}
-                className={`px-3 py-1 transition ${
-                  percentualLance === opcao
-                    ? "bg-green-600 text-white"
-                    : "text-green-800 hover:bg-green-100"
-                }`}
-              >
-                {opcao}%
-              </button>
-            ))}
-          </div>
           <input type="hidden" name="prop_lance_pct" value={percentualLance} />
         </div>
       </div>
