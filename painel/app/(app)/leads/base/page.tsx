@@ -6,7 +6,7 @@ import { FiltrosLeads } from "@/components/filtros-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas, emPedacos } from "@/lib/supabase/paginar";
-import { NIVEIS_REATIVACAO, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { NIVEIS_REATIVACAO, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
 import { funilConsorcio } from "@/lib/terminologia";
 
 type LeadComHistorico = LeadBase & {
@@ -103,7 +103,7 @@ export default async function BasePage({
   const origens = Array.from(
     new Set((origensData ?? []).map((lead) => lead.origem as string))
   ).sort();
-  const todosNiveis = (niveisData ?? []) as NivelResumo[];
+  const todosNiveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const niveisReativacao = todosNiveis.filter((nivel) => NIVEIS_REATIVACAO.includes(nivel.ordem));
 

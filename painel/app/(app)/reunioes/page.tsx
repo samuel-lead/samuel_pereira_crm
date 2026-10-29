@@ -32,8 +32,7 @@ import {
   NIVEL_OPORTUNIDADE_FUTURA,
   ORDEM_OPORTUNIDADE_FUTURA,
   numerarNiveis,
-  type NivelResumo,
-} from "@/lib/niveis";
+  type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
 
 const NIVEL_OPORTUNIDADES = 8;
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -171,7 +170,7 @@ export default async function VendasPage({
   ).sort();
 
   const publicoOrg = usuarioAtual?.publico_org ?? "mentoria";
-  const todosNiveis = (niveisData ?? []) as NivelResumo[];
+  const todosNiveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const niveis = [
     ...todosNiveis.filter((nivel) => colunasVendasDaOrg(publicoOrg).includes(nivel.ordem)),

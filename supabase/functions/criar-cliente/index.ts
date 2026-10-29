@@ -1,5 +1,5 @@
 // Cadastra uma empresa cliente nova: cria a org, o funil padrão (os 10
-// níveis de sempre, 0 a 9), as metas/taxas padrão, e o primeiro usuário
+// níveis de sempre, 0 a 9; o imobiliário ganha mais um, o 10), as metas/taxas padrão, e o primeiro usuário
 // admin dela. Só o dono da plataforma (super_admin) pode chamar isso —
 // cada empresa fica isolada na própria org_id, como todo o resto do sistema.
 
@@ -51,6 +51,23 @@ function niveisPadrao(publico: string) {
       numerado: true,
       destacado: false,
     },
+    // Só imobiliário (Samuel, 29/10/26): fica entre "Em qualificação" e
+    // "Topou visita" na tela, mas o número é 10 — ver lib/niveis.ts.
+    ...(publico === "imobiliario"
+      ? [
+          {
+            ordem: 10,
+            nome: "Documentação/Análise",
+            definicao:
+              "Lead qualificado; documentos e análise de crédito/perfil em andamento antes de seguir pra visita",
+            prazo_dias: null,
+            destino_ao_estourar: null,
+            etiqueta_wpp: "Documentação/Análise",
+            numerado: false,
+            destacado: false,
+          },
+        ]
+      : []),
     {
       ordem: 3,
       nome: `Topou ${palavra}, horário a definir`,

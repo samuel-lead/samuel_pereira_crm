@@ -18,7 +18,7 @@ import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { AvatarLead } from "@/components/avatar-lead";
-import { numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { numerarNiveis, type NivelResumo, ordenarNiveisDoFunil, posicaoNoFunil } from "@/lib/niveis";
 import type { PropostaConsorcio } from "@/lib/proposta-consorcio";
 import { Reuniao, Sdr, Receita, ehImobiliario } from "@/lib/terminologia";
 
@@ -215,7 +215,7 @@ export default async function EditarLeadPage({
     valor: Number(r.valor),
     recebido_em: r.recebido_em as string,
   }));
-  const niveis = (niveisData ?? []) as NivelResumo[];
+  const niveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
   const interacoes = (interacoesData ?? []) as Interacao[];
   const reunioes = (reunioesData ?? []) as Reuniao[];
   const nivelHistorico = (nivelHistoricoData ?? []) as NivelHistorico[];
@@ -491,7 +491,7 @@ export default async function EditarLeadPage({
             </div>
           ) : (
             podeEditar &&
-            leadTipado.nivel_ordem >= NIVEL_REUNIAO_MARCADA &&
+            posicaoNoFunil(leadTipado.nivel_ordem) >= NIVEL_REUNIAO_MARCADA &&
             leadTipado.nivel_ordem !== NIVEL_NO_SHOW &&
             leadTipado.nivel_ordem !== NIVEL_REAGENDAMENTO && (
               <PropostaVendaCard

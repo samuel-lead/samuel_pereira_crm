@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { BuscaLeads } from "@/components/busca-leads";
 import { LinkLead } from "@/components/link-lead";
-import { corDoNivel, numerarNiveis, rotuloNivelCurto, type NivelResumo } from "@/lib/niveis";
+import { corDoNivel, numerarNiveis, rotuloNivelCurto, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 
@@ -54,7 +54,7 @@ export default async function LeadsExcluidosPage({
     buscarTodas(montarConsulta),
   ]);
 
-  const niveis = (niveisData ?? []) as NivelResumo[];
+  const niveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
   const numerosVisiveis = numerarNiveis(niveis);
   const leads = (leadsData ?? []) as LeadExcluido[];
 

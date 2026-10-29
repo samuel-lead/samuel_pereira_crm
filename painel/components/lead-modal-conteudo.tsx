@@ -1,5 +1,6 @@
 "use client";
 
+import { posicaoNoFunil } from "@/lib/niveis";
 import { useEffect, useRef, useState } from "react";
 import { RegistrarNotaForm } from "@/components/registrar-nota-form";
 import { ExcluirInteracaoButton } from "@/components/excluir-interacao-button";
@@ -333,7 +334,7 @@ export function LeadModalConteudo({
           </div>
         ) : (
           podeEditar &&
-          lead.nivel_ordem >= NIVEL_REUNIAO_MARCADA &&
+          posicaoNoFunil(lead.nivel_ordem) >= NIVEL_REUNIAO_MARCADA &&
           lead.nivel_ordem !== NIVEL_NO_SHOW &&
           lead.nivel_ordem !== NIVEL_REAGENDAMENTO && (
             <div
@@ -391,7 +392,7 @@ export function LeadModalConteudo({
             e Precisa reagendar, que ele pediu de volta (07/10/26) porque o
             SDR segue fazendo follow com o lead nessas duas abas. */}
         {podeEditar &&
-          (lead.nivel_ordem < NIVEL_REUNIAO_MARCADA ||
+          (posicaoNoFunil(lead.nivel_ordem) < NIVEL_REUNIAO_MARCADA ||
             lead.nivel_ordem === NIVEL_NO_SHOW ||
             lead.nivel_ordem === NIVEL_REAGENDAMENTO) && (
           <DiaFollowSelector leadId={lead.id} diaFollow={lead.dia_follow} />

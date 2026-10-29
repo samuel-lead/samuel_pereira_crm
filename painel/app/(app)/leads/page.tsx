@@ -22,7 +22,7 @@ import {
   contarPropostasIniciadasPorUsuario,
   inicioDoMes,
 } from "@/lib/metricas";
-import { NIVEIS_PRE_VENDAS, colunasPreVendasDaOrg, numerarNiveis, type NivelResumo } from "@/lib/niveis";
+import { NIVEIS_PRE_VENDAS, colunasPreVendasDaOrg, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
 import { Calls, ehImobiliario, funilConsorcio } from "@/lib/terminologia";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
@@ -149,7 +149,7 @@ export default async function LeadsPage({
     new Set((origensData ?? []).map((lead) => lead.origem as string))
   ).sort();
 
-  const todosNiveis = (niveisData ?? []) as NivelResumo[];
+  const todosNiveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const nivelPorOrdem = new Map(todosNiveis.map((nivel) => [nivel.ordem, nivel]));
   const niveis = colunasPreVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria").map((ordem) => nivelPorOrdem.get(ordem)).filter(

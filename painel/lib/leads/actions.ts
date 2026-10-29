@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import {
   ORDEM_OPORTUNIDADE_FUTURA,
+  ORDEM_DOCUMENTACAO,
+  posicaoNoFunil,
+  ordenarNiveisDoFunil,
   numerarNiveis,
   NIVEIS_REATIVACAO,
   motivosBaseDaOrg,
@@ -1043,8 +1046,8 @@ export async function atualizarLead(
   // dar pra burlar.
   if (
     nivelMudou &&
-    (novoNivel === 0 || novoNivel === 1 || novoNivel === 2 || novoNivel === 3) &&
-    novoNivel < leadAtual.nivel_ordem
+    (novoNivel === 0 || novoNivel === 1 || novoNivel === 2 || novoNivel === 3 || novoNivel === ORDEM_DOCUMENTACAO) &&
+    posicaoNoFunil(novoNivel) < posicaoNoFunil(leadAtual.nivel_ordem)
   ) {
     return {
       erro: "Esse lead já avançou — não dá pra voltar pra um nível de antes.",
@@ -1438,8 +1441,8 @@ export async function moverLeadNivel(
   // qualificação → Topou reunião é mão única, não dá pra arrastar de
   // volta pra um nível de antes.
   if (
-    (nivelReal === 0 || nivelReal === 1 || nivelReal === 2 || nivelReal === 3) &&
-    nivelReal < leadAtual.nivel_ordem
+    (nivelReal === 0 || nivelReal === 1 || nivelReal === 2 || nivelReal === 3 || nivelReal === ORDEM_DOCUMENTACAO) &&
+    posicaoNoFunil(nivelReal) < posicaoNoFunil(leadAtual.nivel_ordem)
   ) {
     return "Esse lead já avançou — não dá pra voltar pra um nível de antes.";
   }
@@ -3104,7 +3107,7 @@ export async function buscarDetalhesDoLead(
   }));
 
   const googleCalendarConectado = googleCalendarConectadoData === true;
-  const niveis = (niveisData ?? []) as NivelResumo[];
+  const niveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
   const interacoes = interacoesData ?? [];
   const reunioes = reunioesData ?? [];
   const nivelHistorico = nivelHistoricoData ?? [];

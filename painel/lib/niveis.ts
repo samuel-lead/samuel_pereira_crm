@@ -1,4 +1,4 @@
-import { semFarming, funilConsorcio } from "@/lib/terminologia";
+import { semFarming, funilConsorcio, ehImobiliario } from "@/lib/terminologia";
 
 export const CORES_NIVEL: Record<
   number,
@@ -106,6 +106,16 @@ export const CORES_NIVEL: Record<
     pilula: "bg-stone-600 text-white",
     solido: "bg-gradient-to-br from-stone-500 to-stone-600",
   },
+  // "Documentação/Análise" (só imobiliário): azul, a cor de "andamento".
+  10: {
+    faixa: "bg-blue-500",
+    texto: "text-blue-700",
+    badge: "bg-blue-200 text-blue-700",
+    header: "bg-blue-50",
+    borda: "border-blue-200",
+    pilula: "bg-blue-600 text-white",
+    solido: "bg-gradient-to-br from-blue-500 to-blue-600",
+  },
   // Coluna sintética "Oportunidades futuras" (ver ORDEM_OPORTUNIDADE_FUTURA
   // mais abaixo) — não é um nível de verdade, por isso a chave não segue
   // a sequência normal de ordem.
@@ -120,6 +130,22 @@ export const CORES_NIVEL: Record<
   },
 };
 
+// "Documentação/Análise" (só imobiliário, Samuel 29/10/26): fica logo depois
+// de "Em qualificação" no funil, mas o número no banco é 10 — inserir no
+// meio renumeraria todos os níveis seguintes (e o código inteiro usa esses
+// números: 4 = visita marcada, 9 = Base...). Por isso a POSIÇÃO no funil é
+// separada do número: 10 vale como "2,5" (entre 2 e 3) em toda comparação de
+// "quem veio antes de quem" e na ordenação das listas.
+export const ORDEM_DOCUMENTACAO = 10;
+
+export function posicaoNoFunil(ordem: number) {
+  return ordem === ORDEM_DOCUMENTACAO ? 2.5 : ordem;
+}
+
+export function ordenarNiveisDoFunil<T extends { ordem: number }>(niveis: T[]): T[] {
+  return [...niveis].sort((a, b) => posicaoNoFunil(a.ordem) - posicaoNoFunil(b.ordem));
+}
+
 export function corDoNivel(ordem: number) {
   return CORES_NIVEL[ordem] ?? CORES_NIVEL[1];
 }
@@ -129,7 +155,7 @@ export function corDoNivel(ordem: number) {
 // que o lead vira "Reunião marcada" ele sai do Pré-vendas e só aparece em
 // Vendas dali em diante — por isso "Reunião marcada" NÃO entra aqui: essa
 // lista é o que filtra quais leads aparecem no quadro.
-export const NIVEIS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
+export const NIVEIS_PRE_VENDAS = [0, 1, 2, ORDEM_DOCUMENTACAO, 3, 5, 6];
 export const NIVEIS_VENDAS = [4, 7, 8];
 
 // Diferente de NIVEIS_PRE_VENDAS: essa é a lista de COLUNAS mostradas no
@@ -141,11 +167,15 @@ export const NIVEIS_VENDAS = [4, 7, 8];
 // arrastar pra uma coluna.
 export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
 
+// Imobiliário ganhou "Documentação/Análise" logo depois de "Em qualificação".
+const COLUNAS_PRE_VENDAS_IMOBILIARIO = [0, 1, 2, ORDEM_DOCUMENTACAO, 3, 5, 6];
+
 // Funil de consórcio não tem reunião: sem as colunas de No-show e "Precisa
 // reagendar" no Pré-vendas, e sem "Oportunidades" (ordem 8) no Vendas — o
 // lead em "Repescagem futura" continua existindo (é a coluna sintética).
 export function colunasPreVendasDaOrg(publicoOrg: string) {
-  return funilConsorcio(publicoOrg) ? [0, 1, 2, 3] : COLUNAS_PRE_VENDAS;
+  if (funilConsorcio(publicoOrg)) return [0, 1, 2, 3];
+  return ehImobiliario(publicoOrg) ? COLUNAS_PRE_VENDAS_IMOBILIARIO : COLUNAS_PRE_VENDAS;
 }
 
 // Níveis do Vendas que viram coluna própria (a ordem 8 só vira coluna fora
@@ -272,7 +302,12 @@ export function nivelDeveApareceNoMenu(
   // sentido rebaixar pra "Sem conversa iniciada"). Vale independente de
   // já ter tido reunião ou não — Samuel foi enfático que isso é sempre,
   // não só depois da reunião.
-  if (ordemDestino <= 3 && ordemDestino < nivelAtual) return false;
+  if (
+    (ordemDestino <= 3 || ordemDestino === ORDEM_DOCUMENTACAO) &&
+    posicaoNoFunil(ordemDestino) < posicaoNoFunil(nivelAtual)
+  ) {
+    return false;
+  }
 
   // No-show/Reagendamento só fazem sentido saindo de "Reunião marcada" —
   // ou de um pro outro diretamente (Samuel pediu essa transição livre:

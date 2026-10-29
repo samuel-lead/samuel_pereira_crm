@@ -35,7 +35,7 @@ import {
 } from "@/lib/metricas";
 import { inicioDoDia, UM_DIA_MS, periodoAnteriorSemana, periodoAnteriorMes, periodoAnterior } from "@/lib/datas";
 import { resolverPeriodo, formatarDataCurta, type ChavePeriodo } from "@/lib/periodo";
-import { numerarNiveis } from "@/lib/niveis";
+import { numerarNiveis, ordenarNiveisDoFunil } from "@/lib/niveis";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
@@ -268,7 +268,7 @@ export default async function DashboardPage({
     ? await calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
     : undefined;
 
-  const todosNiveis = (niveisData ?? []) as { ordem: number; nome: string; numerado: boolean; destacado: boolean }[];
+  const todosNiveis = ordenarNiveisDoFunil((niveisData ?? []) as { ordem: number; nome: string; numerado: boolean; destacado: boolean }[]);
   const nomePorNivel = new Map(todosNiveis.map((n) => [n.ordem, n.nome]));
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const nomePorUsuarioId = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
