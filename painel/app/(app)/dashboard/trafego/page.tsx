@@ -3,6 +3,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { RelatorioTrafego, type DadosTrafego, type PeriodoTrafego } from "@/components/relatorio-trafego";
 import { resolverPeriodo } from "@/lib/periodo";
+import { bloquearSeOculta } from "@/lib/paginas-ocultas";
 import { funilGondolas } from "@/lib/terminologia";
 
 // Relatório "Leads de tráfego" (Samuel, 04/11/26): origem, o que chegou, o
@@ -22,6 +23,9 @@ export default async function TrafegoPage({
   if (funilGondolas(publicoOrg) || publicoOrg === "imobiliario") redirect("/dashboard");
 
   const supabase = await createClient();
+  // Empresa que escondeu esta página (orgs.paginas_ocultas) não abre nem
+  // digitando o endereço.
+  await bloquearSeOculta(supabase, usuario.org_id, "/dashboard/trafego");
 
   // Período do filtro (hoje, ontem, semana, mês, trimestre, mês/ano ou datas
   // próprias). Sem nada escolhido: todo o histórico.
