@@ -378,7 +378,7 @@ export default async function DashboardPage({
                 </p>
               ) : funilGondolas(publicoOrg) ? (
                 <p className="text-xs text-neutral-500">
-                  {enviadosHoje} lead{enviadosHoje === 1 ? "" : "s"} enviado{enviadosHoje === 1 ? "" : "s"} pro Elton ·{" "}
+                  {enviadosHoje} oportunidade{enviadosHoje === 1 ? "" : "s"} enviada{enviadosHoje === 1 ? "" : "s"} para o Elton ·{" "}
                   {metricasHoje.ligacoes} ligaç{metricasHoje.ligacoes === 1 ? "ão" : "ões"},{" "}
                   {formatarDataCurta(agora)}.
                 </p>

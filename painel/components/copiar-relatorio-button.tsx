@@ -24,20 +24,20 @@ function montarRelatorioBanker(
   ].join("\n");
 }
 
-// Inove Gôndolas (Samuel, 04/11/26): sem reunião — o que conta é quantos leads
-// o SDR enviou pro Elton.
+// Inove Gôndolas (Samuel, 04/11/26): sem reunião — no lugar das linhas de
+// calls marcadas/reagendadas, entra "Oportunidades enviadas para o Elton".
+// O resto do modelo (ligações, "Atualizou CRM?") segue igual.
 function montarRelatorioGondolas(
   periodoLabel: string,
-  leadsNovos: number,
   ligacoesFeitas: number,
   enviadosAoCloser: number
 ) {
   return [
     `🗓️Período: ${periodoLabel}`,
     "",
-    `➡️ Leads novos: ${leadsNovos}`,
-    `➡️ Ligações feitas: ${ligacoesFeitas}`,
-    `➡️ Leads enviados pro Elton: ${enviadosAoCloser}`,
+    `➡ Oportunidades enviadas para o Elton: ${enviadosAoCloser}`,
+    `➡ Ligações feitas? ${ligacoesFeitas}`,
+    `➡ Atualizou CRM? `,
   ].join("\n");
 }
 
@@ -53,7 +53,7 @@ function montarRelatorio(
   enviadosAoCloser: number
 ) {
   if (funilGondolas(publicoOrg)) {
-    return montarRelatorioGondolas(periodoLabel, leadsNovos, ligacoesFeitas, enviadosAoCloser);
+    return montarRelatorioGondolas(periodoLabel, ligacoesFeitas, enviadosAoCloser);
   }
   if (relatorioSemCalls(publicoOrg)) {
     return montarRelatorioBanker(periodoLabel, leadsNovos, ligacoesFeitas, ligacoesAtendidas, propostasIniciadas);
