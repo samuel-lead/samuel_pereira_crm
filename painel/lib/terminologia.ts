@@ -136,7 +136,7 @@ export function funilConsorcio(publicoOrg: string) {
 // Funil da Inove Gôndolas (Samuel, 04/11/26): também não tem reunião marcada.
 // O SDR qualifica (Novos Leads → Sem conversa → Em qualificação) e então
 // "Envia pro Elton" (o closer): o lead sai de Pré-vendas e cai em Vendas.
-// Os níveis 3, 4 e 7 viram "Novo para o Elton", "Em negociação" e "Proposta
+// Os níveis 3, 4 e 7 viram "Leads para o Elton", "Em negociação" e "Proposta
 // enviada" (só o nome muda no banco); No-show, Precisa reagendar e
 // Oportunidades somem. Identifica a empresa pelo sufixo ":gond".
 export function funilGondolas(publicoOrg: string) {

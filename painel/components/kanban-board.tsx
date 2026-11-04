@@ -1291,7 +1291,7 @@ export function KanbanBoard({
                         ) : funilGondolas(publicoOrg) ? (
                           // Inove Gôndolas: não tem reunião pra agendar. O SDR, depois de
                           // qualificar, envia o lead pro Elton (closer): o lead sai de
-                          // Pré-vendas e cai em Vendas, na coluna "Novo para o Elton".
+                          // Pré-vendas e cai em Vendas, na coluna "Leads para o Elton".
                           permitirMarcarReuniaoRapido &&
                           lead.nivel_ordem < 3 && (
                             <button

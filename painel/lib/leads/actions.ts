@@ -141,7 +141,7 @@ async function contextoUsuario() {
 
 type UsuarioContexto = { id: string; org_id: string; papel: string };
 
-// Inove Gôndolas: nível 3 = "Novo para o Elton". Quem recebe o lead é o
+// Inove Gôndolas: nível 3 = "Leads para o Elton". Quem recebe o lead é o
 // closer da empresa (Elton). Se não achar nenhum, devolve null e o lead só
 // muda de coluna, sem trocar de responsável.
 const NIVEL_ENVIADO_AO_CLOSER = 3;

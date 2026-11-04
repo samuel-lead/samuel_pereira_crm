@@ -788,7 +788,7 @@ export function EditarLeadForm({
                 do título) — Samuel confirmou essa posição depois de ver
                 ao vivo, maior e destacado igual o botão do card. */}
             {/* Inove Gôndolas: no lugar de "Agendar reunião", o SDR envia o lead
-                pro closer (Elton) — o nível passa a ser "Novo para o Elton" e,
+                pro closer (Elton) — o nível passa a ser "Leads para o Elton" e,
                 ao salvar, ele vira o responsável. */}
             {!vendido && gondolas && Number(lead.nivel_ordem) < 3 && nivelSelecionado !== "3" && (
               <button

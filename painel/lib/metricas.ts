@@ -961,7 +961,7 @@ export async function contarPropostasIniciadasPorUsuario(
 }
 
 // Inove Gôndolas (sem reunião): "enviados pro Elton" = leads que entraram no
-// nível 3 ("Novo para o Elton") dentro do período, contados por quem enviou.
+// nível 3 ("Leads para o Elton") dentro do período, contados por quem enviou.
 // Conta o lead uma vez só por entrada no período e ignora lead arquivado.
 export async function contarEnviadosAoCloserPorUsuario(
   supabase: SupabaseServerClient,

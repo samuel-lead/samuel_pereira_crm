@@ -175,7 +175,7 @@ const COLUNAS_PRE_VENDAS_IMOBILIARIO = [0, 1, 2, ORDEM_DOCUMENTACAO, 3, 5, 6];
 // lead em "Repescagem futura" continua existindo (é a coluna sintética).
 export function colunasPreVendasDaOrg(publicoOrg: string) {
   // Inove Gôndolas: Pré-vendas termina em "Em qualificação"; o nível 3
-  // ("Novo para o Elton") já é a primeira coluna de Vendas.
+  // ("Leads para o Elton") já é a primeira coluna de Vendas.
   if (funilGondolas(publicoOrg)) return [0, 1, 2];
   if (funilConsorcio(publicoOrg)) return [0, 1, 2, 3];
   return ehImobiliario(publicoOrg) ? COLUNAS_PRE_VENDAS_IMOBILIARIO : COLUNAS_PRE_VENDAS;
@@ -199,7 +199,7 @@ export function niveisVendasDaOrg(publicoOrg: string) {
 }
 
 // Níveis pra onde dá pra reativar um lead da Base. Na Inove Gôndolas o 3 é
-// "Novo para o Elton" — reativar um lead da Base direto pra lá não faz
+// "Leads para o Elton" — reativar um lead da Base direto pra lá não faz
 // sentido (ele volta pra Pré-vendas e o SDR envia de novo).
 export function niveisReativacaoDaOrg(publicoOrg: string) {
   return funilGondolas(publicoOrg) ? NIVEIS_REATIVACAO.filter((n) => n !== 3) : NIVEIS_REATIVACAO;
@@ -310,7 +310,7 @@ export function nivelDeveApareceNoMenu(
   // Funil de consórcio: sem reunião, sem No-show/reagendar/Oportunidades.
   // Pré-vendas segue mão única; "Proposta iniciada" (4) e "Aguardando
   // assinatura" (7) podem ser escolhidas de qualquer lugar.
-  // Inove Gôndolas segue a mesma ideia (sem reunião). "Novo para o Elton" (3)
+  // Inove Gôndolas segue a mesma ideia (sem reunião). "Leads para o Elton" (3)
   // e "Em negociação" (4) também são níveis comuns, sem data nem closer.
   if (semReuniaoNoFunil(publicoOrg)) {
     if (ordemDestino === 5 || ordemDestino === 6 || ordemDestino === 8) return false;
