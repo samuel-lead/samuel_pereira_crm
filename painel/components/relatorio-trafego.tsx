@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { FiltroPeriodo } from "@/components/filtro-periodo";
+import type { ChavePeriodo } from "@/lib/periodo";
 import { MOTIVOS_BASE } from "@/lib/niveis";
 import { Reunioes, Reuniao } from "@/lib/terminologia";
 
@@ -111,7 +113,25 @@ function Kpi({ rotulo, valor, detalhe }: { rotulo: string; valor: React.ReactNod
   );
 }
 
-export function RelatorioTrafego({ d, publicoOrg }: { d: DadosTrafego; publicoOrg: string }) {
+// Período escolhido no filtro (null = todo o histórico).
+export type PeriodoTrafego = {
+  chave: ChavePeriodo;
+  titulo: string;
+  subtitulo?: string;
+  mesAno?: string;
+  de?: string;
+  ate?: string;
+} | null;
+
+export function RelatorioTrafego({
+  d,
+  publicoOrg,
+  periodo,
+}: {
+  d: DadosTrafego;
+  publicoOrg: string;
+  periodo: PeriodoTrafego;
+}) {
   const r = d.resumo;
   const ReuniaoPl = Reunioes(publicoOrg);
 
@@ -130,15 +150,44 @@ export function RelatorioTrafego({ d, publicoOrg }: { d: DadosTrafego; publicoOr
   return (
     <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
       <section>
+        <div className="mb-3 flex flex-wrap items-stretch gap-2">
+          <Link
+            href={`/dashboard/trafego?${new URLSearchParams({ origem: d.origem }).toString()}`}
+            scroll={false}
+            className={`inline-flex items-center rounded-xl border px-3 py-2 text-sm font-medium shadow-sm ${
+              periodo === null
+                ? "border-blue-600 bg-blue-600 text-white"
+                : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-100"
+            }`}
+          >
+            Todo o período
+          </Link>
+          <FiltroPeriodo
+            baseHref="/dashboard/trafego"
+            periodoAtual={periodo?.chave ?? null}
+            mesAnoAtual={periodo?.mesAno}
+            deAtual={periodo?.de}
+            ateAtual={periodo?.ate}
+            outrosParams={{ origem: d.origem }}
+            publicoOrg={publicoOrg}
+          />
+        </div>
         <p className="mb-3 text-sm text-neutral-600">
-          Escolha qual origem conta como tráfego. O relatório mostra tudo que chegou por ela, de{" "}
-          {dia(r.primeiroLead)} até {dia(r.ultimoLead)}.
+          Período: <strong>{periodo ? `${periodo.titulo}${periodo.subtitulo ? ` (${periodo.subtitulo})` : ""}` : "todo o histórico"}</strong>
+          {" "}— conta os leads que <strong>chegaram</strong> nesse período e o que aconteceu com eles até hoje. Escolha abaixo qual origem
+          conta como tráfego.
+          {r.chegaram > 0 && <> Primeiro lead em {dia(r.primeiroLead)}, último em {dia(r.ultimoLead)}.</>}
         </p>
         <div className="flex flex-wrap gap-2">
           {d.origens.map((o) => (
             <Link
               key={o.origem}
-              href={`/dashboard/trafego?origem=${encodeURIComponent(o.origem)}`}
+              href={`/dashboard/trafego?${new URLSearchParams({
+                origem: o.origem,
+                ...(periodo?.de && periodo?.ate ? { de: periodo.de, ate: periodo.ate } : {}),
+                ...(periodo?.mesAno ? { mesAno: periodo.mesAno } : {}),
+                ...(periodo && !periodo.mesAno && !(periodo.de && periodo.ate) ? { periodo: periodo.chave } : {}),
+              }).toString()}`}
               className={`rounded-full border px-3 py-1 text-sm font-medium ${
                 o.origem === d.origem
                   ? "border-[#2563eb] bg-[#2563eb] text-white"

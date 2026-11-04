@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
-import { RelatorioTrafego, type DadosTrafego } from "@/components/relatorio-trafego";
+import { RelatorioTrafego, type DadosTrafego, type PeriodoTrafego } from "@/components/relatorio-trafego";
+import { resolverPeriodo } from "@/lib/periodo";
 import { funilGondolas } from "@/lib/terminologia";
 
 // Relatório "Leads de tráfego" (Samuel, 04/11/26): origem, o que chegou, o
@@ -12,9 +13,9 @@ import { funilGondolas } from "@/lib/terminologia";
 export default async function TrafegoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ origem?: string }>;
+  searchParams: Promise<{ origem?: string; periodo?: string; mesAno?: string; de?: string; ate?: string }>;
 }) {
-  const { origem: origemParam } = await searchParams;
+  const { origem: origemParam, periodo, mesAno, de, ate } = await searchParams;
   const { usuario } = await usuarioAutenticado();
   if (!usuario || (usuario.papel !== "admin" && !usuario.super_admin)) redirect("/dashboard");
   const publicoOrg = usuario.publico_org ?? "mentoria";
@@ -22,15 +23,27 @@ export default async function TrafegoPage({
 
   const supabase = await createClient();
 
+  // Período do filtro (hoje, ontem, semana, mês, trimestre, mês/ano ou datas
+  // próprias). Sem nada escolhido: todo o histórico.
+  const resolvido = resolverPeriodo({ periodo, mesAno, de, ate }, new Date());
+  const periodoTela: PeriodoTrafego = resolvido
+    ? { chave: resolvido.chave, titulo: resolvido.titulo, subtitulo: resolvido.subtitulo, mesAno, de, ate }
+    : null;
+  const argsPeriodo = {
+    p_inicio: resolvido ? resolvido.inicio.toISOString() : null,
+    p_fim: resolvido ? resolvido.fim.toISOString() : null,
+  };
+
   // Sem origem escolhida: tenta a que se chama "Tráfego". Se essa não existir
-  // na empresa, escolhe a que tem "tráfego" no nome ou, na falta, a maior.
+  // na empresa (e sem filtro de período), escolhe a que tem "tráfego" no nome
+  // ou, na falta, a maior.
   let origem = origemParam ?? "Tráfego";
-  let { data, error } = await supabase.rpc("relatorio_trafego", { p_origem: origem });
+  let { data, error } = await supabase.rpc("relatorio_trafego", { p_origem: origem, ...argsPeriodo });
   let d = data as DadosTrafego | null;
-  if (!origemParam && d && d.resumo.chegaram === 0 && d.origens.length > 0) {
+  if (!origemParam && !resolvido && d && d.resumo.chegaram === 0 && d.origens.length > 0) {
     const parecida = d.origens.find((o) => /tr[aá]fego/i.test(o.origem));
     origem = (parecida ?? d.origens[0]).origem;
-    ({ data, error } = await supabase.rpc("relatorio_trafego", { p_origem: origem }));
+    ({ data, error } = await supabase.rpc("relatorio_trafego", { p_origem: origem, ...argsPeriodo }));
     d = data as DadosTrafego | null;
   }
 
@@ -50,7 +63,7 @@ export default async function TrafegoPage({
   return (
     <>
       <PageHeader titulo="Leads de tráfego" />
-      <RelatorioTrafego d={d} publicoOrg={publicoOrg} />
+      <RelatorioTrafego d={d} publicoOrg={publicoOrg} periodo={periodoTela} />
     </>
   );
 }
