@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calls, ehGondolas, relatorioSemCalls } from "@/lib/terminologia";
+import { Calls, ehGondolas, relatorioSemCalls, funilGondolas } from "@/lib/terminologia";
 
 // Relatório da Banker - Consorcio (Samuel, 27/10/26): é o modelo que o time
 // já usa no grupo, então o texto tem que sair exatamente nesse formato —
@@ -24,6 +24,23 @@ function montarRelatorioBanker(
   ].join("\n");
 }
 
+// Inove Gôndolas (Samuel, 04/11/26): sem reunião — o que conta é quantos leads
+// o SDR enviou pro Elton.
+function montarRelatorioGondolas(
+  periodoLabel: string,
+  leadsNovos: number,
+  ligacoesFeitas: number,
+  enviadosAoCloser: number
+) {
+  return [
+    `🗓️Período: ${periodoLabel}`,
+    "",
+    `➡️ Leads novos: ${leadsNovos}`,
+    `➡️ Ligações feitas: ${ligacoesFeitas}`,
+    `➡️ Leads enviados pro Elton: ${enviadosAoCloser}`,
+  ].join("\n");
+}
+
 function montarRelatorio(
   periodoLabel: string,
   callsMarcadas: number,
@@ -32,8 +49,12 @@ function montarRelatorio(
   ligacoesAtendidas: number,
   propostasIniciadas: number,
   publicoOrg: string,
-  leadsNovos: number
+  leadsNovos: number,
+  enviadosAoCloser: number
 ) {
+  if (funilGondolas(publicoOrg)) {
+    return montarRelatorioGondolas(periodoLabel, leadsNovos, ligacoesFeitas, enviadosAoCloser);
+  }
   if (relatorioSemCalls(publicoOrg)) {
     return montarRelatorioBanker(periodoLabel, leadsNovos, ligacoesFeitas, ligacoesAtendidas, propostasIniciadas);
   }
@@ -60,6 +81,7 @@ export function CopiarRelatorioButton({
   ligacoesFeitas,
   ligacoesAtendidas = 0,
   propostasIniciadas = 0,
+  enviadosAoCloser = 0,
   leadsNovos = 0,
   publicoOrg = "mentoria",
 }: {
@@ -69,6 +91,7 @@ export function CopiarRelatorioButton({
   ligacoesFeitas: number;
   ligacoesAtendidas?: number;
   propostasIniciadas?: number;
+  enviadosAoCloser?: number;
   leadsNovos?: number;
   publicoOrg?: string;
 }) {
@@ -83,7 +106,8 @@ export function CopiarRelatorioButton({
       ligacoesAtendidas,
       propostasIniciadas,
       publicoOrg,
-      leadsNovos
+      leadsNovos,
+      enviadosAoCloser
     );
     navigator.clipboard?.writeText(texto).catch(() => {});
     setCopiado(true);

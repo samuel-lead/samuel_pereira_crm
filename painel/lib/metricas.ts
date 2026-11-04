@@ -89,6 +89,9 @@ export type Metricas = {
   ligacoesAtendidas: number;
   // Só preenchido no funil de consórcio (Banker) — ver contarPropostasIniciadasPorUsuario.
   propostasIniciadas?: number;
+  // Só preenchido na Inove Gôndolas — leads que o SDR enviou pro closer
+  // (entraram no nível 3) no período. Ver contarEnviadosAoCloserPorUsuario.
+  enviadosAoCloser?: number;
   reunioesMarcadas: number;
   // Das reuniões marcadas no período, quantas são de lead que TAMBÉM
   // entrou nesse mesmo período (não é lead antigo com reunião nova) —
@@ -955,6 +958,41 @@ export async function contarPropostasIniciadasPorUsuario(
     porUsuario.set(linha.usuario_id, (porUsuario.get(linha.usuario_id) ?? 0) + 1);
   }
   return { porUsuario, total: restantes.length };
+}
+
+// Inove Gôndolas (sem reunião): "enviados pro Elton" = leads que entraram no
+// nível 3 ("Novo para o Elton") dentro do período, contados por quem enviou.
+// Conta o lead uma vez só por entrada no período e ignora lead arquivado.
+export async function contarEnviadosAoCloserPorUsuario(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<{ porUsuario: Map<string, number>; total: number }> {
+  type Linha = { lead_id: string; usuario_id: string | null };
+  const { data } = await buscarTodas<Linha>((de, ate) =>
+    supabase
+      .from("nivel_historico")
+      .select("lead_id, usuario_id, leads!inner(arquivado_em)")
+      .eq("org_id", orgId)
+      .eq("para_ordem", 3)
+      .neq("de_ordem", 3)
+      .is("leads.arquivado_em", null)
+      .gte("ocorreu_em", inicio.toISOString())
+      .lt("ocorreu_em", fim.toISOString())
+      .order("id")
+      .range(de, ate)
+  );
+
+  const vistos = new Set<string>();
+  const porUsuario = new Map<string, number>();
+  for (const linha of data ?? []) {
+    if (vistos.has(linha.lead_id)) continue;
+    vistos.add(linha.lead_id);
+    if (!linha.usuario_id) continue;
+    porUsuario.set(linha.usuario_id, (porUsuario.get(linha.usuario_id) ?? 0) + 1);
+  }
+  return { porUsuario, total: vistos.size };
 }
 
 export type MetricasUsuario = Metricas & {

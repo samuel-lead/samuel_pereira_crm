@@ -1,5 +1,5 @@
 import type { MetricasCloser } from "@/lib/metricas";
-import { Calls } from "@/lib/terminologia";
+import { Calls, funilGondolas } from "@/lib/terminologia";
 import { corPosicaoRanking } from "@/lib/ranking";
 
 function formatarMoeda(valor: number) {
@@ -64,10 +64,14 @@ export function PerformanceCloser({
                   </p>
                 </div>
                 <p className="text-xs text-neutral-400">
-                  {linha.reunioesRealizadas} {Calls(publicoOrg).toLowerCase()} realizadas ·{" "}
-                  {linha.reunioesComPitch} {Calls(publicoOrg).toLowerCase()} com pitch ·{" "}
+                  {!funilGondolas(publicoOrg) && (
+                    <>
+                      {linha.reunioesRealizadas} {Calls(publicoOrg).toLowerCase()} realizadas ·{" "}
+                      {linha.reunioesComPitch} {Calls(publicoOrg).toLowerCase()} com pitch ·{" "}
+                    </>
+                  )}
                   {linha.vendas} venda{linha.vendas === 1 ? "" : "s"}
-                  {taxaVendaPct !== null && ` · ${taxaVendaPct}% taxa de venda`}
+                  {!funilGondolas(publicoOrg) && taxaVendaPct !== null && ` · ${taxaVendaPct}% taxa de venda`}
                 </p>
                 <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                   <div

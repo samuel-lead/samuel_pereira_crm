@@ -1203,7 +1203,7 @@ export function EditarLeadForm({
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_problema">
                 {ehGondolas(publicoOrg)
-                  ? "Me conte sobre a loja — como é o negócio dele?"
+                  ? "Informações do lead — como é o negócio dele?"
                   : "Me conte sobre o lead — qual é o perfil dele?"}
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -1240,6 +1240,16 @@ export function EditarLeadForm({
               />
             </div>
 
+            {/* Inove Gôndolas (Samuel, 04/11/26): só o campo descritivo, sem
+                urgência nem verba. Os valores antigos seguem guardados. */}
+            {gondolas && (
+              <>
+                <input type="hidden" name="criterio_urgencia" value={lead.criterio_urgencia} />
+                <input type="hidden" name="criterio_capacidade" value={lead.criterio_capacidade} />
+              </>
+            )}
+
+            {!gondolas && (
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_urgencia">
                 {ehGondolas(publicoOrg)
@@ -1272,6 +1282,9 @@ export function EditarLeadForm({
               />
             </div>
 
+            )}
+
+            {!gondolas && (
             <div className="space-y-1">
               <label className={labelClasse} htmlFor="criterio_capacidade">
                 {ehGondolas(publicoOrg)
@@ -1303,6 +1316,7 @@ export function EditarLeadForm({
                 }
               />
             </div>
+            )}
           </fieldset>
         ) : (
           <>

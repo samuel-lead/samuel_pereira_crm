@@ -5,7 +5,7 @@ import {
   atualizarMetasConfig,
   type EstadoMetasConfig,
 } from "@/lib/configuracoes/actions";
-import { reunioes, ehImobiliario, metasSoTaxas } from "@/lib/terminologia";
+import { reunioes, ehImobiliario, metasSoTaxas, funilGondolas } from "@/lib/terminologia";
 
 const campoClasse =
   "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
@@ -53,9 +53,19 @@ export function MetasConfigForm({
   // o piso de leads/reuniões e a taxa de agendamento. Os valores guardados
   // seguem junto, escondidos, só pra o salvar continuar valendo.
   const soTaxas = metasSoTaxas(publicoOrg);
+  // Inove Gôndolas (sem reunião): o "piso de reuniões" vira piso de leads
+  // enviados pro Elton por dia, e some a taxa de comparecimento.
+  const gondolas = funilGondolas(publicoOrg);
 
   return (
     <form action={acaoFormulario} className="space-y-4">
+      {gondolas && (
+        <input
+          type="hidden"
+          name="taxa_comparecimento_min"
+          value={Math.round(Number(metas.taxa_comparecimento_min) * 1000) / 10}
+        />
+      )}
       {soTaxas && (
         <>
           <input type="hidden" name="piso_leads_dia" value={metas.piso_leads_dia} />
@@ -85,7 +95,9 @@ export function MetasConfigForm({
         )}
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="piso_reunioes_dia">
-            Piso de {reunioes(publicoOrg)}/{ehImobiliario(publicoOrg) ? "semana" : "dia"}
+            {gondolas
+              ? "Piso de leads enviados pro Elton/dia"
+              : `Piso de ${reunioes(publicoOrg)}/${ehImobiliario(publicoOrg) ? "semana" : "dia"}`}
           </label>
           <input
             id="piso_reunioes_dia"
@@ -115,6 +127,7 @@ export function MetasConfigForm({
           />
         </div>
         )}
+        {!gondolas && (
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="taxa_comparecimento_min">
             Taxa de comparecimento mín. (%)
@@ -131,6 +144,7 @@ export function MetasConfigForm({
             className={campoClasse}
           />
         </div>
+        )}
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="taxa_venda_min">
             Taxa de venda mín. (%)

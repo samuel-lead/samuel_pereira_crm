@@ -1,6 +1,6 @@
 import type { MetricasUsuario } from "@/lib/metricas";
 import { CopiarRelatorioButton } from "@/components/copiar-relatorio-button";
-import { Calls, Sdr, funilConsorcio } from "@/lib/terminologia";
+import { Calls, Sdr, funilConsorcio, funilGondolas } from "@/lib/terminologia";
 import { corPosicaoRanking } from "@/lib/ranking";
 
 function formatarPercentual(valor: number | null) {
@@ -29,8 +29,10 @@ export function PerformanceSdr({
   // Funil de consórcio (Banker): sem reunião, o ranking é por propostas
   // iniciadas no período.
   const consorcio = funilConsorcio(publicoOrg);
+  // Inove Gôndolas: sem reunião, o ranking é por leads enviados pro Elton.
+  const gondolas = funilGondolas(publicoOrg);
   const valorPrincipal = (l: MetricasUsuario) =>
-    consorcio ? (l.propostasIniciadas ?? 0) : l.reunioesRealizadas;
+    consorcio ? (l.propostasIniciadas ?? 0) : gondolas ? (l.enviadosAoCloser ?? 0) : l.reunioesRealizadas;
   const ranking = [...dados].sort((a, b) => valorPrincipal(b) - valorPrincipal(a));
   const maiorRealizadas = Math.max(1, ...ranking.map(valorPrincipal));
 
@@ -41,6 +43,8 @@ export function PerformanceSdr({
         <p className="mt-0.5 text-xs text-neutral-500">
           {consorcio
             ? `Top ${Sdr(publicoOrg)} por propostas iniciadas · ${periodo}`
+            : gondolas
+              ? `Top ${Sdr(publicoOrg)} por leads enviados pro Elton · ${periodo}`
             : `Top ${Sdr(publicoOrg)} por ${Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · ${periodo}`}
         </p>
       </div>
@@ -68,7 +72,7 @@ export function PerformanceSdr({
                     <p className="shrink-0 text-base font-extrabold text-neutral-900">
                       {valorPrincipal(linha)}{" "}
                       <span className="text-xs font-medium text-neutral-400">
-                        {consorcio ? "propostas iniciadas" : "realizadas"}
+                        {consorcio ? "propostas iniciadas" : gondolas ? "enviados" : "realizadas"}
                       </span>
                     </p>
                   </div>
@@ -76,6 +80,10 @@ export function PerformanceSdr({
                     {consorcio ? (
                       <>
                         {linha.leadsTrabalhados} leads novos · {linha.ligacoes} ligações · {linha.ligacoesAtendidas} atendidas
+                      </>
+                    ) : gondolas ? (
+                      <>
+                        {linha.leadsTrabalhados} leads novos · {linha.ligacoes} ligações
                       </>
                     ) : (
                       <>
@@ -100,6 +108,7 @@ export function PerformanceSdr({
                     ligacoesFeitas={linha.ligacoes}
                     ligacoesAtendidas={linha.ligacoesAtendidas}
                     propostasIniciadas={linha.propostasIniciadas}
+                    enviadosAoCloser={linha.enviadosAoCloser}
                     leadsNovos={linha.leadsTrabalhados}
                     publicoOrg={publicoOrg}
                   />

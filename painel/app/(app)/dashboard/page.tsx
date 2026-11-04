@@ -23,6 +23,7 @@ import {
   calcularVendasPorProduto,
   calcularMetricasPorUsuario,
   contarPropostasIniciadasPorUsuario,
+  contarEnviadosAoCloserPorUsuario,
   calcularMetricasPorCloser,
   calcularLeadsPorOrigem,
   calcularResumoAno,
@@ -40,7 +41,7 @@ import { numerarNiveis, ordenarNiveisDoFunil } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras, relatorioSemCalls, funilConsorcio } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras, relatorioSemCalls, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -263,8 +264,28 @@ export default async function DashboardPage({
     metricas = { ...metricasPeriodo, propostasIniciadas: periodoAtual.total };
     metricasAnteriores = { ...metricasAnterioresPeriodo, propostasIniciadas: periodoAnterior.total };
   }
+  // Inove Gôndolas (sem reunião): "enviados pro Elton" = leads que entraram no
+  // nível 3 no período. Faz o papel das reuniões marcadas nos cartões, no
+  // ranking e no relatório copiável do SDR.
+  let enviadosHoje = 0;
+  if (funilGondolas(publicoOrg)) {
+    const [hoje, periodoAtual, periodoAnterior] = await Promise.all([
+      souAdmin
+        ? Promise.resolve({ porUsuario: new Map<string, number>(), total: 0 })
+        : contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
+      contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+      contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
+    ]);
+    enviadosHoje = hoje.porUsuario.get(usuario!.id) ?? 0;
+    performanceSdr = performancePeriodoSdr.map((linha) => ({
+      ...linha,
+      enviadosAoCloser: periodoAtual.porUsuario.get(linha.usuarioId) ?? 0,
+    }));
+    metricas = { ...metricasPeriodo, enviadosAoCloser: periodoAtual.total };
+    metricasAnteriores = { ...metricasAnterioresPeriodo, enviadosAoCloser: periodoAnterior.total };
+  }
   // Conversão do funil em barras: vendas fechadas dentro do período.
-  const safraVenda = dashboardEmBarras(publicoOrg)
+  const safraVenda = dashboardEmBarras(publicoOrg) && !funilGondolas(publicoOrg)
     ? await calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
     : undefined;
 
@@ -355,6 +376,12 @@ export default async function DashboardPage({
                   {propostasIniciadasHoje === 1 ? "" : "s"} iniciada{propostasIniciadasHoje === 1 ? "" : "s"},{" "}
                   {formatarDataCurta(agora)}.
                 </p>
+              ) : funilGondolas(publicoOrg) ? (
+                <p className="text-xs text-neutral-500">
+                  {enviadosHoje} lead{enviadosHoje === 1 ? "" : "s"} enviado{enviadosHoje === 1 ? "" : "s"} pro Elton ·{" "}
+                  {metricasHoje.ligacoes} ligaç{metricasHoje.ligacoes === 1 ? "ão" : "ões"},{" "}
+                  {formatarDataCurta(agora)}.
+                </p>
               ) : (
                 <p className="text-xs text-neutral-500">
                   {metricasHoje.reunioesMarcadas}{" "}
@@ -371,6 +398,7 @@ export default async function DashboardPage({
               ligacoesFeitas={metricasHoje.ligacoes}
               ligacoesAtendidas={metricasHoje.ligacoesAtendidas}
               propostasIniciadas={propostasIniciadasHoje}
+              enviadosAoCloser={enviadosHoje}
               leadsNovos={metricasHoje.leadsTrabalhados}
               publicoOrg={publicoOrg}
             />
@@ -464,7 +492,7 @@ export default async function DashboardPage({
           </div>
         )}
 
-        {!funilConsorcio(publicoOrg) && (
+        {!semReuniaoNoFunil(publicoOrg) && (
           <div className="grid gap-4 lg:grid-cols-2">
             <ReunioesAtrasadas reunioes={reunioesAtrasadas} publicoOrg={publicoOrg} />
             <ProximasReunioes

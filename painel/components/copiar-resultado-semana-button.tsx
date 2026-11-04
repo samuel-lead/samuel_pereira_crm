@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Metricas, NegociacoesAbertas } from "@/lib/metricas";
-import { Reunioes, Faturamento, Receita, funilConsorcio } from "@/lib/terminologia";
+import { Reunioes, Faturamento, Receita, funilConsorcio, funilGondolas } from "@/lib/terminologia";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", {
@@ -49,6 +49,34 @@ function montarRelatorio(
       "📈 Taxas",
       `➡ Taxa de proposta iniciada: ${formatarPercentual(taxaProposta)}`,
       `➡ Taxa de venda sobre proposta: ${formatarPercentual(taxaVendaProposta)}`,
+      "",
+      "💰 Fechamento",
+      `➡ ${Receita(publicoOrg)}: ${formatarMoeda(metricas.receita)}`,
+      `➡ ${Faturamento(publicoOrg)}: ${formatarMoeda(metricas.faturamento)}`,
+      `➡ Ticket médio: ${metricas.ticketMedio !== null ? formatarMoeda(metricas.ticketMedio) : "—"}`,
+      `➡ Negociações em aberto: ${negociacoes.quantidade}`,
+      `➡ Valor em negociação: ${formatarMoeda(negociacoes.valor)}`,
+    ].join("\n");
+  }
+
+  // Inove Gôndolas (sem reunião): leads enviados pro Elton no lugar de
+  // reuniões, e a conversão é venda sobre enviados.
+  if (funilGondolas(publicoOrg)) {
+    const enviados = metricas.enviadosAoCloser ?? 0;
+    const taxaEnvio = metricas.leadsTrabalhados > 0 ? enviados / metricas.leadsTrabalhados : null;
+    const taxaVendaEnviados = enviados > 0 ? metricas.vendas / enviados : null;
+    return [
+      "📊 Resultado do período",
+      `🗓️ Período: ${periodo}`,
+      "",
+      `➡ Leads novos: ${metricas.leadsTrabalhados}`,
+      `➡ Ligações feitas: ${metricas.ligacoes}`,
+      `➡ Leads enviados pro Elton: ${enviados}`,
+      `➡ Vendas: ${metricas.vendas}`,
+      "",
+      "📈 Taxas",
+      `➡ Taxa de envio pro Elton: ${formatarPercentual(taxaEnvio)}`,
+      `➡ Taxa de venda sobre enviados: ${formatarPercentual(taxaVendaEnviados)}`,
       "",
       "💰 Fechamento",
       `➡ ${Receita(publicoOrg)}: ${formatarMoeda(metricas.receita)}`,

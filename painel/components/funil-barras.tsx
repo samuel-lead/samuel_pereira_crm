@@ -1,6 +1,6 @@
 import type { Metricas } from "@/lib/metricas";
 import type { MetasConfig } from "@/components/dashboard-ui";
-import { Calls, calls, ehImobiliario, metasSoTaxas } from "@/lib/terminologia";
+import { Calls, calls, ehImobiliario, metasSoTaxas, funilGondolas } from "@/lib/terminologia";
 
 // Funil em barras da Visão geral: cada etapa mostra o resultado do período e,
 // do lado, quanto cresceu (ou caiu) em relação ao período anterior; entre as
@@ -162,7 +162,39 @@ export function FunilBarras({
   const taxaPitch =
     metricas.reunioesRealizadas > 0 ? metricas.reunioesComPitch / metricas.reunioesRealizadas : null;
 
-  const etapas: Etapa[] = [
+  // Inove Gôndolas (sem reunião): Leads → Enviados pro Elton → Vendas.
+  const gondolas = funilGondolas(publicoOrg);
+  const enviados = metricas.enviadosAoCloser ?? 0;
+  const taxaEnvio = metricas.leadsTrabalhados > 0 ? enviados / metricas.leadsTrabalhados : null;
+  const taxaVendaEnviados = enviados > 0 ? metricas.vendas / enviados : null;
+
+  const etapasGondolas: Etapa[] = [
+    {
+      rotulo: "Leads trabalhados",
+      valor: metricas.leadsTrabalhados,
+      anterior: ant?.leadsTrabalhados,
+    },
+    {
+      rotulo: "Enviados pro Elton",
+      valor: enviados,
+      anterior: ant?.enviadosAoCloser,
+      piso: pisoReunioes,
+      conversao: { nome: "envio pro Elton", valor: taxaEnvio },
+    },
+    {
+      rotulo: "Vendas",
+      valor: metricas.vendas,
+      anterior: ant?.vendas,
+      conversao: {
+        nome: "conversão",
+        valor: taxaVendaEnviados,
+        minimo: metas.taxa_venda_min,
+        legenda: "das vendas sobre os leads enviados pro Elton no período",
+      },
+    },
+  ];
+
+  const etapas: Etapa[] = gondolas ? etapasGondolas : [
     {
       rotulo: "Leads trabalhados",
       valor: metricas.leadsTrabalhados,
@@ -330,6 +362,22 @@ export function FunilBarras({
         })}
       </div>
 
+      {gondolas ? (
+      <div className="mt-6 grid grid-cols-2 gap-x-2 gap-y-5 border-t border-neutral-100 pt-5 dark:border-neutral-800">
+        <Medidor
+          valor={taxaEnvio}
+          rotulo="Envio pro Elton"
+          legenda={`${enviados} de ${metricas.leadsTrabalhados}`}
+          bom={null}
+        />
+        <Medidor
+          valor={taxaVendaEnviados}
+          rotulo="Conversão"
+          legenda={`meta ${Math.round(metas.taxa_venda_min * 100)}%`}
+          bom={taxaVendaEnviados === null ? null : taxaVendaEnviados >= metas.taxa_venda_min}
+        />
+      </div>
+      ) : (
       <div className="mt-6 grid grid-cols-2 gap-x-2 gap-y-5 border-t border-neutral-100 pt-5 sm:grid-cols-4 dark:border-neutral-800">
         <Medidor
           valor={metricas.taxaAgendamento}
@@ -366,6 +414,7 @@ export function FunilBarras({
           bom={taxaConversao === null ? null : taxaConversao >= metas.taxa_venda_min}
         />
       </div>
+      )}
     </div>
   );
 }

@@ -20,10 +20,11 @@ import {
   calcularFaturamentoOrg,
   calcularVendasHoje,
   contarPropostasIniciadasPorUsuario,
+  contarEnviadosAoCloserPorUsuario,
   inicioDoMes,
 } from "@/lib/metricas";
 import { niveisPreVendasDaOrg, colunasPreVendasDaOrg, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
-import { Calls, ehImobiliario, funilConsorcio } from "@/lib/terminologia";
+import { Calls, ehImobiliario, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 
@@ -317,6 +318,7 @@ export default async function LeadsPage({
     { data: reunioesAgendadaData },
     { data: todasReunioesData },
     propostasIniciadasHojeResultado,
+    enviadosHojeResultado,
   ] = await Promise.all([
     consultaLeadsNovosHoje ? filtrarPorEscopo(consultaLeadsNovosHoje) : { count: null },
     consultaLigacoesHoje ? filtrarPorEscopo(consultaLigacoesHoje) : { count: null },
@@ -345,7 +347,17 @@ export default async function LeadsPage({
     user && orgId && funilConsorcio(publicoOrg)
       ? contarPropostasIniciadasPorUsuario(supabase, orgId, inicioHoje, amanha)
       : null,
+    // Inove Gôndolas (sem reunião): leads enviados pro Elton hoje.
+    user && orgId && funilGondolas(publicoOrg)
+      ? contarEnviadosAoCloserPorUsuario(supabase, orgId, inicioHoje, amanha)
+      : null,
   ]);
+
+  const enviadosHoje = enviadosHojeResultado
+    ? souAdmin
+      ? enviadosHojeResultado.total
+      : (enviadosHojeResultado.porUsuario.get(user!.id) ?? 0)
+    : null;
 
   // Propostas iniciadas hoje: o time todo pro admin, só as dele pro vendedor.
   const propostasIniciadasHoje = propostasIniciadasHojeResultado
@@ -584,14 +596,21 @@ export default async function LeadsPage({
                   sub={souAdmin ? "Time todo" : undefined}
                 />
               )}
-              {callsMarcadasHoje !== null && !funilConsorcio(publicoOrg) && (
+              {enviadosHoje !== null && (
+                <StatCell
+                  label="Enviados pro Elton hoje"
+                  value={enviadosHoje}
+                  sub={souAdmin ? "Time todo" : undefined}
+                />
+              )}
+              {callsMarcadasHoje !== null && !semReuniaoNoFunil(publicoOrg) && (
                 <StatCell
                   label={`${Calls(publicoOrg)} marcadas hoje`}
                   value={callsMarcadasHoje}
                   sub={souAdmin ? "Time todo" : undefined}
                 />
               )}
-              {callsRealizadasHoje !== null && !funilConsorcio(publicoOrg) && (
+              {callsRealizadasHoje !== null && !semReuniaoNoFunil(publicoOrg) && (
                 <StatCell
                   label={`${Calls(publicoOrg)} realizadas hoje`}
                   value={callsRealizadasHoje}
@@ -607,10 +626,10 @@ export default async function LeadsPage({
                   publicoOrg={publicoOrg}
                 />
               )}
-              {reagendamentosHoje !== null && reagendamentosHoje > 0 && (
+              {reagendamentosHoje !== null && reagendamentosHoje > 0 && !semReuniaoNoFunil(publicoOrg) && (
                 <StatCell label="Reagendamentos hoje" value={reagendamentosHoje} />
               )}
-              {noShowHoje !== null && noShowHoje > 0 && (
+              {noShowHoje !== null && noShowHoje > 0 && !semReuniaoNoFunil(publicoOrg) && (
                 <StatCell label="No-show hoje" value={noShowHoje} />
               )}
             </div>
