@@ -423,7 +423,9 @@ export default async function DashboardPage({
           />
         </div>
 
-        {metas ? (
+        {/* Inove Gôndolas (Samuel, 04/11/26): sem o painel principal (receita e
+            funil) na Visão geral — fica só o ranking do SDR e a parte de baixo. */}
+        {funilGondolas(publicoOrg) ? null : metas ? (
           <SecaoPeriodo
             titulo={periodoResolvido.titulo}
             subtitulo={periodoResolvido.subtitulo}
@@ -472,9 +474,9 @@ export default async function DashboardPage({
             periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
             publicoOrg={publicoOrg}
           />
-        ) : semCloser(publicoOrg) ? (
-          // Empresa sem Closer (ex.: Banker - Consorcio): só o ranking do
-          // Vendedor, sem o ranking de Closer.
+        ) : semCloser(publicoOrg) || funilGondolas(publicoOrg) ? (
+          // Empresa sem Closer (ex.: Banker - Consorcio) e Inove Gôndolas: só
+          // o ranking do SDR/Vendedor, sem o ranking de Closer.
           <PerformanceSdr
             dados={performanceSdr}
             periodo={periodoResolvido.subtitulo ?? periodoResolvido.titulo}
