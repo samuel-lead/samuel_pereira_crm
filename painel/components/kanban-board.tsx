@@ -30,7 +30,7 @@ import { AvatarLead } from "@/components/avatar-lead";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
-import { Reuniao, reuniao, RepescagemFutura, Receita, ehImobiliario, funilConsorcio } from "@/lib/terminologia";
+import { Reuniao, reuniao, RepescagemFutura, Receita, ehImobiliario, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
@@ -266,7 +266,7 @@ function BotaoReativarOportunidade({
             value: String(n.ordem),
             label: rotuloNivel(n, numerosVisiveis.get(n.ordem)),
           })),
-          ...(funilConsorcio(publicoOrg)
+          ...(semReuniaoNoFunil(publicoOrg)
             ? []
             : [
                 {
@@ -551,12 +551,12 @@ function SeletorMoverParaMobile({
           // "Agendar reunião" à parte pra isso).
           // No funil de consórcio não tem data nem closer: "Proposta
           // iniciada" é um nível comum, escolhido direto aqui.
-          if (n.ordem === NIVEL_REUNIAO_MARCADA && !funilConsorcio(publicoOrg)) return false;
+          if (n.ordem === NIVEL_REUNIAO_MARCADA && !semReuniaoNoFunil(publicoOrg)) return false;
           // Nível 8 sempre passa aqui, mesmo sem reunião — o flatMap logo
           // abaixo decide entre mostrar só a "Repescagem futura" ou as
           // duas, porque nascem da mesma linha (mesmo tratamento do menu
-          // Nível no card).
-          if (n.ordem === NIVEL_REUNIAO_FEITA) return true;
+          // Nível no card). Inove Gôndolas não tem esse nível.
+          if (n.ordem === NIVEL_REUNIAO_FEITA) return !funilGondolas(publicoOrg);
           return nivelDeveApareceNoMenu(lead.nivel_ordem, lead.jaTeveReuniao ?? false, n.ordem, publicoOrg);
         })
         .flatMap((n) => {
@@ -573,7 +573,7 @@ function SeletorMoverParaMobile({
 
           // "Oportunidades" normal exige reunião registrada — sem isso só
           // sobra a "Repescagem futura", que não exige.
-          const opcoes = lead.jaTeveReuniao && !funilConsorcio(publicoOrg)
+          const opcoes = lead.jaTeveReuniao && !semReuniaoNoFunil(publicoOrg)
             ? [
                 <option key={n.ordem} value={n.ordem}>
                   {rotulo}
@@ -656,6 +656,8 @@ export function KanbanBoard({
   const [colunaAlvo, setColunaAlvo] = useState<number | null>(null);
   const [, iniciarTransicao] = useTransition();
   const nomePorUsuario = new Map(usuarios.map((u) => [u.id, u.nome]));
+  // Inove Gôndolas: quem recebe o lead no botão "Enviar para o Elton".
+  const nomeDoCloser = usuarios.find((u) => u.funcao === "closer")?.nome ?? null;
   const fotoPorUsuario = new Map(usuarios.map((u) => [u.id, u.foto_url ?? null]));
   const { perguntar, perguntarTexto, avisar, modal: modalConfirmacao } = useConfirmacaoTravaTela();
   const idRoladoRef = useRef<string | null>(null);
@@ -748,15 +750,16 @@ export function KanbanBoard({
     ordem: number,
     temReuniaoPendente: boolean
   ) {
-    const semReunioes = funilConsorcio(publicoOrg);
+    const semReunioes = semReuniaoNoFunil(publicoOrg);
     if (ordem === NIVEL_REUNIAO_MARCADA && !semReunioes) {
       await abrirParaMarcarReuniao(leadId, temReuniaoPendente);
       return;
     }
     // Consórcio: "Proposta iniciada" não move na hora — abre o card do lead
     // com o nível já escolhido e a proposta pra preencher; o lead só vai pra
-    // Vendas quando a pessoa salva (Samuel, 27/10/26).
-    if (ordem === NIVEL_REUNIAO_MARCADA && semReunioes) {
+    // Vendas quando a pessoa salva (Samuel, 27/10/26). Na Inove Gôndolas o
+    // nível 4 ("Em negociação") é um movimento comum, sem formulário.
+    if (ordem === NIVEL_REUNIAO_MARCADA && funilConsorcio(publicoOrg)) {
       abrirLead({ leadId, marcarReuniao: true });
       return;
     }
@@ -1284,6 +1287,27 @@ export function KanbanBoard({
                                 Iniciar proposta
                               </button>
                             </div>
+                          )
+                        ) : funilGondolas(publicoOrg) ? (
+                          // Inove Gôndolas: não tem reunião pra agendar. O SDR, depois de
+                          // qualificar, envia o lead pro Elton (closer): o lead sai de
+                          // Pré-vendas e cai em Vendas, na coluna "Novo para o Elton".
+                          permitirMarcarReuniaoRapido &&
+                          lead.nivel_ordem < 3 && (
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const certeza = await perguntar(
+                                  `Enviar ${lead.nome} para ${nomeDoCloser ?? "o closer"}? O lead sai de Pré-vendas e vai para Vendas.`
+                                );
+                                if (certeza) moverPara(lead.id, lead.nivel_ordem, 3, false);
+                              }}
+                              className="botao-agendar-reuniao -mx-3.5 -mb-3.5 mt-2.5 flex w-[calc(100%+1.75rem)] items-center justify-center gap-1.5 rounded-b-xl border-t border-neutral-200 bg-neutral-50 py-3 text-center text-xs font-semibold text-neutral-600 transition hover:bg-blue-600 hover:text-white"
+                            >
+                              <IconeCarta className="h-3.5 w-3.5" />
+                              Enviar para {nomeDoCloser ? `o ${nomeDoCloser}` : "o closer"}
+                            </button>
                           )
                         ) : (
                           permitirMarcarReuniaoRapido &&

@@ -133,6 +133,24 @@ export function funilConsorcio(publicoOrg: string) {
   return relatorioSemCalls(publicoOrg);
 }
 
+// Funil da Inove Gôndolas (Samuel, 04/11/26): também não tem reunião marcada.
+// O SDR qualifica (Novos Leads → Sem conversa → Em qualificação) e então
+// "Envia pro Elton" (o closer): o lead sai de Pré-vendas e cai em Vendas.
+// Os níveis 3, 4 e 7 viram "Novo para o Elton", "Em negociação" e "Proposta
+// enviada" (só o nome muda no banco); No-show, Precisa reagendar e
+// Oportunidades somem. Identifica a empresa pelo sufixo ":gond".
+export function funilGondolas(publicoOrg: string) {
+  return ehGondolas(publicoOrg);
+}
+
+// Empresas cujo funil não tem reunião marcada: Banker (consórcio) e Inove
+// Gôndolas. Usado onde só importa isso (sem data, sem closer de reunião,
+// sem No-show/Reagendar). Telas que só a Banker tem (proposta de consórcio)
+// continuam usando funilConsorcio.
+export function semReuniaoNoFunil(publicoOrg: string) {
+  return funilConsorcio(publicoOrg) || funilGondolas(publicoOrg);
+}
+
 export function semCloserNaoImobiliario(publicoOrg: string) {
   return !ehImobiliario(publicoOrg) && temVariante(publicoOrg, "solo");
 }

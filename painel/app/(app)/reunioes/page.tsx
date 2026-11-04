@@ -16,7 +16,7 @@ import { anexarUltimaAtividade } from "@/lib/leads/atividade";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 import { diasUteisDesde, inicioDoDia, UM_DIA_MS } from "@/lib/datas";
-import { RepescagemFutura, ehImobiliario } from "@/lib/terminologia";
+import { RepescagemFutura, ehImobiliario, funilGondolas } from "@/lib/terminologia";
 import {
   buscarMetaReceitaMes,
   buscarUltimaVenda,
@@ -26,9 +26,9 @@ import {
   inicioDoMes,
 } from "@/lib/metricas";
 import {
-  NIVEIS_VENDAS,
+  niveisVendasDaOrg,
   colunasVendasDaOrg,
-  NIVEIS_REATIVACAO,
+  niveisReativacaoDaOrg,
   NIVEL_OPORTUNIDADE_FUTURA,
   ORDEM_OPORTUNIDADE_FUTURA,
   numerarNiveis,
@@ -114,7 +114,7 @@ export default async function VendasPage({
       )
       .is("arquivado_em", null)
       .neq("status", "vendido")
-      .in("nivel_ordem", NIVEIS_VENDAS);
+      .in("nivel_ordem", niveisVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria"));
 
     if (usuarioFiltro) {
       consulta = consulta.eq("responsavel_id", usuarioFiltro);
@@ -151,7 +151,7 @@ export default async function VendasPage({
         .select("origem")
         .is("arquivado_em", null)
         .neq("status", "vendido")
-        .in("nivel_ordem", NIVEIS_VENDAS)
+        .in("nivel_ordem", niveisVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria"))
         .not("origem", "is", null)
         .order("id")
         .range(de, ate)
@@ -174,9 +174,12 @@ export default async function VendasPage({
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const niveis = [
     ...todosNiveis.filter((nivel) => colunasVendasDaOrg(publicoOrg).includes(nivel.ordem)),
-    { ...NIVEL_OPORTUNIDADE_FUTURA, nome: RepescagemFutura(publicoOrg) },
+    // Inove Gôndolas não tem Oportunidades nem Repescagem futura (Samuel, 04/11/26).
+    ...(funilGondolas(publicoOrg)
+      ? []
+      : [{ ...NIVEL_OPORTUNIDADE_FUTURA, nome: RepescagemFutura(publicoOrg) }]),
   ];
-  const niveisReativacao = todosNiveis.filter((nivel) => NIVEIS_REATIVACAO.includes(nivel.ordem));
+  const niveisReativacao = todosNiveis.filter((nivel) => niveisReativacaoDaOrg(publicoOrg).includes(nivel.ordem));
   const leads = (leadsData ?? []) as unknown as LeadResumo[];
   const souAdmin = usuarioAtual?.papel === "admin";
   const usuarios = usuariosData ?? [];

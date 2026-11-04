@@ -9,7 +9,7 @@ import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import {
   rotuloNivel,
-  NIVEIS_REATIVACAO,
+  niveisReativacaoDaOrg,
   motivosBaseDaOrg,
   nivelDeveApareceNoMenu,
   type NivelResumo,
@@ -23,8 +23,10 @@ import {
   semCloserNaoImobiliario,
   RepescagemFutura,
   funilConsorcio,
+  funilGondolas,
+  semReuniaoNoFunil,
 } from "@/lib/terminologia";
-import { IconeCalendario, IconeReativar } from "@/components/icons";
+import { IconeCalendario, IconeCarta, IconeReativar } from "@/components/icons";
 import { PropostaConsorcioForm } from "@/components/proposta-consorcio-form";
 import type { PropostaConsorcio } from "@/lib/proposta-consorcio";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
@@ -310,6 +312,11 @@ export function EditarLeadForm({
   // Funil de consórcio (Banker): sem reunião — "Proposta iniciada" (4) e
   // "Aguardando assinatura" (7) são níveis comuns, sem data nem closer.
   const consorcio = funilConsorcio(publicoOrg);
+  // Sem reunião marcada no funil (Banker e Inove Gôndolas): mesmas travas de
+  // menu, sem data nem closer de reunião. A proposta de consórcio continua
+  // só da Banker (usa `consorcio`).
+  const semReuniao = semReuniaoNoFunil(publicoOrg);
+  const gondolas = funilGondolas(publicoOrg);
 
   const [nivelSelecionado, setNivelSelecionado] = useState(
     preSelecionarReuniao
@@ -383,7 +390,7 @@ export function EditarLeadForm({
       ? OPCAO_OPORTUNIDADE_FUTURA
       : nivelSelecionado;
   const vaiEntrarEmReuniaoMarcada =
-    !consorcio &&
+    !semReuniao &&
     nivelSelecionado === NIVEL_REUNIAO_MARCADA &&
     String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA;
 
@@ -403,7 +410,7 @@ export function EditarLeadForm({
   // "Oportunidades": a taxa de comparecimento só pode contar reunião que
   // realmente aconteceu, então confirma antes de deixar salvar.
   const vaiConfirmarReuniao =
-    !consorcio &&
+    !semReuniao &&
     String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA &&
     (nivelSelecionado === NIVEL_FOLLOW_POS_REUNIAO || nivelSelecionado === NIVEL_OPORTUNIDADES);
   // "Sobre o lead" só faz sentido a partir de Reunião marcada — é ali que
@@ -414,7 +421,11 @@ export function EditarLeadForm({
   // aparecendo pra sempre, mesmo o lead indo pra No-show/Base/Oportunidade.
   // Banker (consórcio) não tem "Sobre o lead" (perfil, urgência, capacidade) —
   // Samuel pediu pra tirar (27/10/26).
-  const mostrarSobreLead = !consorcio && Number(nivelSelecionado) >= Number(NIVEL_REUNIAO_MARCADA);
+  // Inove Gôndolas: o SDR preenche o perfil do lead ANTES de enviar pro Elton,
+  // então o bloco já aparece a partir de "Em qualificação".
+  const mostrarSobreLead = gondolas
+    ? Number(nivelSelecionado) >= 2
+    : !consorcio && Number(nivelSelecionado) >= Number(NIVEL_REUNIAO_MARCADA);
   // Depois de vendido, o lead saiu do funil de vez — mudar o nível dele
   // não faz mais sentido (não existe "voltar pra qualificação" de quem já
   // fechou). O valor fica travado no que já estava, só sem aparecer.
@@ -432,7 +443,7 @@ export function EditarLeadForm({
   // "Reunião marcada" — o card tem espaço pra pedir data e closer.
   const niveisReativacao = niveis.filter(
     (n) =>
-      NIVEIS_REATIVACAO.includes(n.ordem) || (!consorcio && n.ordem === Number(NIVEL_REUNIAO_MARCADA))
+      niveisReativacaoDaOrg(publicoOrg).includes(n.ordem) || (!semReuniao && n.ordem === Number(NIVEL_REUNIAO_MARCADA))
   );
 
   // Mesmas travas de painel/lib/leads/actions.ts (sincronizarReuniao), só
@@ -447,7 +458,7 @@ export function EditarLeadForm({
     if (ordemDestino === nivelAtual) return true;
     // Consórcio não tem as travas de reunião (quais níveis existem já é
     // decidido por nivelDeveApareceNoMenu).
-    if (consorcio) return true;
+    if (semReuniao) return true;
 
     if (
       nivelAtual === NIVEL_REUNIAO_MARCADA &&
@@ -497,7 +508,7 @@ export function EditarLeadForm({
     return nivelDeveApareceNoMenu(lead.nivel_ordem, jaTeveReuniao, Number(ordemDestino), publicoOrg);
   }
 
-  const saindoDeReuniaoMarcada = !consorcio && String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA;
+  const saindoDeReuniaoMarcada = !semReuniao && String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA;
   const temNivelBloqueadoPorReuniaoMarcada =
     saindoDeReuniaoMarcada && niveis.some((n) => !nivelPermitido(String(n.ordem)));
 
@@ -519,7 +530,7 @@ export function EditarLeadForm({
   // aconteceu e virou venda, não tem nada pra sincronizar — o nível dele
   // pode continuar sendo "Reunião marcada" no banco, por isso só olhar o
   // nível não bastava (Samuel pegou isso ao vivo na aba Clientes).
-  const emReuniaoMarcada = !consorcio && nivelSelecionado === NIVEL_REUNIAO_MARCADA && !vendido;
+  const emReuniaoMarcada = !semReuniao && nivelSelecionado === NIVEL_REUNIAO_MARCADA && !vendido;
   const prontoParaAgenda =
     emReuniaoMarcada && googleCalendarConectado && !!emailAtual.trim();
 
@@ -732,7 +743,7 @@ export function EditarLeadForm({
                       // obrigatório). Continua existindo no "Mover para..."
                       // rápido do celular (sem mouse não dá pra arrastar).
                       String(nivel.ordem) !== NIVEL_BASE &&
-                      (consorcio ||
+                      (semReuniao ||
                         String(nivel.ordem) !== NIVEL_REUNIAO_MARCADA ||
                         String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA ||
                         // Acabou de clicar em "Agendar reunião" — mesmo essa
@@ -755,6 +766,8 @@ export function EditarLeadForm({
                       disabled: !nivelPermitido(String(nivel.ordem)),
                     };
                     if (String(nivel.ordem) !== NIVEL_OPORTUNIDADES) return [opcao];
+                    // Inove Gôndolas não tem Oportunidades nem Repescagem futura.
+                    if (gondolas) return [];
                     const futura = {
                       value: OPCAO_OPORTUNIDADE_FUTURA,
                       label: RepescagemFutura(publicoOrg),
@@ -764,7 +777,7 @@ export function EditarLeadForm({
                     // A "Oportunidades" normal exige reunião registrada —
                     // sem isso só sobra a "Repescagem futura", que não exige
                     // (Samuel pediu essa exceção explicitamente).
-                    if (!jaTeveReuniao || consorcio) return [futura];
+                    if (!jaTeveReuniao || semReuniao) return [futura];
                     return [opcao, futura];
                   })}
               />
@@ -774,7 +787,20 @@ export function EditarLeadForm({
                 vira um botão dedicado do lado do SELETOR de nível (não só
                 do título) — Samuel confirmou essa posição depois de ver
                 ao vivo, maior e destacado igual o botão do card. */}
-            {!vendido && !consorcio && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA && (
+            {/* Inove Gôndolas: no lugar de "Agendar reunião", o SDR envia o lead
+                pro closer (Elton) — o nível passa a ser "Novo para o Elton" e,
+                ao salvar, ele vira o responsável. */}
+            {!vendido && gondolas && Number(lead.nivel_ordem) < 3 && nivelSelecionado !== "3" && (
+              <button
+                type="button"
+                onClick={() => aoMudarNivel("3")}
+                className="flex shrink-0 items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm font-bold text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
+              >
+                <IconeCarta className="h-4 w-4" />
+                Enviar para {usuarios.find((u) => u.funcao === "closer")?.nome ?? "o closer"}
+              </button>
+            )}
+            {!vendido && !semReuniao && String(lead.nivel_ordem) !== NIVEL_REUNIAO_MARCADA && (
               <button
                 type="button"
                 onClick={aoClicarAgendarReuniao}
@@ -912,7 +938,7 @@ export function EditarLeadForm({
           )}
 
           {!vaiEntrarEmReuniaoMarcada &&
-            !consorcio &&
+            !semReuniao &&
             !semCloserNaoImobiliario(publicoOrg) &&
             nivelSelecionado === NIVEL_REUNIAO_MARCADA &&
             String(lead.nivel_ordem) === NIVEL_REUNIAO_MARCADA && (

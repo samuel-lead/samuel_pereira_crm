@@ -16,7 +16,7 @@ import {
 import { garantirOrigem } from "@/lib/origens/actions";
 import { pareceOrigemInvalida } from "@/lib/origens/validacao";
 import { normalizarTelefone } from "@/lib/telefone";
-import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio } from "@/lib/terminologia";
+import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { lerPropostaConsorcioDoForm, type PropostaConsorcio } from "@/lib/proposta-consorcio";
 
 export type EstadoFormulario = { erro: string | null };
@@ -140,6 +140,23 @@ async function contextoUsuario() {
 }
 
 type UsuarioContexto = { id: string; org_id: string; papel: string };
+
+// Inove Gôndolas: nível 3 = "Novo para o Elton". Quem recebe o lead é o
+// closer da empresa (Elton). Se não achar nenhum, devolve null e o lead só
+// muda de coluna, sem trocar de responsável.
+const NIVEL_ENVIADO_AO_CLOSER = 3;
+
+async function buscarCloserDaOrg(supabase: SupabaseServerClient, orgId: string) {
+  const { data } = await supabase
+    .from("usuarios")
+    .select("id")
+    .eq("org_id", orgId)
+    .eq("funcao", "closer")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data?.id ?? null;
+}
 
 const ERRO_SEM_PERMISSAO = "Você só pode mexer em leads que são seus.";
 
@@ -952,7 +969,13 @@ export async function atualizarLead(
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
   // Banker (consórcio) não tem reunião: níveis 4 e 7 são "Proposta iniciada"
   // e "Aguardando assinatura", sem data, sem closer, sem travas de reunião.
-  const semReunioes = funilConsorcio(usuario.publico_org_completo);
+  const semReunioes = semReuniaoNoFunil(usuario.publico_org_completo);
+  const gondolas = funilGondolas(usuario.publico_org_completo);
+
+  // Inove Gôndolas não tem Oportunidades / Repescagem futura (Samuel, 04/11/26).
+  if (gondolas && (oportunidadeFutura || (nivelMudou && (novoNivel === 5 || novoNivel === 6 || novoNivel === 8)))) {
+    return { erro: "Esse nível não existe nesse funil." };
+  }
 
   // Nenhuma reunião pode ficar marcada sem os 3 critérios de qualificação
   // preenchidos (regra do CLAUDE.md) — vale sempre que o nível FINAL é
@@ -1175,6 +1198,11 @@ export async function atualizarLead(
       return { erro: resultadoSincronizacao.erro };
     }
     transferirParaCloserId = resultadoSincronizacao.transferirParaCloserId;
+    // Inove Gôndolas: ao enviar pro Elton, ele vira o responsável (feito por
+    // último, depois de salvar tudo — mesma ordem da transferência de closer).
+    if (gondolas && novoNivel === NIVEL_ENVIADO_AO_CLOSER) {
+      transferirParaCloserId = await buscarCloserDaOrg(supabase, usuario.org_id);
+    }
   } else if (
     !semReunioes &&
     novoNivel === NIVEL_REUNIAO_MARCADA &&
@@ -1401,11 +1429,16 @@ export async function moverLeadNivel(
   // marcação `oportunidade_futura`, o nivel_ordem continua 8.
   const querFutura = novoNivel === ORDEM_OPORTUNIDADE_FUTURA;
   const nivelReal = querFutura ? NIVEL_REUNIAO_FEITA : novoNivel;
-  const semReunioes = funilConsorcio(usuario.publico_org_completo);
+  const semReunioes = semReuniaoNoFunil(usuario.publico_org_completo);
+  const gondolas = funilGondolas(usuario.publico_org_completo);
 
-  // Funil de consórcio só tem os níveis 0-4, 7 e 9 (+ Repescagem futura).
-  if (semReunioes && !querFutura && (nivelReal === 5 || nivelReal === 6 || nivelReal === 8)) {
-    return "Esse nível não existe no funil de consórcio.";
+  // Funil sem reunião (consórcio e Inove Gôndolas) só tem os níveis 0-4, 7 e 9
+  // (+ Repescagem futura, que a Inove também não tem).
+  if (
+    semReunioes &&
+    ((!querFutura && (nivelReal === 5 || nivelReal === 6 || nivelReal === 8)) || (gondolas && querFutura))
+  ) {
+    return "Esse nível não existe nesse funil.";
   }
 
   if (leadAtual.nivel_ordem === nivelReal && leadAtual.oportunidade_futura === querFutura) {
@@ -1473,7 +1506,7 @@ export async function moverLeadNivel(
     return "Escreva o motivo pelo qual esse lead está indo pra Repescagem futura de ICP.";
   }
 
-  const { erro: erroReuniao, transferirParaCloserId } = await sincronizarReuniao(supabase, {
+  const { erro: erroReuniao, transferirParaCloserId: closerDaReuniao } = await sincronizarReuniao(supabase, {
     orgId: usuario.org_id,
     usuarioId: usuario.id,
     leadId,
@@ -1489,6 +1522,13 @@ export async function moverLeadNivel(
   if (erroReuniao) {
     return erroReuniao;
   }
+
+  // Inove Gôndolas: ao enviar pro Elton (nível 3), ele vira o responsável.
+  // Feito por último, igual a transferência de closer logo abaixo.
+  const transferirParaCloserId =
+    gondolas && nivelReal === NIVEL_ENVIADO_AO_CLOSER && leadAtual.nivel_ordem !== NIVEL_ENVIADO_AO_CLOSER
+      ? await buscarCloserDaOrg(supabase, usuario.org_id)
+      : closerDaReuniao;
 
   const { error } = await supabase
     .from("leads")

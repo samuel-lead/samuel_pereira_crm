@@ -1,4 +1,4 @@
-import { semFarming, funilConsorcio, ehImobiliario } from "@/lib/terminologia";
+import { semFarming, funilConsorcio, funilGondolas, semReuniaoNoFunil, ehImobiliario } from "@/lib/terminologia";
 
 export const CORES_NIVEL: Record<
   number,
@@ -174,6 +174,9 @@ const COLUNAS_PRE_VENDAS_IMOBILIARIO = [0, 1, 2, ORDEM_DOCUMENTACAO, 3, 5, 6];
 // reagendar" no Pré-vendas, e sem "Oportunidades" (ordem 8) no Vendas — o
 // lead em "Repescagem futura" continua existindo (é a coluna sintética).
 export function colunasPreVendasDaOrg(publicoOrg: string) {
+  // Inove Gôndolas: Pré-vendas termina em "Em qualificação"; o nível 3
+  // ("Novo para o Elton") já é a primeira coluna de Vendas.
+  if (funilGondolas(publicoOrg)) return [0, 1, 2];
   if (funilConsorcio(publicoOrg)) return [0, 1, 2, 3];
   return ehImobiliario(publicoOrg) ? COLUNAS_PRE_VENDAS_IMOBILIARIO : COLUNAS_PRE_VENDAS;
 }
@@ -181,7 +184,25 @@ export function colunasPreVendasDaOrg(publicoOrg: string) {
 // Níveis do Vendas que viram coluna própria (a ordem 8 só vira coluna fora
 // do funil de consórcio; "Repescagem futura" é montada à parte).
 export function colunasVendasDaOrg(publicoOrg: string) {
+  if (funilGondolas(publicoOrg)) return [3, 4, 7];
   return funilConsorcio(publicoOrg) ? [4, 7] : NIVEIS_VENDAS;
+}
+
+// Quais níveis cada quadro BUSCA no banco (as consultas de Pré-vendas e de
+// Vendas). Na Inove Gôndolas o nível 3 é de Vendas, não de Pré-vendas.
+export function niveisPreVendasDaOrg(publicoOrg: string) {
+  return funilGondolas(publicoOrg) ? [0, 1, 2] : NIVEIS_PRE_VENDAS;
+}
+
+export function niveisVendasDaOrg(publicoOrg: string) {
+  return funilGondolas(publicoOrg) ? [3, 4, 7] : NIVEIS_VENDAS;
+}
+
+// Níveis pra onde dá pra reativar um lead da Base. Na Inove Gôndolas o 3 é
+// "Novo para o Elton" — reativar um lead da Base direto pra lá não faz
+// sentido (ele volta pra Pré-vendas e o SDR envia de novo).
+export function niveisReativacaoDaOrg(publicoOrg: string) {
+  return funilGondolas(publicoOrg) ? NIVEIS_REATIVACAO.filter((n) => n !== 3) : NIVEIS_REATIVACAO;
 }
 
 // Níveis pra onde dá pra reativar um lead direto do card na Base, sem
@@ -289,7 +310,9 @@ export function nivelDeveApareceNoMenu(
   // Funil de consórcio: sem reunião, sem No-show/reagendar/Oportunidades.
   // Pré-vendas segue mão única; "Proposta iniciada" (4) e "Aguardando
   // assinatura" (7) podem ser escolhidas de qualquer lugar.
-  if (funilConsorcio(publicoOrg)) {
+  // Inove Gôndolas segue a mesma ideia (sem reunião). "Novo para o Elton" (3)
+  // e "Em negociação" (4) também são níveis comuns, sem data nem closer.
+  if (semReuniaoNoFunil(publicoOrg)) {
     if (ordemDestino === 5 || ordemDestino === 6 || ordemDestino === 8) return false;
     if (ordemDestino <= 3 && ordemDestino < nivelAtual) return false;
     return true;

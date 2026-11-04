@@ -22,7 +22,7 @@ import {
   contarPropostasIniciadasPorUsuario,
   inicioDoMes,
 } from "@/lib/metricas";
-import { NIVEIS_PRE_VENDAS, colunasPreVendasDaOrg, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
+import { niveisPreVendasDaOrg, colunasPreVendasDaOrg, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
 import { Calls, ehImobiliario, funilConsorcio } from "@/lib/terminologia";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
@@ -88,7 +88,7 @@ export default async function LeadsPage({
       )
       .is("arquivado_em", null)
       .neq("status", "vendido")
-      .in("nivel_ordem", NIVEIS_PRE_VENDAS);
+      .in("nivel_ordem", niveisPreVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria"));
 
     if (usuarioFiltro) {
       consulta = consulta.eq("responsavel_id", usuarioFiltro);
@@ -131,7 +131,7 @@ export default async function LeadsPage({
         .select("origem")
         .is("arquivado_em", null)
         .neq("status", "vendido")
-        .in("nivel_ordem", NIVEIS_PRE_VENDAS)
+        .in("nivel_ordem", niveisPreVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria"))
         .not("origem", "is", null)
         .order("id")
         .range(de, ate)
