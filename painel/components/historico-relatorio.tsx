@@ -81,6 +81,93 @@ type Historico = {
   resumo: Resumo;
 };
 
+// ---------- Ano em detalhe (função historico_ano_detalhe) ----------
+
+type DetalheResumo = {
+  receita: number;
+  pedidos: number;
+  ticketMedio: number | null;
+  ticketMediano: number | null;
+  mesesComPedido: number;
+  primeiroDia: string | null;
+  ultimoDia: string | null;
+  clientes: number;
+  receitaAnoAnterior: number | null;
+  pedidosAnoAnterior: number | null;
+  ticketAnoAnterior: number | null;
+  clientesAnoAnterior: number | null;
+  clientesDiretos: number;
+  clientesNovos: number;
+  clientesRecorrentes: number;
+  receitaNovos: number;
+  receitaRecorrentes: number;
+  ltvMedioAtivos: number | null;
+  ltvMedianoAtivos: number | null;
+  compraMediaNoAno: number | null;
+  pedidosPorCliente: number | null;
+  pctRecompraNoAno: number | null;
+  melhorMes: { mes: number; receita: number } | null;
+  maiorPedido: { valor: number; conta: string; vendedor: string; dia: string } | null;
+};
+type DetalheMes = {
+  mes: number;
+  receita: number;
+  pedidos: number;
+  clientes: number;
+  ticket: number | null;
+  novos: number;
+  lider: string | null;
+  liderReceita: number | null;
+};
+type DetalheVendedor = {
+  vendedor: string;
+  pedidos: number;
+  receita: number;
+  ticketMedio: number;
+  ticketMediano: number;
+  clientes: number;
+  novos: number;
+  ltvMedio: number | null;
+  primeiroDia: string;
+  ultimoDia: string;
+  melhorMes: number;
+  melhorMesReceita: number;
+  porMes: number[];
+};
+type DetalheCliente = {
+  conta: string;
+  canal: string;
+  vendedor: string;
+  pedidos: number;
+  receita: number;
+  ticketMedio: number;
+  primeiroDia: string;
+  ultimoDia: string;
+  ltvVida: number;
+  pedidosVida: number;
+  primeiroMesVida: string;
+  novo: boolean;
+};
+type DetalheCanal = { canal: string; pedidos: number; receita: number; ticketMedio: number };
+type DetalhePedido = {
+  dia: string;
+  conta: string;
+  cliente: string;
+  vendedor: string;
+  canal: string;
+  valor: number;
+  diasEntrega: number | null;
+};
+export type AnoDetalheDados = {
+  ano: number;
+  resumo: DetalheResumo;
+  meses: DetalheMes[];
+  vendedores: DetalheVendedor[];
+  clientes: DetalheCliente[];
+  canais: DetalheCanal[];
+  maioresPedidos: DetalhePedido[];
+};
+
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const MESES_LONGOS = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -132,6 +219,7 @@ function Variacao({ valor }: { valor: number | null }) {
 // e no título de cada bloco (Samuel quer bater o olho e achar).
 const SECOES = [
   { id: "ano-atual", titulo: "" }, // "2026 até agora" — o ano vem dos dados
+  { id: "ano-detalhe", titulo: "Ano em detalhe" },
   { id: "vendas-por-ano", titulo: "Vendas por ano" },
   { id: "mes-a-mes", titulo: "Crescimento e queda mês a mês" },
   { id: "clientes-ltv", titulo: "Clientes e LTV" },
@@ -687,7 +775,7 @@ function OQueFazerAgora({ a, l, receitaTotal }: { a: Acoes; l: LtvDetalhe; recei
   return (
     <section>
       <Titulo
-        numero={6}
+        numero={7}
         id="o-que-fazer"
         sub={`Sugestões tiradas do histórico até ${mesAno(a.fim)}. As listas mostram com quem falar primeiro. São prioridades, não garantia de venda.`}
       >
@@ -806,11 +894,13 @@ export function RelatorioHistorico({
   ltv,
   acoes,
   anoSel,
+  detalhe,
 }: {
   h: Historico;
   ltv: LtvDetalhe;
   acoes: Acoes | null;
   anoSel: number;
+  detalhe: AnoDetalheDados | null;
 }) {
   const r = h.resumo;
   const anos = h.anual.map((a) => a.ano);
@@ -888,9 +978,11 @@ export function RelatorioHistorico({
           </div>
         </section>
 
+        {detalhe && <AnoDetalhe d={detalhe} anos={anos} anoSel={anoSel} ytdAno={r.ytdAno} ytdMes={r.ytdMes} />}
+
         {/* Total do ano + média por mês lado a lado: o total (ex.: R$ 30 mi) é a soma dos 12 meses. */}
         <section>
-          <Titulo numero={2} id="vendas-por-ano" sub="Total do ano é a soma de todos os meses. A média por mês ajuda a comparar com o faturamento mensal.">
+          <Titulo numero={3} id="vendas-por-ano" sub="Total do ano é a soma de todos os meses. A média por mês ajuda a comparar com o faturamento mensal.">
             Vendas por ano
           </Titulo>
           <Cartao className="overflow-x-auto">
@@ -948,7 +1040,7 @@ export function RelatorioHistorico({
 
         {/* Mês a mês do ano escolhido, contra o mesmo mês do ano anterior. */}
         <section>
-          <Titulo numero={3} id="mes-a-mes" sub="Cada mês comparado com o mesmo mês do ano anterior (barra cinza) e com o mês anterior.">
+          <Titulo numero={4} id="mes-a-mes" sub="Cada mês comparado com o mesmo mês do ano anterior (barra cinza) e com o mês anterior.">
             Crescimento e queda mês a mês
           </Titulo>
           <div className="mb-3 flex flex-wrap gap-2">
@@ -1027,7 +1119,7 @@ export function RelatorioHistorico({
 
         {/* Clientes e LTV — só clientes diretos (sem Big Lar, Hiper e Forte, que são rede/revenda). */}
         <section>
-          <Titulo numero={4} id="clientes-ltv" sub="Clientes diretos (fora Big Lar, Hiper Gôndolas e Forte, que são rede ou revenda), período todo.">
+          <Titulo numero={5} id="clientes-ltv" sub="Clientes diretos (fora Big Lar, Hiper Gôndolas e Forte, que são rede ou revenda), período todo.">
             Clientes e LTV
           </Titulo>
           <LtvDetalhado l={ltv} />
@@ -1138,7 +1230,7 @@ export function RelatorioHistorico({
         </section>
 
         <section>
-          <Titulo numero={5} id="vendedores" sub={`Desde janeiro de ${ultimoAno - 2}, pelo nome do vendedor anotado na planilha.`}>
+          <Titulo numero={6} id="vendedores" sub={`Desde janeiro de ${ultimoAno - 2}, pelo nome do vendedor anotado na planilha.`}>
             Vendedores
           </Titulo>
           <Cartao className="overflow-x-auto">
@@ -1178,7 +1270,7 @@ export function RelatorioHistorico({
         {acoes && <OQueFazerAgora a={acoes} l={ltv} receitaTotal={r.receitaTotal ?? 0} />}
 
         <section>
-        <Titulo numero={7} id="como-foi-feito">
+        <Titulo numero={8} id="como-foi-feito">
           Como esses números foram feitos
         </Titulo>
         <Cartao>
@@ -1208,5 +1300,478 @@ export function RelatorioHistorico({
         </Cartao>
         </section>
       </main>
+  );
+}
+
+// ---------- Ano em detalhe ----------
+
+// "2026-07-31" -> "31/07/2026"
+function diaBr(iso: string | null | undefined) {
+  if (!iso) return "—";
+  return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+}
+
+// Valor curto pra caber na tabela mês a mês: 1,06 mi / 657 mil / 4,8 mil.
+function curtoTabela(valor: number) {
+  if (!valor) return "—";
+  if (valor >= 1_000_000)
+    return `${(valor / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} mi`;
+  if (valor >= 10_000) return `${Math.round(valor / 1_000).toLocaleString("pt-BR")} mil`;
+  if (valor >= 1_000)
+    return `${(valor / 1_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mil`;
+  return brl(valor);
+}
+
+function AnoDetalhe({
+  d,
+  anos,
+  anoSel,
+  ytdAno,
+  ytdMes,
+}: {
+  d: AnoDetalheDados;
+  anos: number[];
+  anoSel: number;
+  ytdAno: number | null;
+  ytdMes: number | null;
+}) {
+  const r = d.resumo;
+  const emAndamento = ytdAno === d.ano;
+  const totalVend = d.vendedores.reduce((s, v) => s + v.receita, 0) || 1;
+  const maiorVend = d.vendedores[0]?.receita || 1;
+  const maiorMes = Math.max(1, ...d.meses.map((m) => m.receita));
+  const totalCanais = d.canais.reduce((s, c) => s + c.receita, 0) || 1;
+  // Matriz vendedor x mês: os 10 maiores, o resto soma em "Demais vendedores".
+  const principais = d.vendedores.slice(0, 10);
+  const demais = d.vendedores.slice(10);
+  const linhaDemais = demais.length
+    ? Array.from({ length: 12 }, (_, i) => demais.reduce((s, v) => s + (v.porMes[i] ?? 0), 0))
+    : null;
+  const totaisPorMes = d.meses.map((m) => m.receita);
+  const mesesComDado = d.meses.filter((m) => m.pedidos > 0);
+  const periodoTexto =
+    r.primeiroDia && r.ultimoDia ? `${diaBr(r.primeiroDia)} a ${diaBr(r.ultimoDia)}` : "sem pedidos no ano";
+
+  return (
+    <section>
+      <Titulo
+        numero={2}
+        id="ano-detalhe"
+        sub={`Tudo de ${d.ano} num lugar só: vendas, período, vendedor, ticket médio e LTV. Pedidos de ${periodoTexto}${
+          emAndamento && ytdMes ? ` (ano em andamento, último mês com pedido: ${MESES_LONGOS[ytdMes - 1]})` : ""
+        }.`}
+      >
+        {d.ano} em detalhe
+      </Titulo>
+
+      <div className="mb-3 flex flex-wrap gap-2">
+        {anos.map((a) => (
+          <Link
+            key={a}
+            href={`/dashboard/historico?ano=${a}#ano-detalhe`}
+            scroll={false}
+            className={`rounded-full border px-3 py-1 text-sm font-medium ${
+              a === anoSel
+                ? "border-[#2563eb] bg-[#2563eb] text-white"
+                : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300"
+            }`}
+          >
+            {a}
+          </Link>
+        ))}
+      </div>
+
+      {/* Os números principais */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Kpi
+          rotulo="Vendas fechadas"
+          valor={brlCurto(r.receita)}
+          detalhe={
+            <>
+              {brl(r.receita)}
+              <br />
+              {emAndamento ? "ano anterior inteiro: " : "ano anterior: "}
+              {brlCurto(r.receitaAnoAnterior)}
+              {!emAndamento && (
+                <>
+                  {" "}
+                  <Variacao valor={variacao(r.receita, r.receitaAnoAnterior)} />
+                </>
+              )}
+            </>
+          }
+        />
+        <Kpi
+          rotulo="Pedidos"
+          valor={num(r.pedidos)}
+          detalhe={
+            <>
+              em {num(r.mesesComPedido)} {r.mesesComPedido === 1 ? "mês" : "meses"} · média de{" "}
+              {num(r.mesesComPedido ? r.pedidos / r.mesesComPedido : 0, 0)} por mês
+              <br />
+              ano anterior: {num(r.pedidosAnoAnterior)}
+            </>
+          }
+        />
+        <Kpi
+          rotulo="Ticket médio"
+          valor={brl(r.ticketMedio)}
+          detalhe={
+            <>
+              mediana (pedido do meio): {brl(r.ticketMediano)}
+              <br />
+              ano anterior: {brl(r.ticketAnoAnterior)} <Variacao valor={variacao(r.ticketMedio, r.ticketAnoAnterior)} />
+            </>
+          }
+        />
+        <Kpi
+          rotulo="Média de vendas por mês"
+          valor={brlCurto(r.mesesComPedido ? r.receita / r.mesesComPedido : null)}
+          detalhe={
+            r.melhorMes ? (
+              <>
+                melhor mês: {MESES_LONGOS[r.melhorMes.mes - 1]} ({brlCurto(r.melhorMes.receita)})
+              </>
+            ) : undefined
+          }
+        />
+        <Kpi
+          rotulo="Clientes que compraram"
+          valor={num(r.clientes)}
+          detalhe={
+            <>
+              {num(r.clientesDiretos)} diretos + {num(r.clientes - r.clientesDiretos)} rede/revenda
+              <br />
+              ano anterior: {num(r.clientesAnoAnterior)}
+            </>
+          }
+        />
+        <Kpi
+          rotulo="Clientes novos (1ª compra no ano)"
+          valor={num(r.clientesNovos)}
+          detalhe={
+            <>
+              clientes diretos · trouxeram {brlCurto(r.receitaNovos)} (
+              {pct(r.receitaNovos / ((r.receitaNovos + r.receitaRecorrentes) || 1))} dos diretos)
+            </>
+          }
+        />
+        <Kpi
+          rotulo="Clientes que já eram clientes"
+          valor={num(r.clientesRecorrentes)}
+          detalhe={
+            <>
+              clientes diretos · compraram {brlCurto(r.receitaRecorrentes)}
+              <br />
+              {pct(r.pctRecompraNoAno)} fizeram 2 ou mais pedidos no ano
+            </>
+          }
+        />
+        <Kpi
+          rotulo="LTV médio dos clientes do ano"
+          valor={brl(r.ltvMedioAtivos)}
+          detalhe={
+            <>
+              tudo que cada cliente direto já comprou na vida (mediana {brl(r.ltvMedianoAtivos)})
+              <br />
+              no ano, cada um comprou em média {brl(r.compraMediaNoAno)}
+            </>
+          }
+        />
+      </div>
+
+      {r.maiorPedido && (
+        <p className="mt-3 text-sm text-neutral-600">
+          Maior pedido do ano: <strong className="text-neutral-900">{brl(r.maiorPedido.valor)}</strong> —{" "}
+          {r.maiorPedido.conta}, vendedor {r.maiorPedido.vendedor}, em {diaBr(r.maiorPedido.dia)}.
+        </p>
+      )}
+
+      {/* Vendedor por vendedor */}
+      <Cartao className="mt-4 overflow-x-auto">
+        <h3 className="text-sm font-semibold text-neutral-800">Vendedor por vendedor — {d.ano}</h3>
+        <p className="mb-3 text-xs text-neutral-500">
+          Pelo nome do vendedor anotado em cada pedido. &quot;LTV médio&quot; é a média do que os clientes diretos
+          atendidos por ele já compraram na vida toda. &quot;Novos&quot; são clientes diretos cuja primeira compra foi
+          em {d.ano}. HIPER e FORTE são as revendas, não pessoas.
+        </p>
+        <table className="w-full min-w-[1080px] text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+              <th className="py-2 pr-3">#</th>
+              <th className="py-2 pr-3">Vendedor</th>
+              <th className="w-[22%] py-2 pr-3">Vendas</th>
+              <th className="py-2 pr-3 text-right">Pedidos</th>
+              <th className="py-2 pr-3 text-right">Ticket médio</th>
+              <th className="py-2 pr-3 text-right">Ticket mediano</th>
+              <th className="py-2 pr-3 text-right">Clientes</th>
+              <th className="py-2 pr-3 text-right">Novos</th>
+              <th className="py-2 pr-3 text-right">LTV médio</th>
+              <th className="py-2 pr-3 text-right">Período</th>
+              <th className="py-2 text-right">Melhor mês</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-100">
+            {d.vendedores.map((v, i) => (
+              <tr key={v.vendedor}>
+                <td className="py-2 pr-3 tabular-nums text-neutral-400">{i + 1}</td>
+                <td className="py-2 pr-3 font-medium text-neutral-800">{v.vendedor}</td>
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Barra fracao={v.receita / maiorVend} />
+                    </div>
+                    <span className="w-28 text-right text-xs tabular-nums text-neutral-700">
+                      {brlCurto(v.receita)} <span className="text-neutral-400">({pct(v.receita / totalVend)})</span>
+                    </span>
+                  </div>
+                </td>
+                <td className="py-2 pr-3 text-right tabular-nums">{num(v.pedidos)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{brl(v.ticketMedio)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums text-neutral-600">{brl(v.ticketMediano)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{num(v.clientes)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{num(v.novos)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{v.ltvMedio !== null ? brl(v.ltvMedio) : "—"}</td>
+                <td className="py-2 pr-3 text-right text-xs tabular-nums text-neutral-600">
+                  {diaBr(v.primeiroDia)} a {diaBr(v.ultimoDia)}
+                </td>
+                <td className="py-2 text-right text-xs tabular-nums text-neutral-600">
+                  {MESES[v.melhorMes - 1]}
+                  <span className="block text-neutral-400">{brlCurto(v.melhorMesReceita)}</span>
+                </td>
+              </tr>
+            ))}
+            <tr className="font-semibold">
+              <td />
+              <td className="py-2 pr-3 text-neutral-900">Total</td>
+              <td className="py-2 pr-3 text-right text-xs tabular-nums text-neutral-900">{brlCurto(r.receita)}</td>
+              <td className="py-2 pr-3 text-right tabular-nums">{num(r.pedidos)}</td>
+              <td className="py-2 pr-3 text-right tabular-nums">{brl(r.ticketMedio)}</td>
+              <td className="py-2 pr-3 text-right tabular-nums text-neutral-600">{brl(r.ticketMediano)}</td>
+              <td className="py-2 pr-3 text-right tabular-nums">{num(r.clientes)}</td>
+              <td className="py-2 pr-3 text-right tabular-nums">{num(r.clientesNovos)}</td>
+              <td className="py-2 pr-3 text-right tabular-nums">{brl(r.ltvMedioAtivos)}</td>
+              <td className="py-2 pr-3 text-right text-xs tabular-nums text-neutral-600">{periodoTexto}</td>
+              <td />
+            </tr>
+          </tbody>
+        </table>
+      </Cartao>
+
+      {/* Vendedor x mês */}
+      <Cartao className="mt-4 overflow-x-auto">
+        <h3 className="text-sm font-semibold text-neutral-800">Quanto cada vendedor vendeu em cada mês</h3>
+        <p className="mb-3 text-xs text-neutral-500">
+          Os 10 maiores vendedores do ano
+          {linhaDemais ? `; os outros ${demais.length} aparecem somados em "Demais vendedores"` : ""}. &quot;mi&quot; é
+          milhão.
+        </p>
+        <table className="w-full min-w-[960px] text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+              <th className="py-2 pr-3">Vendedor</th>
+              {MESES.map((m) => (
+                <th key={m} className="py-2 pr-2 text-right">
+                  {m}
+                </th>
+              ))}
+              <th className="py-2 text-right">Ano</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-100">
+            {principais.map((v) => {
+              const maiorDaLinha = Math.max(...v.porMes);
+              return (
+                <tr key={v.vendedor}>
+                  <td className="py-2 pr-3 font-medium text-neutral-800">{v.vendedor}</td>
+                  {v.porMes.map((valor, i) => (
+                    <td
+                      key={i}
+                      className={`py-2 pr-2 text-right text-xs tabular-nums ${
+                        valor && valor === maiorDaLinha ? "font-bold text-[#2563eb]" : "text-neutral-700"
+                      }`}
+                    >
+                      {curtoTabela(valor)}
+                    </td>
+                  ))}
+                  <td className="py-2 text-right text-xs font-semibold tabular-nums">{curtoTabela(v.receita)}</td>
+                </tr>
+              );
+            })}
+            {linhaDemais && (
+              <tr>
+                <td className="py-2 pr-3 font-medium text-neutral-500">Demais vendedores</td>
+                {linhaDemais.map((valor, i) => (
+                  <td key={i} className="py-2 pr-2 text-right text-xs tabular-nums text-neutral-500">
+                    {curtoTabela(valor)}
+                  </td>
+                ))}
+                <td className="py-2 text-right text-xs font-semibold tabular-nums text-neutral-500">
+                  {curtoTabela(demais.reduce((s, v) => s + v.receita, 0))}
+                </td>
+              </tr>
+            )}
+            <tr className="font-semibold">
+              <td className="py-2 pr-3 text-neutral-900">Total do mês</td>
+              {totaisPorMes.map((valor, i) => (
+                <td key={i} className="py-2 pr-2 text-right text-xs tabular-nums text-neutral-900">
+                  {curtoTabela(valor)}
+                </td>
+              ))}
+              <td className="py-2 text-right text-xs tabular-nums text-neutral-900">{curtoTabela(r.receita)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="mt-2 text-xs text-neutral-500">Em azul, o melhor mês de cada vendedor.</p>
+      </Cartao>
+
+      {/* Mês a mês do ano */}
+      <Cartao className="mt-4 overflow-x-auto">
+        <h3 className="mb-3 text-sm font-semibold text-neutral-800">Mês a mês de {d.ano}</h3>
+        <table className="w-full min-w-[760px] text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+              <th className="py-2 pr-3">Mês</th>
+              <th className="w-[28%] py-2 pr-3">Vendas fechadas</th>
+              <th className="py-2 pr-3 text-right">Pedidos</th>
+              <th className="py-2 pr-3 text-right">Ticket médio</th>
+              <th className="py-2 pr-3 text-right">Clientes</th>
+              <th className="py-2 pr-3 text-right">Novos</th>
+              <th className="py-2 text-right">Quem mais vendeu</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-100">
+            {mesesComDado.map((m) => (
+              <tr key={m.mes}>
+                <td className="py-2 pr-3 font-semibold text-neutral-800">{MESES[m.mes - 1]}</td>
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <Barra fracao={m.receita / maiorMes} />
+                    </div>
+                    <span className="w-28 text-right font-semibold tabular-nums text-neutral-900">
+                      {brlCurto(m.receita)}
+                    </span>
+                  </div>
+                </td>
+                <td className="py-2 pr-3 text-right tabular-nums">{num(m.pedidos)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{brl(m.ticket)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{num(m.clientes)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{num(m.novos)}</td>
+                <td className="py-2 text-right text-xs text-neutral-700">
+                  {m.lider}
+                  <span className="block text-neutral-400">{brlCurto(m.liderReceita)}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Cartao>
+
+      {/* Maiores clientes do ano, com LTV */}
+      <Cartao className="mt-4 overflow-x-auto">
+        <h3 className="text-sm font-semibold text-neutral-800">Maiores clientes de {d.ano} (20 primeiros)</h3>
+        <p className="mb-3 text-xs text-neutral-500">
+          &quot;LTV&quot; é tudo que o cliente já comprou desde a primeira compra, não só no ano. &quot;Vendedor&quot; é
+          quem mais vendeu pra ele no ano.
+        </p>
+        <table className="w-full min-w-[1080px] text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+              <th className="py-2 pr-3">#</th>
+              <th className="py-2 pr-3">Cliente</th>
+              <th className="py-2 pr-3">Vendedor</th>
+              <th className="py-2 pr-3 text-right">Vendas no ano</th>
+              <th className="py-2 pr-3 text-right">Pedidos</th>
+              <th className="py-2 pr-3 text-right">Ticket médio</th>
+              <th className="py-2 pr-3 text-right">Período no ano</th>
+              <th className="py-2 pr-3 text-right">LTV (vida toda)</th>
+              <th className="py-2 pr-3 text-right">Pedidos na vida</th>
+              <th className="py-2 text-right">Cliente desde</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-100">
+            {d.clientes.map((c, i) => (
+              <tr key={c.conta}>
+                <td className="py-2 pr-3 tabular-nums text-neutral-400">{i + 1}</td>
+                <td className="py-2 pr-3 font-medium text-neutral-800">
+                  {c.conta}
+                  {c.canal !== "Demais clientes" ? (
+                    <span className="ml-2 rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
+                      rede/revenda
+                    </span>
+                  ) : c.novo ? (
+                    <span className="ml-2 rounded bg-green-50 px-1.5 py-0.5 text-[11px] font-medium text-green-700">
+                      cliente novo
+                    </span>
+                  ) : null}
+                </td>
+                <td className="py-2 pr-3 text-neutral-700">{c.vendedor}</td>
+                <td className="py-2 pr-3 text-right font-semibold tabular-nums">{brl(c.receita)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{num(c.pedidos)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{brl(c.ticketMedio)}</td>
+                <td className="py-2 pr-3 text-right text-xs tabular-nums text-neutral-600">
+                  {c.primeiroDia === c.ultimoDia ? diaBr(c.primeiroDia) : `${diaBr(c.primeiroDia)} a ${diaBr(c.ultimoDia)}`}
+                </td>
+                <td className="py-2 pr-3 text-right tabular-nums">{brl(c.ltvVida)}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{num(c.pedidosVida)}</td>
+                <td className="py-2 text-right text-xs tabular-nums text-neutral-600">{mesAno(c.primeiroMesVida)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Cartao>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Cartao>
+          <h3 className="mb-3 text-sm font-semibold text-neutral-800">Vendas por canal em {d.ano}</h3>
+          <div className="space-y-3">
+            {d.canais.map((c) => (
+              <div key={c.canal}>
+                <div className="mb-1 flex justify-between text-sm">
+                  <span className="font-medium text-neutral-700">{c.canal}</span>
+                  <span className="tabular-nums text-neutral-900">
+                    {brlCurto(c.receita)} <span className="text-neutral-500">({pct(c.receita / totalCanais)})</span>
+                  </span>
+                </div>
+                <Barra fracao={c.receita / totalCanais} />
+                <p className="mt-1 text-xs text-neutral-500">
+                  {num(c.pedidos)} pedidos · ticket médio {brl(c.ticketMedio)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Cartao>
+
+        <Cartao className="overflow-x-auto">
+          <h3 className="mb-3 text-sm font-semibold text-neutral-800">10 maiores pedidos de {d.ano}</h3>
+          <table className="w-full min-w-[420px] text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+                <th className="py-2 pr-3">Data</th>
+                <th className="py-2 pr-3">Cliente</th>
+                <th className="py-2 pr-3">Vendedor</th>
+                <th className="py-2 text-right">Valor</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {d.maioresPedidos.map((p, i) => (
+                <tr key={`${p.dia}-${i}`}>
+                  <td className="py-2 pr-3 text-xs tabular-nums text-neutral-600">{diaBr(p.dia)}</td>
+                  <td className="py-2 pr-3 font-medium text-neutral-800">{p.conta}</td>
+                  <td className="py-2 pr-3 text-neutral-700">{p.vendedor}</td>
+                  <td className="py-2 text-right font-semibold tabular-nums">
+                    {brl(p.valor)}
+                    {p.diasEntrega !== null && (
+                      <span className="block text-xs font-normal text-neutral-400">entrega em {p.diasEntrega} dias</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Cartao>
+      </div>
+    </section>
   );
 }

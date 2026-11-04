@@ -7,6 +7,7 @@ import {
   type Historico,
   type LtvDetalhe,
   type Acoes,
+  type AnoDetalheDados,
 } from "@/components/historico-relatorio";
 
 // Histórico de pedidos fechados que veio da planilha da empresa (Inove
@@ -53,10 +54,14 @@ export default async function HistoricoVendasPage({
   const ultimoAno = anos[anos.length - 1];
   const anoSel = anos.includes(Number(anoParam)) ? Number(anoParam) : ultimoAno;
 
+  // Detalhe do ano escolhido (vendedor, período, ticket, LTV...), calculado no banco.
+  const { data: dadosDetalhe } = await supabase.rpc("historico_ano_detalhe", { p_ano: anoSel });
+  const detalhe = (dadosDetalhe as AnoDetalheDados | null) ?? null;
+
   return (
     <>
       <PageHeader titulo="Histórico de vendas" />
-      <RelatorioHistorico h={h} ltv={ltv} acoes={acoes} anoSel={anoSel} />
+      <RelatorioHistorico h={h} ltv={ltv} acoes={acoes} anoSel={anoSel} detalhe={detalhe} />
     </>
   );
 }
