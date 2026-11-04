@@ -17,6 +17,8 @@ type ItemMenu = {
   somenteMentoria?: boolean;
   // Só pra empresa do mercado de gôndolas (orgs.mercado_gondolas, ":gond").
   somenteGondolas?: boolean;
+  // Esconde da empresa do mercado de gôndolas (Inove).
+  semGondolas?: boolean;
 };
 
 const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
@@ -28,6 +30,9 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/dashboard", label: "Visão geral", Icone: IconeMetricas, pagina: "metricas" },
       // Histórico da planilha de pedidos (Inove Gôndolas). Só admin.
       { href: "/dashboard/historico", label: "Histórico de vendas", Icone: IconeCalendario, pagina: "admin", somenteGondolas: true },
+      // Relatório de leads de tráfego (origem até reunião e venda). Só admin;
+      // some na Inove Gôndolas, que não tem tráfego.
+      { href: "/dashboard/trafego", label: "Leads de tráfego", Icone: IconeAlvo, pagina: "admin", somenteMentoria: true, semGondolas: true },
     ],
   },
   {
@@ -96,6 +101,7 @@ export function Sidebar({
       if (item.somenteImobiliario && publicoOrg !== "imobiliario") return false;
       if (item.somenteMentoria && publicoOrg === "imobiliario") return false;
       if (item.somenteGondolas && !publicoOrg.split(":").includes("gond")) return false;
+      if (item.semGondolas && publicoOrg.split(":").includes("gond")) return false;
       // Captura de leads: sempre existiu na mentoria; no imobiliário só nas
       // empresas liberadas (Ketlyn, 27/10/26).
       if (item.href === "/iscas" && publicoOrg === "imobiliario" && !capturaLeads) return false;
