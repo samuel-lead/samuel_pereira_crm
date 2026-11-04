@@ -1,12 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
-import {
-  RelatorioTrafego,
-  FILTROS_LEADS,
-  type DadosTrafego,
-  type ChaveFiltro,
-} from "@/components/relatorio-trafego";
+import { RelatorioTrafego, type DadosTrafego } from "@/components/relatorio-trafego";
 import { funilGondolas } from "@/lib/terminologia";
 
 // Relatório "Leads de tráfego" (Samuel, 04/11/26): origem, o que chegou, o
@@ -17,16 +12,15 @@ import { funilGondolas } from "@/lib/terminologia";
 export default async function TrafegoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ origem?: string; filtro?: string }>;
+  searchParams: Promise<{ origem?: string }>;
 }) {
-  const { origem: origemParam, filtro: filtroParam } = await searchParams;
+  const { origem: origemParam } = await searchParams;
   const { usuario } = await usuarioAutenticado();
   if (!usuario || (usuario.papel !== "admin" && !usuario.super_admin)) redirect("/dashboard");
   const publicoOrg = usuario.publico_org ?? "mentoria";
   if (funilGondolas(publicoOrg) || publicoOrg === "imobiliario") redirect("/dashboard");
 
   const supabase = await createClient();
-  const filtro = (FILTROS_LEADS.some((f) => f.chave === filtroParam) ? filtroParam : "todos") as ChaveFiltro;
 
   // Sem origem escolhida: tenta a que se chama "Tráfego". Se essa não existir
   // na empresa, escolhe a que tem "tráfego" no nome ou, na falta, a maior.
@@ -56,7 +50,7 @@ export default async function TrafegoPage({
   return (
     <>
       <PageHeader titulo="Leads de tráfego" />
-      <RelatorioTrafego d={d} filtro={filtro} publicoOrg={publicoOrg} />
+      <RelatorioTrafego d={d} publicoOrg={publicoOrg} />
     </>
   );
 }

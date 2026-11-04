@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MOTIVOS_BASE } from "@/lib/niveis";
-import { Reunioes, reunioes, Reuniao } from "@/lib/terminologia";
+import { Reunioes, Reuniao } from "@/lib/terminologia";
 
 // Relatório "Leads de tráfego": de onde vieram, o que chegou, o que queriam,
 // quem qualificou e até virar reunião e venda. Os números vêm prontos da
@@ -47,24 +47,6 @@ type Responsavel = {
 type Etapa = { nivel_ordem: number; etapa: string; leads: number };
 type Motivo = { motivo: string; leads: number };
 type OrigemItem = { origem: string; leads: number };
-export type LeadTrafego = {
-  id: string;
-  nome: string;
-  chegou: string;
-  responsavel: string | null;
-  etapa: string | null;
-  arquivado: boolean;
-  motivoBase: string | null;
-  urgencia: string;
-  capacidade: string;
-  problema: string | null;
-  emConversa: boolean;
-  qualificado: boolean;
-  reunioes: { data: string; status: string }[];
-  vendido: boolean;
-  valorVenda: number | null;
-  vendidoEm: string | null;
-};
 export type DadosTrafego = {
   origem: string;
   resumo: Resumo;
@@ -73,28 +55,10 @@ export type DadosTrafego = {
   etapas: Etapa[];
   motivosBase: Motivo[];
   origens: OrigemItem[];
-  leads: LeadTrafego[];
 };
-
-export const FILTROS_LEADS = [
-  { chave: "todos", rotulo: "Todos" },
-  { chave: "conversa", rotulo: "Entraram em conversa" },
-  { chave: "qualificados", rotulo: "Qualificados" },
-  { chave: "reuniao", rotulo: "Com reunião" },
-  { chave: "vendas", rotulo: "Vendas" },
-  { chave: "base", rotulo: "Na Base" },
-  { chave: "semconversa", rotulo: "Nunca engataram" },
-] as const;
-export type ChaveFiltro = (typeof FILTROS_LEADS)[number]["chave"];
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const NOME_MOTIVO = new Map<string, string>(MOTIVOS_BASE.map((m) => [m.valor, m.nome]));
-const STATUS_REUNIAO: Record<string, string> = {
-  marcada: "marcada",
-  realizada: "feita",
-  nao_compareceu: "não veio",
-  cancelada: "cancelada",
-};
 const NOME_URGENCIA: Record<string, string> = { alta: "Alta", media: "Média", baixa: "Baixa", desconhecida: "—" };
 const NOME_CAPACIDADE: Record<string, string> = { sim: "Sim", parcial: "Parcial", nao: "Não", desconhecida: "—" };
 
@@ -147,38 +111,8 @@ function Kpi({ rotulo, valor, detalhe }: { rotulo: string; valor: React.ReactNod
   );
 }
 
-export function filtrarLeads(leads: LeadTrafego[], filtro: ChaveFiltro) {
-  switch (filtro) {
-    case "conversa":
-      return leads.filter((l) => l.emConversa);
-    case "qualificados":
-      return leads.filter((l) => l.qualificado);
-    case "reuniao":
-      return leads.filter((l) => l.reunioes.length > 0);
-    case "vendas":
-      return leads.filter((l) => l.vendido);
-    case "base":
-      return leads.filter((l) => l.etapa === "Base" && !l.arquivado);
-    case "semconversa":
-      return leads.filter((l) => !l.emConversa);
-    default:
-      return leads;
-  }
-}
-
-export function RelatorioTrafego({
-  d,
-  filtro,
-  publicoOrg,
-}: {
-  d: DadosTrafego;
-  filtro: ChaveFiltro;
-  publicoOrg: string;
-}) {
+export function RelatorioTrafego({ d, publicoOrg }: { d: DadosTrafego; publicoOrg: string }) {
   const r = d.resumo;
-  const base = `/dashboard/trafego?origem=${encodeURIComponent(d.origem)}`;
-  const lista = filtrarLeads(d.leads, filtro);
-  const reuniaoPl = reunioes(publicoOrg);
   const ReuniaoPl = Reunioes(publicoOrg);
 
   const etapasFunil = [
@@ -288,7 +222,7 @@ export function RelatorioTrafego({
       </section>
 
       <section>
-        <Titulo sub={`O que os ${num(r.comPerfil)} leads com perfil registrado disseram sobre urgência e capacidade de pagar. O texto do que cada um queria está na lista no final.`}>
+        <Titulo sub={`O que os ${num(r.comPerfil)} leads com perfil registrado disseram sobre urgência e capacidade de pagar.`}>
           3. O que queriam e se dava pra qualificar
         </Titulo>
         <div className="grid gap-4 lg:grid-cols-2">
@@ -387,98 +321,6 @@ export function RelatorioTrafego({
             ))}
           </Cartao>
         </div>
-      </section>
-
-      <section>
-        <Titulo sub="Um por linha: quando chegou, quem cuidou, onde está, o que queria e o que aconteceu. Do mais novo pro mais antigo.">
-          6. Lead por lead
-        </Titulo>
-        <div className="mb-3 flex flex-wrap gap-2">
-          {FILTROS_LEADS.map((f) => (
-            <Link
-              key={f.chave}
-              href={`${base}&filtro=${f.chave}#lead-por-lead`}
-              scroll={false}
-              className={`rounded-full border px-3 py-1 text-sm font-medium ${
-                f.chave === filtro
-                  ? "border-[#2563eb] bg-[#2563eb] text-white"
-                  : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300"
-              }`}
-            >
-              {f.rotulo}
-              <span className="ml-1 opacity-70">({num(filtrarLeads(d.leads, f.chave).length)})</span>
-            </Link>
-          ))}
-        </div>
-        <Cartao className="overflow-x-auto" >
-          <div id="lead-por-lead" />
-          <table className="w-full min-w-[1100px] text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
-                <th className="py-2 pr-3">Chegou</th>
-                <th className="py-2 pr-3">Lead</th>
-                <th className="py-2 pr-3">Responsável</th>
-                <th className="py-2 pr-3">Etapa hoje</th>
-                <th className="py-2 pr-3">Urgência</th>
-                <th className="py-2 pr-3">Paga?</th>
-                <th className="w-[30%] py-2 pr-3">O que queria</th>
-                <th className="py-2 pr-3">{ReuniaoPl}</th>
-                <th className="py-2 text-right">Venda</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100 align-top">
-              {lista.map((l) => (
-                <tr key={l.id}>
-                  <td className="py-2 pr-3 text-xs tabular-nums text-neutral-600">{dia(l.chegou)}</td>
-                  <td className="py-2 pr-3 font-medium text-neutral-800">
-                    <Link href={`/leads/${l.id}`} className="hover:text-[#2563eb] hover:underline">{l.nome}</Link>
-                    {l.arquivado && <span className="ml-1 rounded bg-neutral-100 px-1 text-[10px] text-neutral-500">arquivado</span>}
-                  </td>
-                  <td className="py-2 pr-3 text-neutral-700">{l.responsavel?.split(" ")[0] ?? "—"}</td>
-                  <td className="py-2 pr-3 text-neutral-700">
-                    {l.etapa ?? "—"}
-                    {l.motivoBase && (
-                      <span className="block text-xs text-neutral-400">{NOME_MOTIVO.get(l.motivoBase) ?? l.motivoBase}</span>
-                    )}
-                  </td>
-                  <td className="py-2 pr-3 text-neutral-700">{NOME_URGENCIA[l.urgencia] ?? "—"}</td>
-                  <td className="py-2 pr-3 text-neutral-700">{NOME_CAPACIDADE[l.capacidade] ?? "—"}</td>
-                  <td className="py-2 pr-3 text-xs text-neutral-700">{l.problema ?? <span className="text-neutral-300">—</span>}</td>
-                  <td className="py-2 pr-3 text-xs text-neutral-700">
-                    {l.reunioes.length === 0
-                      ? <span className="text-neutral-300">—</span>
-                      : l.reunioes.map((x, i) => (
-                          <span key={i} className="block whitespace-nowrap">
-                            {dia(x.data)} · {STATUS_REUNIAO[x.status] ?? x.status}
-                          </span>
-                        ))}
-                  </td>
-                  <td className="py-2 text-right font-semibold tabular-nums text-green-700">
-                    {l.vendido ? brl(l.valorVenda) : ""}
-                  </td>
-                </tr>
-              ))}
-              {lista.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="py-6 text-center text-sm text-neutral-400">Nenhum lead nesse filtro.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </Cartao>
-      </section>
-
-      <section>
-        <Titulo>Como esses números foram feitos</Titulo>
-        <Cartao>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-600">
-            <li>Lead de tráfego = todo lead cadastrado com a origem escolhida lá em cima. Se outra origem também for tráfego, é só trocar e comparar.</li>
-            <li>Em conversa = o lead chegou a &quot;Em qualificação&quot; ou além, ou teve {reuniao1(publicoOrg)}, ou virou venda. Ficar em &quot;Sem conversa iniciada&quot; e ir pra Base não conta.</li>
-            <li>Qualificado = perfil escrito, urgência e capacidade de pagar preenchidos (os 3 critérios).</li>
-            <li>{ReuniaoPl} e vendas vêm direto do cadastro de {reuniaoPl} e das vendas do CRM. Um lead com mais de uma {reuniao1(publicoOrg)} conta uma vez só.</li>
-            <li>Tempo até marcar = da chegada do lead até a primeira {reuniao1(publicoOrg)} marcada (mediana, ignora os que já vinham com {reuniao1(publicoOrg)} de antes).</li>
-          </ul>
-        </Cartao>
       </section>
     </main>
   );
