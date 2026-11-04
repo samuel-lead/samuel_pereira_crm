@@ -60,18 +60,21 @@ async function receitaRecebidaDe(
     .eq("leads.status", "vendido")
     .is("leads.arquivado_em", null);
   const ids = [...new Set((reunioes ?? []).map((r) => r.lead_id as string))];
-  let total = 0;
-  for (const pedaco of emPedacos(ids, 100)) {
-    const { data } = await supabase
-      .from("venda_recebimentos")
-      .select("valor")
-      .in("lead_id", pedaco)
-      .is("excluido_em", null)
-      .gte("recebido_em", inicioISO)
-      .lt("recebido_em", fimISO);
-    total += (data ?? []).reduce((soma, r) => soma + Number(r.valor), 0);
-  }
-  return total;
+  // Os pedaços de 100 ids saem todos ao mesmo tempo (antes esperava um
+  // terminar pra começar o outro) — mesma soma, menos espera.
+  const totais = await Promise.all(
+    emPedacos(ids, 100).map(async (pedaco) => {
+      const { data } = await supabase
+        .from("venda_recebimentos")
+        .select("valor")
+        .in("lead_id", pedaco)
+        .is("excluido_em", null)
+        .gte("recebido_em", inicioISO)
+        .lt("recebido_em", fimISO);
+      return (data ?? []).reduce((soma, r) => soma + Number(r.valor), 0);
+    })
+  );
+  return totais.reduce((soma, valor) => soma + valor, 0);
 }
 
 const FUSO_BRASIL_MS = 3 * 60 * 60 * 1000; // UTC-3, sem horário de verão
@@ -1015,12 +1018,18 @@ export async function calcularMetricasPorUsuario(
   fim: Date,
   opcoes: { apenasDeclaradosNoPeriodo?: boolean } = {}
 ): Promise<MetricasUsuario[]> {
-  const { data: usuarios } = await supabase
-    .from("usuarios")
-    .select("id, nome, funcao, papel")
-    .eq("org_id", orgId)
-    .or("funcao.eq.sdr,papel.eq.admin")
-    .order("nome");
+  // A lista de usuários e a configuração da empresa (SDR original) não
+  // dependem uma da outra — buscadas juntas (antes a segunda esperava todas
+  // as métricas dos usuários terminarem).
+  const [{ data: usuarios }, { data: flagsOrg }] = await Promise.all([
+    supabase
+      .from("usuarios")
+      .select("id, nome, funcao, papel")
+      .eq("org_id", orgId)
+      .or("funcao.eq.sdr,papel.eq.admin")
+      .order("nome"),
+    supabase.from("orgs").select("sdr_original").eq("id", orgId).maybeSingle(),
+  ]);
 
   const lista = usuarios ?? [];
 
@@ -1040,11 +1049,6 @@ export async function calcularMetricasPorUsuario(
   // pitch, vendas e receita de cada SDR contam pelos leads em que ele marcou
   // a PRIMEIRA reunião — e não pela reunião que de fato aconteceu (que pode
   // ter sido marcada por outra pessoa depois de um reagendamento).
-  const { data: flagsOrg } = await supabase
-    .from("orgs")
-    .select("sdr_original")
-    .eq("id", orgId)
-    .maybeSingle();
   if (flagsOrg?.sdr_original !== true) return resultado;
 
   const inicioISO = inicio.toISOString();
@@ -1636,40 +1640,90 @@ export async function calcularResumoAno(
     metaPorMes.set(linha.mes, linha);
   }
 
-  const resultado: ResumoMes[] = [];
+  // Meses que ainda não têm valor "fechado" guardado precisam ser somados na
+  // hora. Antes era um mês depois do outro (12 idas ao banco em fila, a cada
+  // vez que se trocava o filtro da Visão geral). Agora são 2 consultas pro
+  // ano inteiro e a soma por mês é feita aqui, com as MESMAS fronteiras de
+  // mês de antes (início inclusive, fim exclusivo) — o resultado é idêntico.
+  const limites = Array.from({ length: 12 }, (_, i) => ({
+    inicio: new Date(ano, i, 1).getTime(),
+    fim: new Date(ano, i + 1, 1).getTime(),
+  }));
+  const precisaSomar = (mes: number) => {
+    const registro = metaPorMes.get(mes);
+    return !(registro && (registro.faturamento_real !== null || registro.receita_real !== null));
+  };
+  const mesesParaSomar = Array.from({ length: 12 }, (_, i) => i + 1).filter(precisaSomar);
 
+  const faturamentoPorMes = new Array<number>(12).fill(0);
+  const receitaPorMes = new Array<number>(12).fill(0);
+
+  if (mesesParaSomar.length > 0) {
+    const inicioAno = new Date(ano, 0, 1);
+    const fimAno = new Date(ano + 1, 0, 1);
+    const [{ data: vendas }, { data: recebimentos }] = await Promise.all([
+      buscarTodas<{ valor_venda: number | string | null; vendido_em: string }>((de, ate) =>
+        supabase
+          .from("leads")
+          .select("valor_venda, vendido_em")
+          .eq("org_id", orgId)
+          .eq("status", "vendido")
+          .is("arquivado_em", null)
+          .gte("vendido_em", inicioAno.toISOString())
+          .lt("vendido_em", fimAno.toISOString())
+          .order("vendido_em")
+          .order("id")
+          .range(de, ate) as unknown as PromiseLike<{
+          data: { valor_venda: number | string | null; vendido_em: string }[] | null;
+          error: unknown;
+        }>
+      ),
+      buscarTodas<{ valor: number | string; recebido_em: string }>((de, ate) =>
+        supabase
+          .from("venda_recebimentos")
+          .select("valor, recebido_em, leads!inner(status, arquivado_em)")
+          .eq("org_id", orgId)
+          .is("excluido_em", null)
+          .eq("leads.status", "vendido")
+          .is("leads.arquivado_em", null)
+          .gte("recebido_em", inicioAno.toISOString())
+          .lt("recebido_em", fimAno.toISOString())
+          .order("recebido_em")
+          .order("id")
+          .range(de, ate) as unknown as PromiseLike<{
+          data: { valor: number | string; recebido_em: string }[] | null;
+          error: unknown;
+        }>
+      ),
+    ]);
+
+    const achaMes = (instante: number) => limites.findIndex((l) => instante >= l.inicio && instante < l.fim);
+    for (const v of vendas) {
+      const i = achaMes(new Date(v.vendido_em).getTime());
+      if (i >= 0) faturamentoPorMes[i] += Number(v.valor_venda ?? 0);
+    }
+    for (const r of recebimentos) {
+      const i = achaMes(new Date(r.recebido_em).getTime());
+      if (i >= 0) receitaPorMes[i] += Number(r.valor);
+    }
+  }
+
+  const resultado: ResumoMes[] = [];
   for (let mes = 1; mes <= 12; mes++) {
     const registro = metaPorMes.get(mes);
     const metaReceita = registro?.meta_receita != null ? Number(registro.meta_receita) : null;
 
-    if (registro && (registro.faturamento_real !== null || registro.receita_real !== null)) {
+    if (!precisaSomar(mes)) {
       resultado.push({
         mes,
         metaReceita,
-        faturamento: Number(registro.faturamento_real ?? 0),
-        receita: Number(registro.receita_real ?? 0),
+        faturamento: Number(registro!.faturamento_real ?? 0),
+        receita: Number(registro!.receita_real ?? 0),
       });
       continue;
     }
 
-    const inicio = new Date(ano, mes - 1, 1);
-    const fim = new Date(ano, mes, 1);
-    const [{ data: vendas }, recebimentosMes] = await Promise.all([
-      supabase
-        .from("leads")
-        .select("valor_venda")
-        .eq("org_id", orgId)
-        .eq("status", "vendido")
-        .is("arquivado_em", null)
-        .gte("vendido_em", inicio.toISOString())
-        .lt("vendido_em", fim.toISOString()),
-      recebimentosDaOrg(supabase, orgId, inicio.toISOString(), fim.toISOString()),
-    ]);
-
-    const faturamento = (vendas ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
-    const receita = somarRecebimentos(recebimentosMes);
-
-    resultado.push({ mes, metaReceita, faturamento, receita });
+    resultado.push({ mes, metaReceita, faturamento: faturamentoPorMes[mes - 1], receita: receitaPorMes[mes - 1] });
   }
 
   return resultado;

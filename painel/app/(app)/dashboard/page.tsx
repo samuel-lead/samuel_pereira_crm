@@ -33,6 +33,9 @@ import {
   calcularSafraVendas,
   buscarMetaReceitaMes,
   inicioDoMes,
+  diasUteisEntre,
+  type Metricas,
+  type NegociacoesAbertas,
 } from "@/lib/metricas";
 import { inicioDoDia, UM_DIA_MS, periodoAnteriorSemana, periodoAnteriorMes, periodoAnterior } from "@/lib/datas";
 import { resolverPeriodo, formatarDataCurta, type ChavePeriodo } from "@/lib/periodo";
@@ -81,6 +84,40 @@ export default async function DashboardPage({
     agora
   );
 
+  // O que a tela desta empresa realmente mostra — não vale a pena buscar no
+  // banco o que fica escondido (Inove Gôndolas não tem o painel principal nem
+  // ranking de Closer; empresa sem reunião não tem "Próximas reuniões").
+  const publicoCedo = usuario!.publico_org;
+  const ehGondolasCedo = funilGondolas(publicoCedo);
+  const mostraReunioes = !semReuniaoNoFunil(publicoCedo);
+  const mostraRankingCloser = !ehImobiliario(publicoCedo) && !semCloser(publicoCedo) && !ehGondolasCedo;
+
+  // Contagens extras e conversão por safra não dependem do resto: saem já,
+  // junto com tudo, em vez de esperar o bloco grande terminar (antes eram
+  // mais 1 ou 2 esperas em fila depois dele).
+  const contagemConsorcioP = funilConsorcio(publicoCedo)
+    ? Promise.all([
+        souAdmin
+          ? Promise.resolve({ porUsuario: new Map<string, number>(), total: 0 })
+          : contarPropostasIniciadasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
+        contarPropostasIniciadasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+        contarPropostasIniciadasPorUsuario(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
+      ])
+    : null;
+  const contagemGondolasP = ehGondolasCedo
+    ? Promise.all([
+        souAdmin
+          ? Promise.resolve({ porUsuario: new Map<string, number>(), total: 0 })
+          : contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
+        contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+        contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
+      ])
+    : null;
+  const safraP =
+    dashboardEmBarras(publicoCedo) && !ehGondolasCedo
+      ? calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
+      : Promise.resolve(undefined);
+
   const [
     metricasHoje,
     metricasPeriodo,
@@ -114,8 +151,13 @@ export default async function DashboardPage({
     // — que já vem dessa mesma chamada, sem carry-forward — em vez de
     // chamar a função de novo só com uma opção diferente (isso disparava
     // as mesmas 12 consultas duas vezes a cada carregamento da página).
-    calcularMetricasOrg(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
-    calcularMetricasOrg(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
+    // Inove Gôndolas não mostra o painel principal: pula essas 24 consultas.
+    ehGondolasCedo
+      ? Promise.resolve(null as unknown as Metricas)
+      : calcularMetricasOrg(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    ehGondolasCedo
+      ? Promise.resolve(null as unknown as Metricas)
+      : calcularMetricasOrg(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
     calcularVendasPorCanal(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     calcularVendasPorProduto(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     // "Leads Novos" da tabela também precisa ser estrito, mesmo motivo do
@@ -124,7 +166,9 @@ export default async function DashboardPage({
     calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
       apenasDeclaradosNoPeriodo: true,
     }),
-    calcularMetricasPorCloser(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    mostraRankingCloser
+      ? calcularMetricasPorCloser(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
+      : Promise.resolve([] as Awaited<ReturnType<typeof calcularMetricasPorCloser>>),
     calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
       apenasDeclaradosNoPeriodo: true,
     }),
@@ -136,7 +180,9 @@ export default async function DashboardPage({
       ? calcularFaturamentoOrg(supabase, usuario!.org_id, inicioMesAtual, amanha)
       : calcularReceitaOrg(supabase, usuario!.org_id, inicioMesAtual, amanha),
     buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMesAtual.getUTCFullYear(), inicioMesAtual.getUTCMonth() + 1),
-    calcularNegociacoesAbertas(supabase, usuario!.org_id),
+    ehGondolasCedo
+      ? Promise.resolve({ quantidade: 0, valor: 0 } as NegociacoesAbertas)
+      : calcularNegociacoesAbertas(supabase, usuario!.org_id),
     supabase
       .from("metas_config")
       .select(
@@ -170,25 +216,47 @@ export default async function DashboardPage({
     // primeiro, igual já é feito na coluna "Reunião marcada" do Kanban.
     // Sem limite — mostra todas, a lista rola dentro do card (Samuel
     // pediu: só umas 5 visíveis de cada vez, o resto no scroll).
-    supabase
-      .from("reunioes")
-      .select("id, lead_id, agendada_para, reagendada, closer_id, usuario_id")
-      .eq("org_id", usuario!.org_id)
-      .eq("status", "marcada")
-      .gte("agendada_para", agora.toISOString())
-      .order("agendada_para", { ascending: true }),
+    mostraReunioes
+      ? supabase
+          .from("reunioes")
+          .select("id, lead_id, agendada_para, reagendada, closer_id, usuario_id")
+          .eq("org_id", usuario!.org_id)
+          .eq("status", "marcada")
+          .gte("agendada_para", agora.toISOString())
+          .order("agendada_para", { ascending: true })
+      : Promise.resolve({
+          data: [] as {
+            id: string;
+            lead_id: string;
+            agendada_para: string;
+            reagendada: boolean;
+            closer_id: string | null;
+            usuario_id: string;
+          }[],
+        }),
     // "Reuniões que não aconteceram" — conta pelo nível ATUAL do lead, não
     // pelo histórico da reunião: só entra quem está agora mesmo em "Reunião
     // marcada" (e já passou da data), "No-show" ou "Precisa reagendar".
     // Samuel foi explícito: se o lead já foi ajustado e saiu de lá, some
     // da lista na hora, mesmo que a reunião antiga ainda exista no banco.
-    supabase
-      .from("leads")
-      .select("id, nome, foto_url, nivel_ordem, entrou_nivel_em, responsavel_id")
-      .eq("org_id", usuario!.org_id)
-      .is("arquivado_em", null)
-      .neq("status", "vendido")
-      .in("nivel_ordem", [NIVEL_REUNIAO_MARCADA, NIVEL_NO_SHOW, NIVEL_REAGENDAMENTO]),
+    mostraReunioes
+      ? supabase
+          .from("leads")
+          .select("id, nome, foto_url, nivel_ordem, entrou_nivel_em, responsavel_id")
+          .eq("org_id", usuario!.org_id)
+          .is("arquivado_em", null)
+          .neq("status", "vendido")
+          .in("nivel_ordem", [NIVEL_REUNIAO_MARCADA, NIVEL_NO_SHOW, NIVEL_REAGENDAMENTO])
+      : Promise.resolve({
+          data: [] as {
+            id: string;
+            nome: string;
+            foto_url: string | null;
+            nivel_ordem: number;
+            entrou_nivel_em: string;
+            responsavel_id: string | null;
+          }[],
+        }),
     supabase.from("usuarios").select("id, nome"),
   ]);
 
@@ -238,24 +306,8 @@ export default async function DashboardPage({
   let performanceSdr = performancePeriodoSdr;
   let metricas = metricasPeriodo;
   let metricasAnteriores = metricasAnterioresPeriodo;
-  if (funilConsorcio(publicoOrg)) {
-    const [hoje, periodoAtual, periodoAnterior] = await Promise.all([
-      souAdmin
-        ? Promise.resolve({ porUsuario: new Map<string, number>(), total: 0 })
-        : contarPropostasIniciadasPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
-      contarPropostasIniciadasPorUsuario(
-        supabase,
-        usuario!.org_id,
-        periodoResolvido.inicio,
-        periodoResolvido.fim
-      ),
-      contarPropostasIniciadasPorUsuario(
-        supabase,
-        usuario!.org_id,
-        anteriorResolvido.inicio,
-        anteriorResolvido.fim
-      ),
-    ]);
+  if (contagemConsorcioP) {
+    const [hoje, periodoAtual, periodoAnterior] = await contagemConsorcioP;
     propostasIniciadasHoje = hoje.porUsuario.get(usuario!.id) ?? 0;
     performanceSdr = performancePeriodoSdr.map((linha) => ({
       ...linha,
@@ -268,14 +320,8 @@ export default async function DashboardPage({
   // nível 3 no período. Faz o papel das reuniões marcadas nos cartões, no
   // ranking e no relatório copiável do SDR.
   let enviadosHoje = 0;
-  if (funilGondolas(publicoOrg)) {
-    const [hoje, periodoAtual, periodoAnterior] = await Promise.all([
-      souAdmin
-        ? Promise.resolve({ porUsuario: new Map<string, number>(), total: 0 })
-        : contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, inicioHoje, amanha),
-      contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
-      contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
-    ]);
+  if (contagemGondolasP) {
+    const [hoje, periodoAtual, periodoAnterior] = await contagemGondolasP;
     enviadosHoje = hoje.porUsuario.get(usuario!.id) ?? 0;
     performanceSdr = performancePeriodoSdr.map((linha) => ({
       ...linha,
@@ -285,9 +331,13 @@ export default async function DashboardPage({
     metricasAnteriores = { ...metricasAnterioresPeriodo, enviadosAoCloser: periodoAnterior.total };
   }
   // Conversão do funil em barras: vendas fechadas dentro do período.
-  const safraVenda = dashboardEmBarras(publicoOrg) && !funilGondolas(publicoOrg)
-    ? await calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
-    : undefined;
+  const safraVenda = await safraP;
+  // Dias úteis do período (mesma conta de calcularMetricasOrg) — usado no
+  // gráfico de origens, mesmo quando o painel principal não é montado.
+  const diasUteisPeriodo = diasUteisEntre(
+    periodoResolvido.inicio,
+    periodoResolvido.fim < new Date() ? periodoResolvido.fim : new Date()
+  );
 
   const todosNiveis = ordenarNiveisDoFunil((niveisData ?? []) as { ordem: number; nome: string; numerado: boolean; destacado: boolean }[]);
   const nomePorNivel = new Map(todosNiveis.map((n) => [n.ordem, n.nome]));
@@ -515,7 +565,7 @@ export default async function DashboardPage({
             <LeadsPorOrigem
               titulo={`Origens dos leads — ${periodoResolvido.titulo.toLowerCase()}`}
               dados={leadsPorOrigem}
-              diasUteis={metricas.diasUteis}
+              diasUteis={diasUteisPeriodo}
             />
             <div className="grid gap-4 lg:grid-cols-2">
               <VendasPorCanal dados={vendasPorCanal} periodo={periodoResolvido.titulo} />
