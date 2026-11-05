@@ -10,7 +10,12 @@ import { ProximoContatoBotao } from "@/components/proximo-contato-botao";
 import { ReagendarReuniaoBotao } from "@/components/reagendar-reuniao-botao";
 import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
 import { IconeTelefone } from "@/components/icons";
-import { SCRIPT_PRE_QUALIFICACAO, SCRIPT_PRE_QUALIFICACAO_GONDOLAS } from "@/lib/scripts-sdr";
+import {
+  ORG_ID_SAMUEL,
+  SCRIPT_PRE_QUALIFICACAO,
+  SCRIPT_PRE_QUALIFICACAO_GONDOLAS,
+  SCRIPT_PRE_QUALIFICACAO_SAMUEL,
+} from "@/lib/scripts-sdr";
 import { lerLeadDoCache, salvarLeadNoCache } from "@/lib/leads/cache-lead";
 import { ehGondolas, ehImobiliario, funilConsorcio, Reuniao } from "@/lib/terminologia";
 
@@ -234,7 +239,9 @@ export function ModalLead({
                           url={
                             ehGondolas(dados.publicoOrg)
                               ? SCRIPT_PRE_QUALIFICACAO_GONDOLAS.url
-                              : SCRIPT_PRE_QUALIFICACAO.url
+                              : dados.orgId === ORG_ID_SAMUEL
+                                ? SCRIPT_PRE_QUALIFICACAO_SAMUEL.url
+                                : SCRIPT_PRE_QUALIFICACAO.url
                           }
                           label={SCRIPT_PRE_QUALIFICACAO.label}
                           Icone={IconeTelefone}

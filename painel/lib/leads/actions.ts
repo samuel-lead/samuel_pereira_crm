@@ -3042,6 +3042,9 @@ export type DetalhesLead = {
   // função (ver components/botao-documento-externo.tsx).
   souSdr: boolean;
   publicoOrg: string;
+  // Empresa de quem está olhando — usada pra escolher o roteiro de
+  // pré-qualificação certo (cada CRM pode ter o seu).
+  orgId: string;
   podeEditar: boolean;
   podeReivindicar: boolean;
   nomeResponsavel: string | undefined;
@@ -3201,6 +3204,7 @@ export async function buscarDetalhesDoLead(
       souDonoPlataforma: usuario.super_admin === true,
       souSdr,
       publicoOrg: usuario.publico_org_completo,
+      orgId: usuario.org_id,
       podeEditar,
       podeReivindicar,
       nomeResponsavel,

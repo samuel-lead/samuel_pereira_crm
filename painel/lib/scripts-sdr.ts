@@ -18,3 +18,12 @@ export const SCRIPT_PRE_QUALIFICACAO_GONDOLAS = {
   label: "Pré-qualificação para marcar call",
   url: "https://docs.google.com/document/d/1PBV-ekfYo1X8vcn39_I1SabYEoY1_IJF9ZAxkCeIoo4/edit?usp=sharing",
 };
+
+// Documento de pré-qualificação do CRM do próprio Samuel (05/11/26): só a
+// empresa dele usa este roteiro novo. Os CRMs de clientes de serviço
+// continuam com o roteiro padrão da mentoria acima.
+export const ORG_ID_SAMUEL = "a26cfaff-8e96-4300-87c2-8fc527ef755c";
+export const SCRIPT_PRE_QUALIFICACAO_SAMUEL = {
+  label: "Pré-qualificação para marcar call",
+  url: "https://docs.google.com/document/d/1E29cETvc2qx-prn0ljgJX5k_epi78XxDgETPLd8AmqE/edit?usp=sharing",
+};
