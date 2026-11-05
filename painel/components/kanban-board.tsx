@@ -30,7 +30,7 @@ import { AvatarLead } from "@/components/avatar-lead";
 import { CampoDataHora } from "@/components/campo-data-hora";
 import { MenuSelect } from "@/components/menu-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
-import { Reuniao, reuniao, RepescagemFutura, Receita, ehImobiliario, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
+import { Sdr, Reuniao, reuniao, RepescagemFutura, Receita, ehImobiliario, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { useConfirmacaoTravaTela } from "@/components/confirmacao-modal";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
@@ -52,6 +52,9 @@ type LeadResumo = {
   quem_indicou?: string | null;
   nivel_ordem: number;
   responsavel_id: string | null;
+  // Quem criou o lead (o SDR de origem). Na Inove Gôndolas, onde não há
+  // reunião, é o que mostra "veio do Luciano" depois que o lead vai pro Elton.
+  usuario_id?: string | null;
   declarado_em?: string;
   entrou_nivel_em?: string;
   ultima_atividade_em?: string;
@@ -1148,6 +1151,22 @@ export function KanbanBoard({
                               </span>
                             </p>
                           )}
+                          {funilGondolas(publicoOrg) &&
+                            lead.usuario_id &&
+                            lead.usuario_id !== lead.responsavel_id &&
+                            nomePorUsuario.get(lead.usuario_id) && (
+                              <p className="flex items-center gap-1 truncate text-xs text-neutral-500">
+                                {Sdr(publicoOrg)}:{" "}
+                                <AvatarLead
+                                  nome={nomePorUsuario.get(lead.usuario_id)!}
+                                  fotoUrl={fotoPorUsuario.get(lead.usuario_id)}
+                                  tamanho="h-4 w-4 text-[8px]"
+                                />
+                                <span className="truncate font-medium text-neutral-600">
+                                  {nomePorUsuario.get(lead.usuario_id)}
+                                </span>
+                              </p>
+                            )}
                           {lead.reuniao_agendada_para && (
                             <p
                               className={`flex items-center gap-1.5 text-[11px] font-semibold ${

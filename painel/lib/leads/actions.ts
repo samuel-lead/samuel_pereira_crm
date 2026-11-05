@@ -3094,7 +3094,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio"
+        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, usuario_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio"
       )
       .eq("id", leadId)
       .single(),
@@ -3169,7 +3169,10 @@ export async function buscarDetalhesDoLead(
     ? [...reunioes].sort(
         (a, b) => new Date(a.marcada_em).getTime() - new Date(b.marcada_em).getTime()
       )[0].usuario_id
-    : null;
+    : // Inove Gôndolas não tem reunião: o SDR de origem é quem criou o lead.
+      funilGondolas(usuario.publico_org_completo)
+      ? ((lead as { usuario_id?: string | null }).usuario_id ?? null)
+      : null;
   const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
   // Admin também pega o lead pra si quando ele não tem responsável
   // (Samuel pediu — antes só aparecia pra quem não era admin). E o SDR

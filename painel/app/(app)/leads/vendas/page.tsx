@@ -11,7 +11,7 @@ import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
 import { resolverPeriodo } from "@/lib/periodo";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
-import { Sdr, Faturamento, Receita, ehImobiliario, semCloser, usaComissaoDoVendedor } from "@/lib/terminologia";
+import { funilGondolas, Sdr, Faturamento, Receita, ehImobiliario, semCloser, usaComissaoDoVendedor } from "@/lib/terminologia";
 
 type LeadVendido = {
   id: string;
@@ -67,7 +67,7 @@ export default async function VendasPage({
     let consulta = supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, declarado_em, vendido_em, responsavel_id, indicacao_pega_em"
+        "id, nome, telefone_e164, foto_url, origem, produto, valor_venda, receita_venda, declarado_em, vendido_em, responsavel_id, usuario_id, indicacao_pega_em"
       )
       .eq("status", "vendido")
       .is("arquivado_em", null);
@@ -126,6 +126,12 @@ export default async function VendasPage({
   for (const reuniao of reunioesData ?? []) {
     if (!sdrPorLead.has(reuniao.lead_id)) {
       sdrPorLead.set(reuniao.lead_id, reuniao.usuario_id);
+    }
+  }
+  // Inove Gôndolas não tem reunião: o SDR é quem criou o lead.
+  if (funilGondolas(publicoOrg)) {
+    for (const lead of leads as (LeadVendido & { usuario_id?: string | null })[]) {
+      if (!sdrPorLead.has(lead.id) && lead.usuario_id) sdrPorLead.set(lead.id, lead.usuario_id);
     }
   }
   // Samuel (23/10/26): receita = dinheiro que CAIU no período, não o total das
