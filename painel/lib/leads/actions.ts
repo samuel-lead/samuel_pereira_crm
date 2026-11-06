@@ -9,7 +9,8 @@ import {
   posicaoNoFunil,
   ordenarNiveisDoFunil,
   numerarNiveis,
-  NIVEIS_REATIVACAO,
+  ORDENS_DIAS_GONDOLAS,
+  niveisReativacaoDaOrg,
   motivosBaseDaOrg,
   type NivelResumo,
 } from "@/lib/niveis";
@@ -1069,7 +1070,12 @@ export async function atualizarLead(
   // dar pra burlar.
   if (
     nivelMudou &&
-    (novoNivel === 0 || novoNivel === 1 || novoNivel === 2 || novoNivel === 3 || novoNivel === ORDEM_DOCUMENTACAO) &&
+    (novoNivel === 0 ||
+      novoNivel === 1 ||
+      novoNivel === 2 ||
+      novoNivel === 3 ||
+      novoNivel === ORDEM_DOCUMENTACAO ||
+      ORDENS_DIAS_GONDOLAS.includes(novoNivel)) &&
     posicaoNoFunil(novoNivel) < posicaoNoFunil(leadAtual.nivel_ordem)
   ) {
     return {
@@ -1600,7 +1606,7 @@ export async function reativarLead(
   const { supabase, usuario } = await contextoUsuario();
 
   const reativandoParaReuniao = novoNivel === NIVEL_REUNIAO_MARCADA;
-  if (!NIVEIS_REATIVACAO.includes(novoNivel) && !reativandoParaReuniao) {
+  if (!niveisReativacaoDaOrg(usuario.publico_org_completo).includes(novoNivel) && !reativandoParaReuniao) {
     return "Nível inválido pra reativação.";
   }
 

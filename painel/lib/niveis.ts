@@ -106,6 +106,43 @@ export const CORES_NIVEL: Record<
     pilula: "bg-stone-600 text-white",
     solido: "bg-gradient-to-br from-stone-500 to-stone-600",
   },
+  // Dia 2 a Dia 5 (só Inove Gôndolas): mesma cor do nível 1 ("Dia 1").
+  11: {
+    faixa: "bg-slate-500",
+    texto: "text-slate-700",
+    badge: "bg-slate-200 text-slate-700",
+    header: "bg-slate-50",
+    borda: "border-slate-200",
+    pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
+  },
+  12: {
+    faixa: "bg-slate-500",
+    texto: "text-slate-700",
+    badge: "bg-slate-200 text-slate-700",
+    header: "bg-slate-50",
+    borda: "border-slate-200",
+    pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
+  },
+  13: {
+    faixa: "bg-slate-500",
+    texto: "text-slate-700",
+    badge: "bg-slate-200 text-slate-700",
+    header: "bg-slate-50",
+    borda: "border-slate-200",
+    pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
+  },
+  14: {
+    faixa: "bg-slate-500",
+    texto: "text-slate-700",
+    badge: "bg-slate-200 text-slate-700",
+    header: "bg-slate-50",
+    borda: "border-slate-200",
+    pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
+  },
   // "Documentação/Análise" (só imobiliário): azul, a cor de "andamento".
   10: {
     faixa: "bg-blue-500",
@@ -138,8 +175,16 @@ export const CORES_NIVEL: Record<
 // "quem veio antes de quem" e na ordenação das listas.
 export const ORDEM_DOCUMENTACAO = 10;
 
+// Inove Gôndolas (Samuel, 06/11/26): "Sem conversa iniciada" (1) virou
+// "Dia 1" e ganhou 4 colunas depois dela — Dia 2 a Dia 5. Mesmo motivo de
+// cima: os números no banco são 11 a 14 (não dá pra renumerar o resto), mas a
+// POSIÇÃO no funil é entre o 1 e o 2 (1,1 a 1,4).
+export const ORDENS_DIAS_GONDOLAS = [11, 12, 13, 14];
+
 export function posicaoNoFunil(ordem: number) {
-  return ordem === ORDEM_DOCUMENTACAO ? 2.5 : ordem;
+  if (ordem === ORDEM_DOCUMENTACAO) return 2.5;
+  const indiceDia = ORDENS_DIAS_GONDOLAS.indexOf(ordem);
+  return indiceDia >= 0 ? 1 + (indiceDia + 1) / 10 : ordem;
 }
 
 export function ordenarNiveisDoFunil<T extends { ordem: number }>(niveis: T[]): T[] {
@@ -167,6 +212,10 @@ export const NIVEIS_VENDAS = [4, 7, 8];
 // arrastar pra uma coluna.
 export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
 
+// Inove Gôndolas: Novos Leads, Dia 1 (nível 1) a Dia 5 (níveis 11 a 14) e Em
+// qualificação.
+const COLUNAS_PRE_VENDAS_GONDOLAS = [0, 1, ...ORDENS_DIAS_GONDOLAS, 2];
+
 // Imobiliário ganhou "Documentação/Análise" logo depois de "Em qualificação".
 const COLUNAS_PRE_VENDAS_IMOBILIARIO = [0, 1, 2, ORDEM_DOCUMENTACAO, 3, 5, 6];
 
@@ -176,7 +225,7 @@ const COLUNAS_PRE_VENDAS_IMOBILIARIO = [0, 1, 2, ORDEM_DOCUMENTACAO, 3, 5, 6];
 export function colunasPreVendasDaOrg(publicoOrg: string) {
   // Inove Gôndolas: Pré-vendas termina em "Em qualificação"; o nível 3
   // ("Leads para o Elton") já é a primeira coluna de Vendas.
-  if (funilGondolas(publicoOrg)) return [0, 1, 2];
+  if (funilGondolas(publicoOrg)) return COLUNAS_PRE_VENDAS_GONDOLAS;
   if (funilConsorcio(publicoOrg)) return [0, 1, 2, 3];
   return ehImobiliario(publicoOrg) ? COLUNAS_PRE_VENDAS_IMOBILIARIO : COLUNAS_PRE_VENDAS;
 }
@@ -191,7 +240,7 @@ export function colunasVendasDaOrg(publicoOrg: string) {
 // Quais níveis cada quadro BUSCA no banco (as consultas de Pré-vendas e de
 // Vendas). Na Inove Gôndolas o nível 3 é de Vendas, não de Pré-vendas.
 export function niveisPreVendasDaOrg(publicoOrg: string) {
-  return funilGondolas(publicoOrg) ? [0, 1, 2] : NIVEIS_PRE_VENDAS;
+  return funilGondolas(publicoOrg) ? COLUNAS_PRE_VENDAS_GONDOLAS : NIVEIS_PRE_VENDAS;
 }
 
 export function niveisVendasDaOrg(publicoOrg: string) {
@@ -202,7 +251,9 @@ export function niveisVendasDaOrg(publicoOrg: string) {
 // "Leads para o Elton" — reativar um lead da Base direto pra lá não faz
 // sentido (ele volta pra Pré-vendas e o SDR envia de novo).
 export function niveisReativacaoDaOrg(publicoOrg: string) {
-  return funilGondolas(publicoOrg) ? NIVEIS_REATIVACAO.filter((n) => n !== 3) : NIVEIS_REATIVACAO;
+  return funilGondolas(publicoOrg)
+    ? [0, 1, ...ORDENS_DIAS_GONDOLAS, 2]
+    : NIVEIS_REATIVACAO;
 }
 
 // Níveis pra onde dá pra reativar um lead direto do card na Base, sem
@@ -314,7 +365,7 @@ export function nivelDeveApareceNoMenu(
   // e "Em negociação" (4) também são níveis comuns, sem data nem closer.
   if (semReuniaoNoFunil(publicoOrg)) {
     if (ordemDestino === 5 || ordemDestino === 6 || ordemDestino === 8) return false;
-    if (ordemDestino <= 3 && ordemDestino < nivelAtual) return false;
+    if (posicaoNoFunil(ordemDestino) <= 3 && posicaoNoFunil(ordemDestino) < posicaoNoFunil(nivelAtual)) return false;
     return true;
   }
 

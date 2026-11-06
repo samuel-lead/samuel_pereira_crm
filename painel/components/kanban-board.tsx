@@ -6,6 +6,7 @@ import {
   numerarNiveis,
   rotuloNivel,
   nivelDeveApareceNoMenu,
+  posicaoNoFunil,
   ORDEM_OPORTUNIDADE_FUTURA,
   motivosBaseDaOrg,
   type NivelResumo,
@@ -1312,7 +1313,7 @@ export function KanbanBoard({
                           // qualificar, envia o lead pro Elton (closer): o lead sai de
                           // Pré-vendas e cai em Vendas, na coluna "Leads para o Elton".
                           permitirMarcarReuniaoRapido &&
-                          lead.nivel_ordem < 3 && (
+                          posicaoNoFunil(lead.nivel_ordem) < 3 && (
                             <button
                               type="button"
                               onClick={async (e) => {
