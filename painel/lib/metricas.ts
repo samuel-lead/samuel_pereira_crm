@@ -966,6 +966,14 @@ export async function contarPropostasIniciadasPorUsuario(
 // Inove Gôndolas (sem reunião): "enviados pro Elton" = leads que entraram no
 // nível 3 ("Leads para o Elton") dentro do período, contados por quem enviou.
 // Conta o lead uma vez só por entrada no período e ignora lead arquivado.
+// Lead que o SDR enviou pro Elton (aparece embaixo do SDR no ranking).
+export type LeadEnviado = {
+  id: string;
+  nome: string;
+  telefone_e164: string | null;
+  enviadoEm: string;
+};
+
 // Samuel (06/11/26): os envios de outubro do Luciano (33) e os de novembro (4)
 // foram gravados no histórico, com a data certa de cada um — o ranking lê só
 // o histórico (nível 3 = "Leads para o Elton").
@@ -974,12 +982,17 @@ export async function contarEnviadosAoCloserPorUsuario(
   orgId: string,
   inicio: Date,
   fim: Date
-): Promise<{ porUsuario: Map<string, number>; total: number }> {
-  type Linha = { lead_id: string; usuario_id: string | null };
+): Promise<{ porUsuario: Map<string, number>; total: number; leadsPorUsuario: Map<string, LeadEnviado[]> }> {
+  type Linha = {
+    lead_id: string;
+    usuario_id: string | null;
+    ocorreu_em: string;
+    leads: { nome: string; telefone_e164: string | null } | null;
+  };
   const { data } = await buscarTodas<Linha>((de, ate) =>
-    supabase
+    (supabase
       .from("nivel_historico")
-      .select("lead_id, usuario_id, leads!inner(arquivado_em)")
+      .select("lead_id, usuario_id, ocorreu_em, leads!inner(arquivado_em, nome, telefone_e164)")
       .eq("org_id", orgId)
       .eq("para_ordem", 3)
       .neq("de_ordem", 3)
@@ -987,24 +1000,37 @@ export async function contarEnviadosAoCloserPorUsuario(
       .gte("ocorreu_em", inicio.toISOString())
       .lt("ocorreu_em", fim.toISOString())
       .order("id")
-      .range(de, ate)
+      .range(de, ate)) as unknown as PromiseLike<{ data: Linha[] | null; error: unknown }>
   );
 
   const vistos = new Set<string>();
   const porUsuario = new Map<string, number>();
-  for (const linha of data ?? []) {
+  const leadsPorUsuario = new Map<string, LeadEnviado[]>();
+  // Do mais recente pro mais antigo — é o que o ranking mostra embaixo de cada SDR.
+  const ordenadas = [...(data ?? [])].sort((a, b) => b.ocorreu_em.localeCompare(a.ocorreu_em));
+  for (const linha of ordenadas) {
     if (vistos.has(linha.lead_id)) continue;
     vistos.add(linha.lead_id);
     if (!linha.usuario_id) continue;
     porUsuario.set(linha.usuario_id, (porUsuario.get(linha.usuario_id) ?? 0) + 1);
+    const lista = leadsPorUsuario.get(linha.usuario_id) ?? [];
+    lista.push({
+      id: linha.lead_id,
+      nome: linha.leads?.nome ?? "Sem nome",
+      telefone_e164: linha.leads?.telefone_e164 ?? null,
+      enviadoEm: linha.ocorreu_em,
+    });
+    leadsPorUsuario.set(linha.usuario_id, lista);
   }
-  return { porUsuario, total: vistos.size };
+  return { porUsuario, total: vistos.size, leadsPorUsuario };
 }
 
 export type MetricasUsuario = Metricas & {
   usuarioId: string;
   nome: string;
   funcao?: string | null;
+  // Só na Inove Gôndolas: leads que o SDR enviou pro Elton no período.
+  leadsEnviados?: LeadEnviado[];
   // Só quem é puramente Closer (nem SDR, nem admin) fica de fora do
   // botão "Copiar" — ele não faz o check-in diário de prospecção/ligação.
   // Admin que também é Closer continua podendo copiar (Samuel pediu).

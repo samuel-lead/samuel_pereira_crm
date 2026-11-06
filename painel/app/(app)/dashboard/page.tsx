@@ -330,6 +330,7 @@ export default async function DashboardPage({
       .map((linha) => ({
         ...linha,
         enviadosAoCloser: periodoAtual.porUsuario.get(linha.usuarioId) ?? 0,
+        leadsEnviados: periodoAtual.leadsPorUsuario.get(linha.usuarioId) ?? [],
       }));
     metricas = { ...metricasPeriodo, enviadosAoCloser: periodoAtual.total };
     metricasAnteriores = { ...metricasAnterioresPeriodo, enviadosAoCloser: periodoAnterior.total };
