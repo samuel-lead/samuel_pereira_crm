@@ -140,9 +140,11 @@ export default async function VendasPage({
   // Filtro por SDR e por Closer (Samuel, 06/11/26) — só nos CRMs de
   // serviço/mentoria com Closer. As opções são só as pessoas que aparecem
   // nas vendas do período (sem encher a lista com quem não vendeu nada).
-  const mostrarFiltroPessoas = !semCloser(publicoOrg) && !funilGondolas(publicoOrg);
-  const sdrFiltroAtivo = mostrarFiltroPessoas ? sdrFiltro : undefined;
-  const closerFiltroAtivo = mostrarFiltroPessoas ? closerFiltro : undefined;
+  // Inove Gôndolas (Samuel, 06/11/26): só o filtro de SDR (o Closer é sempre o Elton).
+  const mostrarFiltroCloser = !semCloser(publicoOrg) && !funilGondolas(publicoOrg);
+  const mostrarFiltroSdr = mostrarFiltroCloser || funilGondolas(publicoOrg);
+  const sdrFiltroAtivo = mostrarFiltroSdr ? sdrFiltro : undefined;
+  const closerFiltroAtivo = mostrarFiltroCloser ? closerFiltro : undefined;
   const opcoesPessoas = (ids: (string | null | undefined)[]) =>
     [...new Set(ids.filter((id): id is string => !!id))]
       .map((id) => ({ id, nome: nomePorUsuario.get(id) ?? "—" }))
@@ -200,11 +202,11 @@ export default async function VendasPage({
             publicoOrg={publicoOrg}
           />
 
-          {mostrarFiltroPessoas && (
-            <>
-              <FiltroPessoaClientes rotulo={Sdr(publicoOrg)} parametro="sdr" atual={sdrFiltroAtivo} opcoes={opcoesSdr} />
-              <FiltroPessoaClientes rotulo="Closer" parametro="closer" atual={closerFiltroAtivo} opcoes={opcoesCloser} />
-            </>
+          {mostrarFiltroSdr && (
+            <FiltroPessoaClientes rotulo={Sdr(publicoOrg)} parametro="sdr" atual={sdrFiltroAtivo} opcoes={opcoesSdr} />
+          )}
+          {mostrarFiltroCloser && (
+            <FiltroPessoaClientes rotulo="Closer" parametro="closer" atual={closerFiltroAtivo} opcoes={opcoesCloser} />
           )}
 
           <form className="flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
