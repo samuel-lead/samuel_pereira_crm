@@ -2,8 +2,7 @@ import type { MetricasUsuario } from "@/lib/metricas";
 import { CopiarRelatorioButton } from "@/components/copiar-relatorio-button";
 import { Calls, Sdr, funilConsorcio, funilGondolas } from "@/lib/terminologia";
 import { corPosicaoRanking } from "@/lib/ranking";
-import { BotaoWhatsapp } from "@/components/botao-whatsapp";
-import { LinkLead } from "@/components/link-lead";
+import { LeadsEnviadosLista } from "@/components/leads-enviados-lista";
 
 function formatarPercentual(valor: number | null) {
   if (valor === null) return null;
@@ -126,29 +125,7 @@ export function PerformanceSdr({
                     />
                   </div>
                   {gondolas && (linha.leadsEnviados?.length ?? 0) > 0 && (
-                    <div className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50">
-                      <p className="border-b border-neutral-200 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-neutral-500">
-                        Leads enviados para o Elton ({linha.leadsEnviados!.length})
-                      </p>
-                      <ul className="max-h-72 divide-y divide-neutral-200 overflow-y-auto">
-                        {linha.leadsEnviados!.map((lead) => (
-                          <li key={lead.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                            <LinkLead
-                              leadId={lead.id}
-                              className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-800 hover:underline"
-                              title={lead.nome}
-                            >
-                              {lead.nome}
-                            </LinkLead>
-                            {lead.telefone_e164 ? (
-                              <BotaoWhatsapp telefone={lead.telefone_e164} />
-                            ) : (
-                              <span className="shrink-0 text-xs text-neutral-400">sem telefone</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    <LeadsEnviadosLista leads={linha.leadsEnviados!} />
                   )}
                 </div>
                 {linha.podeCopiarRelatorio && (
