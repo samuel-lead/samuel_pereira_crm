@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { BotaoVoltar } from "@/components/botao-voltar";
 import { buscarIntegracao, STATUS_LABEL } from "@/lib/integracoes";
 import { usuarioAutenticado, createClient } from "@/lib/supabase/server";
+import { reuniao } from "@/lib/terminologia";
 
 export default async function IntegracaoDetalhePage({
   params,
@@ -80,7 +81,7 @@ export default async function IntegracaoDetalhePage({
           {conectado === "1" && (
             <div className="mt-5 rounded-md border border-green-200 bg-green-50 p-3">
               <p className="text-sm text-green-800">
-                ✓ Google Agenda conectada! Agora dá pra salvar uma reunião marcada
+                ✓ Google Agenda conectada! Agora dá pra salvar uma {reuniao(usuario!.publico_org)} marcada
                 direto na agenda, pelo botão dentro do card do lead.
               </p>
             </div>
