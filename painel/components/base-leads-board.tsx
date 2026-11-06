@@ -237,6 +237,11 @@ export function BaseLeadsBoard({
   const [escondidos, setEscondidos] = useState<Set<string>>(new Set());
   const [erroReativar, setErroReativar] = useState<string | null>(null);
 
+  // Desenhar milhares de cartões de uma vez trava a tela (a Base da Ketlyn tem
+  // 3.400+). Cada coluna mostra os primeiros 50 e um botão "Ver mais".
+  const POR_VEZ = 50;
+  const [limites, setLimites] = useState<Record<string, number>>({});
+
   // Quando o servidor já tirou o lead da lista, não precisa mais esconder.
   useEffect(() => {
     const presentes = new Set(Object.values(leadsPorMotivo).flat().map((l) => l.id));
@@ -300,7 +305,10 @@ export function BaseLeadsBoard({
           !(funilConsorcio(publicoOrg) && c.chave === "qualificou_sumiu") &&
           (funilConsorcio(publicoOrg) || !COLUNAS_SO_CONSORCIO.includes(c.chave))
       ).map((coluna) => {
-        const leads = (leadsPorMotivo[coluna.chave] ?? []).filter((l) => !escondidos.has(l.id));
+        const leadsDaColuna = (leadsPorMotivo[coluna.chave] ?? []).filter((l) => !escondidos.has(l.id));
+        const limite = limites[coluna.chave] ?? POR_VEZ;
+        const leads = leadsDaColuna.slice(0, limite);
+        const restantes = leadsDaColuna.length - leads.length;
         return (
           <section
             key={coluna.chave}
@@ -312,7 +320,7 @@ export function BaseLeadsBoard({
                 <span
                   className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ${coluna.cor.badge}`}
                 >
-                  {leads.length}
+                  {leadsDaColuna.length}
                 </span>
               </div>
               <h2 className="text-sm font-semibold text-neutral-800">
@@ -323,7 +331,7 @@ export function BaseLeadsBoard({
             </div>
 
             <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-3">
-              {leads.length === 0 ? (
+              {leadsDaColuna.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-neutral-300 bg-white/50 px-3 py-6 text-center text-xs text-neutral-400">
                   Nenhum lead aqui
                 </p>
@@ -448,6 +456,15 @@ export function BaseLeadsBoard({
                     />
                   </div>
                 ))
+              )}
+              {restantes > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setLimites((atual) => ({ ...atual, [coluna.chave]: limite + POR_VEZ }))}
+                  className="rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-xs font-semibold text-neutral-600 transition hover:bg-neutral-100"
+                >
+                  Ver mais {Math.min(POR_VEZ, restantes)} (restam {restantes})
+                </button>
               )}
             </div>
           </section>

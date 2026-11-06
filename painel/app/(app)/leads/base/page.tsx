@@ -5,7 +5,7 @@ import { BuscaLeads } from "@/components/busca-leads";
 import { FiltrosLeads } from "@/components/filtros-leads";
 import { BaseLeadsBoard, type LeadBase, type MotivoBase } from "@/components/base-leads-board";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
-import { buscarTodas, emPedacos } from "@/lib/supabase/paginar";
+import { buscarTodasEmParalelo } from "@/lib/supabase/paginar";
 import { niveisReativacaoDaOrg, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
 import { funilConsorcio } from "@/lib/terminologia";
 
@@ -78,17 +78,19 @@ export default async function BasePage({
       .range(de, ate);
   };
 
+  type ReuniaoBase = { lead_id: string; status: string; agendada_para: string };
   const [
     { data: leadsData },
     { data: usuariosData },
     { data: niveisData },
     { data: origensData },
+    { data: reunioesBrutas },
   ] = await Promise.all([
-    buscarTodas(montarConsulta),
+    buscarTodasEmParalelo(montarConsulta),
     supabase.from("usuarios").select("id, nome, foto_url, funcao, papel"),
     supabase.from("niveis").select("ordem, nome, numerado, destacado").order("ordem"),
     // Funis que existem na Base (não só os que o filtro atual deixou passar).
-    buscarTodas<{ origem: string | null }>((de, ate) =>
+    buscarTodasEmParalelo<{ origem: string | null }>((de, ate) =>
       supabase
         .from("leads")
         .select("origem")
@@ -98,6 +100,18 @@ export default async function BasePage({
         .not("origem", "is", null)
         .order("id")
         .range(de, ate)
+    ),
+    // Reuniões dos leads da Base numa consulta só, junto com o resto (antes:
+    // esperava a lista de leads e depois pedia em pedaços de 200 ids).
+    buscarTodasEmParalelo<ReuniaoBase>((de, ate) =>
+      supabase
+        .from("reunioes")
+        .select("lead_id, status, agendada_para, leads!inner(nivel_ordem, status, arquivado_em)")
+        .eq("leads.nivel_ordem", 9)
+        .neq("leads.status", "vendido")
+        .is("leads.arquivado_em", null)
+        .order("id")
+        .range(de, ate) as unknown as PromiseLike<{ data: ReuniaoBase[] | null; error: unknown }>
     ),
   ]);
   const origens = Array.from(
@@ -110,23 +124,11 @@ export default async function BasePage({
   );
 
   const leads = (leadsData ?? []) as LeadComHistorico[];
-  const leadIds = leads.map((l) => l.id);
-
-  // .in() com milhares de ids estoura o tamanho do endereço da requisição —
-  // busca em pedaços de 200 ids e junta, ordenando pela data de novo.
-  type ReuniaoBase = { lead_id: string; status: string; agendada_para: string };
-  // Todos os pedaços ao mesmo tempo (antes um depois do outro: com 3.000
-  // leads na Base eram 15 idas e vindas em fila).
-  const pedacosReunioes = await Promise.all(
-    emPedacos(leadIds, 200).map((pedaco) =>
-      supabase
-        .from("reunioes")
-        .select("lead_id, status, agendada_para")
-        .in("lead_id", pedaco)
-        .order("agendada_para", { ascending: false })
-    )
-  );
-  const reunioesData: ReuniaoBase[] = pedacosReunioes.flatMap((r) => (r.data ?? []) as ReuniaoBase[]);
+  const reunioesData: ReuniaoBase[] = (reunioesBrutas ?? []).map((r) => ({
+    lead_id: r.lead_id,
+    status: r.status,
+    agendada_para: r.agendada_para,
+  }));
   reunioesData.sort(
     (a, b) => new Date(b.agendada_para).getTime() - new Date(a.agendada_para).getTime()
   );

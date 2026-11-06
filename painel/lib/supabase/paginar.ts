@@ -29,3 +29,32 @@ export function emPedacos<T>(lista: T[], tamanho: number): T[][] {
   for (let i = 0; i < lista.length; i += tamanho) pedacos.push(lista.slice(i, i + tamanho));
   return pedacos;
 }
+
+// Igual a buscarTodas, mas pede vários pedaços AO MESMO TEMPO (em ondas de 4):
+// uma Base com 3.500 leads vira 1 ida e volta em vez de 4 em fila. Se a onda
+// vier cheia, pede a próxima. Mesma exigência: .order() estável na consulta.
+export async function buscarTodasEmParalelo<T>(
+  montar: (de: number, ate: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+  pedacosPorOnda = 4
+): Promise<{ data: T[]; error: unknown }> {
+  const todas: T[] = [];
+  for (let inicio = 0; ; inicio += pedacosPorOnda) {
+    const respostas = await Promise.all(
+      Array.from({ length: pedacosPorOnda }, (_, i) => {
+        const de = (inicio + i) * TAMANHO_PAGINA;
+        return montar(de, de + TAMANHO_PAGINA - 1);
+      })
+    );
+    let acabou = false;
+    for (const resposta of respostas) {
+      if (resposta.error) return { data: todas, error: resposta.error };
+      const pagina = resposta.data ?? [];
+      todas.push(...pagina);
+      if (pagina.length < TAMANHO_PAGINA) {
+        acabou = true;
+        break;
+      }
+    }
+    if (acabou) return { data: todas, error: null };
+  }
+}
