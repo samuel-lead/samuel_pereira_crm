@@ -8,6 +8,10 @@
 -- apagado. A alteração do nível não dispara aviso no WhatsApp (os gatilhos só
 -- avisam lead novo em Novos Leads ou troca de responsável).
 
+-- A regra do banco precisa aceitar o 15 ANTES de qualquer troca.
+alter table niveis drop constraint if exists niveis_ordem_check;
+alter table niveis add constraint niveis_ordem_check check (ordem >= 0 and ordem <= 15);
+
 update leads
 set nivel_ordem = 15
 where org_id = '1820eb20-9fae-46fd-a986-2dfbe1b5702a' and nivel_ordem = 2;
@@ -20,6 +24,3 @@ where org_id = '1820eb20-9fae-46fd-a986-2dfbe1b5702a' and (de_ordem = 2 or para_
 update niveis
 set ordem = 15
 where org_id = '1820eb20-9fae-46fd-a986-2dfbe1b5702a' and ordem = 2;
-
-alter table niveis drop constraint if exists niveis_ordem_check;
-alter table niveis add constraint niveis_ordem_check check (ordem >= 0 and ordem <= 15);
