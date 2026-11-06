@@ -455,12 +455,15 @@ export default async function DashboardPage({
           </section>
         )}
 
-        <MetaReceitaWidget
-          metaReceita={metaReceita}
-          receitaAtual={receitaOrgMes}
-          podeEditar={souAdmin}
-          publicoOrg={publicoOrg}
-        />
+        {/* Inove Gôndolas (Samuel, 06/11/26): sem meta de receita. */}
+        {!funilGondolas(publicoOrg) && (
+          <MetaReceitaWidget
+            metaReceita={metaReceita}
+            receitaAtual={receitaOrgMes}
+            podeEditar={souAdmin}
+            publicoOrg={publicoOrg}
+          />
+        )}
 
         <div className="sticky top-0 z-10 -mx-6 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)]">
           <FiltroPeriodo

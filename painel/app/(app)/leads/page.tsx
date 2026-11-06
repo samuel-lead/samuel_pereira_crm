@@ -634,7 +634,8 @@ export default async function LeadsPage({
               )}
             </div>
 
-            {receitaOrgMes !== null && (
+            {/* Inove Gôndolas (Samuel, 06/11/26): sem meta de receita. */}
+            {receitaOrgMes !== null && !funilGondolas(publicoOrg) && (
               <MetaReceitaWidget
                 metaReceita={metaReceita}
                 compacta
