@@ -7,6 +7,7 @@ import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { AvatarLead } from "@/components/avatar-lead";
 import { IconeMoeda } from "@/components/icons";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
+import { FiltroPessoaClientes } from "@/components/filtro-pessoa-clientes";
 import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
 import { resolverPeriodo } from "@/lib/periodo";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
@@ -40,7 +41,7 @@ function formatarData(iso: string | null) {
 export default async function VendasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string; mesAno?: string; busca?: string; de?: string; ate?: string }>;
+  searchParams: Promise<{ periodo?: string; mesAno?: string; busca?: string; de?: string; ate?: string; sdr?: string; closer?: string }>;
 }) {
   const {
     periodo: periodoFiltro,
@@ -48,6 +49,8 @@ export default async function VendasPage({
     busca: buscaFiltro,
     de: deFiltro,
     ate: ateFiltro,
+    sdr: sdrFiltro,
+    closer: closerFiltro,
   } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
@@ -89,7 +92,7 @@ export default async function VendasPage({
     supabase.from("usuarios").select("id, nome").order("nome"),
   ]);
 
-  const leads = (leadsData ?? []) as LeadVendido[];
+  const leadsDoPeriodo = (leadsData ?? []) as LeadVendido[];
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
   // Mesma conta de sempre: faturamento ÷ vendas (cartao-vendas.tsx,
   // lib/metricas.ts) — não é receita ÷ vendas.
@@ -99,7 +102,7 @@ export default async function VendasPage({
   // regra do Bônus SDR. Se a Julia marcou, o lead pediu pra remarcar e o
   // Samuel marcou a nova, o SDR continua sendo a Julia. Nas demais continua
   // como sempre: quem marcou a reunião realizada mais recente.
-  const leadIds = leads.map((l) => l.id);
+  const leadIds = leadsDoPeriodo.map((l) => l.id);
   const { data: flagsOrg } = await supabase
     .from("orgs")
     .select("sdr_original")
@@ -130,17 +133,34 @@ export default async function VendasPage({
   }
   // Inove Gôndolas não tem reunião: o SDR é quem criou o lead.
   if (funilGondolas(publicoOrg)) {
-    for (const lead of leads as (LeadVendido & { usuario_id?: string | null })[]) {
+    for (const lead of leadsDoPeriodo as (LeadVendido & { usuario_id?: string | null })[]) {
       if (!sdrPorLead.has(lead.id) && lead.usuario_id) sdrPorLead.set(lead.id, lead.usuario_id);
     }
   }
+  // Filtro por SDR e por Closer (Samuel, 06/11/26) — só nos CRMs de
+  // serviço/mentoria com Closer. As opções são só as pessoas que aparecem
+  // nas vendas do período (sem encher a lista com quem não vendeu nada).
+  const mostrarFiltroPessoas = !semCloser(publicoOrg) && !funilGondolas(publicoOrg);
+  const sdrFiltroAtivo = mostrarFiltroPessoas ? sdrFiltro : undefined;
+  const closerFiltroAtivo = mostrarFiltroPessoas ? closerFiltro : undefined;
+  const opcoesPessoas = (ids: (string | null | undefined)[]) =>
+    [...new Set(ids.filter((id): id is string => !!id))]
+      .map((id) => ({ id, nome: nomePorUsuario.get(id) ?? "—" }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  const opcoesSdr = opcoesPessoas(leadsDoPeriodo.map((l) => sdrPorLead.get(l.id)));
+  const opcoesCloser = opcoesPessoas(leadsDoPeriodo.map((l) => l.responsavel_id));
+  const leads = leadsDoPeriodo.filter(
+    (l) =>
+      (!sdrFiltroAtivo || sdrPorLead.get(l.id) === sdrFiltroAtivo) &&
+      (!closerFiltroAtivo || l.responsavel_id === closerFiltroAtivo)
+  );
   // Samuel (23/10/26): receita = dinheiro que CAIU no período, não o total das
   // vendas fechadas nele (venda de agosto paga em outubro é receita de
   // outubro). Com uma busca ativa, volta a somar só os clientes encontrados.
   const receitaPorPagamentos =
     !ehImobiliario(publicoOrg) && !usaComissaoDoVendedor(publicoOrg);
   let totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
-  if (receitaPorPagamentos && !buscaFiltro && usuario) {
+  if (receitaPorPagamentos && !buscaFiltro && !sdrFiltroAtivo && !closerFiltroAtivo && usuario) {
     const { data: recebimentosData } = await buscarTodas<{ valor: number | string }>((de, ate) =>
       supabase
         .from("venda_recebimentos")
@@ -159,7 +179,9 @@ export default async function VendasPage({
   }
   const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
   const ticketMedio = leads.length > 0 ? totalFaturamento / leads.length : 0;
-  const filtroAtivo = Boolean(periodoFiltro || mesAnoFiltro || deFiltro || ateFiltro || buscaFiltro);
+  const filtroAtivo = Boolean(
+    periodoFiltro || mesAnoFiltro || deFiltro || ateFiltro || buscaFiltro || sdrFiltroAtivo || closerFiltroAtivo
+  );
 
   return (
     <>
@@ -174,11 +196,20 @@ export default async function VendasPage({
             mesAnoAtual={mesAnoFiltro}
             deAtual={deFiltro}
             ateAtual={ateFiltro}
-            outrosParams={{ busca: buscaFiltro }}
+            outrosParams={{ busca: buscaFiltro, sdr: sdrFiltroAtivo, closer: closerFiltroAtivo }}
             publicoOrg={publicoOrg}
           />
 
+          {mostrarFiltroPessoas && (
+            <>
+              <FiltroPessoaClientes rotulo={Sdr(publicoOrg)} parametro="sdr" atual={sdrFiltroAtivo} opcoes={opcoesSdr} />
+              <FiltroPessoaClientes rotulo="Closer" parametro="closer" atual={closerFiltroAtivo} opcoes={opcoesCloser} />
+            </>
+          )}
+
           <form className="flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+            {sdrFiltroAtivo && <input type="hidden" name="sdr" value={sdrFiltroAtivo} />}
+            {closerFiltroAtivo && <input type="hidden" name="closer" value={closerFiltroAtivo} />}
             <div className="flex min-w-[160px] flex-col justify-center gap-0.5 px-4 py-2">
               <label className="text-[10px] font-medium text-neutral-500" htmlFor="busca">
                 Buscar por nome
@@ -221,7 +252,7 @@ export default async function VendasPage({
 
           <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
             <IconeMoeda className="h-3.5 w-3.5" />
-            {receitaPorPagamentos && !buscaFiltro
+            {receitaPorPagamentos && !buscaFiltro && !sdrFiltroAtivo && !closerFiltroAtivo
               ? `${Receita(publicoOrg)} recebida no período`
               : `${Receita(publicoOrg)} total em vendas`}
           </p>
