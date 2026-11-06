@@ -1761,6 +1761,66 @@ export async function calcularResumoAno(
 }
 
 
+// Inove Gôndolas (Samuel, 06/11/26): a "Evolução comercial" da Visão geral é de
+// LEADS ENVIADOS PRO ELTON, mês a mês, com quem enviou cada um. Mesma regra do
+// ranking: entrada no nível 3, lead contado uma vez por mês, sem lead excluído.
+export type EnviadosMes = {
+  mes: number;
+  total: number;
+  porUsuario: { usuarioId: string; nome: string; quantidade: number }[];
+};
+
+export async function calcularEnviadosPorMes(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  ano: number
+): Promise<EnviadosMes[]> {
+  type Linha = { lead_id: string; usuario_id: string | null; ocorreu_em: string };
+  const inicioAno = new Date(`${ano}-01-01T00:00:00-03:00`);
+  const fimAno = new Date(`${ano + 1}-01-01T00:00:00-03:00`);
+  const [{ data }, { data: usuarios }] = await Promise.all([
+    buscarTodas<Linha>((de, ate) =>
+      supabase
+        .from("nivel_historico")
+        .select("lead_id, usuario_id, ocorreu_em, leads!inner(arquivado_em)")
+        .eq("org_id", orgId)
+        .eq("para_ordem", 3)
+        .neq("de_ordem", 3)
+        .is("leads.arquivado_em", null)
+        .gte("ocorreu_em", inicioAno.toISOString())
+        .lt("ocorreu_em", fimAno.toISOString())
+        .order("id")
+        .range(de, ate) as unknown as PromiseLike<{ data: Linha[] | null; error: unknown }>
+    ),
+    supabase.from("usuarios").select("id, nome").eq("org_id", orgId),
+  ]);
+  const nomes = new Map((usuarios ?? []).map((u) => [u.id as string, u.nome as string]));
+
+  // Mês no fuso do Brasil (UTC-3), sem depender do fuso do servidor.
+  const mesDe = (iso: string) => new Date(new Date(iso).getTime() - 3 * 3600 * 1000).getUTCMonth() + 1;
+  const vistos = new Set<string>();
+  const contagem = Array.from({ length: 12 }, () => new Map<string, number>());
+  const totais = new Array<number>(12).fill(0);
+  for (const linha of data ?? []) {
+    const mes = mesDe(linha.ocorreu_em);
+    const chave = `${mes}:${linha.lead_id}`;
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    totais[mes - 1] += 1;
+    if (linha.usuario_id) {
+      contagem[mes - 1].set(linha.usuario_id, (contagem[mes - 1].get(linha.usuario_id) ?? 0) + 1);
+    }
+  }
+
+  return Array.from({ length: 12 }, (_, i) => ({
+    mes: i + 1,
+    total: totais[i],
+    porUsuario: [...contagem[i].entries()]
+      .map(([usuarioId, quantidade]) => ({ usuarioId, nome: nomes.get(usuarioId) ?? "—", quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade),
+  }));
+}
+
 // Conversão por SAFRA DENTRO DO PERÍODO (Samuel, 15/10/26): das calls com
 // pitch do período, quantos leads viraram venda DENTRO desse mesmo período.
 // Venda de call de um período anterior não entra (não infla) e um período já

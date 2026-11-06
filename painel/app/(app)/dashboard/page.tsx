@@ -7,6 +7,7 @@ import { GraficoEvolucaoMensal } from "@/components/grafico-evolucao-mensal";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { PerformanceSdr } from "@/components/performance-sdr";
+import { GraficoEnviadosPorMes } from "@/components/grafico-enviados-por-mes";
 import { PerformanceCloser } from "@/components/performance-closer";
 import { PerformanceCorretor } from "@/components/performance-corretor";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
@@ -27,6 +28,7 @@ import {
   calcularMetricasPorCloser,
   calcularLeadsPorOrigem,
   calcularResumoAno,
+  calcularEnviadosPorMes,
   calcularReceitaOrg,
   calcularFaturamentoOrg,
   calcularNegociacoesAbertas,
@@ -172,7 +174,10 @@ export default async function DashboardPage({
     calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
       apenasDeclaradosNoPeriodo: true,
     }),
-    calcularResumoAno(supabase, usuario!.org_id, anoEvolucaoResolvido),
+    // Inove Gôndolas: a evolução é de leads enviados pro Elton (ver mais abaixo).
+    ehGondolasCedo
+      ? Promise.resolve([] as Awaited<ReturnType<typeof calcularResumoAno>>)
+      : calcularResumoAno(supabase, usuario!.org_id, anoEvolucaoResolvido),
     // Meta de receita é sempre do mês civil corrente — não depende do
     // filtro. Imobiliário acompanha VGV (valor_venda), não receita
     // (dinheiro recebido) — Samuel pediu essa troca.
@@ -337,6 +342,9 @@ export default async function DashboardPage({
   }
   // Conversão do funil em barras: vendas fechadas dentro do período.
   const safraVenda = await safraP;
+  const enviadosPorMes = ehGondolasCedo
+    ? await calcularEnviadosPorMes(supabase, usuario!.org_id, anoEvolucaoResolvido)
+    : [];
   // Dias úteis do período (mesma conta de calcularMetricasOrg) — usado no
   // gráfico de origens, mesmo quando o painel principal não é montado.
   const diasUteisPeriodo = diasUteisEntre(
@@ -582,13 +590,22 @@ export default async function DashboardPage({
               <VendasPorCanal dados={vendasPorCanal} periodo={periodoResolvido.titulo} />
               <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
             </div>
-            <GraficoEvolucaoMensal
+            {funilGondolas(publicoOrg) ? (
+              <GraficoEnviadosPorMes
+                dados={enviadosPorMes}
+                ano={anoEvolucaoResolvido}
+                anoAtual={anoAtualNumero}
+                mesAtual={anoEvolucaoResolvido === anoAtualNumero ? inicioHoje.getUTCMonth() + 1 : 0}
+              />
+            ) : (
+              <GraficoEvolucaoMensal
               dados={resumoAnoEvolucao}
               ano={anoEvolucaoResolvido}
               anoAtual={anoAtualNumero}
               mesAtual={anoEvolucaoResolvido === anoAtualNumero ? inicioHoje.getUTCMonth() + 1 : 0}
               publicoOrg={publicoOrg}
             />
+            )}
           </div>
         </section>
 
