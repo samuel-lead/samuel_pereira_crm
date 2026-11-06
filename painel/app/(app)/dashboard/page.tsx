@@ -160,8 +160,12 @@ export default async function DashboardPage({
     ehGondolasCedo
       ? Promise.resolve(null as unknown as Metricas)
       : calcularMetricasOrg(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
-    calcularVendasPorCanal(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
-    calcularVendasPorProduto(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    ehGondolasCedo
+      ? Promise.resolve([] as Awaited<ReturnType<typeof calcularVendasPorCanal>>)
+      : calcularVendasPorCanal(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    ehGondolasCedo
+      ? Promise.resolve([] as Awaited<ReturnType<typeof calcularVendasPorProduto>>)
+      : calcularVendasPorProduto(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
     // "Leads Novos" da tabela também precisa ser estrito, mesmo motivo do
     // card acima — sem isso, a coluna mostrava o número largo (com
     // carry-forward) embaixo de um título que promete "novos".
@@ -586,10 +590,14 @@ export default async function DashboardPage({
               dados={leadsPorOrigem}
               diasUteis={diasUteisPeriodo}
             />
-            <div className="grid gap-4 lg:grid-cols-2">
-              <VendasPorCanal dados={vendasPorCanal} periodo={periodoResolvido.titulo} />
-              <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
-            </div>
+            {/* Inove Gôndolas (Samuel, 06/11/26): sem "Canais que venderam" nem
+                "Produtos mais vendidos" na Visão geral. */}
+            {!funilGondolas(publicoOrg) && (
+              <div className="grid gap-4 lg:grid-cols-2">
+                <VendasPorCanal dados={vendasPorCanal} periodo={periodoResolvido.titulo} />
+                <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
+              </div>
+            )}
             {funilGondolas(publicoOrg) ? (
               <GraficoEnviadosPorMes
                 dados={enviadosPorMes}
