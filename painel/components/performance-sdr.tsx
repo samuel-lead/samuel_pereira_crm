@@ -53,11 +53,6 @@ export function PerformanceSdr({
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
       <div className="border-b-2 border-neutral-300 px-4 py-3 dark:border-neutral-700">
         <h2 className="text-lg font-extrabold tracking-tight text-neutral-900">{tituloResolvido}</h2>
-        {gondolas && (
-          <p className="mt-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-800">
-            Como o ranking é montado: quem enviou mais leads para o Elton no período fica em 1º lugar.
-          </p>
-        )}
         <p className="mt-0.5 text-xs text-neutral-500">
           {consorcio
             ? `Top ${Sdr(publicoOrg)} por propostas iniciadas · ${periodo}`
