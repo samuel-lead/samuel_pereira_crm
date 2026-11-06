@@ -106,6 +106,16 @@ export const CORES_NIVEL: Record<
     pilula: "bg-stone-600 text-white",
     solido: "bg-gradient-to-br from-stone-500 to-stone-600",
   },
+  // "Em qualificação" da Inove Gôndolas (nível 15, ver ORDEM_QUALIFICACAO_GONDOLAS).
+  15: {
+    faixa: "bg-slate-500",
+    texto: "text-slate-700",
+    badge: "bg-slate-200 text-slate-700",
+    header: "bg-slate-50",
+    borda: "border-slate-200",
+    pilula: "bg-slate-600 text-white",
+    solido: "bg-gradient-to-br from-slate-500 to-slate-600",
+  },
   // Dia 2 a Dia 5 (só Inove Gôndolas): mesma cor do nível 1 ("Dia 1").
   11: {
     faixa: "bg-slate-500",
@@ -181,8 +191,15 @@ export const ORDEM_DOCUMENTACAO = 10;
 // POSIÇÃO no funil é entre o 1 e o 2 (1,1 a 1,4).
 export const ORDENS_DIAS_GONDOLAS = [11, 12, 13, 14];
 
+// Samuel (06/11/26): na Inove, "Em qualificação" passou pra logo depois de
+// "Novos Leads", antes do Dia 1. Como o nível 1 (Dia 1) vem antes do 2 em
+// toda empresa, "Em qualificação" da Inove ganhou o número 15 e vale como
+// "0,5" (entre 0 e 1) na posição do funil.
+export const ORDEM_QUALIFICACAO_GONDOLAS = 15;
+
 export function posicaoNoFunil(ordem: number) {
   if (ordem === ORDEM_DOCUMENTACAO) return 2.5;
+  if (ordem === ORDEM_QUALIFICACAO_GONDOLAS) return 0.5;
   const indiceDia = ORDENS_DIAS_GONDOLAS.indexOf(ordem);
   return indiceDia >= 0 ? 1 + (indiceDia + 1) / 10 : ordem;
 }
@@ -212,9 +229,9 @@ export const NIVEIS_VENDAS = [4, 7, 8];
 // arrastar pra uma coluna.
 export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
 
-// Inove Gôndolas: Novos Leads, Dia 1 (nível 1) a Dia 5 (níveis 11 a 14) e Em
-// qualificação.
-const COLUNAS_PRE_VENDAS_GONDOLAS = [0, 1, ...ORDENS_DIAS_GONDOLAS, 2];
+// Inove Gôndolas: Novos Leads, Em qualificação (nível 15) e Dia 1 (nível 1) a
+// Dia 5 (níveis 11 a 14).
+const COLUNAS_PRE_VENDAS_GONDOLAS = [0, ORDEM_QUALIFICACAO_GONDOLAS, 1, ...ORDENS_DIAS_GONDOLAS];
 
 // Imobiliário ganhou "Documentação/Análise" logo depois de "Em qualificação".
 const COLUNAS_PRE_VENDAS_IMOBILIARIO = [0, 1, 2, ORDEM_DOCUMENTACAO, 3, 5, 6];
@@ -252,7 +269,7 @@ export function niveisVendasDaOrg(publicoOrg: string) {
 // sentido (ele volta pra Pré-vendas e o SDR envia de novo).
 export function niveisReativacaoDaOrg(publicoOrg: string) {
   return funilGondolas(publicoOrg)
-    ? [0, 1, ...ORDENS_DIAS_GONDOLAS, 2]
+    ? COLUNAS_PRE_VENDAS_GONDOLAS
     : NIVEIS_REATIVACAO;
 }
 
@@ -261,6 +278,21 @@ export function niveisReativacaoDaOrg(publicoOrg: string) {
 // ainda. "Reunião marcada" pra frente fica de fora de propósito: precisa
 // de data/closer, e isso o botão rápido do card não tem como perguntar.
 export const NIVEIS_REATIVACAO = [0, 1, 2, 3];
+
+// Quem está em "Em qualificação" ou num dos Dias da Inove pode ir livremente
+// pra qualquer um dos outros (o lead que responde no Dia 3 volta pra
+// "Em qualificação"; quem esfria vai pro dia seguinte). Só "Novos Leads" não
+// aceita volta.
+const ABORDAGEM_GONDOLAS = [ORDEM_QUALIFICACAO_GONDOLAS, 1, ...ORDENS_DIAS_GONDOLAS];
+
+// A progressão Novos Leads → ... → Leads pro Elton é de mão única: não dá pra
+// ir pra um nível de antes. Única fonte dessa regra (menu, arrastar e servidor).
+export function bloqueiaVoltarNoFunil(destino: number, atual: number, publicoOrg: string) {
+  if (funilGondolas(publicoOrg) && ABORDAGEM_GONDOLAS.includes(destino) && ABORDAGEM_GONDOLAS.includes(atual)) {
+    return false;
+  }
+  return posicaoNoFunil(destino) <= 3 && posicaoNoFunil(destino) < posicaoNoFunil(atual);
+}
 
 // Motivos de ir pra Base — única fonte de verdade, usada tanto no menu
 // Nível dentro do card (editar-lead-form) quanto no miniformulário do
@@ -365,7 +397,7 @@ export function nivelDeveApareceNoMenu(
   // e "Em negociação" (4) também são níveis comuns, sem data nem closer.
   if (semReuniaoNoFunil(publicoOrg)) {
     if (ordemDestino === 5 || ordemDestino === 6 || ordemDestino === 8) return false;
-    if (posicaoNoFunil(ordemDestino) <= 3 && posicaoNoFunil(ordemDestino) < posicaoNoFunil(nivelAtual)) return false;
+    if (bloqueiaVoltarNoFunil(ordemDestino, nivelAtual, publicoOrg)) return false;
     return true;
   }
 

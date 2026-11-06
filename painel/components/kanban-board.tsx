@@ -924,7 +924,7 @@ export function KanbanBoard({
                 onDragOver={(e) => aoPassarSobreColuna(e, nivel.ordem)}
                 onDragLeave={() => setColunaAlvo((atual) => (atual === nivel.ordem ? null : atual))}
                 onDrop={(e) => aoSoltarNaColuna(e, nivel.ordem)}
-                className={`kanban-column flex h-full w-80 shrink-0 flex-col rounded-xl border bg-neutral-50 shadow-sm transition ${
+                className={`kanban-column flex h-full ${funilGondolas(publicoOrg) ? "w-64" : "w-80"} shrink-0 flex-col rounded-xl border bg-neutral-50 shadow-sm transition ${
                   recebendoArrasto
                     ? "border-2 border-blue-400 ring-2 ring-blue-200"
                     : "border-neutral-300"

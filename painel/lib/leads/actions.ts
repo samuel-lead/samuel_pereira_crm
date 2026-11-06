@@ -9,7 +9,7 @@ import {
   posicaoNoFunil,
   ordenarNiveisDoFunil,
   numerarNiveis,
-  ORDENS_DIAS_GONDOLAS,
+  bloqueiaVoltarNoFunil,
   niveisReativacaoDaOrg,
   motivosBaseDaOrg,
   type NivelResumo,
@@ -1068,16 +1068,7 @@ export async function atualizarLead(
   // claramente já teve conversa). Mesma trava do menu (ver
   // nivelDeveApareceNoMenu em lib/niveis.ts), agora no servidor pra não
   // dar pra burlar.
-  if (
-    nivelMudou &&
-    (novoNivel === 0 ||
-      novoNivel === 1 ||
-      novoNivel === 2 ||
-      novoNivel === 3 ||
-      novoNivel === ORDEM_DOCUMENTACAO ||
-      ORDENS_DIAS_GONDOLAS.includes(novoNivel)) &&
-    posicaoNoFunil(novoNivel) < posicaoNoFunil(leadAtual.nivel_ordem)
-  ) {
+  if (nivelMudou && bloqueiaVoltarNoFunil(novoNivel, leadAtual.nivel_ordem, usuario.publico_org_completo)) {
     return {
       erro: "Esse lead já avançou — não dá pra voltar pra um nível de antes.",
     };
@@ -1479,10 +1470,7 @@ export async function moverLeadNivel(
   // Mesma trava de atualizarLead: Novos Leads → Sem conversa → Em
   // qualificação → Topou reunião é mão única, não dá pra arrastar de
   // volta pra um nível de antes.
-  if (
-    (nivelReal === 0 || nivelReal === 1 || nivelReal === 2 || nivelReal === 3 || nivelReal === ORDEM_DOCUMENTACAO) &&
-    posicaoNoFunil(nivelReal) < posicaoNoFunil(leadAtual.nivel_ordem)
-  ) {
+  if (bloqueiaVoltarNoFunil(nivelReal, leadAtual.nivel_ordem, usuario.publico_org_completo)) {
     return "Esse lead já avançou — não dá pra voltar pra um nível de antes.";
   }
 
