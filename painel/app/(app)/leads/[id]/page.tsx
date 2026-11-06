@@ -20,7 +20,7 @@ import { AvatarUsuario } from "@/components/avatar-usuario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { numerarNiveis, type NivelResumo, ordenarNiveisDoFunil, posicaoNoFunil } from "@/lib/niveis";
 import type { PropostaConsorcio } from "@/lib/proposta-consorcio";
-import { Reuniao, Sdr, Receita, ehImobiliario } from "@/lib/terminologia";
+import { Reuniao, Sdr, Receita, ehImobiliario, funilGondolas } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
@@ -523,7 +523,7 @@ export default async function EditarLeadPage({
             </div>
           )}
 
-          {podeEditar && (
+          {podeEditar && !funilGondolas(publicoOrg) && (
             <DiaFollowSelector leadId={leadTipado.id} diaFollow={leadTipado.dia_follow} />
           )}
 

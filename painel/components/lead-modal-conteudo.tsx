@@ -18,7 +18,7 @@ import { RecebimentosVenda } from "@/components/recebimentos-venda";
 import { EditarMotivoRepescagem } from "@/components/editar-motivo-repescagem";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeLapis } from "@/components/icons";
-import { Reuniao, Sdr, Receita, ehImobiliario, semCloser } from "@/lib/terminologia";
+import { Reuniao, Sdr, Receita, ehImobiliario, funilGondolas, semCloser } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -391,7 +391,10 @@ export function LeadModalConteudo({
             não tem mais uso. Samuel pediu pra sumir de lá. Exceção: No-show
             e Precisa reagendar, que ele pediu de volta (07/10/26) porque o
             SDR segue fazendo follow com o lead nessas duas abas. */}
+        {/* Inove Gôndolas (Samuel, 06/11/26): o quadro já tem as colunas Dia 1 a
+            Dia 5, então esse seletor dentro do card não existe lá. */}
         {podeEditar &&
+          !funilGondolas(publicoOrg) &&
           (posicaoNoFunil(lead.nivel_ordem) < NIVEL_REUNIAO_MARCADA ||
             lead.nivel_ordem === NIVEL_NO_SHOW ||
             lead.nivel_ordem === NIVEL_REAGENDAMENTO) && (
