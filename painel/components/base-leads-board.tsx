@@ -24,8 +24,14 @@ function BotaoReativar({
   responsavelAtualId,
   usuarios,
   souAdmin,
+  aoReativar,
+  aoFalhar,
 }: {
   leadId: string;
+  // O quadro esconde o cartão NA HORA que a pessoa confirma (sem esperar o
+  // servidor recarregar a Base inteira); se der erro, o cartão volta.
+  aoReativar?: (leadId: string) => void;
+  aoFalhar?: (leadId: string, mensagem: string) => void;
   responsavelAtualId?: string | null;
   niveisReativacao?: { ordem: number; nome: string }[];
   numerosVisiveis?: Map<number, number>;
@@ -43,13 +49,18 @@ function BotaoReativar({
     const novoResponsavelId = String(formData.get("responsavel_id") ?? "");
 
     setErro(null);
+    aoReativar?.(leadId);
     iniciarTransicao(() => {
-      reativarLead(leadId, NIVEL_NOVOS_LEADS, souAdmin ? novoResponsavelId : undefined).then((erro) => {
-        setErro(erro);
-        if (!erro) {
-          setAberto(false);
-        }
-      });
+      reativarLead(leadId, NIVEL_NOVOS_LEADS, souAdmin ? novoResponsavelId : undefined)
+        .then((erro) => {
+          setErro(erro);
+          if (erro) {
+            aoFalhar?.(leadId, erro);
+          } else {
+            setAberto(false);
+          }
+        })
+        .catch(() => aoFalhar?.(leadId, "Não consegui reativar agora. Tente de novo."));
     });
   }
 
@@ -221,6 +232,33 @@ export function BaseLeadsBoard({
   const scrollRef = useRef<HTMLDivElement>(null);
   const idRoladoRef = useRef<string | null>(null);
 
+  // Leads que a pessoa acabou de reativar: somem do quadro na hora, antes do
+  // servidor terminar de recarregar a Base (que é pesada).
+  const [escondidos, setEscondidos] = useState<Set<string>>(new Set());
+  const [erroReativar, setErroReativar] = useState<string | null>(null);
+
+  // Quando o servidor já tirou o lead da lista, não precisa mais esconder.
+  useEffect(() => {
+    const presentes = new Set(Object.values(leadsPorMotivo).flat().map((l) => l.id));
+    setEscondidos((atual) => {
+      const novo = new Set([...atual].filter((id) => presentes.has(id)));
+      return novo.size === atual.size ? atual : novo;
+    });
+  }, [leadsPorMotivo]);
+
+  function esconder(id: string) {
+    setErroReativar(null);
+    setEscondidos((atual) => new Set(atual).add(id));
+  }
+  function desfazerEsconder(id: string, mensagem: string) {
+    setEscondidos((atual) => {
+      const novo = new Set(atual);
+      novo.delete(id);
+      return novo;
+    });
+    setErroReativar(mensagem);
+  }
+
   // Busca achou um lead só: rola a tela sozinha até a coluna dele, mesmo
   // jeito do Kanban de Pré-vendas — senão a pessoa acha que sumiu quando a
   // coluna está fora da área visível.
@@ -243,6 +281,17 @@ export function BaseLeadsBoard({
 
   return (
     <div className="relative h-full min-h-0 flex-1">
+      {erroReativar && (
+        <div
+          role="alert"
+          className="absolute left-1/2 top-2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 shadow-md"
+        >
+          <span>{erroReativar}</span>
+          <button type="button" onClick={() => setErroReativar(null)} className="font-semibold underline">
+            Fechar
+          </button>
+        </div>
+      )}
       <div ref={scrollRef} className="scrollbar-kanban flex h-full gap-5 overflow-x-auto pb-2 pl-1 pr-1">
       {COLUNAS.filter(
         (c) =>
@@ -251,7 +300,7 @@ export function BaseLeadsBoard({
           !(funilConsorcio(publicoOrg) && c.chave === "qualificou_sumiu") &&
           (funilConsorcio(publicoOrg) || !COLUNAS_SO_CONSORCIO.includes(c.chave))
       ).map((coluna) => {
-        const leads = leadsPorMotivo[coluna.chave] ?? [];
+        const leads = (leadsPorMotivo[coluna.chave] ?? []).filter((l) => !escondidos.has(l.id));
         return (
           <section
             key={coluna.chave}
@@ -394,6 +443,8 @@ export function BaseLeadsBoard({
                       usuarios={usuarios}
                       souAdmin={souAdmin}
                       publicoOrg={publicoOrg}
+                      aoReativar={esconder}
+                      aoFalhar={desfazerEsconder}
                     />
                   </div>
                 ))

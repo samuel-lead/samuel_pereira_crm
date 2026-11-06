@@ -115,15 +115,18 @@ export default async function BasePage({
   // .in() com milhares de ids estoura o tamanho do endereço da requisição —
   // busca em pedaços de 200 ids e junta, ordenando pela data de novo.
   type ReuniaoBase = { lead_id: string; status: string; agendada_para: string };
-  const reunioesData: ReuniaoBase[] = [];
-  for (const pedaco of emPedacos(leadIds, 200)) {
-    const { data } = await supabase
-      .from("reunioes")
-      .select("lead_id, status, agendada_para")
-      .in("lead_id", pedaco)
-      .order("agendada_para", { ascending: false });
-    reunioesData.push(...((data ?? []) as ReuniaoBase[]));
-  }
+  // Todos os pedaços ao mesmo tempo (antes um depois do outro: com 3.000
+  // leads na Base eram 15 idas e vindas em fila).
+  const pedacosReunioes = await Promise.all(
+    emPedacos(leadIds, 200).map((pedaco) =>
+      supabase
+        .from("reunioes")
+        .select("lead_id, status, agendada_para")
+        .in("lead_id", pedaco)
+        .order("agendada_para", { ascending: false })
+    )
+  );
+  const reunioesData: ReuniaoBase[] = pedacosReunioes.flatMap((r) => (r.data ?? []) as ReuniaoBase[]);
   reunioesData.sort(
     (a, b) => new Date(b.agendada_para).getTime() - new Date(a.agendada_para).getTime()
   );
