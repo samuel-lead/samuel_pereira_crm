@@ -966,11 +966,9 @@ export async function contarPropostasIniciadasPorUsuario(
 // Inove Gôndolas (sem reunião): "enviados pro Elton" = leads que entraram no
 // nível 3 ("Leads para o Elton") dentro do período, contados por quem enviou.
 // Conta o lead uma vez só por entrada no período e ignora lead arquivado.
-// Dia em que a Inove deixou de passar lead pro Elton por reunião marcada.
-// Até 04/11 inclusive (dia da mudança). Samuel, 06/11/26: as 36 reuniões marcadas
-// pelo Luciano (12 em outubro, 24 em 03 e 04/11) precisam aparecer no ranking.
-const FIM_ENVIO_POR_REUNIAO_GONDOLAS = new Date("2026-11-05T00:00:00-03:00");
-
+// Samuel (06/11/26): os envios de outubro do Luciano (33) e os de novembro (4)
+// foram gravados no histórico, com a data certa de cada um — o ranking lê só
+// o histórico (nível 3 = "Leads para o Elton").
 export async function contarEnviadosAoCloserPorUsuario(
   supabase: SupabaseServerClient,
   orgId: string,
@@ -992,32 +990,9 @@ export async function contarEnviadosAoCloserPorUsuario(
       .range(de, ate)
   );
 
-  // Samuel (06/11/26): até 04/11 a Inove passava o lead pro Elton MARCANDO
-  // REUNIÃO — então a reunião marcada pelo SDR também conta como "enviado"
-  // (na data em que foi marcada, qualquer status; as de antes da mudança
-  // foram todas canceladas quando a reunião saiu do funil). De 05/11 em
-  // diante só vale o botão "Enviar para o Elton". Cada lead conta uma vez.
-  const fimReunioes = new Date(Math.min(fim.getTime(), FIM_ENVIO_POR_REUNIAO_GONDOLAS.getTime()));
-  let reunioesMarcadas: Linha[] = [];
-  if (inicio < fimReunioes) {
-    const { data: reunioesData } = await buscarTodas<Linha>((de, ate) =>
-      supabase
-        .from("reunioes")
-        .select("lead_id, usuario_id:usuario_id, leads!inner(arquivado_em)")
-        .eq("org_id", orgId)
-        .is("leads.arquivado_em", null)
-        .gte("marcada_em", inicio.toISOString())
-        .lt("marcada_em", fimReunioes.toISOString())
-        .order("marcada_em")
-        .order("id")
-        .range(de, ate)
-    );
-    reunioesMarcadas = reunioesData ?? [];
-  }
-
   const vistos = new Set<string>();
   const porUsuario = new Map<string, number>();
-  for (const linha of [...(data ?? []), ...reunioesMarcadas]) {
+  for (const linha of data ?? []) {
     if (vistos.has(linha.lead_id)) continue;
     vistos.add(linha.lead_id);
     if (!linha.usuario_id) continue;
