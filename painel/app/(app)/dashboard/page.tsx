@@ -568,7 +568,10 @@ export default async function DashboardPage({
             Visão geral da equipe
           </h2>
           <div className="space-y-4">
-            <LeadsRecentes leads={leadsRecentes} leadsUltimaHora={leadsUltimaHora ?? 0} publicoOrg={publicoOrg} />
+            {/* Inove Gôndolas (Samuel, 06/11/26): sem "Leads recentes" na Visão geral. */}
+            {!funilGondolas(publicoOrg) && (
+              <LeadsRecentes leads={leadsRecentes} leadsUltimaHora={leadsUltimaHora ?? 0} publicoOrg={publicoOrg} />
+            )}
             <LeadsPorOrigem
               titulo={`Origens dos leads — ${periodoResolvido.titulo.toLowerCase()}`}
               dados={leadsPorOrigem}
