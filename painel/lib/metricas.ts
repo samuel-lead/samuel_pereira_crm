@@ -1001,6 +1001,7 @@ export async function contarEnviadosAoCloserPorUsuario(
 export type MetricasUsuario = Metricas & {
   usuarioId: string;
   nome: string;
+  funcao?: string | null;
   // Só quem é puramente Closer (nem SDR, nem admin) fica de fora do
   // botão "Copiar" — ele não faz o check-in diário de prospecção/ligação.
   // Admin que também é Closer continua podendo copiar (Samuel pediu).
@@ -1040,6 +1041,7 @@ export async function calcularMetricasPorUsuario(
         ...metricas,
         usuarioId: usuario.id,
         nome: usuario.nome,
+        funcao: (usuario.funcao as string | null) ?? null,
         podeCopiarRelatorio: usuario.funcao !== "closer" || usuario.papel === "admin",
       };
     })

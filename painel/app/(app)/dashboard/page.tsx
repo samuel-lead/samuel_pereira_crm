@@ -323,10 +323,14 @@ export default async function DashboardPage({
   if (contagemGondolasP) {
     const [hoje, periodoAtual, periodoAnterior] = await contagemGondolasP;
     enviadosHoje = hoje.porUsuario.get(usuario!.id) ?? 0;
-    performanceSdr = performancePeriodoSdr.map((linha) => ({
-      ...linha,
-      enviadosAoCloser: periodoAtual.porUsuario.get(linha.usuarioId) ?? 0,
-    }));
+    // Samuel (06/11/26): o ranking da Inove é só dos SDRs — Elton (closer) e
+    // Lorrany (admin) ficam de fora.
+    performanceSdr = performancePeriodoSdr
+      .filter((linha) => linha.funcao === "sdr")
+      .map((linha) => ({
+        ...linha,
+        enviadosAoCloser: periodoAtual.porUsuario.get(linha.usuarioId) ?? 0,
+      }));
     metricas = { ...metricasPeriodo, enviadosAoCloser: periodoAtual.total };
     metricasAnteriores = { ...metricasAnterioresPeriodo, enviadosAoCloser: periodoAnterior.total };
   }
