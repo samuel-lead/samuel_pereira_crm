@@ -5,6 +5,7 @@ import { BonusSdrTabela } from "@/components/bonus-sdr";
 import { calcularBonusPorSdr, type BonusSdrConfig } from "@/lib/metricas";
 import { resolverPeriodo } from "@/lib/periodo";
 import { bloquearSeOculta } from "@/lib/paginas-ocultas";
+import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
 
 // Samuel pediu um filtro de mês aqui — antes a tela só mostrava o mês
 // atual, sem jeito nenhum de olhar o bônus de um mês passado. O bônus é
@@ -77,6 +78,7 @@ export default async function BonusSdrPage({
           publicoOrg={usuario!.publico_org}
           config={config}
           travaNoShow={flagsOrg?.sdr_original === true}
+          mostrarTotalEquipe={usuario!.org_id !== ORG_ID_SAMUEL}
         />
       </main>
     </>

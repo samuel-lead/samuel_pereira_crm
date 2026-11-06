@@ -84,6 +84,7 @@ export function BonusSdrTabela({
   publicoOrg = "mentoria",
   config = BONUS_SDR_CONFIG_PADRAO,
   travaNoShow = false,
+  mostrarTotalEquipe = true,
 }: {
   dados: BonusSdr[];
   periodo?: string;
@@ -92,6 +93,9 @@ export function BonusSdrTabela({
   // No-show acima do limite derruba todos os bônus (empresas de serviço com
   // Closer); no modelo por call a trava já é parte do modelo.
   travaNoShow?: boolean;
+  // Samuel (06/11/26): no CRM dele o cartão "Bônus total da equipe" some —
+  // somava a linha dele com a da Julia e gerava confusão.
+  mostrarTotalEquipe?: boolean;
 }) {
   const totalEquipe = dados.reduce((soma, d) => soma + d.totalBonus, 0);
   // Empresa sem a regra de fim de semana (valores iguais aos de semana) e/ou
@@ -286,7 +290,7 @@ export function BonusSdrTabela({
         </p>
       )}
 
-      {config.modelo === "por_call" && (
+      {config.modelo === "por_call" && mostrarTotalEquipe && (
         <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-neutral-500">
             <IconeEstrela className="h-3.5 w-3.5 text-green-600" />
