@@ -1318,7 +1318,7 @@ export function KanbanBoard({
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 const certeza = await perguntar(
-                                  `Enviar ${lead.nome} para ${nomeDoCloser ?? "o closer"}? O lead sai de Pré-vendas e vai para Vendas.`
+                                  `Enviar lead para ${nomeDoCloser ?? "o closer"}? O lead sai de Pré-vendas e vai para Vendas.`
                                 );
                                 if (certeza) moverPara(lead.id, lead.nivel_ordem, 3, false);
                               }}
