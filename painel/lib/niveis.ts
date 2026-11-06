@@ -250,7 +250,9 @@ export function colunasPreVendasDaOrg(publicoOrg: string) {
 // Níveis do Vendas que viram coluna própria (a ordem 8 só vira coluna fora
 // do funil de consórcio; "Repescagem futura" é montada à parte).
 export function colunasVendasDaOrg(publicoOrg: string) {
-  if (funilGondolas(publicoOrg)) return [3, 4, 7];
+  // Inove Gôndolas (Samuel, 06/11/26): "Proposta enviada" (7) vem antes de
+  // "Em negociação" (4).
+  if (funilGondolas(publicoOrg)) return [3, 7, 4];
   return funilConsorcio(publicoOrg) ? [4, 7] : NIVEIS_VENDAS;
 }
 

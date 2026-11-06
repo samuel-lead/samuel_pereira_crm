@@ -174,7 +174,8 @@ export default async function VendasPage({
   const todosNiveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
   const numerosVisiveis = numerarNiveis(todosNiveis);
   const niveis = [
-    ...todosNiveis.filter((nivel) => colunasVendasDaOrg(publicoOrg).includes(nivel.ordem)),
+    // Na ordem da lista da empresa (na Inove a Proposta enviada vem antes da Negociação).
+    ...colunasVendasDaOrg(publicoOrg).flatMap((ordem) => todosNiveis.filter((nivel) => nivel.ordem === ordem)),
     // Inove Gôndolas não tem Oportunidades nem Repescagem futura (Samuel, 04/11/26).
     ...(funilGondolas(publicoOrg)
       ? []
