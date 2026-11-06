@@ -96,7 +96,7 @@ export function MetasConfigForm({
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="piso_reunioes_dia">
             {gondolas
-              ? "Piso de leads enviados pro Elton/dia"
+              ? "Piso de leads enviados para o Elton/dia"
               : `Piso de ${reunioes(publicoOrg)}/${ehImobiliario(publicoOrg) ? "semana" : "dia"}`}
           </label>
           <input

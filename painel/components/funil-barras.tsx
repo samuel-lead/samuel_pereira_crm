@@ -175,11 +175,11 @@ export function FunilBarras({
       anterior: ant?.leadsTrabalhados,
     },
     {
-      rotulo: "Enviados pro Elton",
+      rotulo: "Enviados para o Elton",
       valor: enviados,
       anterior: ant?.enviadosAoCloser,
       piso: pisoReunioes,
-      conversao: { nome: "envio pro Elton", valor: taxaEnvio },
+      conversao: { nome: "envio para o Elton", valor: taxaEnvio },
     },
     {
       rotulo: "Vendas",
@@ -189,7 +189,7 @@ export function FunilBarras({
         nome: "conversão",
         valor: taxaVendaEnviados,
         minimo: metas.taxa_venda_min,
-        legenda: "das vendas sobre os leads enviados pro Elton no período",
+        legenda: "das vendas sobre os leads enviados para o Elton no período",
       },
     },
   ];
@@ -366,7 +366,7 @@ export function FunilBarras({
       <div className="mt-6 grid grid-cols-2 gap-x-2 gap-y-5 border-t border-neutral-100 pt-5 dark:border-neutral-800">
         <Medidor
           valor={taxaEnvio}
-          rotulo="Envio pro Elton"
+          rotulo="Envio para o Elton"
           legenda={`${enviados} de ${metricas.leadsTrabalhados}`}
           bom={null}
         />

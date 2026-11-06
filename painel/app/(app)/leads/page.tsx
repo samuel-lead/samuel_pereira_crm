@@ -598,7 +598,7 @@ export default async function LeadsPage({
               )}
               {enviadosHoje !== null && (
                 <StatCell
-                  label="Enviados pro Elton hoje"
+                  label="Enviados para o Elton hoje"
                   value={enviadosHoje}
                   sub={souAdmin ? "Time todo" : undefined}
                 />

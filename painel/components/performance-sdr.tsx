@@ -14,6 +14,19 @@ function formatarPercentual(valor: number | null) {
 // sem foto, sem cartão de métricas quebrando embaixo (isso é o que ele
 // pediu pra tirar). Ordenado por calls REALIZADAS (não por venda —
 // Samuel foi explícito: o ranking de venda é o do Closer).
+// Inove Gôndolas: diz, em palavras, por que cada SDR está nessa posição.
+function explicacaoPosicao(indice: number, enviados: number, enviadosDoPrimeiro: number) {
+  const leads = (n: number) => `${n} lead${n === 1 ? "" : "s"}`;
+  if (indice === 0) {
+    return enviados === 0
+      ? "Ninguém enviou leads para o Elton ainda"
+      : `1º lugar: enviou ${leads(enviados)} para o Elton`;
+  }
+  const diferenca = enviadosDoPrimeiro - enviados;
+  if (diferenca === 0) return `${indice + 1}º lugar: empatado com o 1º (${leads(enviados)} enviados)`;
+  return `${indice + 1}º lugar: enviou ${leads(enviados)}, ${diferenca} a menos que o 1º`;
+}
+
 export function PerformanceSdr({
   titulo,
   dados,
@@ -40,11 +53,16 @@ export function PerformanceSdr({
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
       <div className="border-b-2 border-neutral-300 px-4 py-3 dark:border-neutral-700">
         <h2 className="text-lg font-extrabold tracking-tight text-neutral-900">{tituloResolvido}</h2>
+        {gondolas && (
+          <p className="mt-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-800">
+            Como o ranking é montado: quem enviou mais leads para o Elton no período fica em 1º lugar.
+          </p>
+        )}
         <p className="mt-0.5 text-xs text-neutral-500">
           {consorcio
             ? `Top ${Sdr(publicoOrg)} por propostas iniciadas · ${periodo}`
             : gondolas
-              ? `Top ${Sdr(publicoOrg)} por leads enviados pro Elton · ${periodo}`
+              ? `Top ${Sdr(publicoOrg)} por leads enviados para o Elton · ${periodo}`
             : `Top ${Sdr(publicoOrg)} por ${Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · ${periodo}`}
         </p>
       </div>
@@ -72,7 +90,7 @@ export function PerformanceSdr({
                     <p className="shrink-0 text-base font-extrabold text-neutral-900">
                       {valorPrincipal(linha)}{" "}
                       <span className="text-xs font-medium text-neutral-400">
-                        {consorcio ? "propostas iniciadas" : gondolas ? "enviados" : "realizadas"}
+                        {consorcio ? "propostas iniciadas" : gondolas ? "enviados para o Elton" : "realizadas"}
                       </span>
                     </p>
                   </div>
@@ -93,6 +111,17 @@ export function PerformanceSdr({
                     )}
                     {` · ${linha.vendas} venda${linha.vendas === 1 ? "" : "s"}`}
                   </p>
+                  {gondolas && (
+                    <p
+                      className={`mt-1.5 inline-block rounded-md px-2 py-1 text-xs font-bold ${
+                        indice === 0
+                          ? "bg-green-100 text-green-800"
+                          : "bg-neutral-100 text-neutral-600"
+                      }`}
+                    >
+                      {explicacaoPosicao(indice, valorPrincipal(linha), valorPrincipal(ranking[0]))}
+                    </p>
+                  )}
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                     <div
                       className="h-full rounded-full bg-green-600"
