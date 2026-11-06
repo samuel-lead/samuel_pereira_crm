@@ -62,16 +62,6 @@ export default async function BonusSdrPage({
       <PageHeader titulo="Bônus SDR" />
 
       <main className="space-y-4 bg-[#f4f5f7] px-6 py-6">
-        <FiltroPeriodo
-          baseHref="/bonus-sdr"
-          periodoAtual={periodoResolvido.chave}
-          mesAnoAtual={mesAno}
-          deAtual={de}
-          ateAtual={ate}
-          atalhos={["mes", "mes_passado"]}
-          publicoOrg={usuario!.publico_org}
-        />
-
         <BonusSdrTabela
           dados={bonus}
           periodo={rotuloPeriodo}
@@ -79,6 +69,17 @@ export default async function BonusSdrPage({
           config={config}
           travaNoShow={flagsOrg?.sdr_original === true}
           mostrarTotalEquipe={usuario!.org_id !== ORG_ID_SAMUEL}
+          filtro={
+            <FiltroPeriodo
+              baseHref="/bonus-sdr"
+              periodoAtual={periodoResolvido.chave}
+              mesAnoAtual={mesAno}
+              deAtual={de}
+              ateAtual={ate}
+              atalhos={["mes", "mes_passado"]}
+              publicoOrg={usuario!.publico_org}
+            />
+          }
         />
       </main>
     </>

@@ -85,6 +85,7 @@ export function BonusSdrTabela({
   config = BONUS_SDR_CONFIG_PADRAO,
   travaNoShow = false,
   mostrarTotalEquipe = true,
+  filtro,
 }: {
   dados: BonusSdr[];
   periodo?: string;
@@ -96,6 +97,9 @@ export function BonusSdrTabela({
   // Samuel (06/11/26): no CRM dele o cartão "Bônus total da equipe" some —
   // somava a linha dele com a da Julia e gerava confusão.
   mostrarTotalEquipe?: boolean;
+  // Filtro de período: aparece logo abaixo da explicação e fica fixo no topo
+  // ao rolar a lista de SDRs (Samuel, 06/11/26), igual à Visão geral.
+  filtro?: React.ReactNode;
 }) {
   const totalEquipe = dados.reduce((soma, d) => soma + d.totalBonus, 0);
   // Empresa sem a regra de fim de semana (valores iguais aos de semana) e/ou
@@ -288,6 +292,12 @@ export function BonusSdrTabela({
             ? `o SDR perde todos os bônus, inclusive o das ${calls(publicoOrg)} realizadas qualificadas.`
             : `o ${Sdr(publicoOrg)} perde todos os bônus do mês.`}
         </p>
+      )}
+
+      {filtro && (
+        <div className="sticky top-0 z-10 -mx-6 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)]">
+          {filtro}
+        </div>
       )}
 
       {config.modelo === "por_call" && mostrarTotalEquipe && (
