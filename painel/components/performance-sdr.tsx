@@ -3,6 +3,7 @@ import { CopiarRelatorioButton } from "@/components/copiar-relatorio-button";
 import { Calls, Sdr, funilConsorcio, funilGondolas } from "@/lib/terminologia";
 import { corPosicaoRanking } from "@/lib/ranking";
 import { LeadsEnviadosLista } from "@/components/leads-enviados-lista";
+import { BaixarPdfLeadsEnviados } from "@/components/baixar-pdf-leads-enviados";
 
 function formatarPercentual(valor: number | null) {
   if (valor === null) return null;
@@ -52,7 +53,8 @@ export function PerformanceSdr({
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-      <div className="border-b-2 border-neutral-300 px-4 py-3 dark:border-neutral-700">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b-2 border-neutral-300 px-4 py-3 dark:border-neutral-700">
+        <div>
         <h2 className="text-lg font-extrabold tracking-tight text-neutral-900">{tituloResolvido}</h2>
         <p className="mt-0.5 text-xs text-neutral-500">
           {consorcio
@@ -61,6 +63,16 @@ export function PerformanceSdr({
               ? `Top ${Sdr(publicoOrg)} por leads enviados para o Elton · ${periodo}`
             : `Top ${Sdr(publicoOrg)} por ${Calls(publicoOrg).toLowerCase()} marcadas que foram realizadas · ${periodo}`}
         </p>
+        </div>
+        {gondolas && ranking.some((l) => (l.leadsEnviados?.length ?? 0) > 0) && (
+          <BaixarPdfLeadsEnviados
+            destaque
+            rotulo="Baixar PDF de todos os SDRs"
+            nomeArquivo="leads-enviados-todos-os-sdrs"
+            periodo={periodo}
+            sdrs={ranking.map((l) => ({ nome: l.nome, leads: l.leadsEnviados ?? [] }))}
+          />
+        )}
       </div>
 
       {ranking.length === 0 ? (
@@ -125,7 +137,7 @@ export function PerformanceSdr({
                     />
                   </div>
                   {gondolas && (linha.leadsEnviados?.length ?? 0) > 0 && (
-                    <LeadsEnviadosLista leads={linha.leadsEnviados!} />
+                    <LeadsEnviadosLista leads={linha.leadsEnviados!} sdrNome={linha.nome} periodo={periodo} />
                   )}
                 </div>
                 {linha.podeCopiarRelatorio && (
