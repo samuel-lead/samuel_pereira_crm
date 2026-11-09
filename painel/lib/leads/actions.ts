@@ -17,6 +17,7 @@ import {
 import { garantirOrigem } from "@/lib/origens/actions";
 import { pareceOrigemInvalida } from "@/lib/origens/validacao";
 import { normalizarTelefone } from "@/lib/telefone";
+import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
 import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { lerPropostaConsorcioDoForm, type PropostaConsorcio } from "@/lib/proposta-consorcio";
 
@@ -2983,6 +2984,7 @@ export type DetalhesLead = {
     venda_comissao_tipo: string | null;
     venda_comissao_valor: number | null;
     proposta_consorcio: PropostaConsorcio | null;
+    sdr_abordagem_id: string | null;
   };
   niveis: NivelResumo[];
   interacoes: {
@@ -3044,6 +3046,11 @@ export type DetalhesLead = {
   nomeResponsavel: string | undefined;
   fotoResponsavel: string | null | undefined;
   nomeSdrOriginal: string | undefined;
+  // Samuel (09/11/26): lead com dois SDRs — quem abordou e quem qualifica.
+  nomeSdrAbordagem: string | undefined;
+  // Só no CRM do Samuel: mostra o botão "Passar pra outro SDR" e a lista de quem pode receber.
+  podePassarParaSdr: boolean;
+  opcoesSdrParaPassar: { id: string; nome: string }[];
   reuniaoAtiva: { id: string; agendada_para: string; closer_id: string | null } | null;
   reuniaoAnteriorPendente: boolean;
   numerosVisiveis: Record<number, number>;
@@ -3088,7 +3095,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, usuario_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio"
+        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, usuario_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio, sdr_abordagem_id"
       )
       .eq("id", leadId)
       .single(),
@@ -3168,6 +3175,18 @@ export async function buscarDetalhesDoLead(
       ? ((lead as { usuario_id?: string | null }).usuario_id ?? null)
       : null;
   const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
+  const nomeSdrAbordagem = usuarios.find(
+    (u) => u.id === (lead as { sdr_abordagem_id?: string | null }).sdr_abordagem_id
+  )?.nome;
+  const podePassarParaSdr =
+    usuario.org_id === ORG_ID_SAMUEL &&
+    lead.responsavel_id !== null &&
+    lead.status !== "vendido" &&
+    lead.arquivado_em === null &&
+    (souAdmin || lead.responsavel_id === usuario.id);
+  const opcoesSdrParaPassar = podePassarParaSdr
+    ? usuarios.filter((u) => u.funcao === "sdr" && u.id !== lead.responsavel_id).map((u) => ({ id: u.id, nome: u.nome }))
+    : [];
   // Admin também pega o lead pra si quando ele não tem responsável
   // (Samuel pediu — antes só aparecia pra quem não era admin). E o SDR
   // que marcou a reunião original também pode "pegar de volta" um lead
@@ -3207,6 +3226,9 @@ export async function buscarDetalhesDoLead(
       nomeResponsavel,
       fotoResponsavel,
       nomeSdrOriginal,
+      nomeSdrAbordagem,
+      podePassarParaSdr,
+      opcoesSdrParaPassar,
       reuniaoAtiva,
       reuniaoAnteriorPendente,
       numerosVisiveis,
@@ -3214,6 +3236,25 @@ export async function buscarDetalhesDoLead(
       googleCalendarConectado,
     },
   };
+}
+
+// Samuel (09/11/26): passa o lead de um SDR pro outro (quem abordou → quem
+// qualifica). Quem fez a abordagem fica guardado no lead (ver gatilho
+// registrar_sdr_abordagem no banco). Só no CRM do Samuel por enquanto.
+export async function passarLeadParaSdr(leadId: string, novoSdrId: string): Promise<string | null> {
+  const { supabase, usuario } = await contextoUsuario();
+  if (usuario.org_id !== ORG_ID_SAMUEL) return "Essa opção não está disponível nessa empresa.";
+  if (!novoSdrId) return "Escolha pra qual SDR passar o lead.";
+
+  const { error } = await supabase.rpc("passar_lead_para_sdr", {
+    p_lead_id: leadId,
+    p_novo_sdr_id: novoSdrId,
+  });
+  if (error) return error.message;
+
+  revalidatePath("/leads");
+  revalidatePath(`/leads/${leadId}`);
+  return null;
 }
 
 // Cria (ou atualiza, se já existir) o evento na Google Agenda conectada

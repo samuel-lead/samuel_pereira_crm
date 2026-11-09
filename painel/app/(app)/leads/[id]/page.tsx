@@ -62,6 +62,7 @@ type Lead = {
   venda_comissao_tipo: string | null;
   proposta_consorcio: PropostaConsorcio | null;
   venda_comissao_valor: number | null;
+  sdr_abordagem_id: string | null;
 };
 
 type Interacao = {
@@ -157,7 +158,7 @@ export default async function EditarLeadPage({
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio"
+        "id, nome, telefone_e164, email, instagram, foto_url, origem, quem_indicou, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio, sdr_abordagem_id"
       )
       .eq("id", id)
       .single(),
@@ -267,6 +268,7 @@ export default async function EditarLeadPage({
       )[0].usuario_id
     : null;
   const nomeSdrOriginal = usuarios.find((u) => u.id === sdrOriginalId)?.nome;
+  const nomeSdrAbordagem = usuarios.find((u) => u.id === leadTipado.sdr_abordagem_id)?.nome;
   const numerosVisiveis = Object.fromEntries(numerarNiveis(niveis));
 
   return (
@@ -294,7 +296,7 @@ export default async function EditarLeadPage({
             </p>
           </div>
 
-          {(nomeResponsavel || nomeSdrOriginal) && (
+          {(nomeResponsavel || nomeSdrOriginal || nomeSdrAbordagem) && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">
               <p className="flex items-center gap-2">
                 <span className="text-neutral-500">Responsável atual: </span>
@@ -305,9 +307,17 @@ export default async function EditarLeadPage({
                   {nomeResponsavel ?? "sem responsável"}
                 </span>
               </p>
+              {nomeSdrAbordagem && (
+                <p>
+                  <span className="text-neutral-500">{Sdr(publicoOrg)} da abordagem: </span>
+                  <span className="font-medium text-neutral-800">{nomeSdrAbordagem}</span>
+                </p>
+              )}
               {nomeSdrOriginal && (
                 <p>
-                  <span className="text-neutral-500">{Sdr(publicoOrg)} responsável: </span>
+                  <span className="text-neutral-500">
+                    {nomeSdrAbordagem ? `${Sdr(publicoOrg)} da qualificação: ` : `${Sdr(publicoOrg)} responsável: `}
+                  </span>
                   <span className="font-medium text-neutral-800">{nomeSdrOriginal}</span>
                 </p>
               )}

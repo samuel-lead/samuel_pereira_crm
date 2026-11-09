@@ -12,6 +12,7 @@ import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { IndicacaoPegaButton } from "@/components/indicacao-pega-button";
 import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
 import { ReivindicarLeadButton } from "@/components/reivindicar-lead-button";
+import { PassarLeadParaSdr } from "@/components/passar-lead-para-sdr";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { RecebimentosVenda } from "@/components/recebimentos-venda";
@@ -125,6 +126,9 @@ export function LeadModalConteudo({
     nomeResponsavel,
     fotoResponsavel,
     nomeSdrOriginal,
+    nomeSdrAbordagem,
+    podePassarParaSdr,
+    opcoesSdrParaPassar,
     reuniaoAtiva,
     reuniaoAnteriorPendente,
     numerosVisiveis,
@@ -159,7 +163,7 @@ export function LeadModalConteudo({
           Lead adicionado em {formatarData(lead.declarado_em)}
         </p>
 
-        {(nomeResponsavel || nomeSdrOriginal) && (
+        {(nomeResponsavel || nomeSdrOriginal || nomeSdrAbordagem) && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm shadow-sm">
             <p className="flex items-center gap-2">
               <span className="text-neutral-500">Responsável atual: </span>
@@ -170,12 +174,21 @@ export function LeadModalConteudo({
                 {nomeResponsavel ?? "sem responsável"}
               </span>
             </p>
+            {nomeSdrAbordagem && (
+              <p>
+                <span className="text-neutral-500">{Sdr(publicoOrg)} da abordagem: </span>
+                <span className="font-medium text-neutral-800">{nomeSdrAbordagem}</span>
+              </p>
+            )}
             {nomeSdrOriginal && (
               <p>
-                <span className="text-neutral-500">{Sdr(publicoOrg)} responsável: </span>
+                <span className="text-neutral-500">
+                  {nomeSdrAbordagem ? `${Sdr(publicoOrg)} da qualificação: ` : `${Sdr(publicoOrg)} responsável: `}
+                </span>
                 <span className="font-medium text-neutral-800">{nomeSdrOriginal}</span>
               </p>
             )}
+            {podePassarParaSdr && <PassarLeadParaSdr leadId={lead.id} opcoes={opcoesSdrParaPassar} />}
           </div>
         )}
 

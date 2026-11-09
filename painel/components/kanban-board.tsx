@@ -56,6 +56,7 @@ type LeadResumo = {
   // Quem criou o lead (o SDR de origem). Na Inove Gôndolas, onde não há
   // reunião, é o que mostra "veio do Luciano" depois que o lead vai pro Elton.
   usuario_id?: string | null;
+  sdr_abordagem_id?: string | null;
   declarado_em?: string;
   entrou_nivel_em?: string;
   ultima_atividade_em?: string;
@@ -1152,6 +1153,21 @@ export function KanbanBoard({
                               </span>
                             </p>
                           )}
+                          {lead.sdr_abordagem_id &&
+                            lead.sdr_abordagem_id !== lead.responsavel_id &&
+                            nomePorUsuario.get(lead.sdr_abordagem_id) && (
+                              <p className="flex items-center gap-1 truncate text-xs text-neutral-500">
+                                {Sdr(publicoOrg)} da abordagem:{" "}
+                                <AvatarLead
+                                  nome={nomePorUsuario.get(lead.sdr_abordagem_id)!}
+                                  fotoUrl={fotoPorUsuario.get(lead.sdr_abordagem_id)}
+                                  tamanho="h-4 w-4 text-[8px]"
+                                />
+                                <span className="truncate font-medium text-neutral-600">
+                                  {nomePorUsuario.get(lead.sdr_abordagem_id)}
+                                </span>
+                              </p>
+                            )}
                           {funilGondolas(publicoOrg) &&
                             lead.usuario_id &&
                             lead.usuario_id !== lead.responsavel_id &&
