@@ -111,14 +111,19 @@ export default async function VendasPage({
     let consulta = supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, usuario_id, oportunidade_futura, reativado_da_base_em, reativado_origem, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
+        "id, nome, telefone_e164, instagram, foto_url, origem, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, sdr_abordagem_id, usuario_id, oportunidade_futura, reativado_da_base_em, reativado_origem, valor_venda, proposta_valor, proximo_follow_em, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
       )
       .is("arquivado_em", null)
       .neq("status", "vendido")
       .in("nivel_ordem", niveisVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria"));
 
     if (usuarioFiltro) {
-      consulta = consulta.eq("responsavel_id", usuarioFiltro);
+      // Samuel (10/11/26): filtrar por um SDR também mostra os leads que ELE
+      // abordou e passou pra outro SDR (sdr_abordagem_id), não só os que estão
+      // com ele agora. O id vai direto no filtro, então só aceita formato de id.
+      consulta = /^[0-9a-f-]{36}$/i.test(usuarioFiltro)
+        ? consulta.or(`responsavel_id.eq.${usuarioFiltro},sdr_abordagem_id.eq.${usuarioFiltro}`)
+        : consulta.eq("responsavel_id", usuarioFiltro);
     }
     if (origemFiltro) {
       consulta = consulta.eq("origem", origemFiltro);

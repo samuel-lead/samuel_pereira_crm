@@ -92,7 +92,12 @@ export default async function LeadsPage({
       .in("nivel_ordem", niveisPreVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria"));
 
     if (usuarioFiltro) {
-      consulta = consulta.eq("responsavel_id", usuarioFiltro);
+      // Samuel (10/11/26): filtrar por um SDR também mostra os leads que ELE
+      // abordou e passou pra outro SDR (sdr_abordagem_id), não só os que estão
+      // com ele agora. O id vai direto no filtro, então só aceita formato de id.
+      consulta = /^[0-9a-f-]{36}$/i.test(usuarioFiltro)
+        ? consulta.or(`responsavel_id.eq.${usuarioFiltro},sdr_abordagem_id.eq.${usuarioFiltro}`)
+        : consulta.eq("responsavel_id", usuarioFiltro);
     }
     if (origemFiltro) {
       consulta = consulta.eq("origem", origemFiltro);
