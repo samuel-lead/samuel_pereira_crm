@@ -180,6 +180,7 @@ export function ModalLead({
                     nome={dados.lead.nome}
                     fotoUrl={dados.lead.foto_url}
                     tamanho="h-14 w-14 text-lg"
+                    ampliavel
                   />
                   <h1 className="truncate text-lg font-bold text-neutral-900">
                     {dados.lead.nome}

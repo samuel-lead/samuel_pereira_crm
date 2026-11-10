@@ -353,6 +353,7 @@ export function BaseLeadsBoard({
                         nome={lead.nome}
                         fotoUrl={lead.foto_url}
                         tamanho="h-9 w-9 text-xs"
+                        ampliavel
                         classeBadge={coluna.cor.badge}
                       />
                       <div className="min-w-0 flex-1">

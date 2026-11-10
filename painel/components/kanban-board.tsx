@@ -1063,6 +1063,7 @@ export function KanbanBoard({
                               nome={lead.nome}
                               fotoUrl={lead.foto_url}
                               tamanho="h-9 w-9 shrink-0 text-xs"
+                              ampliavel
                               classeBadge="bg-neutral-200 text-neutral-700"
                             />
                             {/* Nunca abrevia o nome do lead — quebra linha em vez de
