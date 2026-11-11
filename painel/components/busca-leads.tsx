@@ -35,15 +35,15 @@ export function BuscaLeads() {
   }
 
   return (
-    <div className="relative w-full sm:w-[25rem]">
+    <div className="relative w-full sm:w-[27rem]">
       <IconeBusca className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
       <input
         type="search"
         value={valor}
         onChange={(e) => aoDigitar(e.target.value)}
-        placeholder="Nome, telefone, e-mail, CPF, CNPJ ou @Instagram"
-        title="Busca por nome, telefone, e-mail, CPF, CNPJ ou @Instagram (ou link do Instagram)"
-        className="busca-lead-input w-full rounded-xl border border-blue-300 bg-white py-2.5 pl-10 pr-4 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+        placeholder="Nome, telefone, e-mail, CPF, CNPJ, @ ou link do Instagram"
+        title="Busca por nome, telefone, e-mail, CPF, CNPJ, @ do Instagram ou link do perfil"
+        className="busca-lead-input w-full rounded-xl border border-blue-300 bg-white py-2.5 pl-10 pr-4 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-[13px] placeholder:text-neutral-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
       />
     </div>
   );
