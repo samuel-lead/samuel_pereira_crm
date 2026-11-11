@@ -66,7 +66,7 @@ const NOME_CAPACIDADE: Record<string, string> = { sim: "Sim", parcial: "Parcial"
 
 // Grupo especial do imobiliário (Ketlyn): origem "Trafego" + todos os formulários.
 function nomeOrigem(o: string) {
-  return o === "__trafego__" ? "Tráfego + formulários" : o;
+  return o === "__trafego__" ? "Formulários (tráfego)" : o;
 }
 
 function brl(v: number | null | undefined) {
@@ -179,17 +179,14 @@ export function RelatorioTrafego({
         </div>
         <p className="mb-3 text-sm text-neutral-600">
           Período: <strong>{periodo ? `${periodo.titulo}${periodo.subtitulo ? ` (${periodo.subtitulo})` : ""}` : "todo o histórico"}</strong>
-          {" "}— conta os leads que <strong>chegaram</strong> nesse período e o que aconteceu com eles até hoje. Escolha abaixo qual origem
-          conta como tráfego.
+          {" "}— conta os leads que <strong>chegaram</strong> nesse período e o que aconteceu com eles até hoje. {d.origem !== "__trafego__" && "Escolha abaixo qual origem conta como tráfego."}
           {r.chegaram > 0 && <> Primeiro lead em {dia(r.primeiroLead)}, último em {dia(r.ultimoLead)}.</>}
         </p>
+        {/* Ketlyn (11/11/26): lead de tráfego = lead de formulário, tudo junto. Sem
+            botões separando origem. */}
+        {d.origem !== "__trafego__" && (
         <div className="flex flex-wrap gap-2">
-          {/* Ketlyn (11/11/26): onde existe o grupo "Tráfego + formulários", os
-              botões mostram só ele e cada formulário — o resto das origens
-              (Indicação, Insta, datas soltas...) não entra aqui. */}
-          {d.origens
-            .filter((o) => !d.origens.some((x) => x.origem === "__trafego__") || o.origem === "__trafego__" || o.origem.startsWith("Formulário:"))
-            .map((o) => (
+          {d.origens.map((o) => (
             <Link
               key={o.origem}
               href={`/dashboard/trafego?${new URLSearchParams({
@@ -208,6 +205,7 @@ export function RelatorioTrafego({
             </Link>
           ))}
         </div>
+        )}
       </section>
 
       <section>
