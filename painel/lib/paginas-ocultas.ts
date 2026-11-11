@@ -27,6 +27,21 @@ export async function bloquearSeOculta(
   }
 }
 
+// Relatório "Leads de tráfego": sempre existiu na mentoria; nas IMOBILIÁRIAS só
+// aparece quando a empresa foi liberada (orgs.relatorio_trafego_liberado —
+// por enquanto só a Ketlyn, 11/11/26).
+export async function relatorioTrafegoLiberado(
+  supabase: SupabaseClient,
+  orgId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("orgs")
+    .select("relatorio_trafego_liberado")
+    .eq("id", orgId)
+    .maybeSingle();
+  return data?.relatorio_trafego_liberado === true;
+}
+
 // "Captura de leads" no menu sempre existiu nas empresas de mentoria; nas
 // IMOBILIÁRIAS só aparece quando a empresa foi liberada (orgs.captura_leads).
 export async function capturaLeadsLiberada(

@@ -3,7 +3,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { RelatorioTrafego, type DadosTrafego, type PeriodoTrafego } from "@/components/relatorio-trafego";
 import { resolverPeriodo } from "@/lib/periodo";
-import { bloquearSeOculta } from "@/lib/paginas-ocultas";
+import { bloquearSeOculta, relatorioTrafegoLiberado } from "@/lib/paginas-ocultas";
 import { funilGondolas } from "@/lib/terminologia";
 
 // Relatório "Leads de tráfego" (Samuel, 04/11/26): origem, o que chegou, o
@@ -20,9 +20,11 @@ export default async function TrafegoPage({
   const { usuario } = await usuarioAutenticado();
   if (!usuario || (usuario.papel !== "admin" && !usuario.super_admin)) redirect("/dashboard");
   const publicoOrg = usuario.publico_org ?? "mentoria";
-  if (funilGondolas(publicoOrg) || publicoOrg === "imobiliario") redirect("/dashboard");
-
   const supabase = await createClient();
+  // Imobiliária só abre se foi liberada (hoje: Ketlyn). Lá o "tráfego" junta a
+  // origem Trafego + todos os formulários (grupo especial "__trafego__").
+  const imobLiberada = publicoOrg === "imobiliario" && (await relatorioTrafegoLiberado(supabase, usuario.org_id));
+  if (funilGondolas(publicoOrg) || (publicoOrg === "imobiliario" && !imobLiberada)) redirect("/dashboard");
   // Empresa que escondeu esta página (orgs.paginas_ocultas) não abre nem
   // digitando o endereço.
   await bloquearSeOculta(supabase, usuario.org_id, "/dashboard/trafego");
@@ -41,7 +43,7 @@ export default async function TrafegoPage({
   // Sem origem escolhida: tenta a que se chama "Tráfego". Se essa não existir
   // na empresa (e sem filtro de período), escolhe a que tem "tráfego" no nome
   // ou, na falta, a maior.
-  let origem = origemParam ?? "Tráfego";
+  let origem = origemParam ?? (imobLiberada ? "__trafego__" : "Tráfego");
   let { data, error } = await supabase.rpc("relatorio_trafego", { p_origem: origem, ...argsPeriodo });
   let d = data as DadosTrafego | null;
   if (!origemParam && !resolvido && d && d.resumo.chegaram === 0 && d.origens.length > 0) {

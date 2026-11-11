@@ -64,6 +64,11 @@ const NOME_MOTIVO = new Map<string, string>(MOTIVOS_BASE.map((m) => [m.valor, m.
 const NOME_URGENCIA: Record<string, string> = { alta: "Alta", media: "Média", baixa: "Baixa", desconhecida: "—" };
 const NOME_CAPACIDADE: Record<string, string> = { sim: "Sim", parcial: "Parcial", nao: "Não", desconhecida: "—" };
 
+// Grupo especial do imobiliário (Ketlyn): origem "Trafego" + todos os formulários.
+function nomeOrigem(o: string) {
+  return o === "__trafego__" ? "Tráfego + formulários" : o;
+}
+
 function brl(v: number | null | undefined) {
   if (v === null || v === undefined) return "—";
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -194,14 +199,14 @@ export function RelatorioTrafego({
                   : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300"
               }`}
             >
-              {o.origem} <span className="opacity-70">({num(o.leads)})</span>
+              {nomeOrigem(o.origem)} <span className="opacity-70">({num(o.leads)})</span>
             </Link>
           ))}
         </div>
       </section>
 
       <section>
-        <Titulo sub={`Do lead que chegou por "${d.origem}" até a venda. A % ao lado é sobre o total que chegou.`}>
+        <Titulo sub={`Do lead que chegou por "${nomeOrigem(d.origem)}" até a venda. A % ao lado é sobre o total que chegou.`}>
           1. Do lead até a venda
         </Titulo>
         <Cartao>
