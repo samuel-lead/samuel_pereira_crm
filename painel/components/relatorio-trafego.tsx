@@ -132,10 +132,16 @@ export function RelatorioTrafego({
   d,
   publicoOrg,
   periodo,
+  embutido = false,
+  hrefOrigem,
 }: {
   d: DadosTrafego;
   publicoOrg: string;
   periodo: PeriodoTrafego;
+  // Dentro da Visão geral (Ketlyn): sem filtro de período próprio, sem <main>,
+  // e os botões de origem apontam pra Visão geral (hrefOrigem).
+  embutido?: boolean;
+  hrefOrigem?: (origem: string) => string;
 }) {
   const r = d.resumo;
   const ReuniaoPl = Reunioes(publicoOrg);
@@ -154,9 +160,17 @@ export function RelatorioTrafego({
   const totalUrg = r.urgencia.alta + r.urgencia.media + r.urgencia.baixa;
   const totalCap = r.capacidade.sim + r.capacidade.parcial + r.capacidade.nao;
 
+  const Raiz = embutido ? "div" : "main";
   return (
-    <main className="space-y-8 bg-[#f4f5f7] px-6 py-6">
+    <Raiz className={embutido ? "space-y-8" : "space-y-8 bg-[#f4f5f7] px-6 py-6"}>
       <section>
+        {embutido && (
+          <h2 className="mb-3 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-neutral-900">
+            <span className="h-6 w-1.5 shrink-0 rounded-full bg-[#2563eb]" />
+            Leads de tráfego
+          </h2>
+        )}
+        {!embutido && (
         <div className="mb-3 flex flex-wrap items-stretch gap-2">
           <Link
             href={`/dashboard/trafego?${new URLSearchParams({ origem: d.origem }).toString()}`}
@@ -179,6 +193,7 @@ export function RelatorioTrafego({
             publicoOrg={publicoOrg}
           />
         </div>
+        )}
         <p className="mb-3 text-sm text-neutral-600">
           Período: <strong>{periodo ? `${periodo.titulo}${periodo.subtitulo ? ` (${periodo.subtitulo})` : ""}` : "todo o histórico"}</strong>
           {" "}— conta os leads que <strong>chegaram</strong> nesse período e o que aconteceu com eles até hoje. {d.origem === "__trafego__" ? "Clique num formulário abaixo para ver só ele." : "Escolha abaixo qual origem conta como tráfego."}
@@ -193,12 +208,13 @@ export function RelatorioTrafego({
             .map((o) => (
             <Link
               key={o.origem}
-              href={`/dashboard/trafego?${new URLSearchParams({
+              href={hrefOrigem ? hrefOrigem(o.origem) : `/dashboard/trafego?${new URLSearchParams({
                 origem: o.origem,
                 ...(periodo?.de && periodo?.ate ? { de: periodo.de, ate: periodo.ate } : {}),
                 ...(periodo?.mesAno ? { mesAno: periodo.mesAno } : {}),
                 ...(periodo && !periodo.mesAno && !(periodo.de && periodo.ate) ? { periodo: periodo.chave } : {}),
               }).toString()}`}
+              scroll={!embutido}
               className={`rounded-full border px-3 py-1 text-sm font-medium ${
                 o.origem === d.origem
                   ? "border-[#2563eb] bg-[#2563eb] text-white"
@@ -384,7 +400,7 @@ export function RelatorioTrafego({
           </Cartao>
         </div>
       </section>
-    </main>
+    </Raiz>
   );
 }
 

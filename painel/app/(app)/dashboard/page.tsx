@@ -10,6 +10,8 @@ import { PerformanceSdr } from "@/components/performance-sdr";
 import { GraficoEnviadosPorMes } from "@/components/grafico-enviados-por-mes";
 import { PerformanceCloser } from "@/components/performance-closer";
 import { PerformanceCorretor } from "@/components/performance-corretor";
+import { RelatorioTrafego, type DadosTrafego } from "@/components/relatorio-trafego";
+import { relatorioTrafegoLiberado } from "@/lib/paginas-ocultas";
 import { LeadsPorOrigem } from "@/components/leads-por-origem";
 import { LeadsRecentes, type LeadRecente } from "@/components/leads-recentes";
 import { ProximasReunioes, type ReuniaoProxima } from "@/components/proximas-reunioes";
@@ -60,9 +62,9 @@ function resolverPeriodoAnterior(chave: ChavePeriodo, inicio: Date, fim: Date, a
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string; mesAno?: string; de?: string; ate?: string; anoEvolucao?: string }>;
+  searchParams: Promise<{ periodo?: string; mesAno?: string; de?: string; ate?: string; anoEvolucao?: string; origemTrafego?: string }>;
 }) {
-  const { periodo, mesAno, de, ate, anoEvolucao } = await searchParams;
+  const { periodo, mesAno, de, ate, anoEvolucao, origemTrafego } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
@@ -115,6 +117,21 @@ export default async function DashboardPage({
         contarEnviadosAoCloserPorUsuario(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
       ])
     : null;
+  // Ketlyn (11/11/26): "Leads de tráfego" (formulários) dentro da Visão geral,
+  // entre "Canais que venderam" e a evolução. Só admin de imobiliária
+  // liberada; mostra todo o histórico (não segue o filtro de período).
+  const trafegoP: Promise<DadosTrafego | null> =
+    souAdmin && ehImobiliario(publicoCedo)
+      ? (async () => {
+          if (!(await relatorioTrafegoLiberado(supabase, usuario!.org_id))) return null;
+          const { data } = await supabase.rpc("relatorio_trafego", {
+            p_origem: origemTrafego ?? "__trafego__",
+            p_inicio: null,
+            p_fim: null,
+          });
+          return (data as DadosTrafego | null) ?? null;
+        })()
+      : Promise.resolve(null);
   const safraP =
     dashboardEmBarras(publicoCedo) && !ehGondolasCedo
       ? calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
@@ -425,6 +442,14 @@ export default async function DashboardPage({
     .filter((item): item is ReuniaoAtrasada => item !== null)
     .sort((a, b) => new Date(a.agendadaPara).getTime() - new Date(b.agendadaPara).getTime());
 
+  const dadosTrafego = await trafegoP;
+  const paramsDash = { periodo, mesAno, de, ate, anoEvolucao };
+  const hrefOrigemTrafego = (origem: string) =>
+    `/dashboard?${new URLSearchParams({
+      ...Object.fromEntries(Object.entries(paramsDash).filter(([, v]) => v)) as Record<string, string>,
+      origemTrafego: origem,
+    }).toString()}#leads-trafego`;
+
   return (
     <>
       <PageHeader titulo="Visão geral" />
@@ -596,6 +621,17 @@ export default async function DashboardPage({
               <div className="grid gap-4 lg:grid-cols-2">
                 <VendasPorCanal dados={vendasPorCanal} periodo={periodoResolvido.titulo} />
                 <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
+              </div>
+            )}
+            {dadosTrafego && (
+              <div id="leads-trafego" className="scroll-mt-4">
+                <RelatorioTrafego
+                  d={dadosTrafego}
+                  publicoOrg={publicoOrg}
+                  periodo={null}
+                  embutido
+                  hrefOrigem={hrefOrigemTrafego}
+                />
               </div>
             )}
             {funilGondolas(publicoOrg) ? (

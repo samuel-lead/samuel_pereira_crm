@@ -75,7 +75,6 @@ export function Sidebar({
   publicoOrg = "mentoria",
   paginasOcultas = [],
   capturaLeads = false,
-  trafegoLiberado = false,
   abertoMobile = false,
   onFecharMobile,
 }: {
@@ -89,8 +88,6 @@ export function Sidebar({
   paginasOcultas?: string[];
   // Empresa imobiliária liberada pra ter "Captura de leads" (orgs.captura_leads).
   capturaLeads?: boolean;
-  // Imobiliária liberada pro relatório "Leads de tráfego" (orgs.relatorio_trafego_liberado).
-  trafegoLiberado?: boolean;
   abertoMobile?: boolean;
   onFecharMobile?: () => void;
 }) {
@@ -102,7 +99,7 @@ export function Sidebar({
       // Imóveis é exclusivo do público imobiliário — vale pra admin
       // também, diferente do resto (que admin sempre vê tudo).
       if (item.somenteImobiliario && publicoOrg !== "imobiliario") return false;
-      if (item.somenteMentoria && publicoOrg === "imobiliario" && !(item.href === "/dashboard/trafego" && trafegoLiberado)) return false;
+      if (item.somenteMentoria && publicoOrg === "imobiliario") return false;
       if (item.somenteGondolas && !publicoOrg.split(":").includes("gond")) return false;
       if (item.semGondolas && publicoOrg.split(":").includes("gond")) return false;
       // Captura de leads: sempre existiu na mentoria; no imobiliário só nas

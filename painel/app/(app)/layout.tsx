@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
-import { capturaLeadsLiberada, paginasOcultasDaOrg, relatorioTrafegoLiberado } from "@/lib/paginas-ocultas";
+import { capturaLeadsLiberada, paginasOcultasDaOrg } from "@/lib/paginas-ocultas";
 import { ProvedorLeadModal } from "@/components/provedor-lead-modal";
 import { Sdr } from "@/lib/terminologia";
 
@@ -19,14 +19,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // menu. Lista em orgs.paginas_ocultas.
   let paginasOcultas: string[] = [];
   let capturaLeads = false;
-  let trafegoLiberado = false;
 
   if (usuario) {
     const supabase = await createClient();
-    [paginasOcultas, capturaLeads, trafegoLiberado] = await Promise.all([
+    [paginasOcultas, capturaLeads] = await Promise.all([
       paginasOcultasDaOrg(supabase, usuario.org_id),
       capturaLeadsLiberada(supabase, usuario.org_id),
-      relatorioTrafegoLiberado(supabase, usuario.org_id),
     ]);
 
     isSuperAdmin = usuario.super_admin === true;
@@ -57,7 +55,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         publicoOrg={publicoOrg}
         paginasOcultas={paginasOcultas}
         capturaLeads={capturaLeads}
-        trafegoLiberado={trafegoLiberado}
       >
         {children}
       </AppShell>
