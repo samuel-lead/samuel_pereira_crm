@@ -300,7 +300,29 @@ async function processar(mensagemBrutaId: string, usuario: Usuario, telefone: st
   }
 }
 
+// Comparação que não revela, pelo tempo de resposta, quantas letras bateram.
+function senhaConfere(recebida: string, esperada: string) {
+  const a = new TextEncoder().encode(recebida);
+  const b = new TextEncoder().encode(esperada);
+  if (a.length !== b.length) return false;
+  let diferenca = 0;
+  for (let i = 0; i < a.length; i++) diferenca |= a[i] ^ b[i];
+  return diferenca === 0;
+}
+
 Deno.serve(async (req: Request) => {
+  // Segurança (11/11/26): essa função é pública (a Z-API não manda login), e
+  // quem se identifica é só o número de telefone dentro da mensagem — qualquer
+  // pessoa que soubesse a URL e o número de alguém da equipe poderia se passar
+  // por ele. Por isso só aceita chamada que traga a senha secreta na URL
+  // (?token=...), guardada na secret ZAPI_WEBHOOK_SECRET. Sem a secret
+  // configurada, a função fica trancada (não responde a ninguém).
+  const senhaEsperada = Deno.env.get("ZAPI_WEBHOOK_SECRET");
+  const senhaRecebida = new URL(req.url).searchParams.get("token") ?? "";
+  if (!senhaEsperada || !senhaConfere(senhaRecebida, senhaEsperada)) {
+    return new Response(JSON.stringify({ erro: "Não autorizado" }), { status: 401 });
+  }
+
   let payload: Record<string, unknown>;
   try {
     payload = await req.json();
