@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
+import { BaixarPdfTrafego } from "@/components/baixar-pdf-trafego";
 import type { ChavePeriodo } from "@/lib/periodo";
 import { MOTIVOS_BASE } from "@/lib/niveis";
 import { Reunioes, Reuniao } from "@/lib/terminologia";
@@ -165,10 +166,13 @@ export function RelatorioTrafego({
     <Raiz className={embutido ? "space-y-8" : "space-y-8 bg-[#f4f5f7] px-6 py-6"}>
       <section>
         {embutido && (
-          <h2 className="mb-3 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-neutral-900">
-            <span className="h-6 w-1.5 shrink-0 rounded-full bg-[#2563eb]" />
-            Leads de tráfego
-          </h2>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-neutral-900">
+              <span className="h-6 w-1.5 shrink-0 rounded-full bg-[#2563eb]" />
+              Leads de tráfego
+            </h2>
+            <BaixarPdfTrafego d={d} publicoOrg={publicoOrg} nomeOrigem={nomeOrigem(d.origem)} />
+          </div>
         )}
         {!embutido && (
         <div className="mb-3 flex flex-wrap items-stretch gap-2">
