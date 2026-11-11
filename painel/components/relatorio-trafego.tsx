@@ -179,14 +179,16 @@ export function RelatorioTrafego({
         </div>
         <p className="mb-3 text-sm text-neutral-600">
           Período: <strong>{periodo ? `${periodo.titulo}${periodo.subtitulo ? ` (${periodo.subtitulo})` : ""}` : "todo o histórico"}</strong>
-          {" "}— conta os leads que <strong>chegaram</strong> nesse período e o que aconteceu com eles até hoje. {d.origem !== "__trafego__" && "Escolha abaixo qual origem conta como tráfego."}
+          {" "}— conta os leads que <strong>chegaram</strong> nesse período e o que aconteceu com eles até hoje. {d.origem === "__trafego__" ? "Clique num formulário abaixo para ver só ele." : "Escolha abaixo qual origem conta como tráfego."}
           {r.chegaram > 0 && <> Primeiro lead em {dia(r.primeiroLead)}, último em {dia(r.ultimoLead)}.</>}
         </p>
-        {/* Ketlyn (11/11/26): lead de tráfego = lead de formulário, tudo junto. Sem
-            botões separando origem. */}
-        {d.origem !== "__trafego__" && (
+        {/* Ketlyn (11/11/26): lead de tráfego = lead de formulário. Os botões
+            mostram o geral (todos os formulários juntos) e cada formulário
+            separado; as outras origens não entram aqui. */}
         <div className="flex flex-wrap gap-2">
-          {d.origens.map((o) => (
+          {d.origens
+            .filter((o) => !d.origens.some((x) => x.origem === "__trafego__") || o.origem === "__trafego__" || o.origem.startsWith("Formulário:"))
+            .map((o) => (
             <Link
               key={o.origem}
               href={`/dashboard/trafego?${new URLSearchParams({
@@ -205,7 +207,6 @@ export function RelatorioTrafego({
             </Link>
           ))}
         </div>
-        )}
       </section>
 
       <section>
