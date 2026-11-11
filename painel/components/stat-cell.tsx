@@ -12,8 +12,8 @@ export function StatCell({
   sub?: React.ReactNode;
 }) {
   return (
-    <div className="min-w-[92px] flex-1 px-3 py-2">
-      <p className="text-[10px] leading-tight text-neutral-500">{label}</p>
+    <div className="min-w-fit flex-1 px-3 py-2">
+      <p className="whitespace-nowrap text-[10px] leading-tight text-neutral-500">{label}</p>
       <p className="mt-0.5 text-base font-bold leading-tight text-neutral-900">{value}</p>
       {sub && <div className="mt-0.5 text-[10px] leading-tight text-neutral-400">{sub}</div>}
     </div>
