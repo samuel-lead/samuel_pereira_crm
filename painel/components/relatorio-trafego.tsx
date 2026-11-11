@@ -184,7 +184,12 @@ export function RelatorioTrafego({
           {r.chegaram > 0 && <> Primeiro lead em {dia(r.primeiroLead)}, último em {dia(r.ultimoLead)}.</>}
         </p>
         <div className="flex flex-wrap gap-2">
-          {d.origens.map((o) => (
+          {/* Ketlyn (11/11/26): onde existe o grupo "Tráfego + formulários", os
+              botões mostram só ele e cada formulário — o resto das origens
+              (Indicação, Insta, datas soltas...) não entra aqui. */}
+          {d.origens
+            .filter((o) => !d.origens.some((x) => x.origem === "__trafego__") || o.origem === "__trafego__" || o.origem.startsWith("Formulário:"))
+            .map((o) => (
             <Link
               key={o.origem}
               href={`/dashboard/trafego?${new URLSearchParams({
