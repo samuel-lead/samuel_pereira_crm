@@ -149,6 +149,8 @@ export function RelatorioTrafego({
     { rotulo: "Venda", valor: r.vendas, nota: `${brl(r.valorVendas)} vendidos` },
   ];
   const maior = Math.max(1, r.chegaram);
+  // Ketlyn (11/11/26): sem a parte "Por responsável" (pedido do Samuel).
+  const semResponsavel = d.origens.some((x) => x.origem === "__trafego__");
   const totalUrg = r.urgencia.alta + r.urgencia.media + r.urgencia.baixa;
   const totalCap = r.capacidade.sim + r.capacidade.parcial + r.capacidade.nao;
 
@@ -313,6 +315,7 @@ export function RelatorioTrafego({
         </div>
       </section>
 
+      {!semResponsavel && (
       <section>
         <Titulo sub="Quem cuidou de cada lead de tráfego e o que cada um levou até a venda.">4. Por responsável</Titulo>
         <Cartao className="overflow-x-auto">
@@ -349,9 +352,10 @@ export function RelatorioTrafego({
           </p>
         </Cartao>
       </section>
+      )}
 
       <section>
-        <Titulo sub="Onde cada lead está agora (sem contar os arquivados) e por que foram pra Base.">5. Onde estão hoje</Titulo>
+        <Titulo sub="Onde cada lead está agora (sem contar os arquivados) e por que foram pra Base.">{semResponsavel ? "4" : "5"}. Onde estão hoje</Titulo>
         <div className="grid gap-4 lg:grid-cols-2">
           <Cartao>
             <h3 className="mb-3 text-sm font-semibold text-neutral-800">Etapa atual</h3>
