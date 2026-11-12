@@ -128,7 +128,7 @@ function niveisPadrao(publico: string) {
       prazo_dias: null,
       destino_ao_estourar: null,
       etiqueta_wpp: publico === "imobiliario" ? "Leads em negociação" : `${Palavra} feita, sem fechar`,
-      numerado: true,
+      numerado: publico !== "imobiliario",
       destacado: false,
     },
     {
