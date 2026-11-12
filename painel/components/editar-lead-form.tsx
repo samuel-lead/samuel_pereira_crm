@@ -487,7 +487,7 @@ export function EditarLeadForm({
     // exigem reunião registrada.
     if (
       (ordemDestino === NIVEL_FOLLOW_POS_REUNIAO ||
-        (ordemDestino === NIVEL_OPORTUNIDADES && !ehFutura)) &&
+        (ordemDestino === NIVEL_OPORTUNIDADES && !ehFutura && !ehImobiliario(publicoOrg))) &&
       !jaTeveReuniao
     ) {
       return false;
@@ -777,7 +777,8 @@ export function EditarLeadForm({
                     // A "Oportunidades" normal exige reunião registrada —
                     // sem isso só sobra a "Repescagem futura", que não exige
                     // (Samuel pediu essa exceção explicitamente).
-                    if (!jaTeveReuniao || semReuniao) return [futura];
+                    // Imobiliário: "Leads em negociação" não exige visita.
+                    if ((!jaTeveReuniao && !ehImobiliario(publicoOrg)) || semReuniao) return [futura];
                     return [opcao, futura];
                   })}
               />

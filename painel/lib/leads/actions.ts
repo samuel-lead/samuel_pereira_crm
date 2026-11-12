@@ -18,7 +18,7 @@ import { garantirOrigem } from "@/lib/origens/actions";
 import { pareceOrigemInvalida } from "@/lib/origens/validacao";
 import { normalizarTelefone } from "@/lib/telefone";
 import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
-import { reuniao, Reuniao, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
+import { reuniao, Reuniao, ehImobiliario, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { lerPropostaConsorcioDoForm, type PropostaConsorcio } from "@/lib/proposta-consorcio";
 
 export type EstadoFormulario = { erro: string | null };
@@ -331,9 +331,11 @@ async function sincronizarReuniao(
   // isso deixava lead de pré-venda preso sem conseguir arquivar.
   // "Oportunidades futuras" (repescagem de ICP) também fica fora — Samuel
   // foi explícito que ela não precisa ser só pra quem já teve reunião.
+  // Imobiliário (Samuel, 12/11/26): "Leads em negociação" (8) não exige visita
+  // registrada — pode vir direto da Pré-vendas. "Follow após visita" exige.
   if (
     paraOrdem === NIVEL_FOLLOW_POS_REUNIAO ||
-    (paraOrdem === NIVEL_REUNIAO_FEITA && !querFutura)
+    (paraOrdem === NIVEL_REUNIAO_FEITA && !querFutura && !ehImobiliario(publicoOrg))
   ) {
     const { count: totalReunioes } = await supabase
       .from("reunioes")
@@ -1089,7 +1091,7 @@ export async function atualizarLead(
     !semReunioes &&
     nivelMudou &&
     (novoNivel === NIVEL_FOLLOW_POS_REUNIAO ||
-      (novoNivel === NIVEL_REUNIAO_FEITA && !oportunidadeFutura))
+      (novoNivel === NIVEL_REUNIAO_FEITA && !oportunidadeFutura && !ehImobiliario(usuario.publico_org)))
   ) {
     const { count: totalReunioes } = await supabase
       .from("reunioes")

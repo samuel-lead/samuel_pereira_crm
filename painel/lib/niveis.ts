@@ -432,7 +432,13 @@ export function nivelDeveApareceNoMenu(
 
   // Follow após reunião e Oportunidades (a normal, não a futura) só
   // existem pra quem já teve reunião de verdade em algum momento.
-  if ((ordemDestino === 7 || ordemDestino === 8) && !jaTeveReuniao) {
+  // Imobiliário (Samuel, 12/11/26): "Leads em negociação" (8) NÃO exige visita
+  // — o lead pode ir direto da Pré-vendas (ou de Vendas) pra lá. "Follow após
+  // visita" (7) continua exigindo.
+  if (
+    (ordemDestino === 7 || (ordemDestino === 8 && !ehImobiliario(publicoOrg))) &&
+    !jaTeveReuniao
+  ) {
     return false;
   }
 

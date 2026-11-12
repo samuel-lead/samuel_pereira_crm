@@ -578,7 +578,7 @@ function SeletorMoverParaMobile({
 
           // "Oportunidades" normal exige reunião registrada — sem isso só
           // sobra a "Repescagem futura", que não exige.
-          const opcoes = lead.jaTeveReuniao && !semReuniaoNoFunil(publicoOrg)
+          const opcoes = (lead.jaTeveReuniao || ehImobiliario(publicoOrg)) && !semReuniaoNoFunil(publicoOrg)
             ? [
                 <option key={n.ordem} value={n.ordem}>
                   {rotulo}

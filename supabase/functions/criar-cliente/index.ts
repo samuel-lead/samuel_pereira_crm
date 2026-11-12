@@ -120,11 +120,14 @@ function niveisPadrao(publico: string) {
     },
     {
       ordem: 8,
-      nome: "Oportunidades para o fim do mês",
-      definicao: `${publico === "imobiliario" ? "Visitou" : "Reuniu"}, proposta na mesa, não comprou ainda`,
+      nome: publico === "imobiliario" ? "Leads em negociação" : "Oportunidades para o fim do mês",
+      definicao:
+        publico === "imobiliario"
+          ? "Lead que já está em negociação (pode vir direto da Pré-vendas, sem visita marcada)"
+          : "Reuniu, proposta na mesa, não comprou ainda",
       prazo_dias: null,
       destino_ao_estourar: null,
-      etiqueta_wpp: `${Palavra} feita, sem fechar`,
+      etiqueta_wpp: publico === "imobiliario" ? "Leads em negociação" : `${Palavra} feita, sem fechar`,
       numerado: true,
       destacado: false,
     },
