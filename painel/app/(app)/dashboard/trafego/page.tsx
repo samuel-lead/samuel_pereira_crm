@@ -6,6 +6,8 @@ import { resolverPeriodo } from "@/lib/periodo";
 import { bloquearSeOculta } from "@/lib/paginas-ocultas";
 import { funilGondolas } from "@/lib/terminologia";
 
+const ORG_ID_VEEND_DANILO = "1cc080fd-055d-4f8b-950c-7537cf4f0064";
+
 // Relatório "Leads de tráfego" (Samuel, 04/11/26): origem, o que chegou, o
 // que queriam, qualificação e até virar reunião e venda. Só admin; não vale
 // pra Inove Gôndolas (que não tem tráfego) nem pro imobiliário. Os números
@@ -29,7 +31,16 @@ export default async function TrafegoPage({
 
   // Período do filtro (hoje, ontem, semana, mês, trimestre, mês/ano ou datas
   // próprias). Sem nada escolhido: todo o histórico.
-  const resolvido = resolverPeriodo({ periodo, mesAno, de, ate }, new Date());
+  // Danilo / Veend (Samuel, 12/11/26): ao abrir "Leads de tráfego" sem escolher
+  // nada, já vem filtrado pelo MÊS ATUAL; a pessoa troca depois se quiser.
+  // "periodo=todo" é o jeito de pedir o histórico inteiro (o botão "Todo o
+  // período" usa isso, senão ele voltaria sozinho pro mês).
+  const abrirNoMesAtual = usuario.org_id === ORG_ID_VEEND_DANILO;
+  const periodoEfetivo =
+    periodo === "todo"
+      ? undefined
+      : periodo ?? (abrirNoMesAtual && !mesAno && !de && !ate ? "mes" : undefined);
+  const resolvido = resolverPeriodo({ periodo: periodoEfetivo, mesAno, de, ate }, new Date());
   const periodoTela: PeriodoTrafego = resolvido
     ? { chave: resolvido.chave, titulo: resolvido.titulo, subtitulo: resolvido.subtitulo, mesAno, de, ate }
     : null;

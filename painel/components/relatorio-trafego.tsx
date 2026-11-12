@@ -177,7 +177,7 @@ export function RelatorioTrafego({
         {!embutido && (
         <div className="mb-3 flex flex-wrap items-stretch gap-2">
           <Link
-            href={`/dashboard/trafego?${new URLSearchParams({ origem: d.origem }).toString()}`}
+            href={`/dashboard/trafego?${new URLSearchParams({ origem: d.origem, periodo: "todo" }).toString()}`}
             scroll={false}
             className={`inline-flex items-center rounded-xl border px-3 py-2 text-sm font-medium shadow-sm ${
               periodo === null
@@ -217,6 +217,8 @@ export function RelatorioTrafego({
                 ...(periodo?.de && periodo?.ate ? { de: periodo.de, ate: periodo.ate } : {}),
                 ...(periodo?.mesAno ? { mesAno: periodo.mesAno } : {}),
                 ...(periodo && !periodo.mesAno && !(periodo.de && periodo.ate) ? { periodo: periodo.chave } : {}),
+                // "Todo o período" escolhido de propósito: mantém ao trocar de origem.
+                ...(periodo === null ? { periodo: "todo" } : {}),
               }).toString()}`}
               scroll={!embutido}
               className={`rounded-full border px-3 py-1 text-sm font-medium ${
