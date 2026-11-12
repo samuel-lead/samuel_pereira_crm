@@ -121,7 +121,7 @@ export default async function DashboardPage({
   // entre "Canais que venderam" e a evolução. Só admin de imobiliária
   // liberada; mostra todo o histórico (não segue o filtro de período).
   const trafegoP: Promise<DadosTrafego | null> =
-    souAdmin && ehImobiliario(publicoCedo)
+    ehImobiliario(publicoCedo)
       ? (async () => {
           if (!(await relatorioTrafegoLiberado(supabase, usuario!.org_id))) return null;
           const { data } = await supabase.rpc("relatorio_trafego", {
@@ -631,6 +631,7 @@ export default async function DashboardPage({
                   periodo={null}
                   embutido
                   hrefOrigem={hrefOrigemTrafego}
+                  podeBaixarPdf={souAdmin}
                 />
               </div>
             )}

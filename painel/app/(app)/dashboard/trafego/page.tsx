@@ -20,7 +20,8 @@ export default async function TrafegoPage({
 }) {
   const { origem: origemParam, periodo, mesAno, de, ate } = await searchParams;
   const { usuario } = await usuarioAutenticado();
-  if (!usuario || (usuario.papel !== "admin" && !usuario.super_admin)) redirect("/dashboard");
+  // Samuel (12/11/26): todo mundo da empresa vê (SDR também), não só o admin.
+  if (!usuario) redirect("/login");
   const publicoOrg = usuario.publico_org ?? "mentoria";
   if (funilGondolas(publicoOrg) || publicoOrg === "imobiliario") redirect("/dashboard");
 

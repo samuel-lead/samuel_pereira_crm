@@ -19,6 +19,9 @@ type ItemMenu = {
   somenteGondolas?: boolean;
   // Esconde da empresa do mercado de gôndolas (Inove).
   semGondolas?: boolean;
+  // Aparece pra todo mundo da empresa (SDR/Closer também), sem depender de
+  // admin nem das páginas liberadas por usuário.
+  paraTodos?: boolean;
 };
 
 const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
@@ -32,7 +35,7 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/dashboard/historico", label: "Histórico de vendas", Icone: IconeCalendario, pagina: "admin", somenteGondolas: true },
       // Relatório de leads de tráfego (origem até reunião e venda). Só admin;
       // some na Inove Gôndolas, que não tem tráfego.
-      { href: "/dashboard/trafego", label: "Leads de tráfego", Icone: IconeAlvo, pagina: "admin", somenteMentoria: true, semGondolas: true },
+      { href: "/dashboard/trafego", label: "Leads de tráfego", Icone: IconeAlvo, pagina: "admin", somenteMentoria: true, semGondolas: true, paraTodos: true },
     ],
   },
   {
@@ -110,6 +113,7 @@ export function Sidebar({
       // Páginas que a empresa escondeu (orgs.paginas_ocultas) — vale pra admin.
       if (paginasOcultas.includes(item.href)) return false;
       if (isAdmin) return true;
+      if (item.paraTodos) return true;
       // Bônus SDR e "Minha rotina" são automáticos pra quem tem função
       // SDR, não dependem das páginas liberadas manualmente — Closer não
       // vê nenhuma das duas.

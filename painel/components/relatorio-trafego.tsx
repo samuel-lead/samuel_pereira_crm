@@ -135,6 +135,7 @@ export function RelatorioTrafego({
   periodo,
   embutido = false,
   hrefOrigem,
+  podeBaixarPdf = true,
 }: {
   d: DadosTrafego;
   publicoOrg: string;
@@ -143,6 +144,8 @@ export function RelatorioTrafego({
   // e os botões de origem apontam pra Visão geral (hrefOrigem).
   embutido?: boolean;
   hrefOrigem?: (origem: string) => string;
+  // O PDF com a ficha de todos os leads é só do admin.
+  podeBaixarPdf?: boolean;
 }) {
   const r = d.resumo;
   const ReuniaoPl = Reunioes(publicoOrg);
@@ -171,7 +174,7 @@ export function RelatorioTrafego({
               <span className="h-6 w-1.5 shrink-0 rounded-full bg-[#2563eb]" />
               Leads de tráfego
             </h2>
-            <BaixarPdfTrafego d={d} publicoOrg={publicoOrg} nomeOrigem={nomeOrigem(d.origem)} />
+            {podeBaixarPdf && <BaixarPdfTrafego d={d} publicoOrg={publicoOrg} nomeOrigem={nomeOrigem(d.origem)} />}
           </div>
         )}
         {!embutido && (
