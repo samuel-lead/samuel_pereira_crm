@@ -162,11 +162,23 @@ export default async function VendasPage({
   const receitaPorPagamentos =
     !ehImobiliario(publicoOrg) && !usaComissaoDoVendedor(publicoOrg);
   let totalReceita = leads.reduce((soma, l) => soma + Number(l.receita_venda ?? 0), 0);
+  // Samuel (12/11/26): do total recebido no período, quanto veio de clientes
+  // de vendas de MESES ANTERIORES (ex.: vendeu em outubro, pagou em novembro).
+  // Separado por cliente pra mostrar quem pagou e quanto.
+  let receitaDeMesesAnteriores = 0;
+  const anterioresPorCliente = new Map<string, { nome: string; valor: number }>();
   if (receitaPorPagamentos && !buscaFiltro && !sdrFiltroAtivo && !closerFiltroAtivo && usuario) {
-    const { data: recebimentosData } = await buscarTodas<{ valor: number | string }>((de, ate) =>
+    type ClienteDoRecebimento = { nome: string; vendido_em: string | null };
+    type RecebimentoComCliente = {
+      lead_id: string;
+      valor: number | string;
+      // O Supabase devolve um objeto aqui, mas o tipo gerado diz lista: aceita os dois.
+      leads: ClienteDoRecebimento | ClienteDoRecebimento[];
+    };
+    const { data: recebimentosData } = await buscarTodas<RecebimentoComCliente>((de, ate) =>
       supabase
         .from("venda_recebimentos")
-        .select("valor, leads!inner(status, arquivado_em)")
+        .select("lead_id, valor, leads!inner(status, arquivado_em, nome, vendido_em)")
         .eq("org_id", usuario.org_id)
         .is("excluido_em", null)
         .eq("leads.status", "vendido")
@@ -178,7 +190,21 @@ export default async function VendasPage({
         .range(de, ate)
     );
     totalReceita = (recebimentosData ?? []).reduce((soma, r) => soma + Number(r.valor), 0);
+    const inicioPeriodo = periodoResolvido.inicio.getTime();
+    for (const r of recebimentosData ?? []) {
+      const cliente = Array.isArray(r.leads) ? r.leads[0] : r.leads;
+      const vendidoEm = cliente?.vendido_em ? new Date(cliente.vendido_em).getTime() : null;
+      if (!cliente || vendidoEm === null || vendidoEm >= inicioPeriodo) continue;
+      receitaDeMesesAnteriores += Number(r.valor);
+      const atual = anterioresPorCliente.get(r.lead_id);
+      anterioresPorCliente.set(r.lead_id, {
+        nome: cliente.nome,
+        valor: (atual?.valor ?? 0) + Number(r.valor),
+      });
+    }
   }
+  const mostrarSplitReceita =
+    receitaPorPagamentos && !buscaFiltro && !sdrFiltroAtivo && !closerFiltroAtivo && !!usuario;
   const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
   const ticketMedio = leads.length > 0 ? totalFaturamento / leads.length : 0;
   const filtroAtivo = Boolean(
@@ -269,6 +295,31 @@ export default async function VendasPage({
           <p className="relative mt-1 text-xs text-green-200/80">
             {Faturamento(publicoOrg)}: {formatarMoeda(totalFaturamento)}
           </p>
+          {mostrarSplitReceita && (
+            <div className="relative mt-4 grid gap-2 border-t border-white/20 pt-3 text-sm sm:grid-cols-2">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
+                  De clientes deste período
+                </p>
+                <p className="text-lg font-bold tabular-nums">
+                  {formatarMoeda(totalReceita - receitaDeMesesAnteriores)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
+                  De clientes de meses anteriores
+                </p>
+                <p className="text-lg font-bold tabular-nums">{formatarMoeda(receitaDeMesesAnteriores)}</p>
+                {anterioresPorCliente.size > 0 && (
+                  <p className="mt-0.5 text-xs text-green-100/90">
+                    {[...anterioresPorCliente.values()]
+                      .map((c) => `${c.nome} (${formatarMoeda(c.valor)})`)
+                      .join(" · ")}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
