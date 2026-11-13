@@ -707,6 +707,69 @@ export async function calcularVendasPorCanal(
   return Array.from(porCanal.values()).sort((a, b) => b.faturamento - a.faturamento);
 }
 
+export type CicloDeVendas = {
+  vendas: number;
+  mediaDias: number | null;
+  medianaDias: number | null;
+  maisRapidaDias: number | null;
+  maisLentaDias: number | null;
+  // Quantas vendas caíram em cada faixa de tempo entre o lead entrar e comprar.
+  faixas: { rotulo: string; quantidade: number }[];
+};
+
+// Ciclo de vendas (Samuel, 12/11/26): quantos dias o lead leva, desde o dia em
+// que ENTROU no CRM (declarado_em) até a compra (vendido_em), nas vendas
+// fechadas no período. Soma tudo da org (visão de time).
+export async function calcularCicloDeVendas(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<CicloDeVendas> {
+  const { data } = await buscarTodas<{ declarado_em: string | null; vendido_em: string | null }>((de, ate) =>
+    supabase
+      .from("leads")
+      .select("declarado_em, vendido_em")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicio.toISOString())
+      .lt("vendido_em", fim.toISOString())
+      .order("vendido_em")
+      .order("id")
+      .range(de, ate)
+  );
+
+  const dias = data
+    .filter((l) => l.declarado_em && l.vendido_em)
+    .map((l) => Math.max(0, Math.round((new Date(l.vendido_em!).getTime() - new Date(l.declarado_em!).getTime()) / UM_DIA_MS)))
+    .sort((a, b) => a - b);
+
+  const faixasDef = [
+    { rotulo: "Até 7 dias", max: 7 },
+    { rotulo: "8 a 30 dias", max: 30 },
+    { rotulo: "31 a 60 dias", max: 60 },
+    { rotulo: "Mais de 60 dias", max: Infinity },
+  ];
+  const faixas = faixasDef.map((f, i) => ({
+    rotulo: f.rotulo,
+    quantidade: dias.filter((d) => d <= f.max && (i === 0 || d > faixasDef[i - 1].max)).length,
+  }));
+
+  if (dias.length === 0) {
+    return { vendas: 0, mediaDias: null, medianaDias: null, maisRapidaDias: null, maisLentaDias: null, faixas };
+  }
+  const meio = Math.floor(dias.length / 2);
+  return {
+    vendas: dias.length,
+    mediaDias: dias.reduce((s, d) => s + d, 0) / dias.length,
+    medianaDias: dias.length % 2 ? dias[meio] : (dias[meio - 1] + dias[meio]) / 2,
+    maisRapidaDias: dias[0],
+    maisLentaDias: dias[dias.length - 1],
+    faixas,
+  };
+}
+
 export type VendaPorProduto = {
   produto: string;
   quantidade: number;

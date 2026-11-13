@@ -6,6 +6,7 @@ import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { GraficoEvolucaoMensal } from "@/components/grafico-evolucao-mensal";
 import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
+import { CicloDeVendasCard } from "@/components/ciclo-de-vendas";
 import { PerformanceSdr } from "@/components/performance-sdr";
 import { GraficoEnviadosPorMes } from "@/components/grafico-enviados-por-mes";
 import { PerformanceCloser } from "@/components/performance-closer";
@@ -24,6 +25,7 @@ import {
   calcularMetricasOrg,
   calcularVendasPorCanal,
   calcularVendasPorProduto,
+  calcularCicloDeVendas,
   calcularMetricasPorUsuario,
   contarPropostasIniciadasPorUsuario,
   contarEnviadosAoCloserPorUsuario,
@@ -136,6 +138,8 @@ export default async function DashboardPage({
     dashboardEmBarras(publicoCedo) && !ehGondolasCedo
       ? calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
       : Promise.resolve(undefined);
+  // Ciclo de vendas (Samuel, 12/11/26): dias entre o lead entrar e comprar.
+  const cicloP = calcularCicloDeVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim);
 
   const [
     metricasHoje,
@@ -623,6 +627,7 @@ export default async function DashboardPage({
                 <VendasPorProduto dados={vendasPorProduto} periodo={periodoResolvido.titulo} />
               </div>
             )}
+            <CicloDeVendasCard dados={await cicloP} periodo={periodoResolvido.titulo} />
             {dadosTrafego && (
               <div id="leads-trafego" className="scroll-mt-4">
                 <RelatorioTrafego
