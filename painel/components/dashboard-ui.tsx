@@ -186,10 +186,14 @@ export function SecaoPeriodo({
   publicoOrg = "mentoria",
   leadsNovos,
   safraVenda,
+  receitaDePeriodosAnteriores,
 }: {
   titulo: string;
   subtitulo?: string;
   metricas: Metricas;
+  // Do dinheiro recebido no período, quanto veio de clientes que compraram
+  // antes dele (só serviço/mentoria) — aparece no quadro verde.
+  receitaDePeriodosAnteriores?: { total: number; clientes: { nome: string; valor: number }[] };
   metricasAnteriores?: Metricas;
   metas: MetasConfig;
   acao?: React.ReactNode;
@@ -266,6 +270,33 @@ export function SecaoPeriodo({
             ? `Comissão: ${formatarMoeda(metricas.receita)}`
             : `${Faturamento(publicoOrg)}: ${formatarMoeda(metricas.faturamento)}`}
         </p>
+        {receitaDePeriodosAnteriores && (
+          <div className="relative mt-4 grid gap-2 border-t border-white/20 pt-3 text-sm sm:grid-cols-2">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
+                De clientes deste período
+              </p>
+              <p className="text-lg font-bold tabular-nums">
+                {formatarMoeda(metricas.receita - receitaDePeriodosAnteriores.total)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
+                De clientes de períodos anteriores
+              </p>
+              <p className="text-lg font-bold tabular-nums">
+                {formatarMoeda(receitaDePeriodosAnteriores.total)}
+              </p>
+              {receitaDePeriodosAnteriores.clientes.length > 0 && (
+                <p className="mt-0.5 text-xs text-green-100/90">
+                  {receitaDePeriodosAnteriores.clientes
+                    .map((c) => `${c.nome} (${formatarMoeda(c.valor)})`)
+                    .join(" · ")}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {dashboardEmBarras(publicoOrg) ? (

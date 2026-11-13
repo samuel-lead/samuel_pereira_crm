@@ -141,14 +141,15 @@ export default async function DashboardPage({
       : Promise.resolve(undefined);
   // Ciclo de vendas (Samuel, 12/11/26): dias entre o lead entrar e comprar.
   const cicloP = calcularCicloDeVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim);
-  // Samuel (13/11/26): na meta do mês, separa o que veio de clientes deste mês
-  // do que veio de clientes de meses anteriores. Só serviço/mentoria.
+  // Samuel (13/11/26): no quadro verde da receita, separa o que veio de
+  // clientes deste período do que veio de clientes de períodos anteriores.
+  // Só serviço/mentoria.
   const mostrarSplitMeta =
     !ehImobiliario(usuario!.publico_org) &&
     !usaComissaoDoVendedor(usuario!.publico_org) &&
     !funilGondolas(usuario!.publico_org);
   const receitaAnteriorP = mostrarSplitMeta
-    ? calcularReceitaDeMesesAnteriores(supabase, usuario!.org_id, inicioMesAtual, amanha)
+    ? calcularReceitaDeMesesAnteriores(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
     : Promise.resolve(undefined);
 
   const [
@@ -516,7 +517,6 @@ export default async function DashboardPage({
           <MetaReceitaWidget
             metaReceita={metaReceita}
             receitaAtual={receitaOrgMes}
-            receitaDeMesesAnteriores={await receitaAnteriorP}
             podeEditar={souAdmin}
             publicoOrg={publicoOrg}
           />
@@ -545,6 +545,7 @@ export default async function DashboardPage({
             publicoOrg={publicoOrg}
             leadsNovos={metricas.leadsTrabalhadosDeclarados}
             safraVenda={safraVenda}
+            receitaDePeriodosAnteriores={await receitaAnteriorP}
             acao={
               souAdmin ? (
                 <CopiarResultadoSemanaButton
