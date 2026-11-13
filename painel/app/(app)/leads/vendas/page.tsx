@@ -89,11 +89,21 @@ export default async function VendasPage({
 
   const [{ data: leadsData }, { data: usuariosData }] = await Promise.all([
     buscarTodas(montarConsulta),
-    supabase.from("usuarios").select("id, nome").order("nome"),
+    supabase.from("usuarios").select("id, nome, funcao").order("nome"),
   ]);
 
   const leadsDoPeriodo = (leadsData ?? []) as LeadVendido[];
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
+  // Samuel (12/11/26): SDR nunca aparece como Closer, e o filtro de SDR lista
+  // TODOS os SDRs da empresa (não só quem teve venda no período). Se o lead
+  // vendido ficou com um SDR como responsável e a empresa tem um único
+  // Closer, o Closer da venda é ele.
+  const funcaoPorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.funcao as string | null]));
+  const closersDaEmpresa = (usuariosData ?? []).filter((u) => u.funcao === "closer");
+  const closerDoLead = (l: LeadVendido): string | null => {
+    if (l.responsavel_id && funcaoPorUsuario.get(l.responsavel_id) !== "sdr") return l.responsavel_id;
+    return closersDaEmpresa.length === 1 ? closersDaEmpresa[0].id : null;
+  };
   // Mesma conta de sempre: faturamento ÷ vendas (cartao-vendas.tsx,
   // lib/metricas.ts) — não é receita ÷ vendas.
 
@@ -149,12 +159,18 @@ export default async function VendasPage({
     [...new Set(ids.filter((id): id is string => !!id))]
       .map((id) => ({ id, nome: nomePorUsuario.get(id) ?? "—" }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-  const opcoesSdr = opcoesPessoas(leadsDoPeriodo.map((l) => sdrPorLead.get(l.id)));
-  const opcoesCloser = opcoesPessoas(leadsDoPeriodo.map((l) => l.responsavel_id));
+  const opcoesSdr = opcoesPessoas([
+    ...(usuariosData ?? []).filter((u) => u.funcao === "sdr").map((u) => u.id),
+    ...leadsDoPeriodo.map((l) => sdrPorLead.get(l.id)),
+  ]);
+  const opcoesCloser = opcoesPessoas([
+    ...closersDaEmpresa.map((u) => u.id),
+    ...leadsDoPeriodo.map((l) => closerDoLead(l)),
+  ]);
   const leads = leadsDoPeriodo.filter(
     (l) =>
       (!sdrFiltroAtivo || sdrPorLead.get(l.id) === sdrFiltroAtivo) &&
-      (!closerFiltroAtivo || l.responsavel_id === closerFiltroAtivo)
+      (!closerFiltroAtivo || closerDoLead(l) === closerFiltroAtivo)
   );
   // Samuel (23/10/26): receita = dinheiro que CAIU no período, não o total das
   // vendas fechadas nele (venda de agosto paga em outubro é receita de
@@ -391,7 +407,7 @@ export default async function VendasPage({
                     </td>
                     {!semCloser(publicoOrg) && (
                       <td className="px-4 py-3 text-neutral-600">
-                        {lead.responsavel_id ? nomePorUsuario.get(lead.responsavel_id) ?? "—" : "—"}
+                        {closerDoLead(lead) ? nomePorUsuario.get(closerDoLead(lead)!) ?? "—" : "—"}
                       </td>
                     )}
                     <td className="px-4 py-3 text-neutral-600">{formatarData(lead.declarado_em)}</td>
