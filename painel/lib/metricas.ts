@@ -911,6 +911,60 @@ export async function calcularReceitaOrg(
   );
 }
 
+// Samuel (13/11/26): do dinheiro que caiu no período, quanto veio de clientes
+// que compraram em MESES ANTERIORES (ex.: vendeu em outubro, pagou em novembro).
+// Mesma regra da aba Clientes, agora usada também na meta do mês.
+export type ReceitaDeMesesAnteriores = {
+  total: number;
+  clientes: { nome: string; valor: number }[];
+};
+
+export async function calcularReceitaDeMesesAnteriores(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<ReceitaDeMesesAnteriores> {
+  type ClienteDoRecebimento = { nome: string; vendido_em: string | null };
+  const { data } = await buscarTodas<{
+    lead_id: string;
+    valor: number | string;
+    // O Supabase devolve um objeto aqui, mas o tipo gerado diz lista: aceita os dois.
+    leads: ClienteDoRecebimento | ClienteDoRecebimento[];
+  }>((de, ate) =>
+    supabase
+      .from("venda_recebimentos")
+      .select("lead_id, valor, leads!inner(status, arquivado_em, nome, vendido_em)")
+      .eq("org_id", orgId)
+      .is("excluido_em", null)
+      .eq("leads.status", "vendido")
+      .is("leads.arquivado_em", null)
+      .gte("recebido_em", inicio.toISOString())
+      .lt("recebido_em", fim.toISOString())
+      .order("recebido_em")
+      .order("id")
+      .range(de, ate) as unknown as PromiseLike<{
+      data: {
+        lead_id: string;
+        valor: number | string;
+        leads: ClienteDoRecebimento | ClienteDoRecebimento[];
+      }[] | null;
+      error: unknown;
+    }>
+  );
+  const porCliente = new Map<string, { nome: string; valor: number }>();
+  let total = 0;
+  for (const r of data) {
+    const cliente = Array.isArray(r.leads) ? r.leads[0] : r.leads;
+    const vendidoEm = cliente?.vendido_em ? new Date(cliente.vendido_em).getTime() : null;
+    if (!cliente || vendidoEm === null || vendidoEm >= inicio.getTime()) continue;
+    total += Number(r.valor);
+    const atual = porCliente.get(r.lead_id);
+    porCliente.set(r.lead_id, { nome: cliente.nome, valor: (atual?.valor ?? 0) + Number(r.valor) });
+  }
+  return { total, clientes: [...porCliente.values()] };
+}
+
 // Mesma coisa que calcularReceitaOrg, mas somando valor_venda (VGV) em vez
 // de receita_venda (dinheiro que já caiu) — usada pra Meta do mês no
 // imobiliário, onde a meta é de VGV, não de receita (Samuel pediu essa

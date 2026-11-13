@@ -34,6 +34,7 @@ import {
   calcularResumoAno,
   calcularEnviadosPorMes,
   calcularReceitaOrg,
+  calcularReceitaDeMesesAnteriores,
   calcularFaturamentoOrg,
   calcularNegociacoesAbertas,
   calcularSafraVendas,
@@ -50,7 +51,7 @@ import { numerarNiveis, ordenarNiveisDoFunil } from "@/lib/niveis";
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
 const NIVEL_REAGENDAMENTO = 6;
-import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras, relatorioSemCalls, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
+import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboardEmBarras, relatorioSemCalls, funilConsorcio, funilGondolas, semReuniaoNoFunil, usaComissaoDoVendedor } from "@/lib/terminologia";
 
 // Semana e mês comparam com o pedaço de calendário anterior de verdade
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
@@ -140,6 +141,15 @@ export default async function DashboardPage({
       : Promise.resolve(undefined);
   // Ciclo de vendas (Samuel, 12/11/26): dias entre o lead entrar e comprar.
   const cicloP = calcularCicloDeVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim);
+  // Samuel (13/11/26): na meta do mês, separa o que veio de clientes deste mês
+  // do que veio de clientes de meses anteriores. Só serviço/mentoria.
+  const mostrarSplitMeta =
+    !ehImobiliario(usuario!.publico_org) &&
+    !usaComissaoDoVendedor(usuario!.publico_org) &&
+    !funilGondolas(usuario!.publico_org);
+  const receitaAnteriorP = mostrarSplitMeta
+    ? calcularReceitaDeMesesAnteriores(supabase, usuario!.org_id, inicioMesAtual, amanha)
+    : Promise.resolve(undefined);
 
   const [
     metricasHoje,
@@ -506,6 +516,7 @@ export default async function DashboardPage({
           <MetaReceitaWidget
             metaReceita={metaReceita}
             receitaAtual={receitaOrgMes}
+            receitaDeMesesAnteriores={await receitaAnteriorP}
             podeEditar={souAdmin}
             publicoOrg={publicoOrg}
           />

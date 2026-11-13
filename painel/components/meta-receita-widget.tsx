@@ -23,12 +23,15 @@ function nomeDoMesAtual() {
 export function MetaReceitaWidget({
   metaReceita,
   receitaAtual,
+  receitaDeMesesAnteriores,
   compacta = false,
   podeEditar = false,
   publicoOrg = "mentoria",
 }: {
   metaReceita: number | null;
   receitaAtual: number;
+  // Quanto do "atingido" veio de clientes que compraram em meses anteriores.
+  receitaDeMesesAnteriores?: { total: number; clientes: { nome: string; valor: number }[] };
   compacta?: boolean;
   podeEditar?: boolean;
   publicoOrg?: string;
@@ -250,6 +253,33 @@ export function MetaReceitaWidget({
       <p className="mt-3 text-xs text-neutral-500">
         {bateu ? "Meta batida! 🎉" : `Falta ${formatarMoeda(falta)} pra bater a meta.`}
       </p>
+      {receitaDeMesesAnteriores && (
+        <div className="mt-3 grid gap-3 border-t border-neutral-100 pt-3 sm:grid-cols-2">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+              De clientes deste mês
+            </p>
+            <p className="text-lg font-bold tabular-nums text-neutral-900">
+              {formatarMoeda(receitaAtual - receitaDeMesesAnteriores.total)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+              De clientes de meses anteriores
+            </p>
+            <p className="text-lg font-bold tabular-nums text-neutral-900">
+              {formatarMoeda(receitaDeMesesAnteriores.total)}
+            </p>
+            {receitaDeMesesAnteriores.clientes.length > 0 && (
+              <p className="mt-0.5 text-xs text-neutral-500">
+                {receitaDeMesesAnteriores.clientes
+                  .map((c) => `${c.nome} (${formatarMoeda(c.valor)})`)
+                  .join(" · ")}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
