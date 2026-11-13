@@ -211,10 +211,15 @@ export function RotuloReceitaEvolucao(publicoOrg: string) {
 
 // Empresa que chama "Receita" de "Comissão" (ex.: Banker - Consorcio, onde
 // o que entra é a comissão da venda) — sufixo ":com", ver middleware.
+// Imobiliário (Samuel, 13/11/26): também é "Comissão", nunca "Receita".
+function chamaDeComissao(publicoOrg: string) {
+  return temVariante(publicoOrg, "com") || publicoOrg.split(":")[0] === "imobiliario";
+}
+
 export function Receita(publicoOrg: string) {
-  return temVariante(publicoOrg, "com") ? "Comissão" : "Receita";
+  return chamaDeComissao(publicoOrg) ? "Comissão" : "Receita";
 }
 
 export function receita(publicoOrg: string) {
-  return temVariante(publicoOrg, "com") ? "comissão" : "receita";
+  return chamaDeComissao(publicoOrg) ? "comissão" : "receita";
 }

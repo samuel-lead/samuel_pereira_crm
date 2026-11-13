@@ -11,7 +11,9 @@ const labelClasse = "text-sm font-medium text-neutral-700";
 export function EditarIscaForm({
   isca,
   dominio,
+  somenteFormulario = false,
 }: {
+  somenteFormulario?: boolean;
   isca: {
     id: string;
     nome: string;
@@ -43,10 +45,11 @@ export function EditarIscaForm({
           {dominio}/{isca.slug}
         </p>
         <p className="text-xs text-neutral-400">
-          O link não muda depois de criado — se precisar de outro, crie uma isca nova.
+          O link não muda depois de criado — se precisar de outro, crie um novo.
         </p>
       </div>
 
+      {!(somenteFormulario && !isca.material_url) && (
       <div className="space-y-1">
         <label className={labelClasse}>O que você está editando? *</label>
         <div className="flex overflow-hidden rounded-md border border-neutral-200">
@@ -71,6 +74,8 @@ export function EditarIscaForm({
         </div>
         <input type="hidden" name="tipo" value={tipo} />
       </div>
+      )}
+      {somenteFormulario && !isca.material_url && <input type="hidden" name="tipo" value="contato" />}
 
       {tipo === "material" ? (
         <div className="space-y-1">

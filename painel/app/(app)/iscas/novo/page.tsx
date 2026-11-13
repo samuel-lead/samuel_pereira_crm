@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { NovoIscaForm } from "@/components/novo-isca-form";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { bloquearSeOculta } from "@/lib/paginas-ocultas";
+import { ehImobiliario } from "@/lib/terminologia";
 
 export default async function NovaIscaPage({
   searchParams,
@@ -21,7 +22,8 @@ export default async function NovaIscaPage({
   // "+ Novo forms" já manda tipo=contato, pra abrir direto no tipo certo
   // em vez da pessoa escolher de novo aqui dentro.
   const { tipo } = await searchParams;
-  const tipoInicial = tipo === "contato" ? "contato" : "material";
+  const imobiliario = ehImobiliario(usuario!.publico_org);
+  const tipoInicial = imobiliario || tipo === "contato" ? "contato" : "material";
 
   return (
     <>
@@ -36,7 +38,7 @@ export default async function NovaIscaPage({
 
       <main className="mx-auto max-w-lg px-6 py-10">
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <NovoIscaForm dominio={dominio} tipoInicial={tipoInicial} />
+          <NovoIscaForm dominio={dominio} tipoInicial={tipoInicial} somenteFormulario={imobiliario} />
         </div>
       </main>
     </>

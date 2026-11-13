@@ -7,6 +7,7 @@ import { CopiarLinkIscaButton } from "@/components/copiar-link-isca-button";
 import { ArquivarIscaButton } from "@/components/arquivar-isca-button";
 import { QrCodeIsca } from "@/components/qr-code-isca";
 import { slugificar } from "@/lib/texto";
+import { ehImobiliario } from "@/lib/terminologia";
 
 type IscaLinha = {
   id: string;
@@ -20,6 +21,8 @@ export default async function IscasPage() {
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
   await bloquearSeOculta(supabase, usuario!.org_id, "/iscas");
+  // Imobiliário (Samuel, 13/11/26): sem isca, só formulário básico.
+  const imobiliario = ehImobiliario(usuario!.publico_org);
   const cabecalhos = await headers();
   const host = cabecalhos.get("host") ?? "";
   const protocolo = host.startsWith("localhost") ? "http" : "https";
@@ -36,35 +39,41 @@ export default async function IscasPage() {
   return (
     <>
       <PageHeader
-        titulo="Iscas"
+        titulo={imobiliario ? "Captura de leads" : "Iscas"}
         acao={
           <div className="flex gap-2">
             <Link
               href="/iscas/novo?tipo=contato"
-              className="rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 shadow-sm transition hover:bg-blue-50"
+              className={
+                imobiliario
+                  ? "rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                  : "rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 shadow-sm transition hover:bg-blue-50"
+              }
             >
-              + Novo forms
+              + Novo formulário
             </Link>
-            <Link
-              href="/iscas/novo?tipo=material"
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-            >
-              + Nova isca
-            </Link>
+            {!imobiliario && (
+              <Link
+                href="/iscas/novo?tipo=material"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+              >
+                + Nova isca
+              </Link>
+            )}
           </div>
         }
       />
 
       <main className="space-y-4 px-6 py-6">
         <p className="text-sm text-neutral-500">
-          Cada isca tem um link público próprio. Quem clicar preenche nome e
-          WhatsApp, já vira lead aqui no CRM e recebe o link do material na
-          hora — sem você precisar mandar nada.
+          {imobiliario
+            ? "Cada formulário tem um link público próprio. Quem preencher nome e telefone já vira lead aqui no CRM e, no final, pode falar direto com o seu WhatsApp. Você edita o nome, o WhatsApp e a mensagem quando quiser."
+            : "Cada isca tem um link público próprio. Quem clicar preenche nome e WhatsApp, já vira lead aqui no CRM e recebe o link do material na hora — sem você precisar mandar nada."}
         </p>
 
         {iscas.length === 0 ? (
           <div className="rounded-xl border border-dashed border-neutral-300 bg-white px-4 py-10 text-center text-sm text-neutral-400">
-            Nenhuma isca criada ainda.
+            {imobiliario ? "Nenhum formulário criado ainda." : "Nenhuma isca criada ainda."}
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">

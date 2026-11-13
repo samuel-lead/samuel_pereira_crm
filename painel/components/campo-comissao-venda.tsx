@@ -18,7 +18,7 @@ export function CampoComissaoVenda({
   percentualInicial,
   valorFixoInicial,
   variante = "cartao",
-  rotuloCampo = "Receita (comissão)",
+  rotuloCampo = "Comissão",
 }: {
   valorVendaReais: number;
   tipoInicial: Tipo;

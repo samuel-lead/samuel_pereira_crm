@@ -12,16 +12,19 @@ const labelClasse = "text-sm font-medium text-neutral-700";
 export function NovoIscaForm({
   dominio,
   tipoInicial = "material",
+  somenteFormulario = false,
 }: {
   dominio: string;
   tipoInicial?: "material" | "contato";
+  // Imobiliário (Samuel, 13/11/26): não tem isca, só formulário básico.
+  somenteFormulario?: boolean;
 }) {
   const [estado, acaoFormulario] = useActionState(criarIsca, estadoInicial);
   const [nome, setNome] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTocado, setSlugTocado] = useState(false);
   const [aba, setAba] = useState<"link" | "arquivo">("link");
-  const [tipo, setTipo] = useState<"material" | "contato">(tipoInicial);
+  const [tipo, setTipo] = useState<"material" | "contato">(somenteFormulario ? "contato" : tipoInicial);
 
   function aoMudarNome(valor: string) {
     setNome(valor);
@@ -40,7 +43,7 @@ export function NovoIscaForm({
           required
           value={nome}
           onChange={(e) => aoMudarNome(e.target.value)}
-          placeholder="Ex.: Aula grátis — Como vender mais imóveis"
+          placeholder={somenteFormulario ? "Ex.: Interessados no Residencial Aurora" : "Ex.: Aula grátis — Como vender mais imóveis"}
           className={campoClasse}
         />
       </div>
@@ -70,6 +73,7 @@ export function NovoIscaForm({
         </p>
       </div>
 
+      {!somenteFormulario && (
       <div className="space-y-1">
         <label className={labelClasse}>O que você está criando? *</label>
         <div className="flex overflow-hidden rounded-md border border-neutral-200">
@@ -99,6 +103,8 @@ export function NovoIscaForm({
         </p>
         <input type="hidden" name="tipo" value={tipo} />
       </div>
+      )}
+      {somenteFormulario && <input type="hidden" name="tipo" value="contato" />}
 
       {tipo === "material" ? (
         <div className="space-y-1">
@@ -153,20 +159,34 @@ export function NovoIscaForm({
           )}
         </div>
       ) : (
-        <div className="space-y-1">
-          <label className={labelClasse} htmlFor="whatsapp_contato">
-            WhatsApp da equipe (opcional)
-          </label>
-          <input
-            id="whatsapp_contato"
-            name="whatsapp_contato"
-            type="tel"
-            placeholder="(11) 99999-9999"
-            className={campoClasse}
-          />
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <label className={labelClasse} htmlFor="whatsapp_contato">
+              WhatsApp da equipe (opcional)
+            </label>
+            <input
+              id="whatsapp_contato"
+              name="whatsapp_contato"
+              type="tel"
+              placeholder="(11) 99999-9999"
+              className={campoClasse}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClasse} htmlFor="whatsapp_mensagem">
+              Mensagem que já vem preenchida no WhatsApp (opcional)
+            </label>
+            <textarea
+              id="whatsapp_mensagem"
+              name="whatsapp_mensagem"
+              rows={2}
+              placeholder='Ex.: "Olá! Vi o anúncio do imóvel e quero saber mais"'
+              className={campoClasse}
+            />
+          </div>
           <p className="text-xs text-neutral-400">
-            Se preencher, no final aparece um botão pra falar direto com esse WhatsApp. Se deixar
-            em branco, só mostra uma mensagem de agradecimento.
+            Se preencher o WhatsApp, no final aparece um botão pra falar direto com esse número. Se
+            deixar em branco, só mostra uma mensagem de agradecimento.
           </p>
         </div>
       )}

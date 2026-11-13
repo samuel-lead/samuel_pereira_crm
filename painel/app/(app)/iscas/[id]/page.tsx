@@ -5,6 +5,7 @@ import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { bloquearSeOculta } from "@/lib/paginas-ocultas";
 import { PageHeader } from "@/components/page-header";
 import { EditarIscaForm } from "@/components/editar-isca-form";
+import { ehImobiliario } from "@/lib/terminologia";
 
 export default async function EditarIscaPage({
   params,
@@ -43,7 +44,7 @@ export default async function EditarIscaPage({
 
       <main className="mx-auto max-w-lg px-6 py-10">
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <EditarIscaForm isca={isca} dominio={dominio} />
+          <EditarIscaForm isca={isca} dominio={dominio} somenteFormulario={ehImobiliario(usuario!.publico_org)} />
         </div>
       </main>
     </>

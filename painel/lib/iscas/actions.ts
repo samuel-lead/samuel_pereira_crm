@@ -112,6 +112,8 @@ export async function criarIsca(
     .eq("id", usuario.org_id)
     .maybeSingle();
   const formularioSimples = orgData?.publico === "imobiliario";
+  // Imobiliário não tem isca (Samuel, 13/11/26): só formulário básico, sem material.
+  const tipoFinal = formularioSimples ? "contato" : tipo;
 
   const slug = slugificar(slugDigitado || nome);
   if (!slug) return { erro: "Esse nome não dá pra virar um link válido — tenta outro" };
@@ -130,7 +132,7 @@ export async function criarIsca(
       usuario_id: usuario.id,
       nome,
       slug,
-      material_url: tipo === "material" ? materialUrl || "pendente" : null,
+      material_url: tipoFinal === "material" ? materialUrl || "pendente" : null,
       whatsapp_contato_e164: whatsappContato,
       whatsapp_mensagem: whatsappMensagem,
       formulario_simples: formularioSimples,

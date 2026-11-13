@@ -111,7 +111,7 @@ export function ComissaoForm({
           </div>
           <p className="text-xs text-neutral-400">
             {porImovel
-              ? "Esse valor entra como sua receita em toda venda, não importa o preço do imóvel."
+              ? "Esse valor entra como sua comissão em toda venda, não importa o preço do imóvel."
               : "Esse valor entra como sua comissão em toda venda, não importa o valor vendido."}
           </p>
         </div>
