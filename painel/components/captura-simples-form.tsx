@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Script from "next/script";
 import { registrarLeadIsca } from "@/lib/iscas/actions";
+import type { PerguntaFormulario } from "@/lib/iscas/perguntas";
 import { normalizarTelefone, telefoneValido } from "@/lib/telefone";
 
 declare global {
@@ -44,7 +45,9 @@ export function CapturaSimplesForm({
   whatsappMensagem,
   metaPixelId,
   googleTagId,
+  perguntas = [],
 }: {
+  perguntas?: PerguntaFormulario[];
   slug: string;
   titulo: string;
   whatsappContatoE164: string | null;
@@ -54,6 +57,7 @@ export function CapturaSimplesForm({
 }) {
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [extras, setExtras] = useState<Record<string, string>>({});
   const [erro, setErro] = useState<string | null>(null);
   const [concluido, setConcluido] = useState(false);
   const [enviando, iniciarEnvio] = useTransition();
@@ -101,8 +105,9 @@ export function CapturaSimplesForm({
     };
   }, [numeroNormalizado, formatoOk]);
 
+  const faltaObrigatoria = perguntas.some((p) => p.obrigatoria && !(extras[p.id] ?? "").trim());
   const podeEnviar =
-    nome.trim().length > 0 && formatoOk && statusWhats !== "checando";
+    nome.trim().length > 0 && formatoOk && statusWhats !== "checando" && !faltaObrigatoria;
 
   function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -116,7 +121,7 @@ export function CapturaSimplesForm({
     }
 
     iniciarEnvio(async () => {
-      const resposta = await registrarLeadIsca(slug, { nome, telefone: numeroNormalizado, ...RESPOSTAS_VAZIAS });
+      const resposta = await registrarLeadIsca(slug, { nome, telefone: numeroNormalizado, ...RESPOSTAS_VAZIAS }, extras);
       if (resposta.erro) {
         setErro(resposta.erro);
         return;
@@ -250,6 +255,41 @@ export function CapturaSimplesForm({
             Não conseguimos confirmar o WhatsApp desse número. Confere se digitou certinho.
           </p>
         )}
+        {perguntas.map((p) => (
+          <div key={p.id} className="space-y-1.5">
+            <label htmlFor={`extra-${p.id}`} className="text-sm font-medium text-[#c4cad3]">
+              {p.rotulo}
+              {!p.obrigatoria && <span className="text-[#6b7280]"> (opcional)</span>}
+            </label>
+            {p.tipo === "opcoes" ? (
+              <select
+                id={`extra-${p.id}`}
+                required={p.obrigatoria}
+                value={extras[p.id] ?? ""}
+                onChange={(e) => setExtras((atual) => ({ ...atual, [p.id]: e.target.value }))}
+                className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-4 py-3 text-base text-[#eef1f6] outline-none transition focus:border-[#22c55e] focus:ring-2 focus:ring-[#22c55e]/30"
+              >
+                <option value="">Escolha uma opção</option>
+                {p.opcoes.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                id={`extra-${p.id}`}
+                type="text"
+                required={p.obrigatoria}
+                value={extras[p.id] ?? ""}
+                onChange={(e) => setExtras((atual) => ({ ...atual, [p.id]: e.target.value }))}
+                maxLength={1000}
+                className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-4 py-3 text-base text-[#eef1f6] outline-none transition placeholder:text-[#6b7280] focus:border-[#22c55e] focus:ring-2 focus:ring-[#22c55e]/30"
+              />
+            )}
+          </div>
+        ))}
+
         <p className="text-base font-semibold text-[#eef1f6]">
           Fale agora mesmo com a Ketlyn no WhatsApp 👇
         </p>

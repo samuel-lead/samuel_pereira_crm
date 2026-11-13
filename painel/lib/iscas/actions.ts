@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { normalizarTelefone } from "@/lib/telefone";
 import { slugificar } from "@/lib/texto";
+import { normalizarPerguntas } from "@/lib/iscas/perguntas";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -83,6 +84,15 @@ async function subirMaterialSeTiverArquivo(
   return { url: data.publicUrl, erro: null };
 }
 
+// Lê as perguntas do formulário (JSON escondido no <form>) e limpa o conteúdo.
+function lerPerguntas(formData: FormData) {
+  try {
+    return normalizarPerguntas(JSON.parse(String(formData.get("perguntas") ?? "[]")));
+  } catch {
+    return [];
+  }
+}
+
 export async function criarIsca(
   _estadoAnterior: EstadoFormulario,
   formData: FormData
@@ -98,6 +108,7 @@ export async function criarIsca(
   const whatsappContatoDigitado = String(formData.get("whatsapp_contato") ?? "").trim();
   const whatsappContato = whatsappContatoDigitado ? normalizarTelefone(whatsappContatoDigitado) : null;
   const whatsappMensagem = String(formData.get("whatsapp_mensagem") ?? "").trim() || null;
+  const perguntas = lerPerguntas(formData);
 
   if (!nome) return { erro: "Dá um nome pra essa isca" };
   if (tipo === "material" && !materialUrl && !temArquivo) {
@@ -136,6 +147,7 @@ export async function criarIsca(
       whatsapp_contato_e164: whatsappContato,
       whatsapp_mensagem: whatsappMensagem,
       formulario_simples: formularioSimples,
+      perguntas: formularioSimples ? perguntas : [],
     })
     .select("id")
     .single();
@@ -181,6 +193,7 @@ export async function atualizarIsca(
   const whatsappContatoDigitado = String(formData.get("whatsapp_contato") ?? "").trim();
   const whatsappContato = whatsappContatoDigitado ? normalizarTelefone(whatsappContatoDigitado) : null;
   const whatsappMensagem = String(formData.get("whatsapp_mensagem") ?? "").trim() || null;
+  const perguntas = lerPerguntas(formData);
 
   if (!nome) return { erro: "Dá um nome pra essa isca" };
 
@@ -189,7 +202,7 @@ export async function atualizarIsca(
   // "só cadastro" o material some (fica null), mesmo que já tivesse um.
   const { data: iscaAtual } = await supabase
     .from("iscas")
-    .select("material_url")
+    .select("material_url, formulario_simples")
     .eq("id", iscaId)
     .single();
 
@@ -212,6 +225,8 @@ export async function atualizarIsca(
       material_url: urlFinal,
       whatsapp_contato_e164: whatsappContato,
       whatsapp_mensagem: whatsappMensagem,
+      // Só o formulário simples (imobiliário) tem perguntas; nos demais não mexe.
+      ...(iscaAtual?.formulario_simples ? { perguntas } : {}),
       ativo,
       updated_at: new Date().toISOString(),
     })
@@ -276,7 +291,9 @@ export async function registrarErroIscaNoNavegador(slug: string, mensagem: strin
 // controlada pra um visitante anônimo conseguir gravar um lead.
 export async function registrarLeadIsca(
   slug: string,
-  respostas: RespostasIsca
+  respostas: RespostasIsca,
+  // Respostas das perguntas extras do formulário: id da pergunta -> resposta.
+  respostasExtras: Record<string, string> = {}
 ): Promise<EstadoCaptura> {
   const supabase = await createClient();
 
@@ -295,6 +312,28 @@ export async function registrarLeadIsca(
   }
 
   const telefone = normalizarTelefone(telefoneDigitado);
+
+  // Perguntas extras: confere as obrigatórias antes de criar o lead, usando as
+  // perguntas gravadas no banco (nunca o texto que veio do navegador).
+  const { data: iscaPerguntas } = await supabase
+    .from("iscas")
+    .select("perguntas")
+    .eq("slug", slug)
+    .eq("ativo", true)
+    .is("arquivado_em", null)
+    .maybeSingle();
+  const perguntasDoForm = normalizarPerguntas(iscaPerguntas?.perguntas);
+  const respostasParaNota: { pergunta: string; resposta: string }[] = [];
+  for (const p of perguntasDoForm) {
+    const resposta = String(respostasExtras[p.id] ?? "").trim().slice(0, 1000);
+    if (p.obrigatoria && !resposta) {
+      return { erro: `Responde: ${p.rotulo}`, sucesso: false, ...semRespostaVazia };
+    }
+    if (p.tipo === "opcoes" && resposta && !p.opcoes.includes(resposta)) {
+      return { erro: `Escolhe uma das opções em: ${p.rotulo}`, sucesso: false, ...semRespostaVazia };
+    }
+    if (resposta) respostasParaNota.push({ pergunta: p.rotulo, resposta });
+  }
 
   const { data, error } = await supabase.rpc("criar_lead_via_isca", {
     p_slug: slug,
@@ -326,6 +365,18 @@ export async function registrarLeadIsca(
   }
 
   const resultado = Array.isArray(data) ? data[0] : data;
+
+  // Guarda as respostas extras como nota no lead. Se falhar, o lead já foi
+  // criado — só registra o erro no log, sem barrar a pessoa.
+  if (respostasParaNota.length > 0 && resultado?.lead_id) {
+    const { error: erroNota } = await supabase.rpc("registrar_respostas_formulario", {
+      p_slug: slug,
+      p_lead_id: resultado.lead_id,
+      p_respostas: respostasParaNota,
+    });
+    if (erroNota) console.error("[isca] falha ao guardar respostas", { slug, erro: erroNota.message });
+  }
+
   return {
     erro: null,
     sucesso: true,

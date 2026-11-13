@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { IscaCapturaForm } from "@/components/isca-captura-form";
 import { CapturaSimplesForm } from "@/components/captura-simples-form";
+import { normalizarPerguntas } from "@/lib/iscas/perguntas";
 
 // Fonte só dessa página pública (não mexe na fonte do resto do painel) —
 // Samuel achou a fonte padrão feia aqui, Inter é mais legível pra uma
@@ -64,7 +65,7 @@ export default async function IscaPage({
   const [{ data: isca }, { data: pixels }] = await Promise.all([
     supabase
       .from("iscas")
-      .select("nome, material_url, formulario_simples, whatsapp_contato_e164, whatsapp_mensagem")
+      .select("nome, material_url, formulario_simples, whatsapp_contato_e164, whatsapp_mensagem, perguntas")
       .eq("slug", slug)
       .eq("ativo", true)
       .is("arquivado_em", null)
@@ -90,6 +91,7 @@ export default async function IscaPage({
           titulo={isca.nome}
           whatsappContatoE164={isca.whatsapp_contato_e164}
           whatsappMensagem={isca.whatsapp_mensagem}
+          perguntas={normalizarPerguntas(isca.perguntas)}
           metaPixelId={idsPixel?.meta_pixel_id ?? null}
           googleTagId={idsPixel?.google_tag_id ?? null}
         />

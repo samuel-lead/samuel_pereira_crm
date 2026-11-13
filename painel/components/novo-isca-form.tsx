@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { criarIsca, type EstadoFormulario } from "@/lib/iscas/actions";
 import { slugificar } from "@/lib/texto";
+import { EditorPerguntas } from "@/components/editor-perguntas";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 const campoClasse =
@@ -190,6 +191,8 @@ export function NovoIscaForm({
           </p>
         </div>
       )}
+
+      {somenteFormulario && <EditorPerguntas inicial={[]} />}
 
       {estado.erro && <p className="text-sm text-red-600">{estado.erro}</p>}
 

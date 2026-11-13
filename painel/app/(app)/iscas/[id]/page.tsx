@@ -6,6 +6,7 @@ import { bloquearSeOculta } from "@/lib/paginas-ocultas";
 import { PageHeader } from "@/components/page-header";
 import { EditarIscaForm } from "@/components/editar-isca-form";
 import { ehImobiliario } from "@/lib/terminologia";
+import { normalizarPerguntas } from "@/lib/iscas/perguntas";
 
 export default async function EditarIscaPage({
   params,
@@ -23,7 +24,7 @@ export default async function EditarIscaPage({
 
   const { data: isca } = await supabase
     .from("iscas")
-    .select("id, nome, slug, material_url, whatsapp_contato_e164, whatsapp_mensagem, ativo")
+    .select("id, nome, slug, material_url, whatsapp_contato_e164, whatsapp_mensagem, ativo, perguntas")
     .eq("id", id)
     .single();
 
@@ -44,7 +45,12 @@ export default async function EditarIscaPage({
 
       <main className="mx-auto max-w-lg px-6 py-10">
         <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <EditarIscaForm isca={isca} dominio={dominio} somenteFormulario={ehImobiliario(usuario!.publico_org)} />
+          <EditarIscaForm
+            isca={isca}
+            dominio={dominio}
+            somenteFormulario={ehImobiliario(usuario!.publico_org)}
+            perguntas={normalizarPerguntas(isca.perguntas)}
+          />
         </div>
       </main>
     </>

@@ -2,6 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { atualizarIsca, type EstadoFormulario } from "@/lib/iscas/actions";
+import { EditorPerguntas } from "@/components/editor-perguntas";
+import type { PerguntaFormulario } from "@/lib/iscas/perguntas";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 const campoClasse =
@@ -12,8 +14,10 @@ export function EditarIscaForm({
   isca,
   dominio,
   somenteFormulario = false,
+  perguntas = [],
 }: {
   somenteFormulario?: boolean;
+  perguntas?: PerguntaFormulario[];
   isca: {
     id: string;
     nome: string;
@@ -158,6 +162,8 @@ export function EditarIscaForm({
           </p>
         </div>
       )}
+
+      {somenteFormulario && tipo === "contato" && <EditorPerguntas inicial={perguntas} />}
 
       <label className="flex items-center gap-2 text-sm text-neutral-700">
         <input type="checkbox" name="ativo" defaultChecked={isca.ativo} className="h-4 w-4" />
