@@ -11,7 +11,7 @@ export function CicloDeVendasCard({ dados, periodo }: { dados: CicloDeVendas; pe
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <h2 className="mb-1 text-sm font-semibold text-neutral-800">
+      <h2 className="mb-1 text-lg font-extrabold tracking-tight text-neutral-900">
         Ciclo de vendas — {periodo.toLowerCase()}
       </h2>
       <p className="mb-4 text-xs text-neutral-500">
