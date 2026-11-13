@@ -30,7 +30,7 @@ type Props = {
   // Estilo do botão gatilho — "campo" (com borda, padrão em formulário)
   // ou "sem-borda" (pra ficar dentro de um cartão premium que já tem a
   // borda por fora, ex.: os filtros de Clientes/Lista de leads).
-  variante?: "campo" | "sem-borda" | "pilula";
+  variante?: "campo" | "sem-borda" | "pilula" | "destaque";
   pilulaClasse?: string;
   titulo?: string;
   // Já nasce com a listinha aberta, sem precisar clicar primeiro — usado
@@ -136,7 +136,9 @@ export function MenuSelect({
   const botaoClasse =
     variante === "sem-borda"
       ? "flex w-full items-center justify-between gap-2 bg-transparent p-0 text-left text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60"
-      : "flex w-full items-center justify-between gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-left text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500";
+      : variante === "destaque"
+        ? "flex w-full items-center justify-between gap-2 rounded-lg border-2 border-blue-500 bg-white px-4 py-3 text-left text-base font-bold shadow-sm outline-none transition hover:bg-blue-50 focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500"
+        : "flex w-full items-center justify-between gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-left text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500";
 
   return (
     <div ref={containerRef} className="relative">

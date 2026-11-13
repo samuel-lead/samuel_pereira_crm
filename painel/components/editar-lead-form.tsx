@@ -724,13 +724,18 @@ export function EditarLeadForm({
           </>
         ) : (
         <div className="space-y-1.5">
-          <label className="text-base font-bold text-neutral-900" htmlFor="nivel_ordem">
-            Nível
+          {/* Samuel pediu: o Nível estava difícil de achar dentro do card —
+              agora fica num cartão azul com título grande e o seletor
+              maior, que chama o olho logo de cara. */}
+          <div className="space-y-2 rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
+          <label className="block text-lg font-extrabold tracking-tight text-neutral-900" htmlFor="nivel_ordem">
+            Nível do lead
           </label>
           <div className="flex items-center gap-2">
             <div className="min-w-0 flex-1">
               <MenuSelect
                 id="nivel_ordem"
+                variante="destaque"
                 value={valorMenuNivel}
                 onChange={aoMudarNivel}
                 buscar={false}
@@ -811,6 +816,7 @@ export function EditarLeadForm({
                 Agendar {reuniao(publicoOrg)}
               </button>
             )}
+          </div>
           </div>
           <input type="hidden" name="nivel_ordem" value={nivelSelecionado} />
 
