@@ -1559,6 +1559,22 @@ export async function calcularBonusPorSdr(
     }
   }
 
+  // Samuel (16/11/26): o SDR da ABORDAGEM (quem abordou o lead e passou pra
+  // outro SDR qualificar — leads.sdr_abordagem_id) também ganha o bônus da
+  // call, da venda e da receita desse lead, igualzinho ao SDR responsável.
+  // Os dois recebem (não divide).
+  const abordagemPorLead = new Map<string, string>();
+  if (leadsDasCalls.length > 0) {
+    const { data: abordagens } = await supabase
+      .from("leads")
+      .select("id, sdr_abordagem_id")
+      .in("id", leadsDasCalls)
+      .not("sdr_abordagem_id", "is", null);
+    for (const l of abordagens ?? []) {
+      if (l.sdr_abordagem_id) abordagemPorLead.set(l.id, l.sdr_abordagem_id as string);
+    }
+  }
+
   // SDR ORIGINAL (quem marcou a primeira reunião do lead) vale pros CRMs de
   // serviço/mentoria com Closer (orgs.sdr_original — Samuel, 15/10/26). Nas
   // demais o crédito continua com quem marcou a reunião que aconteceu.
@@ -1568,6 +1584,11 @@ export async function calcularBonusPorSdr(
     .eq("id", orgId)
     .maybeSingle();
   const usarSdrOriginal = orgFlags?.sdr_original === true;
+  // O lead conta pra essa pessoa se ela é o SDR original (quem marcou a 1ª
+  // reunião) OU o SDR da abordagem do lead.
+  const creditadoA = (leadId: string, usuarioId: string) =>
+    primeiraReuniaoPorLead.get(leadId)?.usuario_id === usuarioId ||
+    (usarSdrOriginal && abordagemPorLead.get(leadId) === usuarioId);
   // Trava de no-show (Samuel, 15/10/26): vale nos CRMs de serviço com Closer
   // (mesmo grupo do SDR original). Conta só reunião já resolvida (realizada
   // ou no-show), creditada ao SDR original — a que o closer esqueceu de
@@ -1577,19 +1598,15 @@ export async function calcularBonusPorSdr(
   const bonusPorUsuario = await Promise.all(
     metricasPorUsuario.map(async (m) => {
       const realizadasNoPeriodo = (realizadasDaOrg ?? []).filter((r) =>
-        usarSdrOriginal
-          ? primeiraReuniaoPorLead.get(r.lead_id)?.usuario_id === m.usuarioId
-          : r.usuario_id === m.usuarioId
+        usarSdrOriginal ? creditadoA(r.lead_id, m.usuarioId) : r.usuario_id === m.usuarioId
       );
 
       // Vendas do período cujo SDR original é esse usuário.
-      const vendasDele = (vendidosNoPeriodo ?? []).filter(
-        (l) => primeiraReuniaoPorLead.get(l.id)?.usuario_id === m.usuarioId
-      );
+      const vendasDele = (vendidosNoPeriodo ?? []).filter((l) => creditadoA(l.id, m.usuarioId));
       const vendasDeleQtd = usarSdrOriginal ? vendasDele.length : m.vendas;
       const receitaDele = usarSdrOriginal
         ? somarRecebimentos(
-            recebimentosOrg.filter((r) => primeiraReuniaoPorLead.get(r.lead_id)?.usuario_id === m.usuarioId)
+            recebimentosOrg.filter((r) => creditadoA(r.lead_id, m.usuarioId))
           )
         : m.receita;
       const faturamentoDele = usarSdrOriginal
@@ -1625,7 +1642,7 @@ export async function calcularBonusPorSdr(
       // (mesma regra das calls): a reunião que o Samuel marcou depois de a
       // Julia ter remarcado continua sendo dela.
       const devidasDele = noShowPorCall
-        ? (devidasDaOrg ?? []).filter((r) => primeiraReuniaoPorLead.get(r.lead_id)?.usuario_id === m.usuarioId)
+        ? (devidasDaOrg ?? []).filter((r) => creditadoA(r.lead_id, m.usuarioId))
         : [];
       const devidasQtd = noShowPorCall ? devidasDele.length : m.reunioesDevidas;
       const realizadasQtd = noShowPorCall
