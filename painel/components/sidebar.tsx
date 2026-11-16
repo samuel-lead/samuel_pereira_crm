@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
 import { IconeFunil, IconeAtividade, IconeMetricas, IconeUsuarios, IconeConfig, IconeAlvo, IconeMoeda, IconeEstrela, IconeClientePagante, IconeLixeira, IconeCasa, IconeFoguete, IconeIma, IconeCalendario, IconeX } from "@/components/icons";
 
 type ItemMenu = {
@@ -22,6 +23,8 @@ type ItemMenu = {
   // Aparece pra todo mundo da empresa (SDR/Closer também), sem depender de
   // admin nem das páginas liberadas por usuário.
   paraTodos?: boolean;
+  // Só aparece pra essas empresas (ids) — ex.: Farm, por enquanto só do Samuel.
+  somenteOrgs?: string[];
 };
 
 const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
@@ -44,6 +47,8 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/leads", label: "Pré-vendas", Icone: IconeFunil, pagina: "funil" },
       { href: "/reunioes", label: "Vendas", Icone: IconeMoeda, pagina: "reunioes" },
       { href: "/leads/vendas", label: "Clientes", Icone: IconeClientePagante, pagina: "funil" },
+      // Farm (Samuel, 16/11/26): funil novo, só no CRM do Samuel por enquanto.
+      { href: "/farm", label: "Farm", Icone: IconeFunil, pagina: "funil", somenteOrgs: [ORG_ID_SAMUEL] },
       { href: "/leads/base", label: "Base de leads", Icone: IconeAlvo, pagina: "funil" },
     ],
   },
@@ -78,6 +83,7 @@ export function Sidebar({
   publicoOrg = "mentoria",
   paginasOcultas = [],
   capturaLeads = false,
+  orgId = "",
   abertoMobile = false,
   onFecharMobile,
 }: {
@@ -91,6 +97,7 @@ export function Sidebar({
   paginasOcultas?: string[];
   // Empresa imobiliária liberada pra ter "Captura de leads" (orgs.captura_leads).
   capturaLeads?: boolean;
+  orgId?: string;
   abertoMobile?: boolean;
   onFecharMobile?: () => void;
 }) {
@@ -101,6 +108,7 @@ export function Sidebar({
     itens: grupo.itens.filter((item) => {
       // Imóveis é exclusivo do público imobiliário — vale pra admin
       // também, diferente do resto (que admin sempre vê tudo).
+      if (item.somenteOrgs && !item.somenteOrgs.includes(orgId)) return false;
       if (item.somenteImobiliario && publicoOrg !== "imobiliario") return false;
       if (item.somenteMentoria && publicoOrg === "imobiliario") return false;
       if (item.somenteGondolas && !publicoOrg.split(":").includes("gond")) return false;

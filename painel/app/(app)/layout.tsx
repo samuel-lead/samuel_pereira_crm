@@ -19,6 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // menu. Lista em orgs.paginas_ocultas.
   let paginasOcultas: string[] = [];
   let capturaLeads = false;
+  let orgId = "";
 
   if (usuario) {
     const supabase = await createClient();
@@ -34,6 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     fotoUsuario = usuario.foto_url ?? null;
     funcao = usuario.funcao ?? null;
     publicoOrg = usuario.publico_org ?? "mentoria";
+    orgId = usuario.org_id;
     cargo = isAdmin
       ? "Admin"
       : usuario?.funcao === "sdr"
@@ -55,6 +57,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         publicoOrg={publicoOrg}
         paginasOcultas={paginasOcultas}
         capturaLeads={capturaLeads}
+        orgId={orgId}
       >
         {children}
       </AppShell>

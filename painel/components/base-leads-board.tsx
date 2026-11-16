@@ -218,7 +218,10 @@ export function BaseLeadsBoard({
   usuarios,
   souAdmin,
   publicoOrg = "mentoria",
+  apenasColunas,
 }: {
+  // Mostra só essas colunas (ex.: a página Farm mostra só "farming").
+  apenasColunas?: MotivoBase[];
   leadsPorMotivo: Record<MotivoBase, LeadBase[]>;
   nomePorUsuario: Map<string, string>;
   fotoPorUsuario?: Map<string, string | null>;
@@ -300,6 +303,7 @@ export function BaseLeadsBoard({
       <div ref={scrollRef} className="scrollbar-kanban flex h-full gap-5 overflow-x-auto pb-2 pl-1 pr-1">
       {COLUNAS.filter(
         (c) =>
+          (!apenasColunas || apenasColunas.includes(c.chave)) &&
           !(semFarming(publicoOrg) && c.chave === "farming") &&
           !(funilConsorcio(publicoOrg) && c.chave === "nao_reagendados") &&
           !(funilConsorcio(publicoOrg) && c.chave === "qualificou_sumiu") &&
