@@ -693,13 +693,21 @@ export function EditarLeadForm({
             Responsável
           </label>
           {souAdmin ? (
-            <ResponsavelSelect
-              usuarios={usuarios}
-              valorInicial={lead.responsavel_id}
-              funcaoFiltro="sdr"
-              permiteVazio
-              incluirAdmins
-            />
+            <>
+              {/* Samuel (16/11/26): o "key" refaz o campo quando o responsável
+                  muda por fora (ex.: botão "Passar pra outro SDR") — antes ele
+                  ficava mostrando o responsável antigo e, ao salvar, mandava o
+                  lead de volta pra ele. */}
+              <ResponsavelSelect
+                key={lead.responsavel_id ?? "sem-responsavel"}
+                usuarios={usuarios}
+                valorInicial={lead.responsavel_id}
+                funcaoFiltro="sdr"
+                permiteVazio
+                incluirAdmins
+              />
+              <input type="hidden" name="responsavel_inicial" value={lead.responsavel_id ?? ""} />
+            </>
           ) : (
             <p className={`${campoClasse} bg-neutral-50 text-neutral-600`}>
               {nomeResponsavelAtual}{" "}

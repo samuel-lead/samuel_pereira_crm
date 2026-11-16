@@ -965,9 +965,18 @@ export async function atualizarLead(
 
   // Só admin pode trocar quem é o responsável; o "dono" do lead mantém o
   // valor atual (o formulário nem mostra o campo editável pra ele).
+  // Se o admin não mexeu no campo (o valor enviado é igual ao que o formulário
+  // mostrou ao abrir), mantém o responsável que está salvo AGORA — assim um
+  // formulário aberto antes de "Passar pra outro SDR" não devolve o lead.
+  const responsavelDoForm = String(formData.get("responsavel_id") ?? "").trim() || null;
+  const responsavelQueOFormMostrou = formData.has("responsavel_inicial")
+    ? String(formData.get("responsavel_inicial") ?? "").trim() || null
+    : undefined;
   const responsavelId =
     usuario.papel === "admin"
-      ? String(formData.get("responsavel_id") ?? "").trim() || null
+      ? responsavelQueOFormMostrou !== undefined && responsavelDoForm === responsavelQueOFormMostrou
+        ? leadAtual.responsavel_id
+        : responsavelDoForm
       : leadAtual.responsavel_id;
 
   const nivelMudou = novoNivel !== leadAtual.nivel_ordem;
