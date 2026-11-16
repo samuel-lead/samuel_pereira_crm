@@ -47,8 +47,8 @@ const GRUPOS: { titulo: string; itens: ItemMenu[] }[] = [
       { href: "/leads", label: "Pré-vendas", Icone: IconeFunil, pagina: "funil" },
       { href: "/reunioes", label: "Vendas", Icone: IconeMoeda, pagina: "reunioes" },
       { href: "/leads/vendas", label: "Clientes", Icone: IconeClientePagante, pagina: "funil" },
-      // Farm (Samuel, 16/11/26): funil novo, só no CRM do Samuel por enquanto.
-      { href: "/farm", label: "Farm", Icone: IconeFunil, pagina: "funil", somenteOrgs: [ORG_ID_SAMUEL] },
+      // Farming (Samuel, 16/11/26): funil novo, só no CRM do Samuel por enquanto.
+      { href: "/farming", label: "Farming", Icone: IconeFunil, pagina: "funil", somenteOrgs: [ORG_ID_SAMUEL] },
       { href: "/leads/base", label: "Base de leads", Icone: IconeAlvo, pagina: "funil" },
     ],
   },
