@@ -133,20 +133,32 @@ export function ImportarLeadsForm({
   const [erroPrevia, setErroPrevia] = useState<string | null>(null);
   const inputArquivoRef = useRef<HTMLInputElement>(null);
   const enviandoRef = useRef(false);
-  const jaImportou = estado.total > 0;
+  const resultadoRef = useRef<HTMLDivElement>(null);
+  // Samuel (16/11/26): depois de importar, o resultado ficava só lá embaixo
+  // (e erro nem aparecia). Agora vira um cartão grande no topo, sempre visível.
+  const [resultadoVisivel, setResultadoVisivel] = useState(false);
   const ehIndicacao = origemAtual.toLowerCase().includes("indica");
 
   useEffect(() => {
     if (pendente) {
       enviandoRef.current = true;
+      setResultadoVisivel(false);
       return;
     }
     if (enviandoRef.current) {
       enviandoRef.current = false;
+      setResultadoVisivel(true);
       if (!estado.erro && estado.criados > 0) {
         setTexto("");
         setArquivoNome(null);
         setPrevia(null);
+      }
+      setTimeout(() => resultadoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+      // Samuel (16/11/26): importou, avisa e fecha a tela rápido — volta pra
+      // lista de leads sozinho. Se nada entrou (tudo duplicado) ou deu erro,
+      // continua aberta pra ele ver o motivo.
+      if (!estado.erro && estado.criados > 0) {
+        setTimeout(() => router.push("/leads"), 1200);
       }
     }
   }, [pendente, estado]);
@@ -281,6 +293,49 @@ export function ImportarLeadsForm({
       </div>
 
       <form action={acaoFormulario} className="space-y-4 p-6">
+        {resultadoVisivel && (estado.erro || estado.total > 0) && (
+          <div
+            ref={resultadoRef}
+            className={`rounded-xl border-2 p-4 ${
+              estado.erro ? "border-red-300 bg-red-50 text-red-800" : "border-green-300 bg-green-50 text-green-900"
+            }`}
+          >
+            {estado.erro ? (
+              <p className="text-base font-bold">❌ Não consegui importar: {estado.erro}</p>
+            ) : (
+              <>
+                <p className="text-lg font-extrabold">
+                  ✅ {estado.criados} lead{estado.criados === 1 ? "" : "s"} importado
+                  {estado.criados === 1 ? "" : "s"} com sucesso
+                </p>
+                {estado.duplicados > 0 && (
+                  <p className="mt-1 text-sm font-medium text-amber-700">
+                    {estado.duplicados} ignorado{estado.duplicados === 1 ? "" : "s"} por telefone já
+                    cadastrado.
+                  </p>
+                )}
+                {estado.invalidos > 0 && (
+                  <p className="mt-1 text-sm font-medium text-red-700">
+                    {estado.invalidos} linha{estado.invalidos === 1 ? "" : "s"} ignorada
+                    {estado.invalidos === 1 ? "" : "s"} (sem nome ou com erro).
+                  </p>
+                )}
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/leads"
+                    className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800"
+                  >
+                    Ver os leads →
+                  </Link>
+                  {estado.criados > 0 && (
+                    <span className="text-sm font-medium text-green-800">Fechando e abrindo os leads…</span>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         <div
           onDragOver={(e) => {
             e.preventDefault();
@@ -442,33 +497,6 @@ export function ImportarLeadsForm({
         )}
 
         {erroPrevia && <p className="text-xs text-red-600">{erroPrevia}</p>}
-
-        {jaImportou && (
-          <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-            <p className="font-medium">
-              {estado.criados} lead{estado.criados === 1 ? "" : "s"} importado
-              {estado.criados === 1 ? "" : "s"} com sucesso.
-            </p>
-            {estado.duplicados > 0 && (
-              <p className="mt-1 text-amber-700">
-                {estado.duplicados} ignorado{estado.duplicados === 1 ? "" : "s"} por
-                telefone já cadastrado.
-              </p>
-            )}
-            {estado.invalidos > 0 && (
-              <p className="mt-1 text-red-700">
-                {estado.invalidos} linha{estado.invalidos === 1 ? "" : "s"} ignorada
-                {estado.invalidos === 1 ? "" : "s"} (sem nome ou com erro).
-              </p>
-            )}
-            <Link
-              href="/leads"
-              className="mt-2 inline-block text-sm font-medium text-blue-600 underline hover:text-blue-700"
-            >
-              Ver na coluna &quot;Leads&quot; em Pré-vendas →
-            </Link>
-          </div>
-        )}
 
         <div className="flex gap-3">
           <button
