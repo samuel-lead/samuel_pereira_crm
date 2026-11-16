@@ -11,7 +11,7 @@ import { ReagendarReuniaoBotao } from "@/components/reagendar-reuniao-botao";
 import { BotaoDocumentoExterno } from "@/components/botao-documento-externo";
 import { IconeTelefone } from "@/components/icons";
 import {
-  ORG_ID_SAMUEL,
+  ORGS_COM_SCRIPT_DO_SAMUEL,
   SCRIPT_PRE_QUALIFICACAO,
   SCRIPT_PRE_QUALIFICACAO_GONDOLAS,
   SCRIPT_PRE_QUALIFICACAO_SAMUEL,
@@ -240,7 +240,7 @@ export function ModalLead({
                           url={
                             ehGondolas(dados.publicoOrg)
                               ? SCRIPT_PRE_QUALIFICACAO_GONDOLAS.url
-                              : dados.orgId === ORG_ID_SAMUEL
+                              : ORGS_COM_SCRIPT_DO_SAMUEL.includes(dados.orgId)
                                 ? SCRIPT_PRE_QUALIFICACAO_SAMUEL.url
                                 : SCRIPT_PRE_QUALIFICACAO.url
                           }

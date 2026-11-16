@@ -27,3 +27,8 @@ export const SCRIPT_PRE_QUALIFICACAO_SAMUEL = {
   label: "Pré-qualificação para marcar call",
   url: "https://docs.google.com/document/d/1E29cETvc2qx-prn0ljgJX5k_epi78XxDgETPLd8AmqE/edit?usp=sharing",
 };
+
+// Danilo / Veend (Samuel, 16/11/26): usa o mesmo roteiro de pré-qualificação do
+// CRM do Samuel dentro do card do lead.
+export const ORG_ID_VEEND_DANILO = "1cc080fd-055d-4f8b-950c-7537cf4f0064";
+export const ORGS_COM_SCRIPT_DO_SAMUEL = [ORG_ID_SAMUEL, ORG_ID_VEEND_DANILO];
