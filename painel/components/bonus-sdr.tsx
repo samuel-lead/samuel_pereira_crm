@@ -410,6 +410,12 @@ export function BonusSdrTabela({
                   valor={linha.bonusPorFaturamento}
                 />
               )}
+              {linha.comissaoPercentual > 0 && (
+                <LinhaBonus
+                  label={`Comissão de ${linha.comissaoPercentual.toLocaleString("pt-BR")}% sobre a receita das vendas (${formatarMoeda(linha.receita)})`}
+                  valor={linha.comissaoSobreReceita}
+                />
+              )}
             </div>
             {linha.diasReposicao.length > 0 && (
               <p className="mt-2 rounded-md bg-blue-50 px-3 py-2 text-xs font-medium text-blue-800 dark:bg-blue-950/40 dark:text-blue-300">

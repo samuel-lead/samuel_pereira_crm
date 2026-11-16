@@ -1389,6 +1389,10 @@ export type BonusSdr = MetricasUsuario & {
   vendasSemana: number;
   vendasFimDeSemana: number;
   bonusPorFaturamento: number;
+  // Comissão sobre a receita (SDR que não tem fixo, ex.: Luiz Paulo — 10%).
+  // 0 quando a pessoa não tem comissão. Soma no totalBonus.
+  comissaoPercentual: number;
+  comissaoSobreReceita: number;
   totalBonus: number;
   // Sábados/domingos de reposição (folga na semana) que caem no período —
   // valem como dia de semana no bônus. Formato "dd/mm". Só pra deixar claro na tela.
@@ -1498,7 +1502,7 @@ export async function calcularBonusPorSdr(
       .is("leads.arquivado_em", null)
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", fimISO),
-    supabase.from("usuarios").select("id, funcao, dias_reposicao").eq("org_id", orgId),
+    supabase.from("usuarios").select("id, funcao, dias_reposicao, bonus_comissao_percentual").eq("org_id", orgId),
     // Vendas do período (pela data da venda) — receita e faturamento do SDR
     // também seguem o SDR original do lead.
     supabase
@@ -1524,6 +1528,9 @@ export async function calcularBonusPorSdr(
     recebimentosDaOrg(supabase, orgId, inicioISO, fimISO),
   ]);
   const funcaoPorUsuario = new Map((funcoesData ?? []).map((u) => [u.id, u.funcao as string | null]));
+  const comissaoPercentualPorUsuario = new Map(
+    (funcoesData ?? []).map((u) => [u.id, Number(u.bonus_comissao_percentual ?? 0)])
+  );
   // Sábados/domingos que o SDR trabalhou pra repor uma folga na semana: NÃO
   // contam como fim de semana no bônus (Samuel, 15/10/26). "AAAA-MM-DD".
   const diasReposicaoPorUsuario = new Map(
@@ -1711,6 +1718,12 @@ export async function calcularBonusPorSdr(
         bonusPorFaturamento = 0;
       }
 
+      // Comissão (Samuel, 16/11/26): % sobre a receita (dinheiro recebido) das
+      // vendas creditadas ao SDR — vale além dos bônus acima e não é derrubada
+      // pela trava de no-show (é parte do que ele ganha em vez do fixo).
+      const comissaoPercentual = comissaoPercentualPorUsuario.get(m.usuarioId) ?? 0;
+      const comissaoSobreReceita = Math.round(receitaDele * (comissaoPercentual / 100) * 100) / 100;
+
       return {
         ...m,
         // Calls realizadas creditadas ao SDR original (bate com o bônus).
@@ -1738,7 +1751,10 @@ export async function calcularBonusPorSdr(
         vendasSemana: nVendasSemana,
         vendasFimDeSemana: nVendasFimDeSemana,
         bonusPorFaturamento,
-        totalBonus: bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda + bonusPorFaturamento,
+        comissaoPercentual,
+        comissaoSobreReceita,
+        totalBonus:
+          bonusPorCallRealizada + bonusFimDeSemana + bonusPorVenda + bonusPorFaturamento + comissaoSobreReceita,
         diasReposicao: [...(diasReposicaoPorUsuario.get(m.usuarioId) ?? [])]
           .filter((dia) => {
             const meioDia = new Date(`${dia}T12:00:00-03:00`);
