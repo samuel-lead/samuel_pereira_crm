@@ -55,10 +55,6 @@ type LeadResumo = {
   imovel: { titulo: string; foto_url: string | null } | null;
 };
 
-function formatarMoedaFarming(valor: number) {
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-}
-
 // Farming: só essas etapas (Sem conversa iniciada e Conversando) têm alarme de parado/atrasado.
 const NIVEIS_ALARME_FARMING = [1, 2];
 
@@ -371,73 +367,6 @@ export async function PaginaDeLeads({
       grupos: gruposN,
       marcadas: marcadasN,
       realizadas: realizadasN,
-    };
-  }
-
-  // Farming (Samuel, 17/11/26): resultado do MÊS dos leads que vieram do
-  // Farming — quantos entraram no grupo, viraram reunião e venda, e a receita.
-  // Só conta o que aconteceu a partir do começo do Farming (16/11/26), pra não
-  // pegar reunião/venda antiga desses leads de antes do funil existir.
-  let resultadoFarming: {
-    mesRotulo: string;
-    grupos: number;
-    marcadas: number;
-    realizadas: number;
-    vendas: number;
-    faturamento: number;
-    receita: number;
-  } | null = null;
-  if (funil === "farming" && user && souAdmin) {
-    const INICIO_FARMING = new Date("2026-11-16T00:00:00-03:00");
-    const inicioPeriodo = inicioMes > INICIO_FARMING ? inicioMes : INICIO_FARMING;
-    const [de, ate] = [inicioPeriodo.toISOString(), amanha.toISOString()];
-    const doFarming = "leads!inner(arquivado_em, farming_origem)";
-    const db = supabase as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-    const contar = async (consulta: unknown): Promise<number> => {
-      const { count } = (await consulta) as { count: number | null };
-      return count ?? 0;
-    };
-    const [gruposN, marcadasN, realizadasN, vendasRes] = await Promise.all([
-      contar(
-        db.from("nivel_historico").select(`id, ${doFarming}`, { count: "exact", head: true })
-          .eq("org_id", orgId).eq("para_ordem", 3).neq("de_ordem", 3)
-          .is("leads.arquivado_em", null).eq("leads.farming_origem", true)
-          .gte("ocorreu_em", de).lt("ocorreu_em", ate)
-      ),
-      contar(
-        db.from("reunioes").select(`id, ${doFarming}`, { count: "exact", head: true })
-          .eq("org_id", orgId).eq("reagendada", false)
-          .is("leads.arquivado_em", null).eq("leads.farming_origem", true)
-          .gte("marcada_em", de).lt("marcada_em", ate)
-      ),
-      contar(
-        db.from("reunioes").select(`id, ${doFarming}`, { count: "exact", head: true })
-          .eq("org_id", orgId).eq("status", "realizada")
-          .is("leads.arquivado_em", null).eq("leads.farming_origem", true)
-          .gte("agendada_para", de).lt("agendada_para", ate)
-      ),
-      db.from("leads").select("id, valor_venda")
-        .eq("org_id", orgId).eq("status", "vendido").eq("farming_origem", true)
-        .is("arquivado_em", null).gte("vendido_em", de).lt("vendido_em", ate),
-    ]);
-    const vendidos = ((vendasRes as { data: { id: string; valor_venda: number | string | null }[] | null }).data ?? []);
-    let receita = 0;
-    if (vendidos.length > 0) {
-      const { data: pagos } = await db.from("venda_recebimentos").select("valor")
-        .eq("org_id", orgId).is("excluido_em", null)
-        .in("lead_id", vendidos.map((v) => v.id))
-        .gte("recebido_em", de).lt("recebido_em", ate);
-      receita = ((pagos ?? []) as { valor: number | string }[]).reduce((soma, r) => soma + Number(r.valor), 0);
-    }
-    const nomeMes = agora.toLocaleDateString("pt-BR", { month: "long", timeZone: "America/Sao_Paulo" });
-    resultadoFarming = {
-      mesRotulo: nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1),
-      grupos: gruposN,
-      marcadas: marcadasN,
-      realizadas: realizadasN,
-      vendas: vendidos.length,
-      faturamento: vendidos.reduce((soma, v) => soma + Number(v.valor_venda ?? 0), 0),
-      receita,
     };
   }
 
@@ -884,24 +813,6 @@ export async function PaginaDeLeads({
                   value={metricasFarming.realizadas}
                   sub={souAdmin ? "Time todo" : undefined}
                 />
-              </div>
-            )}
-            {resultadoFarming && (
-              <div className="w-full">
-                <p className="mb-1.5 text-base font-extrabold tracking-tight text-neutral-900">
-                  Resultado do Farming em {resultadoFarming.mesRotulo}
-                </p>
-                <div className="flex flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-                  <StatCell label="Entraram no grupo" value={resultadoFarming.grupos} />
-                  <StatCell label={`${Calls(publicoOrg)} marcadas`} value={resultadoFarming.marcadas} />
-                  <StatCell label={`${Calls(publicoOrg)} realizadas`} value={resultadoFarming.realizadas} />
-                  <StatCell
-                    label="Vendas"
-                    value={resultadoFarming.vendas}
-                    sub={`${formatarMoedaFarming(resultadoFarming.faturamento)} de faturamento`}
-                  />
-                  <StatCell label="Receita" value={formatarMoedaFarming(resultadoFarming.receita)} />
-                </div>
               </div>
             )}
             {/* Solta o card aqui pra mandar o lead de volta pra Base (com motivo e dia pra falar de novo). */}
