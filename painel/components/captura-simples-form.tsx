@@ -46,8 +46,12 @@ export function CapturaSimplesForm({
   metaPixelId,
   googleTagId,
   perguntas = [],
+  grupo = null,
 }: {
   perguntas?: PerguntaFormulario[];
+  // Formulário "Grupo do WhatsApp" (Samuel, 17/11/26): mostra o nome e a
+  // descrição do grupo, pede só o telefone e leva pro link de convite.
+  grupo?: { nome: string; descricao: string | null } | null;
   slug: string;
   titulo: string;
   whatsappContatoE164: string | null;
@@ -65,6 +69,7 @@ export function CapturaSimplesForm({
     "idle" | "checando" | "existe" | "nao_existe" | "indefinido"
   >("idle");
 
+  const ehGrupo = grupo !== null;
   const dddPadrao = whatsappContatoE164?.startsWith("55") ? whatsappContatoE164.slice(2, 4) : null;
   const semDdd = /^\d{8,9}$/.test(telefone.replace(/\D/g, "")) && telefone.replace(/\D/g, "").length <= 9;
   const numeroNormalizado = normalizarComDddPadrao(telefone, dddPadrao);
@@ -107,21 +112,21 @@ export function CapturaSimplesForm({
 
   const faltaObrigatoria = perguntas.some((p) => p.obrigatoria && !(extras[p.id] ?? "").trim());
   const podeEnviar =
-    nome.trim().length > 0 && formatoOk && statusWhats !== "checando" && !faltaObrigatoria;
+    (ehGrupo || nome.trim().length > 0) && formatoOk && statusWhats !== "checando" && !faltaObrigatoria;
 
   function enviar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
 
     if (!podeEnviar) return;
-    if (!nome.trim()) return setErro("Preenche seu nome");
+    if (!ehGrupo && !nome.trim()) return setErro("Preenche seu nome");
     const numero = numeroNormalizado;
     if (!telefone.trim() || !telefoneValido(numero)) {
       return setErro("Confere seu WhatsApp — precisa ser um número com DDD, tipo (62) 99999-9999");
     }
 
     iniciarEnvio(async () => {
-      const resposta = await registrarLeadIsca(slug, { nome, telefone: numeroNormalizado, ...RESPOSTAS_VAZIAS }, extras);
+      const resposta = await registrarLeadIsca(slug, { nome: ehGrupo ? "" : nome, telefone: numeroNormalizado, ...RESPOSTAS_VAZIAS }, extras);
       if (resposta.erro) {
         setErro(resposta.erro);
         return;
@@ -131,11 +136,17 @@ export function CapturaSimplesForm({
 
       const destino = resposta.whatsappContatoE164 ?? whatsappContatoE164;
       const mensagem = resposta.whatsappMensagem ?? whatsappMensagem;
-      if (!destino) {
+      if (ehGrupo && !resposta.grupoLink) {
         setConcluido(true);
         return;
       }
-      const linkWhatsapp = `https://wa.me/${destino}${mensagem ? `?text=${encodeURIComponent(mensagem)}` : ""}`;
+      if (!ehGrupo && !destino) {
+        setConcluido(true);
+        return;
+      }
+      const linkWhatsapp = ehGrupo
+        ? (resposta.grupoLink as string)
+        : `https://wa.me/${destino}${mensagem ? `?text=${encodeURIComponent(mensagem)}` : ""}`;
       // Com pixel/tag configurado, dá meio segundo pro navegador enviar o
       // evento "Lead" antes de sair da página — sem isso o envio podia ser
       // cortado pela troca de página e o anúncio não contava o cadastro.
@@ -201,12 +212,23 @@ export function CapturaSimplesForm({
     <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col justify-center px-6 py-16">
       {scripts}
       <div className="mb-6 h-1 w-16 rounded-full bg-[#4ade80]" />
-      <h1 className="break-words text-2xl font-bold leading-snug text-[#eef1f6]">{titulo}</h1>
-      <p className="mt-2 text-base text-[#c4cad3]">
-        Preencha os dados para saber mais informações do imóvel.
-      </p>
+      <h1 className="break-words text-2xl font-bold leading-snug text-[#eef1f6]">
+        {grupo ? grupo.nome : titulo}
+      </h1>
+      {grupo ? (
+        grupo.descricao && (
+          <p className="mt-3 whitespace-pre-line break-words text-base leading-relaxed text-[#c4cad3]">
+            {grupo.descricao}
+          </p>
+        )
+      ) : (
+        <p className="mt-2 text-base text-[#c4cad3]">
+          Preencha os dados para saber mais informações do imóvel.
+        </p>
+      )}
 
       <form onSubmit={enviar} className="mt-8 space-y-5">
+        {!ehGrupo && (
         <div className="space-y-1.5">
           <label htmlFor="nome" className="text-sm font-medium text-[#c4cad3]">
             Qual o seu nome?
@@ -222,6 +244,7 @@ export function CapturaSimplesForm({
             className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-4 py-3 text-base text-[#eef1f6] outline-none transition placeholder:text-[#6b7280] focus:border-[#22c55e] focus:ring-2 focus:ring-[#22c55e]/30"
           />
         </div>
+        )}
 
         <div className="space-y-1.5">
           <label htmlFor="telefone" className="text-sm font-medium text-[#c4cad3]">
@@ -255,7 +278,7 @@ export function CapturaSimplesForm({
             Não conseguimos confirmar o WhatsApp desse número. Confere se digitou certinho.
           </p>
         )}
-        {perguntas.map((p) => (
+        {!ehGrupo && perguntas.map((p) => (
           <div key={p.id} className="space-y-1.5">
             <label htmlFor={`extra-${p.id}`} className="text-sm font-medium text-[#c4cad3]">
               {p.rotulo}
@@ -290,9 +313,11 @@ export function CapturaSimplesForm({
           </div>
         ))}
 
-        <p className="text-base font-semibold text-[#eef1f6]">
-          Fale agora mesmo com a Ketlyn no WhatsApp 👇
-        </p>
+        {!ehGrupo && (
+          <p className="text-base font-semibold text-[#eef1f6]">
+            Fale agora mesmo com a Ketlyn no WhatsApp 👇
+          </p>
+        )}
 
         {erro && <p className="text-sm text-red-400">{erro}</p>}
 
@@ -304,7 +329,9 @@ export function CapturaSimplesForm({
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.12h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.21 8.21 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.55-3.7 8.21-8.24 8.21Zm4.52-6.16c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.24-.64.81-.78.97-.14.17-.29.19-.53.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.14-.24-.01-.38.11-.5.11-.11.25-.29.37-.43.12-.14.16-.24.25-.41.08-.16.04-.31-.02-.43-.06-.13-.56-1.35-.77-1.84-.2-.48-.41-.42-.56-.43h-.48c-.16 0-.42.06-.65.31-.22.24-.85.83-.85 2.03s.87 2.35.99 2.51c.12.17 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.1.16 1.52.1.46-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.07-.11-.23-.17-.48-.29Z" />
           </svg>
-          {enviando ? "Abrindo o WhatsApp..." : "Falar no WhatsApp"}
+          {enviando
+            ? ehGrupo ? "Entrando no grupo..." : "Abrindo o WhatsApp..."
+            : ehGrupo ? "Entre agora no grupo do WhatsApp" : "Falar no WhatsApp"}
         </button>
       </form>
     </div>

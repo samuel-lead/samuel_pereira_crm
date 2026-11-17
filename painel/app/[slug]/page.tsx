@@ -30,7 +30,7 @@ export async function generateMetadata({
   const supabase = await createClient();
   const { data: isca } = await supabase
     .from("iscas")
-    .select("nome, material_url, formulario_simples")
+    .select("nome, material_url, formulario_simples, formulario_grupo")
     .eq("slug", slug)
     .eq("ativo", true)
     .is("arquivado_em", null)
@@ -38,7 +38,9 @@ export async function generateMetadata({
 
   if (!isca) return { title: "Meu Vendedor" };
 
-  const descricao = isca.formulario_simples
+  const descricao = isca.formulario_grupo
+    ? "Digite seu WhatsApp e entre agora no grupo."
+    : isca.formulario_simples
     ? "Preencha os dados para saber mais informações do imóvel."
     : isca.material_url
     ? "Preenche seus dados pra liberar o acesso — leva menos de 2 minutos."
@@ -65,7 +67,9 @@ export default async function IscaPage({
   const [{ data: isca }, { data: pixels }] = await Promise.all([
     supabase
       .from("iscas")
-      .select("nome, material_url, formulario_simples, whatsapp_contato_e164, whatsapp_mensagem, perguntas")
+      .select(
+        "nome, material_url, formulario_simples, whatsapp_contato_e164, whatsapp_mensagem, perguntas, formulario_grupo, grupo_nome, grupo_descricao"
+      )
       .eq("slug", slug)
       .eq("ativo", true)
       .is("arquivado_em", null)
@@ -92,6 +96,11 @@ export default async function IscaPage({
           whatsappContatoE164={isca.whatsapp_contato_e164}
           whatsappMensagem={isca.whatsapp_mensagem}
           perguntas={normalizarPerguntas(isca.perguntas)}
+          grupo={
+            isca.formulario_grupo
+              ? { nome: isca.grupo_nome || isca.nome, descricao: isca.grupo_descricao }
+              : null
+          }
           metaPixelId={idsPixel?.meta_pixel_id ?? null}
           googleTagId={idsPixel?.google_tag_id ?? null}
         />

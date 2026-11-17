@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { criarIsca, type EstadoFormulario } from "@/lib/iscas/actions";
 import { slugificar } from "@/lib/texto";
 import { EditorPerguntas } from "@/components/editor-perguntas";
+import { CamposGrupo } from "@/components/campos-grupo";
 
 const estadoInicial: EstadoFormulario = { erro: null };
 const campoClasse =
@@ -16,7 +17,7 @@ export function NovoIscaForm({
   somenteFormulario = false,
 }: {
   dominio: string;
-  tipoInicial?: "material" | "contato";
+  tipoInicial?: "material" | "contato" | "grupo";
   // Imobiliário (Samuel, 13/11/26): não tem isca, só formulário básico.
   somenteFormulario?: boolean;
 }) {
@@ -25,7 +26,7 @@ export function NovoIscaForm({
   const [slug, setSlug] = useState("");
   const [slugTocado, setSlugTocado] = useState(false);
   const [aba, setAba] = useState<"link" | "arquivo">("link");
-  const [tipo, setTipo] = useState<"material" | "contato">(somenteFormulario ? "contato" : tipoInicial);
+  const [tipo, setTipo] = useState<"material" | "contato" | "grupo">(somenteFormulario ? "contato" : tipoInicial);
 
   function aoMudarNome(valor: string) {
     setNome(valor);
@@ -44,9 +45,21 @@ export function NovoIscaForm({
           required
           value={nome}
           onChange={(e) => aoMudarNome(e.target.value)}
-          placeholder={somenteFormulario ? "Ex.: Interessados no Residencial Aurora" : "Ex.: Aula grátis — Como vender mais imóveis"}
+          placeholder={
+            tipo === "grupo"
+              ? "Ex.: Embaixadora Ketlyn"
+              : somenteFormulario
+              ? "Ex.: Interessados no Residencial Aurora"
+              : "Ex.: Aula grátis — Como vender mais imóveis"
+          }
           className={campoClasse}
         />
+        {tipo === "grupo" && (
+          <p className="text-xs text-neutral-400">
+            Esse nome vira a <strong>origem</strong> de todo lead que entrar por aqui — é assim que você
+            sabe de qual embaixador ele veio.
+          </p>
+        )}
       </div>
 
       <div className="space-y-1">
@@ -96,10 +109,21 @@ export function NovoIscaForm({
           >
             Formulário (só cadastro)
           </button>
+          <button
+            type="button"
+            onClick={() => setTipo("grupo")}
+            className={`flex-1 px-3 py-1.5 text-sm font-medium transition ${
+              tipo === "grupo" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"
+            }`}
+          >
+            Grupo do WhatsApp
+          </button>
         </div>
         <p className="text-xs text-neutral-400">
           {tipo === "material"
             ? "Isca: a pessoa se cadastra e já recebe o material na hora."
+            : tipo === "grupo"
+            ? "Grupo: a pessoa digita só o telefone e é levada pro grupo do WhatsApp."
             : "Formulário: a pessoa só se cadastra, sem nenhum material pra liberar."}
         </p>
         <input type="hidden" name="tipo" value={tipo} />
@@ -159,6 +183,8 @@ export function NovoIscaForm({
             </div>
           )}
         </div>
+      ) : tipo === "grupo" ? (
+        <CamposGrupo />
       ) : (
         <div className="space-y-3">
           <div className="space-y-1">
@@ -200,7 +226,7 @@ export function NovoIscaForm({
         type="submit"
         className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
       >
-        {tipo === "material" ? "Criar isca" : "Criar formulário"}
+        {tipo === "material" ? "Criar isca" : tipo === "grupo" ? "Criar formulário do grupo" : "Criar formulário"}
       </button>
     </form>
   );

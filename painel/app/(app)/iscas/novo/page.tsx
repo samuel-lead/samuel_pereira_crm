@@ -23,12 +23,12 @@ export default async function NovaIscaPage({
   // em vez da pessoa escolher de novo aqui dentro.
   const { tipo } = await searchParams;
   const imobiliario = ehImobiliario(usuario!.publico_org);
-  const tipoInicial = imobiliario || tipo === "contato" ? "contato" : "material";
+  const tipoInicial = imobiliario || tipo === "contato" ? "contato" : tipo === "grupo" ? "grupo" : "material";
 
   return (
     <>
       <PageHeader
-        titulo={tipoInicial === "material" ? "Nova isca" : "Novo formulário"}
+        titulo={tipoInicial === "material" ? "Nova isca" : tipoInicial === "grupo" ? "Novo formulário de grupo" : "Novo formulário"}
         acao={
           <Link href="/iscas" className="text-sm text-neutral-500 hover:text-neutral-700">
             Cancelar

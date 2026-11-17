@@ -93,6 +93,24 @@ function lerPerguntas(formData: FormData) {
   }
 }
 
+// Campos do formulário "Grupo do WhatsApp": nome, descrição e link de convite.
+function lerGrupo(formData: FormData) {
+  return {
+    nome: String(formData.get("grupo_nome") ?? "").trim(),
+    descricao: String(formData.get("grupo_descricao") ?? "").trim(),
+    link: String(formData.get("grupo_link") ?? "").trim(),
+  };
+}
+
+function validarGrupo(g: { nome: string; descricao: string; link: string }): string | null {
+  if (!g.nome) return "Escreve o nome do grupo";
+  if (!g.link) return "Cola o link de convite do grupo do WhatsApp";
+  if (!/^https:\/\/chat\.whatsapp\.com\/\S+$/i.test(g.link)) {
+    return "O link do grupo precisa começar com https://chat.whatsapp.com/";
+  }
+  return null;
+}
+
 export async function criarIsca(
   _estadoAnterior: EstadoFormulario,
   formData: FormData
@@ -109,10 +127,16 @@ export async function criarIsca(
   const whatsappContato = whatsappContatoDigitado ? normalizarTelefone(whatsappContatoDigitado) : null;
   const whatsappMensagem = String(formData.get("whatsapp_mensagem") ?? "").trim() || null;
   const perguntas = lerPerguntas(formData);
+  const ehGrupo = tipo === "grupo";
+  const grupo = lerGrupo(formData);
 
   if (!nome) return { erro: "Dá um nome pra essa isca" };
   if (tipo === "material" && !materialUrl && !temArquivo) {
     return { erro: "Cola o link do material ou anexa um arquivo" };
+  }
+  if (ehGrupo) {
+    const erroGrupo = validarGrupo(grupo);
+    if (erroGrupo) return { erro: erroGrupo };
   }
 
   // Empresa imobiliária: o link público é o formulário simples (nome + WhatsApp
@@ -122,7 +146,8 @@ export async function criarIsca(
     .select("publico")
     .eq("id", usuario.org_id)
     .maybeSingle();
-  const formularioSimples = orgData?.publico === "imobiliario";
+  // Formulário de grupo também usa o formulário simples (sem qualificação).
+  const formularioSimples = orgData?.publico === "imobiliario" || ehGrupo;
   // Imobiliário não tem isca (Samuel, 13/11/26): só formulário básico, sem material.
   const tipoFinal = formularioSimples ? "contato" : tipo;
 
@@ -147,7 +172,11 @@ export async function criarIsca(
       whatsapp_contato_e164: whatsappContato,
       whatsapp_mensagem: whatsappMensagem,
       formulario_simples: formularioSimples,
-      perguntas: formularioSimples ? perguntas : [],
+      perguntas: formularioSimples && !ehGrupo ? perguntas : [],
+      formulario_grupo: ehGrupo,
+      grupo_nome: ehGrupo ? grupo.nome : null,
+      grupo_descricao: ehGrupo ? grupo.descricao : null,
+      grupo_link: ehGrupo ? grupo.link : null,
     })
     .select("id")
     .single();
@@ -202,9 +231,15 @@ export async function atualizarIsca(
   // "só cadastro" o material some (fica null), mesmo que já tivesse um.
   const { data: iscaAtual } = await supabase
     .from("iscas")
-    .select("material_url, formulario_simples")
+    .select("material_url, formulario_simples, formulario_grupo")
     .eq("id", iscaId)
     .single();
+
+  const grupo = lerGrupo(formData);
+  if (iscaAtual?.formulario_grupo) {
+    const erroGrupo = validarGrupo(grupo);
+    if (erroGrupo) return { erro: erroGrupo };
+  }
 
   let urlFinal: string | null = tipo === "material" ? materialUrl || iscaAtual?.material_url || "" : null;
   if (tipo === "material" && temArquivo) {
@@ -226,7 +261,10 @@ export async function atualizarIsca(
       whatsapp_contato_e164: whatsappContato,
       whatsapp_mensagem: whatsappMensagem,
       // Só o formulário simples (imobiliário) tem perguntas; nos demais não mexe.
-      ...(iscaAtual?.formulario_simples ? { perguntas } : {}),
+      ...(iscaAtual?.formulario_simples && !iscaAtual?.formulario_grupo ? { perguntas } : {}),
+      ...(iscaAtual?.formulario_grupo
+        ? { grupo_nome: grupo.nome, grupo_descricao: grupo.descricao || null, grupo_link: grupo.link }
+        : {}),
       ativo,
       updated_at: new Date().toISOString(),
     })
@@ -259,6 +297,8 @@ export type EstadoCaptura = {
   materialUrl: string | null;
   whatsappContatoE164: string | null;
   whatsappMensagem: string | null;
+  // Só vem preenchido no formulário "Grupo do WhatsApp", depois do lead gravado.
+  grupoLink?: string | null;
 };
 
 export type RespostasIsca = {
@@ -297,7 +337,7 @@ export async function registrarLeadIsca(
 ): Promise<EstadoCaptura> {
   const supabase = await createClient();
 
-  const nome = respostas.nome.trim();
+  let nome = respostas.nome.trim();
   const telefoneDigitado = respostas.telefone.trim();
 
   const semRespostaVazia = {
@@ -306,7 +346,6 @@ export async function registrarLeadIsca(
     whatsappMensagem: null,
   };
 
-  if (!nome) return { erro: "Preenche seu nome", sucesso: false, ...semRespostaVazia };
   if (!telefoneDigitado) {
     return { erro: "Preenche seu WhatsApp", sucesso: false, ...semRespostaVazia };
   }
@@ -317,12 +356,17 @@ export async function registrarLeadIsca(
   // perguntas gravadas no banco (nunca o texto que veio do navegador).
   const { data: iscaPerguntas } = await supabase
     .from("iscas")
-    .select("perguntas")
+    .select("perguntas, formulario_grupo")
     .eq("slug", slug)
     .eq("ativo", true)
     .is("arquivado_em", null)
     .maybeSingle();
   const perguntasDoForm = normalizarPerguntas(iscaPerguntas?.perguntas);
+  const ehGrupo = iscaPerguntas?.formulario_grupo === true;
+  // Formulário de grupo só pede o telefone: o lead entra com um nome
+  // provisório (o número) até alguém descobrir o nome de verdade.
+  if (ehGrupo && !nome) nome = `Lead ${telefone.replace(/^55/, "")}`;
+  if (!nome) return { erro: "Preenche seu nome", sucesso: false, ...semRespostaVazia };
   const respostasParaNota: { pergunta: string; resposta: string }[] = [];
   for (const p of perguntasDoForm) {
     const resposta = String(respostasExtras[p.id] ?? "").trim().slice(0, 1000);
@@ -377,11 +421,23 @@ export async function registrarLeadIsca(
     if (erroNota) console.error("[isca] falha ao guardar respostas", { slug, erro: erroNota.message });
   }
 
+  // Formulário de grupo: o link de convite só sai depois do lead gravado.
+  let grupoLink: string | null = null;
+  if (ehGrupo && resultado?.lead_id) {
+    const { data: link, error: erroLink } = await supabase.rpc("link_do_grupo", {
+      p_slug: slug,
+      p_lead_id: resultado.lead_id,
+    });
+    if (erroLink) console.error("[isca] falha ao buscar link do grupo", { slug, erro: erroLink.message });
+    grupoLink = typeof link === "string" ? link : null;
+  }
+
   return {
     erro: null,
     sucesso: true,
     materialUrl: resultado?.material_url ?? null,
     whatsappContatoE164: resultado?.whatsapp_contato_e164 ?? null,
     whatsappMensagem: resultado?.whatsapp_mensagem ?? null,
+    grupoLink,
   };
 }

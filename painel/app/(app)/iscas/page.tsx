@@ -54,6 +54,14 @@ export default async function IscasPage() {
             </Link>
             {!imobiliario && (
               <Link
+                href="/iscas/novo?tipo=grupo"
+                className="rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 shadow-sm transition hover:bg-blue-50"
+              >
+                + Grupo do WhatsApp
+              </Link>
+            )}
+            {!imobiliario && (
+              <Link
                 href="/iscas/novo?tipo=material"
                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
               >

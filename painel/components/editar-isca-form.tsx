@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { atualizarIsca, type EstadoFormulario } from "@/lib/iscas/actions";
 import { EditorPerguntas } from "@/components/editor-perguntas";
+import { CamposGrupo } from "@/components/campos-grupo";
 import type { PerguntaFormulario } from "@/lib/iscas/perguntas";
 
 const estadoInicial: EstadoFormulario = { erro: null };
@@ -26,6 +27,10 @@ export function EditarIscaForm({
     whatsapp_contato_e164: string | null;
     whatsapp_mensagem: string | null;
     ativo: boolean;
+    formulario_grupo?: boolean;
+    grupo_nome?: string | null;
+    grupo_descricao?: string | null;
+    grupo_link?: string | null;
   };
   dominio: string;
 }) {
@@ -33,6 +38,7 @@ export function EditarIscaForm({
   const [estado, acaoFormulario] = useActionState(atualizarComId, estadoInicial);
   const [aba, setAba] = useState<"link" | "arquivo">("link");
   const [tipo, setTipo] = useState<"material" | "contato">(isca.material_url ? "material" : "contato");
+  const ehGrupo = isca.formulario_grupo === true;
 
   return (
     <form action={acaoFormulario} className="space-y-4">
@@ -53,7 +59,7 @@ export function EditarIscaForm({
         </p>
       </div>
 
-      {!(somenteFormulario && !isca.material_url) && (
+      {!(somenteFormulario && !isca.material_url) && !ehGrupo && (
       <div className="space-y-1">
         <label className={labelClasse}>O que você está editando? *</label>
         <div className="flex overflow-hidden rounded-md border border-neutral-200">
@@ -79,9 +85,22 @@ export function EditarIscaForm({
         <input type="hidden" name="tipo" value={tipo} />
       </div>
       )}
-      {somenteFormulario && !isca.material_url && <input type="hidden" name="tipo" value="contato" />}
+      {(ehGrupo || (somenteFormulario && !isca.material_url)) && <input type="hidden" name="tipo" value="contato" />}
 
-      {tipo === "material" ? (
+      {ehGrupo ? (
+        <>
+          <p className="text-xs text-neutral-400">
+            O nome do formulário acima é a <strong>origem</strong> dos leads que entram por aqui.
+          </p>
+          <CamposGrupo
+            inicial={{
+              nome: isca.grupo_nome ?? null,
+              descricao: isca.grupo_descricao ?? null,
+              link: isca.grupo_link ?? null,
+            }}
+          />
+        </>
+      ) : tipo === "material" ? (
         <div className="space-y-1">
           <label className={labelClasse}>Material atual</label>
           <p className="truncate rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
