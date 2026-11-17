@@ -604,6 +604,7 @@ export function KanbanBoard({
   usuarios = [],
   mostrarValor = false,
   mostrarParado = true,
+  paradoSoNosNiveis,
   numerosVisiveis: numerosVisiveisExternos,
   publicoOrg = "mentoria",
   permitirMarcarReuniaoRapido = false,
@@ -645,6 +646,9 @@ export function KanbanBoard({
   // "Parado" é alarme de lead esfriando no funil — não faz sentido em
   // Clientes, onde é normal ficar dias/meses sem mexer depois de vendido.
   mostrarParado?: boolean;
+  // Se vier, só esses níveis mostram os selos de parado/atrasado (Farming:
+  // só "Sem conversa iniciada" e "Conversando").
+  paradoSoNosNiveis?: number[];
   // Quando o quadro mostra só um pedaço dos níveis (ex.: Vendas, que é a
   // continuação do Pré-vendas), a numeração "Nível X" precisa vir calculada
   // com base em TODOS os níveis, senão recomeça do 1 dentro do recorte.
@@ -995,7 +999,8 @@ export function KanbanBoard({
                       // sem atividade nenhuma.
                       const reuniaoAtrasada =
                         temReuniaoMarcada && new Date(lead.reuniao_agendada_para!).getTime() < Date.now();
-                      const temAlgoAtrasado = reuniaoAtrasada || contatoAtrasado;
+                      const contaAlarme = !paradoSoNosNiveis || paradoSoNosNiveis.includes(lead.nivel_ordem);
+                      const temAlgoAtrasado = contaAlarme && (reuniaoAtrasada || contatoAtrasado);
                       // Lead com QUALQUER próximo contato marcado ou
                       // reunião marcada nunca mostra "Xd parado" — mesmo já
                       // vencido, já tem um plano; quem avisa disso é o selo
@@ -1005,6 +1010,7 @@ export function KanbanBoard({
                       // tempo, confuso).
                       const atrasado =
                         mostrarParado &&
+                        contaAlarme &&
                         diasParado >= 1 &&
                         !temProximoContato &&
                         !temReuniaoMarcada &&

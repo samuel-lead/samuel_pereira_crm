@@ -53,6 +53,9 @@ type LeadResumo = {
   imovel: { titulo: string; foto_url: string | null } | null;
 };
 
+// Farming: só essas etapas (Sem conversa iniciada e Conversando) têm alarme de parado/atrasado.
+const NIVEIS_ALARME_FARMING = [1, 2];
+
 export type ParametrosLeads = {
   usuario?: string;
   origem?: string;
@@ -414,6 +417,9 @@ export async function PaginaDeLeads({
   // vencer) OU "atrasado" (próximo contato ou reunião já venceu a data e
   // ninguém atualizou — esse acende na hora, sem esperar 1 dia parado).
   function ehParado(lead: (typeof leadsComAtividade)[number]) {
+    // Farming (Samuel, 17/11/26): só conta parado/atrasado em "Sem conversa
+    // iniciada" (1) e "Conversando" (2).
+    if (funil === "farming" && !NIVEIS_ALARME_FARMING.includes(lead.nivel_ordem)) return false;
     const proximoContatoPendente =
       !!lead.proximo_follow_em && new Date(lead.proximo_follow_em).getTime() > Date.now();
     const contatoAtrasado =
@@ -732,6 +738,7 @@ export async function PaginaDeLeads({
             permitirMarcarReuniaoRapido
             permitirProximoContatoRapido
             mostrarDiasNaFase
+            paradoSoNosNiveis={funil === "farming" ? NIVEIS_ALARME_FARMING : undefined}
           />
         )}
       </main>
