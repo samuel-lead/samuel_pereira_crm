@@ -23,7 +23,7 @@ import {
   contarEnviadosAoCloserPorUsuario,
   inicioDoMes,
 } from "@/lib/metricas";
-import { niveisPreVendasDaOrg, colunasPreVendasDaOrg, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
+import { niveisPreVendasDaOrg, colunasPreVendasDaOrg, COLUNAS_FARMING, comNomesDoFarming, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
 import { Calls, ehImobiliario, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
@@ -171,10 +171,12 @@ export async function PaginaDeLeads({
     new Set((origensData ?? []).map((lead) => lead.origem as string))
   ).sort();
 
-  const todosNiveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
-  const numerosVisiveis = numerarNiveis(todosNiveis);
+  const niveisDoBanco = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
+  // Farming: nomes próprios nas 4 etapas e sem "Nível N" na frente.
+  const todosNiveis = funil === "farming" ? comNomesDoFarming(niveisDoBanco) : niveisDoBanco;
+  const numerosVisiveis = funil === "farming" ? new Map<number, number>() : numerarNiveis(todosNiveis);
   const nivelPorOrdem = new Map(todosNiveis.map((nivel) => [nivel.ordem, nivel]));
-  const niveis = colunasPreVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria").map((ordem) => nivelPorOrdem.get(ordem)).filter(
+  const niveis = (funil === "farming" ? COLUNAS_FARMING : colunasPreVendasDaOrg(usuarioAtual?.publico_org ?? "mentoria")).map((ordem) => nivelPorOrdem.get(ordem)).filter(
     (nivel): nivel is NivelResumo => !!nivel
   );
   const leads = (leadsData ?? []) as unknown as LeadResumo[];
@@ -702,8 +704,14 @@ export async function PaginaDeLeads({
         </MetricasColapsaveis>
         )}
         {funil && (
-          <div className="border-b border-neutral-200 px-6 py-3 text-sm text-neutral-500">
-            {leadsExibidos.length} lead{leadsExibidos.length === 1 ? "" : "s"} em Farming
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 px-6 py-3 text-sm text-neutral-500">
+            <span>
+              {leadsExibidos.length} lead{leadsExibidos.length === 1 ? "" : "s"} em Farming
+            </span>
+            {/* Solta o card aqui pra mandar o lead de volta pra Base (com motivo e dia pra falar de novo). */}
+            <div className="w-96 max-w-full">
+              <BaseDropzone publicoOrg={publicoOrg} />
+            </div>
           </div>
         )}
       </BarraFixaKanban>

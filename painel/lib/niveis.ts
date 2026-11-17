@@ -444,3 +444,17 @@ export function nivelDeveApareceNoMenu(
 
   return true;
 }
+
+// Funil Farming (Samuel, 17/11/26): usa os níveis 0 a 3 do banco, mas com os
+// nomes próprios do Farming — reativar lead antigo: convite pra aula, conversa,
+// entrada no grupo. Reunião marcada tira o lead do Farming (vai pra Vendas).
+export const COLUNAS_FARMING = [0, 1, 2, 3];
+export const NOMES_ETAPAS_FARMING: Record<number, string> = {
+  0: "Leads",
+  1: "Sem conversa iniciada",
+  2: "Conversando",
+  3: "Adicionado no grupo",
+};
+export function comNomesDoFarming<T extends { ordem: number; nome: string }>(niveis: T[]): T[] {
+  return niveis.map((n) => (NOMES_ETAPAS_FARMING[n.ordem] ? { ...n, nome: NOMES_ETAPAS_FARMING[n.ordem] } : n));
+}

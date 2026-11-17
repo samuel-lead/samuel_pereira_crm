@@ -11,6 +11,7 @@ import {
   numerarNiveis,
   bloqueiaVoltarNoFunil,
   niveisReativacaoDaOrg,
+  comNomesDoFarming,
   motivosBaseDaOrg,
   type NivelResumo,
 } from "@/lib/niveis";
@@ -3106,7 +3107,7 @@ export async function buscarDetalhesDoLead(
     supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, usuario_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio, sdr_abordagem_id"
+        "id, nome, telefone_e164, email, documento, instagram, foto_url, origem, quem_indicou, indicacao_pega_em, produto, nivel_ordem, criterio_problema, criterio_urgencia, criterio_capacidade, status, valor_venda, receita_venda, vendido_em, declarado_em, responsavel_id, usuario_id, oportunidade_futura, motivo_base, motivo_base_detalhe, motivo_repescagem_futura, proposta_valor, proposta_enviada_em, proposta_observacao, proximo_follow_em, dia_follow, arquivado_em, imovel_id, unidade_id, imovel_captacao, venda_comissao_tipo, venda_comissao_valor, proposta_consorcio, sdr_abordagem_id, funil"
       )
       .eq("id", leadId)
       .single(),
@@ -3162,7 +3163,10 @@ export async function buscarDetalhesDoLead(
   }));
 
   const googleCalendarConectado = googleCalendarConectadoData === true;
-  const niveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
+  const niveisDoBanco = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
+  // Lead do funil Farming mostra os nomes das etapas do Farming.
+  const niveis =
+    (lead as { funil?: string | null }).funil === "farming" ? comNomesDoFarming(niveisDoBanco) : niveisDoBanco;
   const interacoes = interacoesData ?? [];
   const reunioes = reunioesData ?? [];
   const nivelHistorico = nivelHistoricoData ?? [];
