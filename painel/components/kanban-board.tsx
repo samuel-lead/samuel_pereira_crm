@@ -82,6 +82,9 @@ type LeadResumo = {
   // que "acaba", é um fato histórico que ajuda a entender o lead.
   reativado_da_base_em?: string | null;
   reativado_origem?: string | null;
+  // Passou pelo funil Farming (e já saiu dele, ex.: marcou reunião) — mostra o selo "Veio do Farming".
+  farming_origem?: boolean | null;
+  funil?: string | null;
   // Já teve alguma reunião registrada alguma vez (não importa o status) —
   // usado só pelo "Mover para..." do celular, pra aplicar exatamente a
   // mesma trava do menu Nível dentro do card (ver nivelDeveApareceNoMenu).
@@ -1102,6 +1105,13 @@ export function KanbanBoard({
                           >
                             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
                             {SELO_QUALIFICACAO[lead.nivelQualificacao].texto}
+                          </span>
+                        )}
+
+                        {lead.farming_origem && !lead.funil && (
+                          <span className="mb-2 mr-1 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+                            Veio do Farming
                           </span>
                         )}
 
