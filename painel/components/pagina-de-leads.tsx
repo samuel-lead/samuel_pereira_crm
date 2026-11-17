@@ -298,6 +298,76 @@ export async function PaginaDeLeads({
       : consulta.eq("usuario_id", user!.id);
   }
 
+  // Farming (Samuel, 17/11/26): métricas do dia só dos leads do Farming (os que
+  // estão nele ou que passaram por ele e saíram ao marcar reunião).
+  let metricasFarming: {
+    ligacoes: number;
+    atendidas: number;
+    naoAtendidas: number;
+    grupos: number;
+    marcadas: number;
+    realizadas: number;
+  } | null = null;
+  if (funil === "farming" && user) {
+    const doFarming = "leads!inner(arquivado_em, funil, farming_origem)";
+    const soFarming = { referencedTable: "leads" } as const;
+    const contar = async (consulta: unknown): Promise<number> => {
+      const { count } = (await consulta) as { count: number | null };
+      return count ?? 0;
+    };
+    const hoje = [inicioHoje.toISOString(), amanha.toISOString()] as const;
+    const ligacoes = (extra?: (c: any) => any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      let c: any = supabase // eslint-disable-line @typescript-eslint/no-explicit-any
+        .from("interacoes")
+        .select(`id, ${doFarming}`, { count: "exact", head: true })
+        .eq("tipo", "ligacao")
+        .is("excluido_em", null)
+        .is("leads.arquivado_em", null)
+        .or("funil.eq.farming,farming_origem.eq.true", soFarming)
+        .gte("ocorreu_em", hoje[0])
+        .lt("ocorreu_em", hoje[1]);
+      if (extra) c = extra(c);
+      return contar(filtrarPorEscopo(c));
+    };
+    const reunioesDoFarming = (colunaData: string, extra: (c: any) => any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const c: any = supabase // eslint-disable-line @typescript-eslint/no-explicit-any
+        .from("reunioes")
+        .select(`id, ${doFarming}`, { count: "exact", head: true })
+        .is("leads.arquivado_em", null)
+        .or("funil.eq.farming,farming_origem.eq.true", soFarming)
+        .gte(colunaData, hoje[0])
+        .lt(colunaData, hoje[1]);
+      return contar(filtrarPorEscopo(extra(c)));
+    };
+    const [ligacoesN, atendidasN, gruposN, marcadasN, realizadasN] = await Promise.all([
+      ligacoes(),
+      ligacoes((c) => c.eq("atendida", true)),
+      contar(
+        filtrarPorEscopo(
+          (supabase as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+            .from("nivel_historico")
+            .select(`id, ${doFarming}`, { count: "exact", head: true })
+            .eq("para_ordem", 3)
+            .neq("de_ordem", 3)
+            .is("leads.arquivado_em", null)
+            .or("funil.eq.farming,farming_origem.eq.true", soFarming)
+            .gte("ocorreu_em", hoje[0])
+            .lt("ocorreu_em", hoje[1])
+        )
+      ),
+      reunioesDoFarming("marcada_em", (c) => c.eq("reagendada", false)),
+      reunioesDoFarming("agendada_para", (c) => c.eq("status", "realizada")),
+    ]);
+    metricasFarming = {
+      ligacoes: ligacoesN,
+      atendidas: atendidasN,
+      naoAtendidas: Math.max(0, ligacoesN - atendidasN),
+      grupos: gruposN,
+      marcadas: marcadasN,
+      realizadas: realizadasN,
+    };
+  }
+
   // Reuniões ainda "marcada" com a data já passada — ao arrastar esse lead
   // de volta pra "Reunião marcada", o Kanban precisa saber pra perguntar na
   // hora (aviso) se a pessoa sumiu ou avisou antes de remarcar.
@@ -714,6 +784,35 @@ export async function PaginaDeLeads({
             <span>
               {leadsExibidos.length} lead{leadsExibidos.length === 1 ? "" : "s"} em Farming
             </span>
+            {metricasFarming && (
+              <div className="flex w-full flex-wrap divide-x divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+                <StatCell
+                  label="Ligações hoje"
+                  value={metricasFarming.ligacoes}
+                  sub={
+                    <span className="block">
+                      {metricasFarming.atendidas} atendida{metricasFarming.atendidas === 1 ? "" : "s"} ·{" "}
+                      {metricasFarming.naoAtendidas} não atendida{metricasFarming.naoAtendidas === 1 ? "" : "s"}
+                    </span>
+                  }
+                />
+                <StatCell
+                  label="Leads adicionados ao grupo hoje"
+                  value={metricasFarming.grupos}
+                  sub={souAdmin ? "Time todo" : undefined}
+                />
+                <StatCell
+                  label={`${Calls(publicoOrg)} marcadas hoje`}
+                  value={metricasFarming.marcadas}
+                  sub={souAdmin ? "Time todo" : undefined}
+                />
+                <StatCell
+                  label={`${Calls(publicoOrg)} realizadas hoje`}
+                  value={metricasFarming.realizadas}
+                  sub={souAdmin ? "Time todo" : undefined}
+                />
+              </div>
+            )}
             {/* Solta o card aqui pra mandar o lead de volta pra Base (com motivo e dia pra falar de novo). */}
             <div className="w-96 max-w-full">
               <BaseDropzone publicoOrg={publicoOrg} />
