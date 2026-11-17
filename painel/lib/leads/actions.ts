@@ -2876,6 +2876,54 @@ export async function reativarLeadExcluido(leadId: string): Promise<string | nul
   return null;
 }
 
+// Samuel (17/11/26): manda um lead da Base pro funil Farming (só no CRM do
+// Samuel). O motivo que ele tinha na Base fica guardado e aparece no card.
+export async function mandarParaFarming(leadId: string): Promise<string | null> {
+  const { supabase, usuario } = await contextoUsuario();
+  if (usuario.org_id !== ORG_ID_SAMUEL) return "Essa opção não está disponível nessa empresa.";
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("nivel_ordem, status, arquivado_em, motivo_base, motivo_base_detalhe")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!lead || lead.arquivado_em) return "Lead não encontrado.";
+  if (lead.nivel_ordem !== 9 || lead.status === "vendido") {
+    return "Só dá pra mandar pro Farming um lead que está na Base.";
+  }
+
+  const { error } = await supabase
+    .from("leads")
+    .update({
+      funil: "farming",
+      farming_origem: true,
+      nivel_ordem: 0,
+      entrou_nivel_em: new Date().toISOString(),
+      farming_motivo_base: lead.motivo_base,
+      farming_motivo_detalhe: lead.motivo_base_detalhe,
+      motivo_base: null,
+      motivo_base_detalhe: null,
+      voltar_da_base_em: null,
+    })
+    .eq("id", leadId);
+  if (error) return error.message;
+
+  await supabase.from("nivel_historico").insert({
+    org_id: usuario.org_id,
+    lead_id: leadId,
+    de_ordem: 9,
+    para_ordem: 0,
+    motivo: "Mandado da Base para o Farming",
+    automatico: false,
+    usuario_id: usuario.id,
+  });
+
+  revalidatePath("/leads/base");
+  revalidatePath("/farming");
+  revalidatePath(`/leads/${leadId}`);
+  return null;
+}
+
 // Lead sem responsável (ex.: chegou de uma campanha, sem dono definido)
 // pode ser "pego" por qualquer usuário com acesso ao Funil. Também vale
 // pro SDR que marcou a reunião original "pegar de volta" um lead que foi

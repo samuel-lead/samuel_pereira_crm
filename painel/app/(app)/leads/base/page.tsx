@@ -8,6 +8,7 @@ import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodasEmParalelo } from "@/lib/supabase/paginar";
 import { niveisReativacaoDaOrg, numerarNiveis, type NivelResumo, ordenarNiveisDoFunil } from "@/lib/niveis";
 import { funilConsorcio } from "@/lib/terminologia";
+import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
 
 type LeadComHistorico = LeadBase & {
   criterio_problema: string | null;
@@ -204,6 +205,7 @@ export default async function BasePage({
           usuarios={usuarios}
           souAdmin={souAdmin}
           publicoOrg={publicoOrg}
+          permitirFarming={usuarioAtual?.org_id === ORG_ID_SAMUEL}
         />
       </main>
     </>

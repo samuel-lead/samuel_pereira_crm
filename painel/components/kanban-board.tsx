@@ -9,6 +9,7 @@ import {
   posicaoNoFunil,
   ORDEM_OPORTUNIDADE_FUTURA,
   motivosBaseDaOrg,
+  MOTIVOS_BASE,
   type NivelResumo,
 } from "@/lib/niveis";
 import { moverLeadNivel, reativarLead, marcarProximoContato } from "@/lib/leads/actions";
@@ -84,6 +85,8 @@ type LeadResumo = {
   reativado_origem?: string | null;
   // Passou pelo funil Farming (e já saiu dele, ex.: marcou reunião) — mostra o selo "Veio do Farming".
   farming_origem?: boolean | null;
+  farming_motivo_base?: string | null;
+  farming_motivo_detalhe?: string | null;
   funil?: string | null;
   // Já teve alguma reunião registrada alguma vez (não importa o status) —
   // usado só pelo "Mover para..." do celular, pra aplicar exatamente a
@@ -1105,6 +1108,16 @@ export function KanbanBoard({
                           >
                             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
                             {SELO_QUALIFICACAO[lead.nivelQualificacao].texto}
+                          </span>
+                        )}
+
+                        {lead.funil === "farming" && lead.farming_motivo_base && (
+                          <span
+                            title={lead.farming_motivo_detalhe ?? undefined}
+                            className="mb-2 mr-1 inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-stone-700"
+                          >
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+                            Na Base: {MOTIVOS_BASE.find((m) => m.valor === lead.farming_motivo_base)?.nome ?? lead.farming_motivo_base}
                           </span>
                         )}
 

@@ -11,9 +11,43 @@ import { diasDesde } from "@/lib/datas";
 import { formatarTelefone, handleInstagram, linkInstagram, origemParaCard } from "@/lib/texto";
 import { useAbrirLeadModal } from "@/components/contexto-lead-modal";
 import { prefetchLead } from "@/lib/leads/cache-lead";
-import { reativarLead } from "@/lib/leads/actions";
+import { reativarLead, mandarParaFarming } from "@/lib/leads/actions";
 
 const NIVEL_NOVOS_LEADS = 0;
+
+// Mandar um lead da Base pro funil Farming (só no CRM do Samuel). O motivo que ele
+// tinha na Base fica guardado e aparece no card do Farming.
+function BotaoMandarParaFarming({
+  leadId,
+  aoEnviar,
+  aoFalhar,
+}: {
+  leadId: string;
+  aoEnviar?: (leadId: string) => void;
+  aoFalhar?: (leadId: string, mensagem: string) => void;
+}) {
+  const [pendente, iniciar] = useTransition();
+  return (
+    <button
+      type="button"
+      disabled={pendente}
+      onClick={(e) => {
+        e.stopPropagation();
+        aoEnviar?.(leadId);
+        iniciar(() => {
+          mandarParaFarming(leadId)
+            .then((erro) => {
+              if (erro) aoFalhar?.(leadId, erro);
+            })
+            .catch(() => aoFalhar?.(leadId, "Não consegui mandar pro Farming agora. Tente de novo."));
+        });
+      }}
+      className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-600 hover:text-white disabled:opacity-60"
+    >
+      🌱 {pendente ? "Mandando..." : "Mandar pro Farming"}
+    </button>
+  );
+}
 
 // Botão de rodapé pra tirar o lead da Base sem abrir o card inteiro.
 // Samuel pediu: sem escolha de nível — reativar sempre manda o lead pra
@@ -219,7 +253,10 @@ export function BaseLeadsBoard({
   souAdmin,
   publicoOrg = "mentoria",
   apenasColunas,
+  permitirFarming = false,
 }: {
+  // Mostra o botão "Mandar pro Farming" nos cards (só no CRM do Samuel).
+  permitirFarming?: boolean;
   // Mostra só essas colunas (ex.: a página Farm mostra só "farming").
   apenasColunas?: MotivoBase[];
   leadsPorMotivo: Record<MotivoBase, LeadBase[]>;
@@ -448,6 +485,9 @@ export function BaseLeadsBoard({
                         </div>
                       </div>
                     </div>
+                    {permitirFarming && (
+                      <BotaoMandarParaFarming leadId={lead.id} aoEnviar={esconder} aoFalhar={desfazerEsconder} />
+                    )}
                     <BotaoReativar
                       leadId={lead.id}
                       responsavelAtualId={lead.responsavel_id}

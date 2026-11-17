@@ -45,6 +45,8 @@ type LeadResumo = {
   reativado_da_base_em: string | null;
   reativado_origem: string | null;
   farming_origem?: boolean | null;
+  farming_motivo_base?: string | null;
+  farming_motivo_detalhe?: string | null;
   funil?: string | null;
   proposta_valor: number | null;
   isca_respostas: { nivel_qualificacao: string | null }[] | null;
@@ -103,7 +105,7 @@ export async function PaginaDeLeads({
     let consulta = supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, instagram, foto_url, origem, quem_indicou, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, sdr_abordagem_id, proximo_follow_em, oportunidade_futura, reativado_da_base_em, reativado_origem, farming_origem, funil, proposta_valor, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
+        "id, nome, telefone_e164, instagram, foto_url, origem, quem_indicou, nivel_ordem, declarado_em, entrou_nivel_em, status, responsavel_id, sdr_abordagem_id, proximo_follow_em, oportunidade_futura, reativado_da_base_em, reativado_origem, farming_origem, funil, farming_motivo_base, farming_motivo_detalhe, proposta_valor, isca_respostas(nivel_qualificacao), imovel:imoveis(titulo, foto_url)"
       )
       .is("arquivado_em", null)
       .neq("status", "vendido")
