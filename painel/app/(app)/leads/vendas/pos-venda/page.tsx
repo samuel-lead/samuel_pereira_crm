@@ -25,12 +25,12 @@ type ClientePosVenda = {
   indicacao_pega_em: string | null;
 };
 
-type Visao = "proximo" | "sem-novo" | "indicacao";
+type Visao = "proximo" | "sem-novo";
 
 // Pós-venda (Samuel, 18/11/26) — só duas visões:
 //  * próximo contato: o cliente tem um dia marcado (hoje, atrasado ou futuro);
 //  * sem novo contato: não tem nenhum dia marcado.
-function situacao(c: ClientePosVenda): "proximo" | "sem-novo" {
+function situacao(c: ClientePosVenda): Visao {
   return c.pos_venda_proximo_em ? "proximo" : "sem-novo";
 }
 
@@ -48,14 +48,17 @@ function formatarInstante(iso: string | null) {
 export default async function PosVendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ vis?: string; ind?: string; busca?: string; periodo?: string; mesAno?: string; de?: string; ate?: string }>;
+  searchParams: Promise<{ vis?: string; busca?: string; periodo?: string; mesAno?: string; de?: string; ate?: string }>;
 }) {
-  const { vis, ind, busca, periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro } = await searchParams;
+  const { vis, busca, periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
   const hoje = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
   const publicoOrg = usuario?.publico_org ?? "mentoria";
+  // Coluna "Pegou indicação?" (Sim/Não) — mesmo marcador do card do lead; por enquanto
+  // só o dono da plataforma vê, como no card.
+  const podeIndicacao = usuario?.super_admin === true;
 
   // Filtro de período (hoje, semana, mês, ano/mês, personalizado), igual ao da aba
   // Clientes. Sem nenhum escolhido, mostra todos. O período vale pra DATA DO PRÓXIMO
@@ -78,23 +81,10 @@ export default async function PosVendaPage({
     const t = new Date(c.vendido_em).getTime();
     return t >= periodo.inicio.getTime() && t < periodo.fim.getTime();
   };
-  // "Indicação" (Pegou indicação? Sim/Não) é o mesmo marcador do card do lead — por
-  // enquanto só o dono da plataforma vê, como no card.
-  const podeIndicacao = usuario?.super_admin === true;
-  const visEscolhida =
-    vis === "proximo" || vis === "sem-novo" || (vis === "indicacao" && podeIndicacao) ? (vis as Visao) : undefined;
-  const indFiltro: "nao" | "sim" | "todos" = ind === "sim" || ind === "todos" ? ind : "nao";
-  // Na visão Indicação, o período vale pela DATA DA VENDA.
-  const vendaNoPeriodo = (c: ClientePosVenda) => {
-    if (!periodo) return true;
-    if (!c.vendido_em) return false;
-    const t = new Date(c.vendido_em).getTime();
-    return t >= periodo.inicio.getTime() && t < periodo.fim.getTime();
-  };
-  const hrefPara = (extra: { vis?: string; ind?: string }) => {
+  const visEscolhida = vis === "proximo" || vis === "sem-novo" ? vis : undefined;
+  const hrefPara = (extra: { vis?: string }) => {
     const q = new URLSearchParams();
     if (extra.vis) q.set("vis", extra.vis);
-    if (extra.ind) q.set("ind", extra.ind);
     if (busca) q.set("busca", busca);
     if (periodoFiltro) q.set("periodo", periodoFiltro);
     if (mesAnoFiltro) q.set("mesAno", mesAnoFiltro);
@@ -121,12 +111,10 @@ export default async function PosVendaPage({
     supabase.from("usuarios").select("id, nome").order("nome"),
   ]);
 
-  const todosClientes = (clientesData ?? []) as ClientePosVenda[];
-  const clientes = todosClientes.filter(noPeriodo);
-  const clientesInd = todosClientes.filter(vendaNoPeriodo);
+  const clientes = ((clientesData ?? []) as ClientePosVenda[]).filter(noPeriodo);
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
 
-  const contagem = { proximo: 0, "sem-novo": 0, indicacao: clientesInd.filter((c) => !c.indicacao_pega_em).length };
+  const contagem = { proximo: 0, "sem-novo": 0 };
   for (const c of clientes) contagem[situacao(c)]++;
 
   // Sem escolha na tela: abre em "Próximo contato"; se ninguém tem data marcada
@@ -134,12 +122,8 @@ export default async function PosVendaPage({
   const visao: Visao =
     visEscolhida ?? (contagem.proximo > 0 ? "proximo" : "sem-novo");
 
-  const listaIndicacao = clientesInd
-    .filter((c) => (indFiltro === "todos" ? true : indFiltro === "sim" ? !!c.indicacao_pega_em : !c.indicacao_pega_em))
-    .sort((a, b) => ((b.vendido_em ?? "") < (a.vendido_em ?? "") ? -1 : 1));
-
   const lista = clientes
-    .filter((c) => visao !== "indicacao" && situacao(c) === visao)
+    .filter((c) => situacao(c) === visao)
     .sort((a, b) => {
       // Mais urgente primeiro: quem tem data mais antiga; sem data, pela venda mais antiga.
       const ka = a.pos_venda_proximo_em ?? (a.vendido_em ?? "").slice(0, 10);
@@ -150,7 +134,6 @@ export default async function PosVendaPage({
   const chips: { chave: Visao; rotulo: string }[] = [
     { chave: "proximo", rotulo: "Próximo contato" },
     { chave: "sem-novo", rotulo: "Sem novo contato" },
-    ...(podeIndicacao ? [{ chave: "indicacao" as Visao, rotulo: "Pegou indicação?" }] : []),
   ];
 
   return (
@@ -240,81 +223,8 @@ export default async function PosVendaPage({
           O que for conversado fica salvo como nota no histórico do cliente.
         </p>
 
-        {visao === "indicacao" ? (
-          <>
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-xs font-medium text-neutral-500">Mostrar:</span>
-              {([["nao", "Não pegou"], ["sim", "Pegou"], ["todos", "Todos"]] as const).map(([chave, rotulo]) => (
-                <Link
-                  key={chave}
-                  href={hrefPara({ vis: "indicacao", ind: chave })}
-                  className={`rounded-xl border border-neutral-200 px-3 py-1.5 text-xs font-medium shadow-sm transition ${
-                    indFiltro === chave ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-100"
-                  }`}
-                >
-                  {rotulo}
-                </Link>
-              ))}
-            </div>
-            <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
-                    <th className="px-4 py-3 font-medium">Cliente</th>
-                    <th className="px-4 py-3 font-medium">Telefone</th>
-                    <th className="px-4 py-3 font-medium">Vendido em</th>
-                    <th className="px-4 py-3 font-medium">Pegou indicação?</th>
-                    <th className="px-4 py-3 font-medium">Responsável</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {listaIndicacao.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-sm text-neutral-400">
-                        Nenhum cliente nessa visão
-                      </td>
-                    </tr>
-                  ) : (
-                    listaIndicacao.map((c) => (
-                      <tr key={c.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                        <td className="px-4 py-3">
-                          <LinkLead leadId={c.id} className="flex items-center gap-2.5 hover:underline">
-                            <AvatarLead
-                              nome={c.nome}
-                              fotoUrl={c.foto_url}
-                              tamanho="h-8 w-8 text-xs"
-                              classeBadge="bg-green-100 text-green-700"
-                            />
-                            <span className="font-medium text-neutral-900">{c.nome}</span>
-                          </LinkLead>
-                        </td>
-                        <td className="px-4 py-3 text-neutral-600">
-                          {c.telefone_e164 ? (
-                            <span className="flex items-center gap-1.5 whitespace-nowrap">
-                              {c.telefone_e164}
-                              <BotaoWhatsapp telefone={c.telefone_e164} />
-                            </span>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-neutral-600">{formatarInstante(c.vendido_em)}</td>
-                        <td className="px-4 py-3">
-                          <IndicacaoPegaToggle leadId={c.id} jaPegou={!!c.indicacao_pega_em} />
-                        </td>
-                        <td className="px-4 py-3 text-neutral-600">
-                          {c.responsavel_id ? nomePorUsuario.get(c.responsavel_id) ?? "—" : "—"}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
-          <table className="w-full min-w-[1000px] text-left text-sm">
+          <table className="w-full min-w-[1100px] text-left text-sm">
             <thead>
               <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
                 <th className="px-4 py-3 font-medium">Cliente</th>
@@ -324,13 +234,14 @@ export default async function PosVendaPage({
                 <th className="px-4 py-3 font-medium">Próximo contato</th>
                 <th className="px-4 py-3 font-medium">Motivo do contato</th>
                 <th className="px-4 py-3 font-medium">Responsável</th>
+                {podeIndicacao && <th className="px-4 py-3 font-medium">Pegou indicação?</th>}
                 <th className="px-4 py-3 font-medium" />
               </tr>
             </thead>
             <tbody>
               {lista.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-neutral-400">
+                  <td colSpan={podeIndicacao ? 9 : 8} className="px-4 py-10 text-center text-sm text-neutral-400">
                     Nenhum cliente nessa visão
                   </td>
                 </tr>
@@ -384,6 +295,11 @@ export default async function PosVendaPage({
                       <td className="px-4 py-3 text-neutral-600">
                         {c.responsavel_id ? nomePorUsuario.get(c.responsavel_id) ?? "—" : "—"}
                       </td>
+                      {podeIndicacao && (
+                        <td className="px-4 py-3">
+                          <IndicacaoPegaToggle leadId={c.id} jaPegou={!!c.indicacao_pega_em} />
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-right">
                         {podeRegistrar && <RegistrarContatoPosVenda leadId={c.id} nome={c.nome} />}
                       </td>
@@ -394,7 +310,6 @@ export default async function PosVendaPage({
             </tbody>
           </table>
         </div>
-        )}
       </main>
     </>
   );
