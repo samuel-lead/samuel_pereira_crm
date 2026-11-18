@@ -325,18 +325,18 @@ export default async function VendasPage({
           </p>
           </div>
           {mostrarSplitReceita && (
-            <div className="relative grid min-w-0 gap-3 border-t border-white/20 pt-3 text-sm md:max-w-[46%] md:border-l md:border-t-0 md:pl-8 md:pt-0">
+            <div className="relative grid min-w-0 gap-3 border-t border-white/20 pt-3 text-sm md:shrink-0 md:border-l md:border-t-0 md:pl-8 md:pt-0">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
-                  De clientes deste período
+                <p className="text-[10px] font-bold uppercase tracking-wider text-green-200 md:whitespace-nowrap">
+                  {Receita(publicoOrg)} de clientes do período
                 </p>
                 <p className="text-lg font-bold tabular-nums">
                   {formatarMoeda(totalReceita - receitaDeMesesAnteriores)}
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
-                  De clientes de meses anteriores
+                <p className="text-[10px] font-bold uppercase tracking-wider text-green-200 md:whitespace-nowrap">
+                  {Receita(publicoOrg)} de clientes dos períodos anteriores
                 </p>
                 <p className="text-lg font-bold tabular-nums">{formatarMoeda(receitaDeMesesAnteriores)}</p>
                 {anterioresPorCliente.size > 0 && (
