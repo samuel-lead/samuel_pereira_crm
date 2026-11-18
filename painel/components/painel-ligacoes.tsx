@@ -31,6 +31,33 @@ function Variacao({ atual, anterior }: { atual: number; anterior: number | null 
   );
 }
 
+// Variação da TAXA contra o período anterior, em pontos percentuais (ex.: 18,7% → 14,6%
+// = ▼ 4,1 pts, em vermelho). Samuel, 18/11/26: queda tem que aparecer em vermelho.
+function VariacaoPontos({ atual, anterior }: { atual: number | null; anterior: number | null }) {
+  if (atual === null || anterior === null) {
+    return (
+      <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-400">—</span>
+    );
+  }
+  const dif = atual - anterior;
+  if (Math.abs(dif) < 0.05) {
+    return (
+      <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500">= igual</span>
+    );
+  }
+  const subiu = dif > 0;
+  return (
+    <span
+      className={`rounded-md px-1.5 py-0.5 text-xs font-semibold ${
+        subiu ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+      }`}
+      title="Comparado ao período anterior (em pontos percentuais)"
+    >
+      {subiu ? "▲" : "▼"} {numero(Math.abs(dif), 1)} pts
+    </span>
+  );
+}
+
 export function PainelLigacoes({
   titulo,
   realizadas,
@@ -89,8 +116,13 @@ export function PainelLigacoes({
 
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Taxa de atendimento</p>
-          <p className="mt-1 text-3xl font-black tabular-nums text-neutral-900">
+          <p
+            className={`mt-1 flex items-center gap-2 text-3xl font-black tabular-nums ${
+              taxa !== null && taxaAnterior !== null && taxa < taxaAnterior ? "text-red-600" : "text-neutral-900"
+            }`}
+          >
             {taxa === null ? "—" : `${numero(taxa, 1)}%`}
+            <VariacaoPontos atual={taxa} anterior={taxaAnterior} />
           </p>
           <p className="mt-1 text-sm text-neutral-500">
             {taxaAnterior === null ? "sem registro no período anterior" : `período anterior: ${numero(taxaAnterior, 1)}%`}
