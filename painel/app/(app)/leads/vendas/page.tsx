@@ -247,6 +247,7 @@ export default async function VendasPage({
             ateAtual={ateFiltro}
             outrosParams={{ busca: buscaFiltro, sdr: sdrFiltroAtivo, closer: closerFiltroAtivo }}
             publicoOrg={publicoOrg}
+            personalizadoEmbaixo
           />
           </div>
 

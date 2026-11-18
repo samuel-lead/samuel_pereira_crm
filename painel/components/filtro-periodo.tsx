@@ -36,7 +36,10 @@ export function FiltroPeriodo({
   atalhos,
   mostrarMesEspecifico = true,
   publicoOrg = "mentoria",
+  personalizadoEmbaixo = false,
 }: {
+  // "Período personalizado" empilhado embaixo do filtro de ano/mês (aba Clientes).
+  personalizadoEmbaixo?: boolean;
   baseHref: string;
   periodoAtual: ChavePeriodo | null;
   mesAnoAtual?: string;
@@ -124,6 +127,10 @@ export function FiltroPeriodo({
         ))}
       </div>
 
+      {/* Com personalizadoEmbaixo, o botão "Período personalizado" fica logo abaixo
+          do filtro de ano/mês, com a mesma largura (Samuel, 18/11/26). Sem isso,
+          "contents" faz este bloco não existir no layout (como era antes). */}
+      <div className={personalizadoEmbaixo ? "flex flex-col items-stretch gap-2" : "contents"}>
       {mostrarMesEspecifico && (
         <div className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
           <div className="w-[90px]">
@@ -175,6 +182,7 @@ export function FiltroPeriodo({
       >
         Período personalizado
       </button>
+      </div>
 
       {mostrarCustom && (
         <form
