@@ -248,15 +248,19 @@ export function SecaoPeriodo({
         {acao}
       </div>
 
-      <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
+      <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-5 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
         <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
 
+        {/* Compacto, igual à aba Clientes (Samuel, 18/11/26): total à esquerda; receita do
+            período e de períodos anteriores empilhadas à direita. */}
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
+        <div className="min-w-0">
         <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
           <IconeMoeda className="h-3.5 w-3.5" />
           {ehImobiliario(publicoOrg) ? Faturamento(publicoOrg) : Receita(publicoOrg)}
         </p>
-        <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
+        <p className="relative mt-1 text-4xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
           {formatarMoeda(ehImobiliario(publicoOrg) ? metricas.faturamento : metricas.receita)}
         </p>
         <p className="relative mt-2 text-sm font-medium text-green-100">
@@ -270,19 +274,20 @@ export function SecaoPeriodo({
             ? `Comissão: ${formatarMoeda(metricas.receita)}`
             : `${Faturamento(publicoOrg)}: ${formatarMoeda(metricas.faturamento)}`}
         </p>
+        </div>
         {receitaDePeriodosAnteriores && (
-          <div className="relative mt-4 grid gap-2 border-t border-white/20 pt-3 text-sm sm:grid-cols-2">
+          <div className="relative grid min-w-0 gap-3 border-t border-white/20 pt-3 text-sm md:shrink-0 md:border-l md:border-t-0 md:pl-8 md:pt-0">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
-                De clientes deste período
+              <p className="text-[10px] font-bold uppercase tracking-wider text-green-200 md:whitespace-nowrap">
+                {Receita(publicoOrg)} de clientes do período
               </p>
               <p className="text-lg font-bold tabular-nums">
                 {formatarMoeda(metricas.receita - receitaDePeriodosAnteriores.total)}
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
-                De clientes de períodos anteriores
+              <p className="text-[10px] font-bold uppercase tracking-wider text-green-200 md:whitespace-nowrap">
+                {Receita(publicoOrg)} de clientes dos períodos anteriores
               </p>
               <p className="text-lg font-bold tabular-nums">
                 {formatarMoeda(receitaDePeriodosAnteriores.total)}
@@ -297,6 +302,7 @@ export function SecaoPeriodo({
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {dashboardEmBarras(publicoOrg) ? (
