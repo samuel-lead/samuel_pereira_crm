@@ -18,7 +18,7 @@ import {
 import { garantirOrigem } from "@/lib/origens/actions";
 import { pareceOrigemInvalida } from "@/lib/origens/validacao";
 import { normalizarTelefone } from "@/lib/telefone";
-import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
+import { ORG_ID_SAMUEL, ORGS_COM_PASSAR_LEAD_PARA_SDR } from "@/lib/scripts-sdr";
 import { reuniao, Reuniao, ehImobiliario, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { lerPropostaConsorcioDoForm, type PropostaConsorcio } from "@/lib/proposta-consorcio";
 
@@ -3242,7 +3242,7 @@ export async function buscarDetalhesDoLead(
     (u) => u.id === (lead as { sdr_abordagem_id?: string | null }).sdr_abordagem_id
   )?.nome;
   const podePassarParaSdr =
-    usuario.org_id === ORG_ID_SAMUEL &&
+    ORGS_COM_PASSAR_LEAD_PARA_SDR.includes(usuario.org_id) &&
     lead.responsavel_id !== null &&
     lead.status !== "vendido" &&
     lead.arquivado_em === null &&
@@ -3306,7 +3306,7 @@ export async function buscarDetalhesDoLead(
 // registrar_sdr_abordagem no banco). Só no CRM do Samuel por enquanto.
 export async function passarLeadParaSdr(leadId: string, novoSdrId: string): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
-  if (usuario.org_id !== ORG_ID_SAMUEL) return "Essa opção não está disponível nessa empresa.";
+  if (!ORGS_COM_PASSAR_LEAD_PARA_SDR.includes(usuario.org_id)) return "Essa opção não está disponível nessa empresa.";
   if (!novoSdrId) return "Escolha pra qual SDR passar o lead.";
 
   const { error } = await supabase.rpc("passar_lead_para_sdr", {
