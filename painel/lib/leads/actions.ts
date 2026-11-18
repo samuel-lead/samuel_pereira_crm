@@ -2720,8 +2720,8 @@ export async function registrarLigacao(leadId: string, atendida: boolean) {
 export async function registrarContatoPosVenda(
   leadId: string,
   texto: string,
-  proximoContato: string | null,
-  motivoProximo: string | null = null
+  proximoContato: string,
+  motivoProximo: string
 ): Promise<{ erro: string | null }> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -2729,11 +2729,12 @@ export async function registrarContatoPosVenda(
   if (!conteudo) return { erro: "Escreva o que foi feito ou conversado no contato." };
   if (conteudo.length > 2000) return { erro: "Texto muito longo (máximo 2000 letras)." };
 
-  let proximo: string | null = null;
-  if (proximoContato) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(proximoContato)) return { erro: "Data do próximo contato inválida." };
-    proximo = proximoContato;
-  }
+  // Próximo contato e motivo são obrigatórios (Samuel, 18/11/26).
+  if (!proximoContato) return { erro: "Informe a data do próximo contato." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(proximoContato)) return { erro: "Data do próximo contato inválida." };
+  const proximo: string = proximoContato;
+  const motivo = (motivoProximo ?? "").trim().slice(0, 300);
+  if (!motivo) return { erro: "Informe o motivo do próximo contato." };
 
   const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
   if (erroPermissao) return { erro: erroPermissao };
@@ -2745,9 +2746,6 @@ export async function registrarContatoPosVenda(
     .eq("org_id", usuario.org_id)
     .maybeSingle();
   if (!lead || lead.status !== "vendido") return { erro: "Pós-venda só vale pra cliente (lead já vendido)." };
-
-  // Motivo só vale junto com a data do próximo contato.
-  const motivo = proximo ? (motivoProximo ?? "").trim().slice(0, 300) || null : null;
 
   const agora = new Date().toISOString();
   const { error: erroNota } = await supabase.from("interacoes").insert({

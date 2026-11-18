@@ -17,8 +17,11 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
 
   function salvar() {
     setErro(null);
+    if (!texto.trim()) return setErro("Escreva o que foi feito ou conversado no contato.");
+    if (!proximo) return setErro("Informe a data do próximo contato.");
+    if (!motivo.trim()) return setErro("Informe o motivo do próximo contato.");
     iniciar(async () => {
-      const r = await registrarContatoPosVenda(leadId, texto, proximo || null, motivo || null);
+      const r = await registrarContatoPosVenda(leadId, texto, proximo, motivo);
       if (r.erro) {
         setErro(r.erro);
         return;
@@ -57,33 +60,34 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-prox-${leadId}`}>
-              Próximo contato (opcional)
+              Próximo contato *
             </label>
+            {/* Clicar em QUALQUER lugar do campo abre o calendário (não só no ícone). */}
             <input
               id={`pv-prox-${leadId}`}
               type="date"
+              required
               value={proximo}
               onChange={(e) => setProximo(e.target.value)}
+              onClick={(e) => e.currentTarget.showPicker?.()}
+              className="w-full cursor-pointer rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-motivo-${leadId}`}>
+              Motivo do próximo contato *
+            </label>
+            <input
+              id={`pv-motivo-${leadId}`}
+              type="text"
+              required
+              maxLength={300}
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ex.: Comprovante de pagamento às 15h"
               className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
-            <p className="text-[11px] text-neutral-400">Sem data = não precisa de novo contato por enquanto.</p>
           </div>
-          {proximo && (
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-motivo-${leadId}`}>
-                Motivo do próximo contato
-              </label>
-              <input
-                id={`pv-motivo-${leadId}`}
-                type="text"
-                maxLength={300}
-                value={motivo}
-                onChange={(e) => setMotivo(e.target.value)}
-                placeholder="Ex.: Comprovante de pagamento às 15h"
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          )}
           {erro && <p className="text-xs text-red-600">{erro}</p>}
           <div className="flex justify-end gap-2">
             <button
