@@ -595,8 +595,10 @@ export default async function DashboardPage({
             atendidasAnterior={metricasAnteriores?.ligacoesAtendidas}
             diasUteis={diasUteisPeriodo}
             leadsDiferentes={leadsDiferentesLigados}
+            // Todo SDR + qualquer outra pessoa (admin/closer) que tenha ligado, como no
+            // ranking — assim a soma da tabela bate com o total do painel.
             sdrs={performanceSdr
-              .filter((linha) => linha.funcao === "sdr")
+              .filter((linha) => linha.funcao === "sdr" || linha.ligacoes > 0)
               .map((linha) => ({ nome: linha.nome, realizadas: linha.ligacoes, atendidas: linha.ligacoesAtendidas }))}
           />
         )}
