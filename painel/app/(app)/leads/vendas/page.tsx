@@ -298,17 +298,21 @@ export default async function VendasPage({
           </div>
         </div>
 
-        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-7 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
+        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-green-950 via-green-700 to-green-500 p-5 text-white shadow-2xl shadow-green-950/50 ring-1 ring-white/10">
           <IconeMoeda className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 text-white/[0.07]" />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/10" />
 
+          {/* Compacto (Samuel, 18/11/26): total e vendas à esquerda; receita do período e
+              de meses anteriores empilhadas à direita, em vez de uma faixa embaixo. */}
+          <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
+          <div className="min-w-0">
           <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-green-200">
             <IconeMoeda className="h-3.5 w-3.5" />
             {receitaPorPagamentos && !buscaFiltro && !sdrFiltroAtivo && !closerFiltroAtivo
               ? `${Receita(publicoOrg)} recebida no período`
               : `${Receita(publicoOrg)} total em vendas`}
           </p>
-          <p className="relative mt-1 text-5xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
+          <p className="relative mt-1 text-4xl font-black tracking-tight tabular-nums [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]">
             {formatarMoeda(totalReceita)}
           </p>
           <p className="relative mt-2 text-sm font-medium text-green-100">
@@ -319,8 +323,9 @@ export default async function VendasPage({
           <p className="relative mt-1 text-xs text-green-200/80">
             {Faturamento(publicoOrg)}: {formatarMoeda(totalFaturamento)}
           </p>
+          </div>
           {mostrarSplitReceita && (
-            <div className="relative mt-4 grid gap-2 border-t border-white/20 pt-3 text-sm sm:grid-cols-2">
+            <div className="relative grid min-w-0 gap-3 border-t border-white/20 pt-3 text-sm md:max-w-[46%] md:border-l md:border-t-0 md:pl-8 md:pt-0">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-green-200">
                   De clientes deste período
@@ -344,6 +349,7 @@ export default async function VendasPage({
               </div>
             </div>
           )}
+          </div>
         </div>
 
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
