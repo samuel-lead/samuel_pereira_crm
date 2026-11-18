@@ -578,10 +578,13 @@ export async function PaginaDeLeads({
           acao={
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
               <BuscaLeads />
-              <div className="flex w-full items-center justify-between gap-2 md:w-auto">
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="flex w-full items-center justify-between gap-2 md:w-auto md:shrink-0">
+                {/* Desktop: os botões ficam SEMPRE na mesma linha (Samuel, 18/11/26 —
+                    com o menu lateral aberto o "Novo lead" descia pra linha de baixo);
+                    quem encolhe é a caixa de busca. */}
+                <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
                   <FiltrosColapsaveis>
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3 md:flex-nowrap">
                       <FiltrosLeads
                         usuarios={usuarios}
                         origens={origens}
@@ -594,7 +597,7 @@ export async function PaginaDeLeads({
                       {!funil && (
                         <Link
                           href="/leads/importar"
-                          className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+                          className="whitespace-nowrap rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
                         >
                           Importar leads
                         </Link>
@@ -608,7 +611,7 @@ export async function PaginaDeLeads({
                   {!funil && (
                     <Link
                       href="/leads/novo"
-                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                      className="shrink-0 whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
                     >
                       + Novo lead
                     </Link>

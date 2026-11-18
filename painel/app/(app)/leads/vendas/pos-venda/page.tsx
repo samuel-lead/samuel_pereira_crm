@@ -99,7 +99,7 @@ export default async function PosVendaPage({
       <main className="px-6 py-6">
         <AbasClientes ativa="pos-venda" />
 
-        <div className="mb-4 flex flex-wrap items-stretch gap-3">
+        <div className="mb-4 flex flex-wrap items-stretch gap-3 md:flex-nowrap md:overflow-x-auto [&>*]:md:shrink-0">
           <div className="flex overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
             {chips.map((chip) => (
               <Link

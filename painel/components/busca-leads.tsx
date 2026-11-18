@@ -35,7 +35,7 @@ export function BuscaLeads() {
   }
 
   return (
-    <div className="relative w-full sm:w-[27rem]">
+    <div className="relative w-full min-w-0 sm:w-[27rem] sm:min-w-[9rem]">
       <IconeBusca className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
       <input
         type="search"

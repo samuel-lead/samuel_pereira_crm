@@ -235,7 +235,8 @@ export default async function VendasPage({
       <main className="px-6 py-6">
         <AbasClientes ativa="clientes" />
         {/* Fica preso no topo ao rolar, igual à Visão geral (Samuel pediu). */}
-        <div className="sticky top-0 z-10 -mx-6 mb-4 flex flex-wrap items-stretch gap-3 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)]">
+        <div className="sticky top-0 z-10 -mx-6 mb-4 flex flex-wrap items-stretch gap-3 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)] md:flex-nowrap md:overflow-x-auto [&>*]:md:shrink-0">
+          <div className="md:[&_div]:flex-nowrap md:[&_div]:whitespace-nowrap">
           <FiltroPeriodo
             baseHref="/leads/vendas"
             periodoAtual={periodoResolvido?.chave ?? null}
@@ -245,6 +246,7 @@ export default async function VendasPage({
             outrosParams={{ busca: buscaFiltro, sdr: sdrFiltroAtivo, closer: closerFiltroAtivo }}
             publicoOrg={publicoOrg}
           />
+          </div>
 
           {mostrarFiltroSdr && (
             <FiltroPessoaClientes rotulo={Sdr(publicoOrg)} parametro="sdr" atual={sdrFiltroAtivo} opcoes={opcoesSdr} />
@@ -253,10 +255,10 @@ export default async function VendasPage({
             <FiltroPessoaClientes rotulo="Closer" parametro="closer" atual={closerFiltroAtivo} opcoes={opcoesCloser} />
           )}
 
-          <form className="flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <form className="flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm md:!shrink md:min-w-0">
             {sdrFiltroAtivo && <input type="hidden" name="sdr" value={sdrFiltroAtivo} />}
             {closerFiltroAtivo && <input type="hidden" name="closer" value={closerFiltroAtivo} />}
-            <div className="flex min-w-[160px] flex-col justify-center gap-0.5 px-4 py-2">
+            <div className="flex min-w-[160px] flex-col justify-center gap-0.5 px-4 py-2 md:min-w-[100px]">
               <label className="text-[10px] font-medium text-neutral-500" htmlFor="busca">
                 Buscar por nome
               </label>

@@ -142,7 +142,7 @@ export function FiltrosLeads({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 whitespace-nowrap">
       {!esconderUsuarios && (
         <DropdownFiltro
           rotulo="Usuários"
