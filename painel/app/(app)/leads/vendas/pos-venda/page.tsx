@@ -5,6 +5,7 @@ import { AbasClientes } from "@/components/abas-clientes";
 import { LinkLead } from "@/components/link-lead";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { AvatarLead } from "@/components/avatar-lead";
+import { IndicacaoPegaToggle } from "@/components/indicacao-pega-toggle";
 import { RegistrarContatoPosVenda } from "@/components/registrar-contato-pos-venda";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { resolverPeriodo } from "@/lib/periodo";
@@ -21,14 +22,15 @@ type ClientePosVenda = {
   pos_venda_proximo_em: string | null;
   pos_venda_ultimo_contato_em: string | null;
   pos_venda_motivo: string | null;
+  indicacao_pega_em: string | null;
 };
 
-type Visao = "proximo" | "sem-novo";
+type Visao = "proximo" | "sem-novo" | "indicacao";
 
 // Pós-venda (Samuel, 18/11/26) — só duas visões:
 //  * próximo contato: o cliente tem um dia marcado (hoje, atrasado ou futuro);
 //  * sem novo contato: não tem nenhum dia marcado.
-function situacao(c: ClientePosVenda): Visao {
+function situacao(c: ClientePosVenda): "proximo" | "sem-novo" {
   return c.pos_venda_proximo_em ? "proximo" : "sem-novo";
 }
 
@@ -46,9 +48,9 @@ function formatarInstante(iso: string | null) {
 export default async function PosVendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ vis?: string; busca?: string; periodo?: string; mesAno?: string; de?: string; ate?: string }>;
+  searchParams: Promise<{ vis?: string; ind?: string; busca?: string; periodo?: string; mesAno?: string; de?: string; ate?: string }>;
 }) {
-  const { vis, busca, periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro } = await searchParams;
+  const { vis, ind, busca, periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
@@ -76,10 +78,23 @@ export default async function PosVendaPage({
     const t = new Date(c.vendido_em).getTime();
     return t >= periodo.inicio.getTime() && t < periodo.fim.getTime();
   };
-  const visEscolhida = vis === "proximo" || vis === "sem-novo" ? vis : undefined;
-  const hrefPara = (extra: { vis?: string }) => {
+  // "Indicação" (Pegou indicação? Sim/Não) é o mesmo marcador do card do lead — por
+  // enquanto só o dono da plataforma vê, como no card.
+  const podeIndicacao = usuario?.super_admin === true;
+  const visEscolhida =
+    vis === "proximo" || vis === "sem-novo" || (vis === "indicacao" && podeIndicacao) ? (vis as Visao) : undefined;
+  const indFiltro: "nao" | "sim" | "todos" = ind === "sim" || ind === "todos" ? ind : "nao";
+  // Na visão Indicação, o período vale pela DATA DA VENDA.
+  const vendaNoPeriodo = (c: ClientePosVenda) => {
+    if (!periodo) return true;
+    if (!c.vendido_em) return false;
+    const t = new Date(c.vendido_em).getTime();
+    return t >= periodo.inicio.getTime() && t < periodo.fim.getTime();
+  };
+  const hrefPara = (extra: { vis?: string; ind?: string }) => {
     const q = new URLSearchParams();
     if (extra.vis) q.set("vis", extra.vis);
+    if (extra.ind) q.set("ind", extra.ind);
     if (busca) q.set("busca", busca);
     if (periodoFiltro) q.set("periodo", periodoFiltro);
     if (mesAnoFiltro) q.set("mesAno", mesAnoFiltro);
@@ -93,7 +108,7 @@ export default async function PosVendaPage({
     let consulta = supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, foto_url, vendido_em, responsavel_id, pos_venda_proximo_em, pos_venda_ultimo_contato_em, pos_venda_motivo"
+        "id, nome, telefone_e164, foto_url, vendido_em, responsavel_id, pos_venda_proximo_em, pos_venda_ultimo_contato_em, pos_venda_motivo, indicacao_pega_em"
       )
       .eq("status", "vendido")
       .is("arquivado_em", null);
@@ -106,10 +121,12 @@ export default async function PosVendaPage({
     supabase.from("usuarios").select("id, nome").order("nome"),
   ]);
 
-  const clientes = ((clientesData ?? []) as ClientePosVenda[]).filter(noPeriodo);
+  const todosClientes = (clientesData ?? []) as ClientePosVenda[];
+  const clientes = todosClientes.filter(noPeriodo);
+  const clientesInd = todosClientes.filter(vendaNoPeriodo);
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
 
-  const contagem = { proximo: 0, "sem-novo": 0 };
+  const contagem = { proximo: 0, "sem-novo": 0, indicacao: clientesInd.filter((c) => !c.indicacao_pega_em).length };
   for (const c of clientes) contagem[situacao(c)]++;
 
   // Sem escolha na tela: abre em "Próximo contato"; se ninguém tem data marcada
@@ -117,8 +134,12 @@ export default async function PosVendaPage({
   const visao: Visao =
     visEscolhida ?? (contagem.proximo > 0 ? "proximo" : "sem-novo");
 
+  const listaIndicacao = clientesInd
+    .filter((c) => (indFiltro === "todos" ? true : indFiltro === "sim" ? !!c.indicacao_pega_em : !c.indicacao_pega_em))
+    .sort((a, b) => ((b.vendido_em ?? "") < (a.vendido_em ?? "") ? -1 : 1));
+
   const lista = clientes
-    .filter((c) => situacao(c) === visao)
+    .filter((c) => visao !== "indicacao" && situacao(c) === visao)
     .sort((a, b) => {
       // Mais urgente primeiro: quem tem data mais antiga; sem data, pela venda mais antiga.
       const ka = a.pos_venda_proximo_em ?? (a.vendido_em ?? "").slice(0, 10);
@@ -129,6 +150,7 @@ export default async function PosVendaPage({
   const chips: { chave: Visao; rotulo: string }[] = [
     { chave: "proximo", rotulo: "Próximo contato" },
     { chave: "sem-novo", rotulo: "Sem novo contato" },
+    ...(podeIndicacao ? [{ chave: "indicacao" as Visao, rotulo: "Pegou indicação?" }] : []),
   ];
 
   return (
@@ -218,6 +240,79 @@ export default async function PosVendaPage({
           O que for conversado fica salvo como nota no histórico do cliente.
         </p>
 
+        {visao === "indicacao" ? (
+          <>
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-xs font-medium text-neutral-500">Mostrar:</span>
+              {([["nao", "Não pegou"], ["sim", "Pegou"], ["todos", "Todos"]] as const).map(([chave, rotulo]) => (
+                <Link
+                  key={chave}
+                  href={hrefPara({ vis: "indicacao", ind: chave })}
+                  className={`rounded-xl border border-neutral-200 px-3 py-1.5 text-xs font-medium shadow-sm transition ${
+                    indFiltro === chave ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-100"
+                  }`}
+                >
+                  {rotulo}
+                </Link>
+              ))}
+            </div>
+            <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
+                    <th className="px-4 py-3 font-medium">Cliente</th>
+                    <th className="px-4 py-3 font-medium">Telefone</th>
+                    <th className="px-4 py-3 font-medium">Vendido em</th>
+                    <th className="px-4 py-3 font-medium">Pegou indicação?</th>
+                    <th className="px-4 py-3 font-medium">Responsável</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {listaIndicacao.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-10 text-center text-sm text-neutral-400">
+                        Nenhum cliente nessa visão
+                      </td>
+                    </tr>
+                  ) : (
+                    listaIndicacao.map((c) => (
+                      <tr key={c.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
+                        <td className="px-4 py-3">
+                          <LinkLead leadId={c.id} className="flex items-center gap-2.5 hover:underline">
+                            <AvatarLead
+                              nome={c.nome}
+                              fotoUrl={c.foto_url}
+                              tamanho="h-8 w-8 text-xs"
+                              classeBadge="bg-green-100 text-green-700"
+                            />
+                            <span className="font-medium text-neutral-900">{c.nome}</span>
+                          </LinkLead>
+                        </td>
+                        <td className="px-4 py-3 text-neutral-600">
+                          {c.telefone_e164 ? (
+                            <span className="flex items-center gap-1.5 whitespace-nowrap">
+                              {c.telefone_e164}
+                              <BotaoWhatsapp telefone={c.telefone_e164} />
+                            </span>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-neutral-600">{formatarInstante(c.vendido_em)}</td>
+                        <td className="px-4 py-3">
+                          <IndicacaoPegaToggle leadId={c.id} jaPegou={!!c.indicacao_pega_em} />
+                        </td>
+                        <td className="px-4 py-3 text-neutral-600">
+                          {c.responsavel_id ? nomePorUsuario.get(c.responsavel_id) ?? "—" : "—"}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
           <table className="w-full min-w-[1000px] text-left text-sm">
             <thead>
@@ -299,6 +394,7 @@ export default async function PosVendaPage({
             </tbody>
           </table>
         </div>
+        )}
       </main>
     </>
   );
