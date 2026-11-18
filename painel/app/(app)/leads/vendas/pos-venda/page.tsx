@@ -6,6 +6,8 @@ import { LinkLead } from "@/components/link-lead";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { AvatarLead } from "@/components/avatar-lead";
 import { RegistrarContatoPosVenda } from "@/components/registrar-contato-pos-venda";
+import { FiltroPeriodo } from "@/components/filtro-periodo";
+import { resolverPeriodo } from "@/lib/periodo";
 import { aplicarBuscaLead } from "@/lib/busca-leads";
 import { buscarTodas } from "@/lib/supabase/paginar";
 
@@ -44,13 +46,45 @@ function formatarInstante(iso: string | null) {
 export default async function PosVendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ vis?: string; busca?: string }>;
+  searchParams: Promise<{ vis?: string; busca?: string; periodo?: string; mesAno?: string; de?: string; ate?: string }>;
 }) {
-  const { vis, busca } = await searchParams;
+  const { vis, busca, periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro } = await searchParams;
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
   const hoje = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+  const publicoOrg = usuario?.publico_org ?? "mentoria";
+
+  // Filtro de período (hoje, semana, mês, ano/mês, personalizado), igual ao da aba
+  // Clientes. Sem nenhum escolhido, mostra todos. O período vale pra DATA DO PRÓXIMO
+  // CONTATO (em "Próximo contato") e pra DATA DA VENDA (em "Sem novo contato", que
+  // não tem data de contato).
+  const periodo = resolverPeriodo(
+    { periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro },
+    new Date()
+  );
+  const diaSp = (d: Date) => d.toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+  const noPeriodo = (c: ClientePosVenda) => {
+    if (!periodo) return true;
+    if (c.pos_venda_proximo_em) {
+      return c.pos_venda_proximo_em >= diaSp(periodo.inicio) && c.pos_venda_proximo_em < diaSp(periodo.fim);
+    }
+    if (!c.vendido_em) return false;
+    const t = new Date(c.vendido_em).getTime();
+    return t >= periodo.inicio.getTime() && t < periodo.fim.getTime();
+  };
+  const visEscolhida = vis === "proximo" || vis === "sem-novo" ? vis : undefined;
+  const hrefPara = (extra: { vis?: string }) => {
+    const q = new URLSearchParams();
+    if (extra.vis) q.set("vis", extra.vis);
+    if (busca) q.set("busca", busca);
+    if (periodoFiltro) q.set("periodo", periodoFiltro);
+    if (mesAnoFiltro) q.set("mesAno", mesAnoFiltro);
+    if (deFiltro) q.set("de", deFiltro);
+    if (ateFiltro) q.set("ate", ateFiltro);
+    const qs = q.toString();
+    return qs ? `/leads/vendas/pos-venda?${qs}` : "/leads/vendas/pos-venda";
+  };
 
   const montar = (de: number, ate: number) => {
     let consulta = supabase
@@ -69,7 +103,7 @@ export default async function PosVendaPage({
     supabase.from("usuarios").select("id, nome").order("nome"),
   ]);
 
-  const clientes = (clientesData ?? []) as ClientePosVenda[];
+  const clientes = ((clientesData ?? []) as ClientePosVenda[]).filter(noPeriodo);
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
 
   const contagem = { proximo: 0, "sem-novo": 0 };
@@ -78,7 +112,7 @@ export default async function PosVendaPage({
   // Sem escolha na tela: abre em "Próximo contato"; se ninguém tem data marcada
   // ainda, abre em "Sem novo contato" pra lista não aparecer vazia.
   const visao: Visao =
-    vis === "proximo" || vis === "sem-novo" ? vis : contagem.proximo > 0 ? "proximo" : "sem-novo";
+    visEscolhida ?? (contagem.proximo > 0 ? "proximo" : "sem-novo");
 
   const lista = clientes
     .filter((c) => situacao(c) === visao)
@@ -100,12 +134,25 @@ export default async function PosVendaPage({
       <main className="px-6 py-6">
         <AbasClientes ativa="pos-venda" />
 
+        <div className="mb-3">
+          <FiltroPeriodo
+            baseHref="/leads/vendas/pos-venda"
+            periodoAtual={periodo?.chave ?? null}
+            mesAnoAtual={mesAnoFiltro}
+            deAtual={deFiltro}
+            ateAtual={ateFiltro}
+            outrosParams={{ busca, vis: visEscolhida }}
+            publicoOrg={publicoOrg}
+            personalizadoEmbaixo
+          />
+        </div>
+
         <div className="mb-4 flex flex-wrap items-stretch gap-3">
           <div className="flex overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
             {chips.map((chip) => (
               <Link
                 key={chip.chave}
-                href={`/leads/vendas/pos-venda?vis=${chip.chave}${busca ? `&busca=${encodeURIComponent(busca)}` : ""}`}
+                href={hrefPara({ vis: chip.chave })}
                 className={`flex flex-col justify-center px-5 py-2 text-sm font-semibold transition ${
                   visao === chip.chave ? "bg-blue-600 text-white" : "text-neutral-600 hover:bg-neutral-50"
                 }`}
@@ -118,6 +165,10 @@ export default async function PosVendaPage({
 
           <form className="flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
             <input type="hidden" name="vis" value={visao} />
+            {periodoFiltro && <input type="hidden" name="periodo" value={periodoFiltro} />}
+            {mesAnoFiltro && <input type="hidden" name="mesAno" value={mesAnoFiltro} />}
+            {deFiltro && <input type="hidden" name="de" value={deFiltro} />}
+            {ateFiltro && <input type="hidden" name="ate" value={ateFiltro} />}
             <div className="flex min-w-[160px] flex-col justify-center gap-0.5 px-4 py-2">
               <label className="text-[10px] font-medium text-neutral-500" htmlFor="busca">
                 Buscar por nome
@@ -139,11 +190,24 @@ export default async function PosVendaPage({
               </button>
             </div>
           </form>
+
+          {(periodo || busca) && (
+            <Link
+              href="/leads/vendas/pos-venda"
+              className="inline-flex items-center rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-500 shadow-sm hover:text-neutral-700"
+            >
+              Limpar filtros
+            </Link>
+          )}
         </div>
 
         <p className="mb-3 text-xs text-neutral-500">
           Próximo contato = clientes com um dia marcado (hoje e atrasados aparecem em destaque). Sem novo contato =
-          clientes sem dia marcado. O que for conversado fica salvo como nota no histórico do cliente.
+          clientes sem dia marcado.
+          {periodo
+            ? ` O período filtra pela data do próximo contato (em Próximo contato) e pela data da venda (em Sem novo contato).`
+            : ""}{" "}
+          O que for conversado fica salvo como nota no histórico do cliente.
         </p>
 
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
