@@ -18,6 +18,7 @@ type ClientePosVenda = {
   responsavel_id: string | null;
   pos_venda_proximo_em: string | null;
   pos_venda_ultimo_contato_em: string | null;
+  pos_venda_motivo: string | null;
 };
 
 type Visao = "proximo" | "sem-novo";
@@ -55,7 +56,7 @@ export default async function PosVendaPage({
     let consulta = supabase
       .from("leads")
       .select(
-        "id, nome, telefone_e164, foto_url, vendido_em, responsavel_id, pos_venda_proximo_em, pos_venda_ultimo_contato_em"
+        "id, nome, telefone_e164, foto_url, vendido_em, responsavel_id, pos_venda_proximo_em, pos_venda_ultimo_contato_em, pos_venda_motivo"
       )
       .eq("status", "vendido")
       .is("arquivado_em", null);
@@ -146,7 +147,7 @@ export default async function PosVendaPage({
         </p>
 
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
-          <table className="w-full min-w-[860px] text-left text-sm">
+          <table className="w-full min-w-[1000px] text-left text-sm">
             <thead>
               <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
                 <th className="px-4 py-3 font-medium">Cliente</th>
@@ -154,6 +155,7 @@ export default async function PosVendaPage({
                 <th className="px-4 py-3 font-medium">Vendido em</th>
                 <th className="px-4 py-3 font-medium">Último contato</th>
                 <th className="px-4 py-3 font-medium">Próximo contato</th>
+                <th className="px-4 py-3 font-medium">Motivo do contato</th>
                 <th className="px-4 py-3 font-medium">Responsável</th>
                 <th className="px-4 py-3 font-medium" />
               </tr>
@@ -161,7 +163,7 @@ export default async function PosVendaPage({
             <tbody>
               {lista.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-neutral-400">
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-neutral-400">
                     Nenhum cliente nessa visão
                   </td>
                 </tr>
@@ -208,6 +210,9 @@ export default async function PosVendaPage({
                         ) : (
                           <span className="text-neutral-400">Sem novo contato</span>
                         )}
+                      </td>
+                      <td className="max-w-[260px] px-4 py-3 text-neutral-700" title={c.pos_venda_motivo ?? undefined}>
+                        {c.pos_venda_motivo ?? <span className="text-neutral-300">—</span>}
                       </td>
                       <td className="px-4 py-3 text-neutral-600">
                         {c.responsavel_id ? nomePorUsuario.get(c.responsavel_id) ?? "—" : "—"}

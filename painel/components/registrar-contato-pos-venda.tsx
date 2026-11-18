@@ -11,13 +11,14 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
   const [aberto, setAberto] = useState(false);
   const [texto, setTexto] = useState("");
   const [proximo, setProximo] = useState("");
+  const [motivo, setMotivo] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
 
   function salvar() {
     setErro(null);
     iniciar(async () => {
-      const r = await registrarContatoPosVenda(leadId, texto, proximo || null);
+      const r = await registrarContatoPosVenda(leadId, texto, proximo || null, motivo || null);
       if (r.erro) {
         setErro(r.erro);
         return;
@@ -25,6 +26,7 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
       setAberto(false);
       setTexto("");
       setProximo("");
+      setMotivo("");
       router.refresh();
     });
   }
@@ -66,6 +68,22 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
             />
             <p className="text-[11px] text-neutral-400">Sem data = não precisa de novo contato por enquanto.</p>
           </div>
+          {proximo && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-motivo-${leadId}`}>
+                Motivo do próximo contato
+              </label>
+              <input
+                id={`pv-motivo-${leadId}`}
+                type="text"
+                maxLength={300}
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                placeholder="Ex.: Comprovante de pagamento às 15h"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          )}
           {erro && <p className="text-xs text-red-600">{erro}</p>}
           <div className="flex justify-end gap-2">
             <button

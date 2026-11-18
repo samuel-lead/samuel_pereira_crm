@@ -2720,7 +2720,8 @@ export async function registrarLigacao(leadId: string, atendida: boolean) {
 export async function registrarContatoPosVenda(
   leadId: string,
   texto: string,
-  proximoContato: string | null
+  proximoContato: string | null,
+  motivoProximo: string | null = null
 ): Promise<{ erro: string | null }> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -2745,6 +2746,9 @@ export async function registrarContatoPosVenda(
     .maybeSingle();
   if (!lead || lead.status !== "vendido") return { erro: "Pós-venda só vale pra cliente (lead já vendido)." };
 
+  // Motivo só vale junto com a data do próximo contato.
+  const motivo = proximo ? (motivoProximo ?? "").trim().slice(0, 300) || null : null;
+
   const agora = new Date().toISOString();
   const { error: erroNota } = await supabase.from("interacoes").insert({
     org_id: usuario.org_id,
@@ -2760,7 +2764,7 @@ export async function registrarContatoPosVenda(
 
   const { error } = await supabase
     .from("leads")
-    .update({ pos_venda_ultimo_contato_em: agora, pos_venda_proximo_em: proximo })
+    .update({ pos_venda_ultimo_contato_em: agora, pos_venda_proximo_em: proximo, pos_venda_motivo: motivo })
     .eq("id", leadId)
     .eq("org_id", usuario.org_id);
   if (error) return { erro: error.message };
