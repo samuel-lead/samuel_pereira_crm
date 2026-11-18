@@ -49,15 +49,21 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
             <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-motivo-${leadId}`}>
               Motivo do próximo contato *
             </label>
-            <input
+            {/* O texto quebra de linha e a caixa cresce pra baixo enquanto digita (Samuel, 18/11/26) —
+                antes ficava numa linha só, andando pro lado. */}
+            <textarea
               id={`pv-motivo-${leadId}`}
-              type="text"
               required
+              rows={2}
               maxLength={300}
               value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
+              onChange={(e) => {
+                setMotivo(e.target.value);
+                e.currentTarget.style.height = "auto";
+                e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+              }}
               placeholder="Ex.: Comprovante de pagamento às 15h"
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full resize-none overflow-hidden rounded-md border border-neutral-300 px-3 py-2 text-sm leading-snug outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div className="space-y-1">

@@ -289,7 +289,7 @@ export default async function PosVendaPage({
                           <span className="text-neutral-400">Sem novo contato</span>
                         )}
                       </td>
-                      <td className="max-w-[260px] px-4 py-3 text-neutral-700" title={c.pos_venda_motivo ?? undefined}>
+                      <td className="max-w-[260px] whitespace-pre-wrap break-words px-4 py-3 text-neutral-700" title={c.pos_venda_motivo ?? undefined}>
                         {c.pos_venda_motivo ?? <span className="text-neutral-300">—</span>}
                       </td>
                       <td className="px-4 py-3 text-neutral-600">
