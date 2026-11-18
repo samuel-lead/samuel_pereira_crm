@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
+import { AbasClientes } from "@/components/abas-clientes";
 import { IndicacaoPegaToggle } from "@/components/indicacao-pega-toggle";
 import { LinkLead } from "@/components/link-lead";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
@@ -232,6 +233,7 @@ export default async function VendasPage({
       <PageHeader titulo="Clientes" />
 
       <main className="px-6 py-6">
+        <AbasClientes ativa="clientes" />
         {/* Fica preso no topo ao rolar, igual à Visão geral (Samuel pediu). */}
         <div className="sticky top-0 z-10 -mx-6 mb-4 flex flex-wrap items-stretch gap-3 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)]">
           <FiltroPeriodo

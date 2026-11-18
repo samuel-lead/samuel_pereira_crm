@@ -2714,6 +2714,62 @@ export async function registrarLigacao(leadId: string, atendida: boolean) {
   revalidatePath(`/leads/${leadId}`);
 }
 
+// Pós-venda (Samuel, 18/11/26): registra um contato feito com o CLIENTE (lead
+// vendido). Grava uma nota na linha do tempo, guarda a data do último contato e
+// o dia do próximo (vazio = sem novo contato marcado).
+export async function registrarContatoPosVenda(
+  leadId: string,
+  texto: string,
+  proximoContato: string | null
+): Promise<{ erro: string | null }> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const conteudo = texto.trim();
+  if (!conteudo) return { erro: "Escreva o que foi feito ou conversado no contato." };
+  if (conteudo.length > 2000) return { erro: "Texto muito longo (máximo 2000 letras)." };
+
+  let proximo: string | null = null;
+  if (proximoContato) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(proximoContato)) return { erro: "Data do próximo contato inválida." };
+    proximo = proximoContato;
+  }
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) return { erro: erroPermissao };
+
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("status")
+    .eq("id", leadId)
+    .eq("org_id", usuario.org_id)
+    .maybeSingle();
+  if (!lead || lead.status !== "vendido") return { erro: "Pós-venda só vale pra cliente (lead já vendido)." };
+
+  const agora = new Date().toISOString();
+  const { error: erroNota } = await supabase.from("interacoes").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    tipo: "nota",
+    canal: "manual",
+    conteudo: `Pós-venda: ${conteudo}`,
+    ocorreu_em: agora,
+    origem: "declarado",
+  });
+  if (erroNota) return { erro: erroNota.message };
+
+  const { error } = await supabase
+    .from("leads")
+    .update({ pos_venda_ultimo_contato_em: agora, pos_venda_proximo_em: proximo })
+    .eq("id", leadId)
+    .eq("org_id", usuario.org_id);
+  if (error) return { erro: error.message };
+
+  revalidatePath("/leads/vendas/pos-venda");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
 export async function excluirInteracao(leadId: string, interacaoId: string) {
   const { supabase, usuario } = await contextoUsuario();
 
