@@ -59,14 +59,23 @@ export default async function PosVendaPage({
   // Clientes. Sem nenhum escolhido, mostra todos. O período vale pra DATA DO PRÓXIMO
   // CONTATO (em "Próximo contato") e pra DATA DA VENDA (em "Sem novo contato", que
   // não tem data de contato).
-  const periodo = resolverPeriodo(
-    { periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro },
-    new Date()
-  );
+  // Sem escolha na tela abre em "Mês atual" (como em Clientes); o botão "Todos"
+  // (periodo=todos) tira o filtro de período.
+  const todos = periodoFiltro === "todos";
+  const semEscolha = !periodoFiltro && !mesAnoFiltro && !(deFiltro && ateFiltro);
+  const periodo = todos
+    ? null
+    : resolverPeriodo(
+        { periodo: periodoFiltro, mesAno: mesAnoFiltro, de: deFiltro, ate: ateFiltro },
+        new Date()
+      ) ?? resolverPeriodo({ periodo: "mes" }, new Date());
   const diaSp = (d: Date) => d.toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
   const noPeriodo = (c: ClientePosVenda) => {
     if (!periodo) return true;
     if (c.pos_venda_proximo_em) {
+      // No padrão (mês atual, sem escolha), os ATRASADOS de meses anteriores
+      // continuam aparecendo — pra nenhum contato esquecido sumir da lista.
+      if (semEscolha && c.pos_venda_proximo_em < diaSp(periodo.inicio) && c.pos_venda_proximo_em < hoje) return true;
       return c.pos_venda_proximo_em >= diaSp(periodo.inicio) && c.pos_venda_proximo_em < diaSp(periodo.fim);
     }
     if (!c.vendido_em) return false;
@@ -144,6 +153,7 @@ export default async function PosVendaPage({
             outrosParams={{ busca, vis: visEscolhida }}
             publicoOrg={publicoOrg}
             personalizadoEmbaixo
+            opcaoTodos={{ ativo: todos }}
           />
         </div>
 
@@ -191,7 +201,7 @@ export default async function PosVendaPage({
             </div>
           </form>
 
-          {(periodo || busca) && (
+          {(!semEscolha || busca) && (
             <Link
               href="/leads/vendas/pos-venda"
               className="inline-flex items-center rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-500 shadow-sm hover:text-neutral-700"
@@ -205,8 +215,8 @@ export default async function PosVendaPage({
           Próximo contato = clientes com um dia marcado (hoje e atrasados aparecem em destaque). Sem novo contato =
           clientes sem dia marcado.
           {periodo
-            ? ` O período filtra pela data do próximo contato (em Próximo contato) e pela data da venda (em Sem novo contato).`
-            : ""}{" "}
+            ? ` O período filtra pela data do próximo contato (em Próximo contato) e pela data da venda (em Sem novo contato)${semEscolha ? "; contatos atrasados de meses anteriores continuam aparecendo" : ""}.`
+            : " Mostrando todos os clientes."}{" "}
           O que for conversado fica salvo como nota no histórico do cliente.
         </p>
 
