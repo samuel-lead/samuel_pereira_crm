@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { atualizarLead, reativarLead, type EstadoFormulario } from "@/lib/leads/actions";
+import { temNotaPendente, salvarNotaPendente } from "@/lib/nota-pendente";
 import { OrigemSelect } from "@/components/origem-select";
 import { ImovelSelect } from "@/components/imovel-select";
 import { ResponsavelSelect } from "@/components/responsavel-select";
@@ -284,6 +285,22 @@ export function EditarLeadForm({
   aoMudarEstadoRodape?: (estado: EstadoRodapeSalvarLead | null) => void;
 }) {
   const modalAtivo = useLeadModalAtivo();
+  // Nota digitada e não adicionada: salva ela primeiro e só depois o card (Samuel,
+  // 18/11/26 — antes a nota se perdia quando clicava direto em "Salvar alterações").
+  const jaSalvouNotaRef = useRef(false);
+  async function aoEnviarComNota(evento: React.FormEvent<HTMLFormElement>) {
+    if (jaSalvouNotaRef.current) {
+      jaSalvouNotaRef.current = false;
+      return;
+    }
+    if (!temNotaPendente(lead.id)) return;
+    evento.preventDefault();
+    const formulario = evento.currentTarget;
+    const erro = await salvarNotaPendente(lead.id);
+    if (erro) return; // a caixa de nota mostra o erro; o card não é salvo
+    jaSalvouNotaRef.current = true;
+    formulario.requestSubmit();
+  }
   const acaoComId = atualizarLead.bind(null, lead.id, !modalAtivo);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const enviandoRef = useRef(false);
@@ -569,7 +586,7 @@ export function EditarLeadForm({
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-      <form id={formId} action={acaoFormulario} className="space-y-4">
+      <form id={formId} action={acaoFormulario} onSubmit={aoEnviarComNota} className="space-y-4">
         <fieldset disabled={!podeEditar} className="space-y-4">
         <div className="space-y-1">
           <label className={labelClasse} htmlFor="nome">
