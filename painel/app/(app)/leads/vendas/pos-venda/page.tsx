@@ -137,7 +137,9 @@ export default async function PosVendaPage({
       <main className="px-6 pb-6 pt-3">
         <AbasClientes ativa="pos-venda" />
 
-        <div className="mb-5">
+        {/* Filtros presos no topo ao rolar a lista (Samuel, 18/11/26), igual à aba Clientes. */}
+        <div className="sticky top-0 z-10 -mx-6 mb-4 bg-[#f4f5f7] px-6 pb-2 pt-2 md:top-[var(--page-header-altura,64px)]">
+        <div className="mb-4">
           <FiltroPeriodo
             baseHref="/leads/vendas/pos-venda"
             periodoAtual={periodo?.chave ?? null}
@@ -152,7 +154,7 @@ export default async function PosVendaPage({
           />
         </div>
 
-        <div className="mb-4 flex flex-wrap items-stretch gap-3">
+        <div className="flex flex-wrap items-stretch gap-3">
           <div className="flex overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
             {chips.map((chip) => (
               <Link
@@ -204,6 +206,7 @@ export default async function PosVendaPage({
               Limpar filtros
             </Link>
           )}
+        </div>
         </div>
 
         <p className="mb-3 text-xs text-neutral-500">
