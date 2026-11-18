@@ -21,7 +21,10 @@ export function PropostaVendaCard({
   comissaoValorFixo,
   imoveis,
   imovelIdAtual,
+  vendaDireta = false,
 }: {
+  // CRM do Glauber: venda direta — o cartão já abre na aba "Venda".
+  vendaDireta?: boolean;
   leadId: string;
   propostaAtual: {
     valor: number | null;
@@ -40,7 +43,7 @@ export function PropostaVendaCard({
   // lance e parcelas, ao lado — o valor/data/observação de "proposta na
   // mesa" daqui não faz sentido nesse mercado (Samuel, 29/10/26). Só Venda.
   const soVenda = funilConsorcio(publicoOrg);
-  const [aba, setAba] = useState<"proposta" | "venda">(soVenda ? "venda" : "proposta");
+  const [aba, setAba] = useState<"proposta" | "venda">(soVenda || vendaDireta ? "venda" : "proposta");
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white shadow-sm">

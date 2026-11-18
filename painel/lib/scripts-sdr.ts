@@ -33,3 +33,9 @@ export const SCRIPT_PRE_QUALIFICACAO_SAMUEL = {
 export const ORG_ID_VEEND_DANILO = "1cc080fd-055d-4f8b-950c-7537cf4f0064";
 export const ORGS_COM_SCRIPT_DO_SAMUEL = [ORG_ID_SAMUEL, ORG_ID_VEEND_DANILO];
 
+// Glauber Afonso (imobiliário). Samuel, 18/11/26: no CRM dele a venda é
+// registrada direto no lead, em qualquer etapa — sem precisar agendar e fazer
+// a visita antes, e sem exigir o perfil do lead preenchido.
+export const ORG_ID_GLAUBER = "dced44d6-4b3d-4df7-bf16-ec314055406a";
+export const ORGS_VENDA_DIRETA = [ORG_ID_GLAUBER];
+

@@ -8,6 +8,7 @@ import { EditarLeadForm, type EstadoRodapeSalvarLead } from "@/components/editar
 import { EditarVendaForm } from "@/components/editar-venda-form";
 import { CancelarVendaButton } from "@/components/cancelar-venda-button";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
+import { ORGS_VENDA_DIRETA } from "@/lib/scripts-sdr";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
 import { IndicacaoPegaButton } from "@/components/indicacao-pega-button";
 import { ReativarLeadExcluidoButton } from "@/components/reativar-lead-excluido-button";
@@ -347,9 +348,10 @@ export function LeadModalConteudo({
           </div>
         ) : (
           podeEditar &&
-          posicaoNoFunil(lead.nivel_ordem) >= NIVEL_REUNIAO_MARCADA &&
-          lead.nivel_ordem !== NIVEL_NO_SHOW &&
-          lead.nivel_ordem !== NIVEL_REAGENDAMENTO && (
+          (ORGS_VENDA_DIRETA.includes(dados.orgId) ||
+            (posicaoNoFunil(lead.nivel_ordem) >= NIVEL_REUNIAO_MARCADA &&
+              lead.nivel_ordem !== NIVEL_NO_SHOW &&
+              lead.nivel_ordem !== NIVEL_REAGENDAMENTO)) && (
             <div
               ref={propostaRef}
               // scroll-mt-16 não bastava mais depois que o cabeçalho ganhou
@@ -359,6 +361,7 @@ export function LeadModalConteudo({
               className={`scroll-mt-40 rounded-lg ${brilhoPropostaAtivo ? "destaque-proposta" : ""}`}
             >
               <PropostaVendaCard
+                vendaDireta={ORGS_VENDA_DIRETA.includes(dados.orgId)}
                 leadId={lead.id}
                 propostaAtual={{
                   valor: lead.proposta_valor,

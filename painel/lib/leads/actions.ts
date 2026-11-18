@@ -18,7 +18,7 @@ import {
 import { garantirOrigem } from "@/lib/origens/actions";
 import { pareceOrigemInvalida } from "@/lib/origens/validacao";
 import { normalizarTelefone, telefoneValido } from "@/lib/telefone";
-import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
+import { ORG_ID_SAMUEL, ORGS_VENDA_DIRETA } from "@/lib/scripts-sdr";
 import { reuniao, Reuniao, ehImobiliario, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { lerPropostaConsorcioDoForm, type PropostaConsorcio } from "@/lib/proposta-consorcio";
 
@@ -1812,7 +1812,8 @@ export async function marcarVendido(
     .eq("id", leadId)
     .single();
   // Banker (consórcio) não preenche perfil/urgência/capacidade do lead.
-  const semPerfil = funilConsorcio(usuario.publico_org_completo);
+  // Venda direta (CRM do Glauber): também não exige o perfil.
+  const semPerfil = funilConsorcio(usuario.publico_org_completo) || ORGS_VENDA_DIRETA.includes(usuario.org_id);
 
   // Sem responsável, a venda não entra na conta de ninguém (some do Bônus
   // SDR, mesmo contando no total geral) — trava aqui pra não deixar passar.

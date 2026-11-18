@@ -9,6 +9,7 @@ import { EditarLeadForm } from "@/components/editar-lead-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
 import { RecebimentosVenda } from "@/components/recebimentos-venda";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
+import { ORGS_VENDA_DIRETA } from "@/lib/scripts-sdr";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
 import { ReagendarReuniaoForm } from "@/components/reagendar-reuniao-form";
 import { ExcluirLeadButton } from "@/components/excluir-lead-button";
@@ -501,10 +502,12 @@ export default async function EditarLeadPage({
             </div>
           ) : (
             podeEditar &&
-            posicaoNoFunil(leadTipado.nivel_ordem) >= NIVEL_REUNIAO_MARCADA &&
-            leadTipado.nivel_ordem !== NIVEL_NO_SHOW &&
-            leadTipado.nivel_ordem !== NIVEL_REAGENDAMENTO && (
+            (ORGS_VENDA_DIRETA.includes(usuarioAtual?.org_id ?? "") ||
+              (posicaoNoFunil(leadTipado.nivel_ordem) >= NIVEL_REUNIAO_MARCADA &&
+                leadTipado.nivel_ordem !== NIVEL_NO_SHOW &&
+                leadTipado.nivel_ordem !== NIVEL_REAGENDAMENTO)) && (
               <PropostaVendaCard
+                vendaDireta={ORGS_VENDA_DIRETA.includes(usuarioAtual?.org_id ?? "")}
                 leadId={leadTipado.id}
                 propostaAtual={{
                   valor: leadTipado.proposta_valor,
