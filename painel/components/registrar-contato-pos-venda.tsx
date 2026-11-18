@@ -17,9 +17,8 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
 
   function salvar() {
     setErro(null);
-    if (!texto.trim()) return setErro("Escreva o que foi feito ou conversado no contato.");
-    if (!proximo) return setErro("Informe a data do próximo contato.");
     if (!motivo.trim()) return setErro("Informe o motivo do próximo contato.");
+    if (!proximo) return setErro("Informe a data do próximo contato.");
     iniciar(async () => {
       const r = await registrarContatoPosVenda(leadId, texto, proximo, motivo);
       if (r.erro) {
@@ -47,20 +46,23 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
         <div className="absolute right-0 z-30 mt-2 w-80 space-y-3 rounded-xl border border-neutral-200 bg-white p-4 text-left shadow-xl">
           <p className="text-sm font-semibold text-neutral-800">Contato de pós-venda — {nome}</p>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-texto-${leadId}`}>
-              O que foi feito ou conversado *
+            <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-motivo-${leadId}`}>
+              Motivo do próximo contato *
             </label>
-            <textarea
-              id={`pv-texto-${leadId}`}
-              rows={3}
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
+            <input
+              id={`pv-motivo-${leadId}`}
+              type="text"
+              required
+              maxLength={300}
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ex.: Comprovante de pagamento às 15h"
               className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-prox-${leadId}`}>
-              Próximo contato *
+              Data do próximo contato *
             </label>
             {/* Clicar em QUALQUER lugar do campo abre o calendário (não só no ícone). */}
             <input
@@ -74,17 +76,14 @@ export function RegistrarContatoPosVenda({ leadId, nome }: { leadId: string; nom
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-motivo-${leadId}`}>
-              Motivo do próximo contato *
+            <label className="text-xs font-medium text-neutral-600" htmlFor={`pv-texto-${leadId}`}>
+              O que foi conversado neste contato (opcional)
             </label>
-            <input
-              id={`pv-motivo-${leadId}`}
-              type="text"
-              required
-              maxLength={300}
-              value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
-              placeholder="Ex.: Comprovante de pagamento às 15h"
+            <textarea
+              id={`pv-texto-${leadId}`}
+              rows={2}
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
               className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>

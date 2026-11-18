@@ -2725,8 +2725,8 @@ export async function registrarContatoPosVenda(
 ): Promise<{ erro: string | null }> {
   const { supabase, usuario } = await contextoUsuario();
 
-  const conteudo = texto.trim();
-  if (!conteudo) return { erro: "Escreva o que foi feito ou conversado no contato." };
+  // O que foi conversado é opcional (Samuel, 18/11/26) — obrigatórios: motivo e data do próximo contato.
+  const conteudo = (texto ?? "").trim();
   if (conteudo.length > 2000) return { erro: "Texto muito longo (máximo 2000 letras)." };
 
   // Próximo contato e motivo são obrigatórios (Samuel, 18/11/26).
@@ -2754,7 +2754,7 @@ export async function registrarContatoPosVenda(
     lead_id: leadId,
     tipo: "nota",
     canal: "manual",
-    conteudo: `Pós-venda: ${conteudo}`,
+    conteudo: `Pós-venda: ${conteudo || "contato registrado"} · Próximo contato: ${proximo.split("-").reverse().join("/")} — ${motivo}`,
     ocorreu_em: agora,
     origem: "declarado",
   });
