@@ -89,7 +89,7 @@ export function PainelLigacoes({
     <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
       <h2 className="text-lg font-bold text-neutral-900">{titulo}</h2>
       <p className="mt-0.5 text-sm text-neutral-500">
-        Registradas pelos SDRs no card do lead (Pré-vendas, Pipeline, Base e Instagram Radar)
+        Registradas pelos SDRs
       </p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-3">
