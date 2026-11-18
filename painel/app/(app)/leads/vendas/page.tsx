@@ -235,7 +235,9 @@ export default async function VendasPage({
       <main className="px-6 py-6">
         <AbasClientes ativa="clientes" />
         {/* Fica preso no topo ao rolar, igual à Visão geral (Samuel pediu). */}
-        <div className="sticky top-0 z-10 -mx-6 mb-4 flex flex-wrap items-stretch gap-3 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)] md:flex-nowrap md:overflow-x-auto [&>*]:md:shrink-0">
+        <div className="sticky top-0 z-10 -mx-6 mb-4 flex flex-col gap-2 bg-[#f4f5f7] px-6 py-2 md:top-[var(--page-header-altura,64px)]">
+          {/* Linha 1: período, busca e limpar filtros (sempre na mesma linha no desktop). */}
+          <div className="flex flex-wrap items-stretch gap-3 md:flex-nowrap md:overflow-x-auto [&>*]:md:shrink-0">
           <div className="md:[&_div]:flex-nowrap md:[&_div]:whitespace-nowrap">
           <FiltroPeriodo
             baseHref="/leads/vendas"
@@ -248,12 +250,6 @@ export default async function VendasPage({
           />
           </div>
 
-          {mostrarFiltroSdr && (
-            <FiltroPessoaClientes rotulo={Sdr(publicoOrg)} parametro="sdr" atual={sdrFiltroAtivo} opcoes={opcoesSdr} />
-          )}
-          {mostrarFiltroCloser && (
-            <FiltroPessoaClientes rotulo="Closer" parametro="closer" atual={closerFiltroAtivo} opcoes={opcoesCloser} />
-          )}
 
           <form className="flex items-stretch overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm md:!shrink md:min-w-0">
             {sdrFiltroAtivo && <input type="hidden" name="sdr" value={sdrFiltroAtivo} />}
@@ -288,9 +284,20 @@ export default async function VendasPage({
               Limpar filtros
             </Link>
           )}
+          </div>
 
+          {/* Linha 2 (Samuel, 18/11/26): filtros de SDR/Closer e total de clientes ficam
+              embaixo, pra não cortar a barra de cima. */}
+          <div className="flex flex-wrap items-stretch gap-3">
+          {mostrarFiltroSdr && (
+            <FiltroPessoaClientes rotulo={Sdr(publicoOrg)} parametro="sdr" atual={sdrFiltroAtivo} opcoes={opcoesSdr} />
+          )}
+          {mostrarFiltroCloser && (
+            <FiltroPessoaClientes rotulo="Closer" parametro="closer" atual={closerFiltroAtivo} opcoes={opcoesCloser} />
+          )}
           <div className="flex shrink-0 items-center rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-500 shadow-sm">
             {leads.length} cliente{leads.length === 1 ? "" : "s"}
+          </div>
           </div>
         </div>
 
