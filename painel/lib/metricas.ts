@@ -2011,3 +2011,28 @@ export async function calcularSafraVendas(
   );
   return { comPitch: lista.length, vendidos: vendidosNoPeriodo.length };
 }
+
+
+// Quantos LEADS DIFERENTES receberam ligação no período (Samuel, 18/11/26 — painel
+// "Ligações" da Visão geral). Ignora ligação apagada e de lead arquivado, como o resto.
+export async function contarLeadsDiferentesLigados(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicio: Date,
+  fim: Date
+): Promise<number> {
+  const { data } = await buscarTodas<{ lead_id: string }>((de, ate) =>
+    supabase
+      .from("interacoes")
+      .select("lead_id, leads!inner(arquivado_em)")
+      .eq("org_id", orgId)
+      .eq("tipo", "ligacao")
+      .is("excluido_em", null)
+      .is("leads.arquivado_em", null)
+      .gte("ocorreu_em", inicio.toISOString())
+      .lt("ocorreu_em", fim.toISOString())
+      .order("id")
+      .range(de, ate)
+  );
+  return new Set(data.map((l) => l.lead_id)).size;
+}

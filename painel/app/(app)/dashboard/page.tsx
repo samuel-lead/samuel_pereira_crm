@@ -8,6 +8,8 @@ import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { CicloDeVendasCard } from "@/components/ciclo-de-vendas";
 import { PerformanceSdr } from "@/components/performance-sdr";
+import { PainelLigacoes } from "@/components/painel-ligacoes";
+import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
 import { GraficoEnviadosPorMes } from "@/components/grafico-enviados-por-mes";
 import { PerformanceCloser } from "@/components/performance-closer";
 import { PerformanceCorretor } from "@/components/performance-corretor";
@@ -29,6 +31,7 @@ import {
   calcularMetricasPorUsuario,
   contarPropostasIniciadasPorUsuario,
   contarEnviadosAoCloserPorUsuario,
+  contarLeadsDiferentesLigados,
   calcularMetricasPorCloser,
   calcularLeadsPorOrigem,
   calcularResumoAno,
@@ -378,6 +381,11 @@ export default async function DashboardPage({
   }
   // Conversão do funil em barras: vendas fechadas dentro do período.
   const safraVenda = await safraP;
+  // Painel "Ligações" (Samuel, 18/11/26) — por enquanto só na Visão geral do CRM dele.
+  const mostraPainelLigacoes = usuario!.org_id === ORG_ID_SAMUEL;
+  const leadsDiferentesLigados = mostraPainelLigacoes
+    ? await contarLeadsDiferentesLigados(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
+    : 0;
   const enviadosPorMes = ehGondolasCedo
     ? await calcularEnviadosPorMes(supabase, usuario!.org_id, anoEvolucaoResolvido)
     : [];
@@ -578,6 +586,21 @@ export default async function DashboardPage({
             nem Closer: só a tabela de performance do corretor, com todas as
             métricas (Samuel pediu de volta). Mentoria segue com os dois
             rankings lado a lado. */}
+        {mostraPainelLigacoes && (
+          <PainelLigacoes
+            titulo={`Ligações · ${periodoResolvido.titulo.toLowerCase()}`}
+            realizadas={metricas.ligacoes}
+            atendidas={metricas.ligacoesAtendidas}
+            realizadasAnterior={metricasAnteriores?.ligacoes}
+            atendidasAnterior={metricasAnteriores?.ligacoesAtendidas}
+            diasUteis={diasUteisPeriodo}
+            leadsDiferentes={leadsDiferentesLigados}
+            sdrs={performanceSdr
+              .filter((linha) => linha.funcao === "sdr")
+              .map((linha) => ({ nome: linha.nome, realizadas: linha.ligacoes, atendidas: linha.ligacoesAtendidas }))}
+          />
+        )}
+
         {ehImobiliario(publicoOrg) ? (
           <PerformanceCorretor
             titulo={`Performance por ${Sdr(publicoOrg)} — ${periodoResolvido.titulo.toLowerCase()}`}
