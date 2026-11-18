@@ -20,15 +20,13 @@ type ClientePosVenda = {
   pos_venda_ultimo_contato_em: string | null;
 };
 
-type Visao = "fazer" | "em-dia" | "sem-retorno" | "todos";
+type Visao = "proximo" | "sem-novo";
 
-// Pós-venda (Samuel, 18/11/26) — três situações, sempre calculadas pela data de hoje:
-//  * pra fazer: próximo contato é hoje ou já passou, OU o cliente nunca teve contato de pós-venda;
-//  * em dia: tem próximo contato marcado pra frente;
-//  * sem novo contato: já teve contato e ficou sem próximo marcado.
-function situacao(c: ClientePosVenda, hoje: string): Exclude<Visao, "todos"> {
-  if (c.pos_venda_proximo_em) return c.pos_venda_proximo_em <= hoje ? "fazer" : "em-dia";
-  return c.pos_venda_ultimo_contato_em ? "sem-retorno" : "fazer";
+// Pós-venda (Samuel, 18/11/26) — só duas visões:
+//  * próximo contato: o cliente tem um dia marcado (hoje, atrasado ou futuro);
+//  * sem novo contato: não tem nenhum dia marcado.
+function situacao(c: ClientePosVenda): Visao {
+  return c.pos_venda_proximo_em ? "proximo" : "sem-novo";
 }
 
 function formatarDia(dia: string | null) {
@@ -48,7 +46,6 @@ export default async function PosVendaPage({
   searchParams: Promise<{ vis?: string; busca?: string }>;
 }) {
   const { vis, busca } = await searchParams;
-  const visao: Visao = vis === "em-dia" || vis === "sem-retorno" || vis === "todos" ? vis : "fazer";
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
 
@@ -74,11 +71,16 @@ export default async function PosVendaPage({
   const clientes = (clientesData ?? []) as ClientePosVenda[];
   const nomePorUsuario = new Map((usuariosData ?? []).map((u) => [u.id, u.nome]));
 
-  const contagem = { fazer: 0, "em-dia": 0, "sem-retorno": 0, todos: clientes.length };
-  for (const c of clientes) contagem[situacao(c, hoje)]++;
+  const contagem = { proximo: 0, "sem-novo": 0 };
+  for (const c of clientes) contagem[situacao(c)]++;
+
+  // Sem escolha na tela: abre em "Próximo contato"; se ninguém tem data marcada
+  // ainda, abre em "Sem novo contato" pra lista não aparecer vazia.
+  const visao: Visao =
+    vis === "proximo" || vis === "sem-novo" ? vis : contagem.proximo > 0 ? "proximo" : "sem-novo";
 
   const lista = clientes
-    .filter((c) => visao === "todos" || situacao(c, hoje) === visao)
+    .filter((c) => situacao(c) === visao)
     .sort((a, b) => {
       // Mais urgente primeiro: quem tem data mais antiga; sem data, pela venda mais antiga.
       const ka = a.pos_venda_proximo_em ?? (a.vendido_em ?? "").slice(0, 10);
@@ -87,10 +89,8 @@ export default async function PosVendaPage({
     });
 
   const chips: { chave: Visao; rotulo: string }[] = [
-    { chave: "fazer", rotulo: "Pra fazer" },
-    { chave: "em-dia", rotulo: "Em dia" },
-    { chave: "sem-retorno", rotulo: "Sem novo contato" },
-    { chave: "todos", rotulo: "Todos" },
+    { chave: "proximo", rotulo: "Próximo contato" },
+    { chave: "sem-novo", rotulo: "Sem novo contato" },
   ];
 
   return (
@@ -141,8 +141,8 @@ export default async function PosVendaPage({
         </div>
 
         <p className="mb-3 text-xs text-neutral-500">
-          Pra fazer = contato de hoje, atrasado ou cliente que ainda não teve nenhum contato de pós-venda. O que
-          for conversado fica salvo como nota no histórico do cliente.
+          Próximo contato = clientes com um dia marcado (hoje e atrasados aparecem em destaque). Sem novo contato =
+          clientes sem dia marcado. O que for conversado fica salvo como nota no histórico do cliente.
         </p>
 
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
@@ -205,10 +205,8 @@ export default async function PosVendaPage({
                             {formatarDia(c.pos_venda_proximo_em)}
                             {atrasado ? " · atrasado" : ehHoje ? " · hoje" : ""}
                           </span>
-                        ) : c.pos_venda_ultimo_contato_em ? (
-                          <span className="text-neutral-400">Sem novo contato</span>
                         ) : (
-                          <span className="text-amber-600">Ainda sem contato</span>
+                          <span className="text-neutral-400">Sem novo contato</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-neutral-600">
