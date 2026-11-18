@@ -17,7 +17,7 @@ import {
 } from "@/lib/niveis";
 import { garantirOrigem } from "@/lib/origens/actions";
 import { pareceOrigemInvalida } from "@/lib/origens/validacao";
-import { normalizarTelefone } from "@/lib/telefone";
+import { normalizarTelefone, telefoneValido } from "@/lib/telefone";
 import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
 import { reuniao, Reuniao, ehImobiliario, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { lerPropostaConsorcioDoForm, type PropostaConsorcio } from "@/lib/proposta-consorcio";
@@ -633,6 +633,8 @@ export type ResultadoImportacao = {
   duplicados: number;
   invalidos: number;
   total: number;
+  // Leads que entraram, mas sem telefone (ou com um número que não parece de WhatsApp).
+  semTelefone?: number;
 };
 
 // Cola de planilha (Excel/Sheets) manda TAB entre colunas — prioriza isso,
@@ -812,6 +814,7 @@ export async function importarLeads(
   let criados = 0;
   let duplicados = 0;
   let invalidos = 0;
+  let semTelefone = 0;
   const vistosNaLista = new Set<string>();
   const notas: { lead_id: string; conteudo: string }[] = [];
 
@@ -864,6 +867,7 @@ export async function importarLeads(
     }
 
     criados++;
+    if (!linha.telefone || !telefoneValido(linha.telefone)) semTelefone++;
     await garantirOrigem(supabase, usuario.org_id, origemLinha);
 
     if (quemIndicou && origemLinha.toLowerCase().includes("indica")) {
@@ -899,7 +903,7 @@ export async function importarLeads(
 
   revalidatePath("/leads");
 
-  return { erro: null, criados, duplicados, invalidos, total: linhas.length };
+  return { erro: null, criados, duplicados, invalidos, total: linhas.length, semTelefone };
 }
 
 // redirecionar=true (página cheia) volta pra /leads como sempre foi.

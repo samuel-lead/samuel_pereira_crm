@@ -75,26 +75,54 @@ function linhasParaLista(linhas: string[][]) {
   if (linhas.length === 0) return "";
 
   let dados = linhas;
-  let indiceNome = 0;
-  let indiceTelefone = 1;
+  let indicesNome = [0];
+  let indicesTelefone = [1];
   let indiceOrigem = -1;
 
   const primeiraLinha = linhas[0];
   if (linhaPareceCabecalho(primeiraLinha)) {
-    const posNome = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_NOME));
-    const posTelefone = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_TELEFONE));
+    const minusculas = primeiraLinha.map((c) => c.trim().toLowerCase());
     const posOrigem = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_ORIGEM));
-    if (posNome !== -1) indiceNome = posNome;
-    if (posTelefone !== -1) indiceTelefone = posTelefone;
     if (posOrigem !== -1) indiceOrigem = posOrigem;
+
+    // Exportação do Google Contatos (Samuel, 18/11/26): o nome vem partido em
+    // "First Name / Middle Name / Last Name" e cada telefone tem DUAS colunas —
+    // "Phone 1 - Label" (só a palavra "Mobile") e "Phone 1 - Value" (o número).
+    // Antes pegava a coluna "Label" e o telefone de todos os leads sumia.
+    const partesDoNome = ["first name", "middle name", "last name"]
+      .map((t) => minusculas.indexOf(t))
+      .filter((i) => i !== -1);
+    if (partesDoNome.length > 0) {
+      indicesNome = partesDoNome;
+    } else {
+      const posNome = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_NOME));
+      if (posNome !== -1) indicesNome = [posNome];
+    }
+
+    const colunasTelefone = primeiraLinha
+      .map((c, i) => ({ c, i }))
+      .filter(({ c }) => celulaTemPalavra(c, PALAVRAS_TELEFONE));
+    // Colunas de telefone que NÃO são "Label"/"Type" (rótulo do tipo de telefone).
+    const soNumeros = colunasTelefone.filter(({ c }) => !celulaTemPalavra(c, ["label", "type", "tipo"]));
+    const escolhidas = soNumeros.length > 0 ? soNumeros : colunasTelefone;
+    if (escolhidas.length > 0) indicesTelefone = escolhidas.map(({ i }) => i);
     dados = linhas.slice(1);
   }
 
   return dados
     .filter((linha) => linha.some((celula) => celula.trim()))
     .map((linha) => {
-      const nome = (linha[indiceNome] ?? "").trim();
-      const telefone = (linha[indiceTelefone] ?? "").trim();
+      const nome = indicesNome
+        .map((i) => (linha[i] ?? "").trim())
+        .filter(Boolean)
+        .join(" ");
+      // Vários telefones na mesma linha (Phone 1/2/3) ou na mesma célula
+      // ("a ::: b"): usa o primeiro que tiver algum dígito.
+      const telefone =
+        indicesTelefone
+          .flatMap((i) => (linha[i] ?? "").split(":::"))
+          .map((t) => t.trim())
+          .find((t) => /\d/.test(t)) ?? "";
       const origem = indiceOrigem !== -1 ? (linha[indiceOrigem] ?? "").trim() : "";
       // Telefone vazio vira só o nome (sem coluna vazia no meio).
       if (!telefone) return nome;
@@ -154,12 +182,9 @@ export function ImportarLeadsForm({
         setPrevia(null);
       }
       setTimeout(() => resultadoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
-      // Samuel (16/11/26): importou, avisa e fecha a tela rápido — volta pra
-      // lista de leads sozinho. Se nada entrou (tudo duplicado) ou deu erro,
-      // continua aberta pra ele ver o motivo.
-      if (!estado.erro && estado.criados > 0) {
-        setTimeout(() => router.push("/leads"), 1200);
-      }
+      // Samuel (18/11/26): a tela NÃO fecha mais sozinha (fechava rápido demais
+      // e ele não conseguia ver o resultado) — fica aberta com o cartão de
+      // resultado e o botão "Ver os leads".
     }
   }, [pendente, estado]);
 
@@ -314,6 +339,13 @@ export function ImportarLeadsForm({
                     cadastrado.
                   </p>
                 )}
+                {(estado.semTelefone ?? 0) > 0 && (
+                  <p className="mt-1 text-sm font-medium text-amber-700">
+                    ⚠️ {estado.semTelefone} lead{estado.semTelefone === 1 ? "" : "s"} entrou
+                    {estado.semTelefone === 1 ? "" : "ram"} sem telefone válido — confere a coluna de
+                    telefone da planilha.
+                  </p>
+                )}
                 {estado.invalidos > 0 && (
                   <p className="mt-1 text-sm font-medium text-red-700">
                     {estado.invalidos} linha{estado.invalidos === 1 ? "" : "s"} ignorada
@@ -327,9 +359,6 @@ export function ImportarLeadsForm({
                   >
                     Ver os leads →
                   </Link>
-                  {estado.criados > 0 && (
-                    <span className="text-sm font-medium text-green-800">Fechando e abrindo os leads…</span>
-                  )}
                 </div>
               </>
             )}
