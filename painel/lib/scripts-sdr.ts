@@ -33,6 +33,3 @@ export const SCRIPT_PRE_QUALIFICACAO_SAMUEL = {
 export const ORG_ID_VEEND_DANILO = "1cc080fd-055d-4f8b-950c-7537cf4f0064";
 export const ORGS_COM_SCRIPT_DO_SAMUEL = [ORG_ID_SAMUEL, ORG_ID_VEEND_DANILO];
 
-// Empresas onde o SDR (responsável) e o admin veem o botão "Passar pra outro SDR"
-// no card do lead (Samuel, 18/11/26: na Veend o SDR pode passar o lead dele).
-export const ORGS_COM_PASSAR_LEAD_PARA_SDR = [ORG_ID_SAMUEL, ORG_ID_VEEND_DANILO];
