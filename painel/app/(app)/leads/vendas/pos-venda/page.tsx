@@ -57,8 +57,8 @@ export default async function PosVendaPage({
   const hoje = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
   const publicoOrg = usuario?.publico_org ?? "mentoria";
   // Coluna "Pegou indicação?" (Sim/Não) — mesmo marcador do card do lead; por enquanto
-  // só o dono da plataforma vê, como no card.
-  const podeIndicacao = usuario?.super_admin === true;
+  // só o dono da plataforma e os CRMs imobiliários veem.
+  const podeIndicacao = usuario?.super_admin === true || publicoOrg === "imobiliario";
 
   // Filtro de período (hoje, semana, mês, ano/mês, personalizado), igual ao da aba
   // Clientes. Sem nenhum escolhido, mostra todos. O período vale pra DATA DO PRÓXIMO

@@ -2861,8 +2861,16 @@ export async function marcarIndicacaoPega(
 ): Promise<string | null> {
   const { supabase, usuario } = await contextoUsuario();
 
-  if (usuario.super_admin !== true) {
+  // Dono da plataforma (qualquer lead) e CRMs imobiliários (Samuel, 18/11/26: coluna
+  // "Pegou indicação?" do Pós-venda também vale pro imobiliário) — nesses, só quem
+  // pode editar o lead (admin ou responsável).
+  const ehImobiliarioUsuario = usuario.publico_org === "imobiliario";
+  if (usuario.super_admin !== true && !ehImobiliarioUsuario) {
     return "Só o dono da plataforma pode marcar isso.";
+  }
+  if (usuario.super_admin !== true) {
+    const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+    if (erroPermissao) return erroPermissao;
   }
 
   const { data, error } = await supabase
