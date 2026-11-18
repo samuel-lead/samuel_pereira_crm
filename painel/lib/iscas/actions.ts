@@ -337,7 +337,7 @@ export async function registrarLeadIsca(
 ): Promise<EstadoCaptura> {
   const supabase = await createClient();
 
-  let nome = respostas.nome.trim();
+  const nome = respostas.nome.trim();
   const telefoneDigitado = respostas.telefone.trim();
 
   const semRespostaVazia = {
@@ -363,9 +363,6 @@ export async function registrarLeadIsca(
     .maybeSingle();
   const perguntasDoForm = normalizarPerguntas(iscaPerguntas?.perguntas);
   const ehGrupo = iscaPerguntas?.formulario_grupo === true;
-  // Formulário de grupo só pede o telefone: o lead entra com um nome
-  // provisório (o número) até alguém descobrir o nome de verdade.
-  if (ehGrupo && !nome) nome = `Lead ${telefone.replace(/^55/, "")}`;
   if (!nome) return { erro: "Preenche seu nome", sucesso: false, ...semRespostaVazia };
   const respostasParaNota: { pergunta: string; resposta: string }[] = [];
   for (const p of perguntasDoForm) {

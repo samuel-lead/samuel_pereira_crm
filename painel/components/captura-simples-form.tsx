@@ -50,7 +50,8 @@ export function CapturaSimplesForm({
 }: {
   perguntas?: PerguntaFormulario[];
   // Formulário "Grupo do WhatsApp" (Samuel, 17/11/26): mostra o nome e a
-  // descrição do grupo, pede só o telefone e leva pro link de convite.
+  // descrição do grupo, pede nome + WhatsApp (conferido no Z-API, como nos
+  // outros formulários) e leva pro link de convite.
   grupo?: { nome: string; descricao: string | null } | null;
   slug: string;
   titulo: string;
@@ -112,21 +113,21 @@ export function CapturaSimplesForm({
 
   const faltaObrigatoria = perguntas.some((p) => p.obrigatoria && !(extras[p.id] ?? "").trim());
   const podeEnviar =
-    (ehGrupo || nome.trim().length > 0) && formatoOk && statusWhats !== "checando" && !faltaObrigatoria;
+    nome.trim().length > 0 && formatoOk && statusWhats !== "checando" && !faltaObrigatoria;
 
   function enviar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
 
     if (!podeEnviar) return;
-    if (!ehGrupo && !nome.trim()) return setErro("Preenche seu nome");
+    if (!nome.trim()) return setErro("Preenche seu nome");
     const numero = numeroNormalizado;
     if (!telefone.trim() || !telefoneValido(numero)) {
       return setErro("Confere seu WhatsApp — precisa ser um número com DDD, tipo (62) 99999-9999");
     }
 
     iniciarEnvio(async () => {
-      const resposta = await registrarLeadIsca(slug, { nome: ehGrupo ? "" : nome, telefone: numeroNormalizado, ...RESPOSTAS_VAZIAS }, extras);
+      const resposta = await registrarLeadIsca(slug, { nome, telefone: numeroNormalizado, ...RESPOSTAS_VAZIAS }, extras);
       if (resposta.erro) {
         setErro(resposta.erro);
         return;
@@ -228,7 +229,6 @@ export function CapturaSimplesForm({
       )}
 
       <form onSubmit={enviar} className="mt-8 space-y-5">
-        {!ehGrupo && (
         <div className="space-y-1.5">
           <label htmlFor="nome" className="text-sm font-medium text-[#c4cad3]">
             Qual o seu nome?
@@ -244,7 +244,6 @@ export function CapturaSimplesForm({
             className="w-full rounded-lg border border-[#262f3d] bg-[#10141b] px-4 py-3 text-base text-[#eef1f6] outline-none transition placeholder:text-[#6b7280] focus:border-[#22c55e] focus:ring-2 focus:ring-[#22c55e]/30"
           />
         </div>
-        )}
 
         <div className="space-y-1.5">
           <label htmlFor="telefone" className="text-sm font-medium text-[#c4cad3]">

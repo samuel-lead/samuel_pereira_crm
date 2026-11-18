@@ -123,7 +123,7 @@ export function NovoIscaForm({
           {tipo === "material"
             ? "Isca: a pessoa se cadastra e já recebe o material na hora."
             : tipo === "grupo"
-            ? "Grupo: a pessoa digita só o telefone e é levada pro grupo do WhatsApp."
+            ? "Grupo: a pessoa digita nome e WhatsApp (o número é conferido) e é levada pro grupo."
             : "Formulário: a pessoa só se cadastra, sem nenhum material pra liberar."}
         </p>
         <input type="hidden" name="tipo" value={tipo} />
