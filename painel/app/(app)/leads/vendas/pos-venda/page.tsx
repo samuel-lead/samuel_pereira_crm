@@ -154,6 +154,7 @@ export default async function PosVendaPage({
             publicoOrg={publicoOrg}
             personalizadoEmbaixo
             opcaoTodos={{ ativo: todos }}
+            atalhos={["hoje", "semana", "mes"]}
           />
         </div>
 
