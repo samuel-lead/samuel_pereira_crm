@@ -13,6 +13,11 @@ export function RegistrarNotaForm({ leadId }: { leadId: string }) {
   const acaoComId = registrarNota.bind(null, leadId);
   const [estado, acaoFormulario, pendente] = useActionState(acaoComId, estadoInicial);
   const [adicionado, setAdicionado] = useState(false);
+  // Texto digitado que AINDA NÃO foi adicionado à linha do tempo: só entra no histórico
+  // quando clica no botão (o "Salvar" do card não grava a nota). Enquanto isso, o
+  // botão pisca em destaque e aparece um aviso (Samuel, 18/11/26).
+  const [rascunho, setRascunho] = useState("");
+  const temRascunho = rascunho.trim().length > 0 && !adicionado;
   const enviandoRef = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -25,6 +30,7 @@ export function RegistrarNotaForm({ leadId }: { leadId: string }) {
       enviandoRef.current = false;
       if (estado.erro === null) {
         formRef.current?.reset();
+        setRascunho("");
         setAdicionado(true);
         modalAtivo?.recarregar();
         const timeout = setTimeout(() => setAdicionado(false), 2000);
@@ -41,7 +47,8 @@ export function RegistrarNotaForm({ leadId }: { leadId: string }) {
         required
         rows={3}
         placeholder="Ex.: liguei, ficou de ver a agenda e responder amanhã..."
-        className={campoClasse}
+        className={`${campoClasse} ${temRascunho ? "border-amber-400 ring-2 ring-amber-300/70" : ""}`}
+        onChange={(e) => setRascunho(e.target.value)}
         // Ctrl/Cmd+Enter envia sem precisar pegar o mouse — quem registra
         // nota toda hora durante ligação agradece.
         onKeyDown={(e) => {
@@ -52,15 +59,23 @@ export function RegistrarNotaForm({ leadId }: { leadId: string }) {
         }}
       />
 
+      {temRascunho && (
+        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">
+          ⚠️ Essa nota ainda NÃO foi salva. Clique em &quot;Adicionar à linha do tempo&quot; antes de salvar o card.
+        </p>
+      )}
+
       {estado.erro && <p className="text-xs text-red-600">{estado.erro}</p>}
 
       <button
         type="submit"
         disabled={pendente}
-        className={`w-full rounded-md border px-3 py-2 text-sm font-medium transition disabled:opacity-60 ${
+        className={`w-full rounded-lg px-4 py-3 text-sm font-extrabold uppercase tracking-wide shadow-md transition disabled:opacity-60 ${
           adicionado
-            ? "border-green-200 bg-green-50 text-green-700"
-            : "border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100"
+            ? "bg-green-600 text-white"
+            : temRascunho
+              ? "animate-pulse bg-amber-500 text-white ring-4 ring-amber-300/60 hover:bg-amber-600"
+              : "bg-teal-600 text-white ring-2 ring-teal-300/50 hover:bg-teal-700"
         }`}
       >
         {pendente ? "Adicionando..." : adicionado ? "Adicionado ✓" : "Adicionar à linha do tempo"}
