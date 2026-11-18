@@ -38,7 +38,11 @@ export function FiltroPeriodo({
   publicoOrg = "mentoria",
   personalizadoEmbaixo = false,
   opcaoTodos,
+  compacto = false,
 }: {
+  // Visual enxuto (Pós-venda): cada atalho é um botão separado, no mesmo formato de
+  // "Período personalizado", tudo na mesma linha — em vez de um bloco grande só.
+  compacto?: boolean;
   // Botão "Todos" antes dos atalhos (Pós-venda): manda periodo=todos, que a tela
   // entende como "sem filtro de período". `ativo` diz se ele está selecionado.
   opcaoTodos?: { ativo: boolean };
@@ -100,6 +104,12 @@ export function FiltroPeriodo({
     router.push(`${baseHref}?${params.toString()}`, { scroll: false });
   }
 
+  const classeAtalho = compacto
+    ? "rounded-xl border border-neutral-200 px-3 py-2 text-sm font-medium shadow-sm transition"
+    : "rounded-md px-3 py-1.5 text-sm font-medium transition";
+  const ativoClasse = compacto ? "bg-blue-600 text-white" : "bg-blue-600 text-white shadow-sm";
+  const inativoClasse = compacto ? "bg-white text-neutral-600 hover:bg-neutral-100" : "text-neutral-600 hover:bg-neutral-100";
+
   function aplicarCustom(evento: React.FormEvent) {
     evento.preventDefault();
     if (!de || !ate) return;
@@ -110,14 +120,20 @@ export function FiltroPeriodo({
   }
 
   return (
-    <div className="flex flex-wrap items-stretch gap-2">
-      <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-neutral-200 bg-white px-2 py-2 shadow-sm">
+    <div className={`flex flex-wrap gap-2 ${compacto ? "items-center" : "items-stretch"}`}>
+      <div
+        className={
+          compacto
+            ? "contents"
+            : "inline-flex flex-wrap items-center gap-1 rounded-xl border border-neutral-200 bg-white px-2 py-2 shadow-sm"
+        }
+      >
         {opcaoTodos && (
           <button
             type="button"
             onClick={() => irPara("todos")}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-              opcaoTodos.ativo ? "bg-blue-600 text-white shadow-sm" : "text-neutral-600 hover:bg-neutral-100"
+            className={`${classeAtalho} ${
+              opcaoTodos.ativo ? ativoClasse : inativoClasse
             }`}
           >
             Todos
@@ -131,11 +147,7 @@ export function FiltroPeriodo({
             onMouseEnter={() => router.prefetch(hrefDoAtalho(opcao.valor))}
             onFocus={() => router.prefetch(hrefDoAtalho(opcao.valor))}
             onTouchStart={() => router.prefetch(hrefDoAtalho(opcao.valor))}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-              periodoAtual === opcao.valor
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-neutral-600 hover:bg-neutral-100"
-            }`}
+            className={`${classeAtalho} ${periodoAtual === opcao.valor ? ativoClasse : inativoClasse}`}
           >
             {opcao.label}
           </button>

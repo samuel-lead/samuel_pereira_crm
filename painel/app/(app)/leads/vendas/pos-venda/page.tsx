@@ -134,10 +134,10 @@ export default async function PosVendaPage({
   return (
     <>
       <PageHeader titulo="Clientes" />
-      <main className="px-6 py-6">
+      <main className="px-6 pb-6 pt-3">
         <AbasClientes ativa="pos-venda" />
 
-        <div className="mb-3">
+        <div className="mb-5">
           <FiltroPeriodo
             baseHref="/leads/vendas/pos-venda"
             periodoAtual={periodo?.chave ?? null}
@@ -146,7 +146,7 @@ export default async function PosVendaPage({
             ateAtual={ateFiltro}
             outrosParams={{ busca, vis: visEscolhida }}
             publicoOrg={publicoOrg}
-            personalizadoEmbaixo
+            compacto
             opcaoTodos={{ ativo: todos }}
             atalhos={["hoje", "semana", "mes"]}
           />
