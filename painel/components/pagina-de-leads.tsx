@@ -206,10 +206,14 @@ export async function PaginaDeLeads({
   const consultaLigacoesHoje = user
     ? supabase
         .from("interacoes")
-        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em, funil, farming_origem)", { count: "exact", head: true })
         .eq("tipo", "ligacao")
         .is("excluido_em", null)
         .is("leads.arquivado_em", null)
+        // Samuel (19/11/26): ligação de lead do Farming conta só no Farming,
+        // nunca aqui em Pré-vendas. Só na Visão geral aparece tudo junto.
+        .is("leads.funil", null)
+        .eq("leads.farming_origem", false)
         .gte("ocorreu_em", inicioHoje.toISOString())
         .lt("ocorreu_em", amanha.toISOString())
     : null;
@@ -233,11 +237,15 @@ export async function PaginaDeLeads({
   const consultaLigacoesAtendidasHoje = user
     ? supabase
         .from("interacoes")
-        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em, funil, farming_origem)", { count: "exact", head: true })
         .eq("tipo", "ligacao")
         .eq("atendida", true)
         .is("excluido_em", null)
         .is("leads.arquivado_em", null)
+        // Samuel (19/11/26): ligação de lead do Farming conta só no Farming,
+        // nunca aqui em Pré-vendas. Só na Visão geral aparece tudo junto.
+        .is("leads.funil", null)
+        .eq("leads.farming_origem", false)
         .gte("ocorreu_em", inicioHoje.toISOString())
         .lt("ocorreu_em", amanha.toISOString())
     : null;
@@ -245,11 +253,15 @@ export async function PaginaDeLeads({
   const consultaLigacoesNaoAtendidasHoje = user
     ? supabase
         .from("interacoes")
-        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em, funil, farming_origem)", { count: "exact", head: true })
         .eq("tipo", "ligacao")
         .eq("atendida", false)
         .is("excluido_em", null)
         .is("leads.arquivado_em", null)
+        // Samuel (19/11/26): ligação de lead do Farming conta só no Farming,
+        // nunca aqui em Pré-vendas. Só na Visão geral aparece tudo junto.
+        .is("leads.funil", null)
+        .eq("leads.farming_origem", false)
         .gte("ocorreu_em", inicioHoje.toISOString())
         .lt("ocorreu_em", amanha.toISOString())
     : null;
