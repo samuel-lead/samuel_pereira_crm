@@ -405,7 +405,10 @@ async function sincronizarReuniao(
       if (Number.isNaN(parsed.getTime())) {
         return { erro: "Data de agendamento inválida." };
       }
-      dataMarcada = parsed;
+      // Samuel (19/11/26): "Data em que foi marcada" nunca pode ser no futuro —
+      // se alguém digitou o dia da reunião aqui por engano, a reunião sumia da
+      // contagem de "marcadas hoje". No futuro, vale agora.
+      dataMarcada = parsed.getTime() > Date.now() ? new Date() : parsed;
     }
 
     // Reunião anterior "esquecida" (ainda "marcada", com a data já
