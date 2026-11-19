@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 async function contextoUsuario() {
   const supabase = await createClient();
@@ -61,7 +62,7 @@ export async function alternarAtividadeRotina(
         { org_id: usuario.org_id, usuario_id: usuario.id, data, atividade },
         { onConflict: "usuario_id,data,atividade" }
       );
-    if (error) return { erro: error.message };
+    if (error) return { erro: traduzirErro(error.message) };
   } else {
     const { error } = await supabase
       .from("rotina_diaria_status")
@@ -69,7 +70,7 @@ export async function alternarAtividadeRotina(
       .eq("usuario_id", usuario.id)
       .eq("data", data)
       .eq("atividade", atividade);
-    if (error) return { erro: error.message };
+    if (error) return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/rotina");

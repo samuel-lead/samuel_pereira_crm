@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 export type EstadoExclusao = { erro: string | null; precisaTransferir?: boolean };
 export type EstadoFormulario = { erro: string | null };
@@ -23,7 +24,7 @@ export async function excluirUsuario(
 
   if (error) {
     return {
-      erro: error.message,
+      erro: traduzirErro(error.message),
       precisaTransferir: error.message.includes("vinculadas"),
     };
   }
@@ -75,7 +76,7 @@ export async function criarUsuario(
         // resposta sem corpo JSON, mantém a mensagem padrão
       }
     }
-    return { erro: mensagem };
+    return { erro: traduzirErro(mensagem) };
   }
 
   revalidatePath("/usuarios");
@@ -101,7 +102,7 @@ export async function atualizarPermissoes(
   });
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/usuarios");
@@ -130,7 +131,7 @@ export async function atualizarPropriaFuncao(formData: FormData) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/usuarios");
@@ -164,7 +165,7 @@ export async function atualizarFuncaoDoUsuario(formData: FormData) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/usuarios");
@@ -195,7 +196,7 @@ export async function tornarAdmin(usuarioId: string) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/usuarios");
@@ -231,7 +232,7 @@ export async function atualizarUsuarioAdmin(
     .eq("org_id", usuario.org_id);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/usuarios");
@@ -261,7 +262,7 @@ export async function atualizarMeuNome(
   const { error } = await supabase.from("usuarios").update({ nome }).eq("id", usuario.id);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/", "layout");
@@ -292,7 +293,7 @@ export async function atualizarMeuTelefone(
     .eq("id", usuario.id);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/perfil");
@@ -349,7 +350,7 @@ export async function atualizarMinhaComissao(
     .eq("id", usuario.id);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/perfil");

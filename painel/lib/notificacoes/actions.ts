@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 export type EstadoPush = { erro: string | null };
 
@@ -38,7 +39,7 @@ export async function salvarInscricaoPush(
     { onConflict: "usuario_id,endpoint" }
   );
 
-  if (error) return { erro: error.message };
+  if (error) return { erro: traduzirErro(error.message) };
   return { erro: null };
 }
 
@@ -53,7 +54,7 @@ export async function removerInscricaoPush(endpoint: string): Promise<EstadoPush
     .eq("usuario_id", user.id)
     .eq("endpoint", endpoint);
 
-  if (error) return { erro: error.message };
+  if (error) return { erro: traduzirErro(error.message) };
   return { erro: null };
 }
 

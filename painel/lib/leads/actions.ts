@@ -21,6 +21,7 @@ import { normalizarTelefone, telefoneValido } from "@/lib/telefone";
 import { ORG_ID_SAMUEL, ORGS_VENDA_DIRETA } from "@/lib/scripts-sdr";
 import { reuniao, Reuniao, ehImobiliario, usaComissaoDoVendedor, montarPublicoOrg, funilConsorcio, funilGondolas, semReuniaoNoFunil } from "@/lib/terminologia";
 import { lerPropostaConsorcioDoForm, type PropostaConsorcio } from "@/lib/proposta-consorcio";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -382,7 +383,7 @@ async function sincronizarReuniao(
           .from("reunioes")
           .update({ status: novoStatus })
           .eq("id", ultimaReuniao.id);
-        if (error) return { erro: error.message };
+        if (error) return { erro: traduzirErro(error.message) };
       }
     }
     return { erro: null };
@@ -466,7 +467,7 @@ async function sincronizarReuniao(
       reagendada: !!reuniaoAnterior && reuniaoAnterior.status !== "realizada",
     });
 
-    if (error) return { erro: error.message };
+    if (error) return { erro: traduzirErro(error.message) };
     return { erro: null };
   }
 
@@ -519,7 +520,7 @@ async function sincronizarReuniao(
             : {}),
         })
         .eq("id", reuniaoAtiva.id);
-      if (error) return { erro: error.message };
+      if (error) return { erro: traduzirErro(error.message) };
 
       // Reunião realizada de verdade (foi pra Follow ou já virou
       // Oportunidade E a reunião de fato aconteceu, inclui Repescagem
@@ -1929,7 +1930,7 @@ export async function marcarVendido(
     .eq("id", leadId);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   // A unidade vendida sai da lista de disponíveis e fica ligada ao lead.
@@ -2228,7 +2229,7 @@ export async function editarVenda(
     .eq("status", "vendido");
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   if (!receitaEhPorPagamentos(usuario)) {
@@ -2274,7 +2275,7 @@ export async function registrarRecebimento(
     valor: Math.round(valor * 100) / 100,
     recebido_em: `${dia}T12:00:00-03:00`,
   });
-  if (error) return { erro: error.message };
+  if (error) return { erro: traduzirErro(error.message) };
 
   revalidatePath("/leads/vendas");
   revalidatePath("/dashboard");
@@ -2314,7 +2315,7 @@ export async function editarRecebimento(
     .eq("lead_id", leadId)
     .is("excluido_em", null)
     .select("id");
-  if (error) return { erro: error.message };
+  if (error) return { erro: traduzirErro(error.message) };
   if (!data || data.length === 0) return { erro: "Não consegui salvar esse pagamento." };
 
   revalidatePath("/leads/vendas");
@@ -2340,7 +2341,7 @@ export async function removerRecebimento(
     .eq("lead_id", leadId)
     .is("excluido_em", null)
     .select("id");
-  if (error) return { erro: error.message };
+  if (error) return { erro: traduzirErro(error.message) };
   if (!data || data.length === 0) return { erro: "Não consegui remover esse pagamento." };
 
   revalidatePath("/leads/vendas");
@@ -2380,7 +2381,7 @@ export async function registrarProposta(
     .eq("id", leadId);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   const valorFormatado = valor.toLocaleString("pt-BR", {
@@ -2428,7 +2429,7 @@ export async function marcarProximoContato(leadId: string, formData: FormData) {
     .eq("id", leadId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/leads");
@@ -2457,7 +2458,7 @@ export async function definirDiaFollow(leadId: string, dia: number | null) {
     .eq("id", leadId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/leads");
@@ -2488,7 +2489,7 @@ export async function definirQualificadaReuniao(
     .select("id");
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
   if (!data || data.length === 0) {
     throw new Error("Não consegui alterar essa reunião.");
@@ -2620,7 +2621,7 @@ export async function reagendarReuniao(
     .eq("status", "marcada");
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   if (reuniaoAtual?.agendada_para) {
@@ -2677,7 +2678,7 @@ export async function cancelarProximoContato(leadId: string) {
     .eq("id", leadId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/leads");
@@ -2714,7 +2715,7 @@ export async function registrarNota(
   });
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   // Registrar contato cumpre o lembrete de "próximo contato" — sem isso,
@@ -2746,7 +2747,7 @@ export async function registrarLigacao(leadId: string, atendida: boolean) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   // Mesma ideia da nota: a ligação cumpre o lembrete de "próximo contato".
@@ -2806,7 +2807,7 @@ export async function registrarContatoPosVenda(
     .update({ pos_venda_ultimo_contato_em: agora, pos_venda_proximo_em: proximo, pos_venda_motivo: motivo })
     .eq("id", leadId)
     .eq("org_id", usuario.org_id);
-  if (error) return { erro: error.message };
+  if (error) return { erro: traduzirErro(error.message) };
 
   revalidatePath("/leads/vendas/pos-venda");
   revalidatePath(`/leads/${leadId}`);
@@ -2828,7 +2829,7 @@ export async function excluirInteracao(leadId: string, interacaoId: string) {
     .eq("lead_id", leadId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath(`/leads/${leadId}`);
@@ -2873,7 +2874,7 @@ export async function arquivarLead(
     .eq("id", leadId);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/leads");

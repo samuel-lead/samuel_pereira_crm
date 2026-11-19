@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -119,7 +120,7 @@ export async function atualizarImovel(
     if (error.code === "23505") {
       return { erro: `Já existe um imóvel ativo com o código "${campos.codigo}" — escolha outro.` };
     }
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/imoveis");
@@ -189,7 +190,7 @@ export async function arquivarImovel(
     .eq("id", imovelId);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/imoveis");

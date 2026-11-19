@@ -5,6 +5,7 @@ import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { diasUteisEntre, inicioDoMes } from "@/lib/metricas";
 import { UM_DIA_MS } from "@/lib/datas";
 import { paraNumeroBR } from "@/lib/dinheiro";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 export type EstadoMeta = { erro: string | null };
 
@@ -74,7 +75,7 @@ export async function definirMetaReceita(
   );
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/leads");

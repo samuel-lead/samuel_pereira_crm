@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, usuarioDoToken } from "@/lib/supabase/server";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 export type EstadoFoto = { erro: string | null };
 
@@ -112,7 +113,7 @@ export async function atualizarMetasConfig(
     .eq("org_id", usuario.org_id);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/configuracoes");
@@ -193,7 +194,7 @@ export async function atualizarBonusSdrConfig(
     .eq("org_id", usuario.org_id);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/configuracoes");
@@ -238,7 +239,7 @@ export async function atualizarPixelsConfig(
     .eq("id", usuario.org_id);
 
   if (error) {
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/configuracoes");
@@ -289,7 +290,7 @@ export async function criarOrigem(
     if (error.code === "23505") {
       return { erro: "Essa origem já existe" };
     }
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/configuracoes");
@@ -320,7 +321,7 @@ export async function renomearOrigem(
     });
 
     if (error) {
-      return { erro: error.message };
+      return { erro: traduzirErro(error.message) };
     }
 
     revalidatePath("/configuracoes");
@@ -355,7 +356,7 @@ export async function excluirOrigem(
     });
 
     if (error) {
-      return { erro: error.message, bloqueadoPorUso: false, quantidadeLeads: 0 };
+      return { erro: traduzirErro(error.message), bloqueadoPorUso: false, quantidadeLeads: 0 };
     }
 
     const resultado = data as { excluido: boolean; quantidade_leads: number };
@@ -400,7 +401,7 @@ export async function criarProduto(
     if (error.code === "23505") {
       return { erro: "Esse produto já existe" };
     }
-    return { erro: error.message };
+    return { erro: traduzirErro(error.message) };
   }
 
   revalidatePath("/configuracoes");
@@ -425,7 +426,7 @@ export async function renomearProduto(
     });
 
     if (error) {
-      return { erro: error.message };
+      return { erro: traduzirErro(error.message) };
     }
 
     revalidatePath("/configuracoes");
@@ -443,7 +444,7 @@ export async function excluirProduto(produtoId: string): Promise<EstadoProduto> 
     const { error } = await supabase.rpc("excluir_produto", { produto_id: produtoId });
 
     if (error) {
-      return { erro: error.message };
+      return { erro: traduzirErro(error.message) };
     }
 
     revalidatePath("/configuracoes");

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -41,7 +42,7 @@ export async function criarCliente(
         // resposta sem corpo JSON, mantém a mensagem padrão
       }
     }
-    return { erro: mensagem };
+    return { erro: traduzirErro(mensagem) };
   }
 
   revalidatePath("/empresas");
@@ -67,7 +68,7 @@ export async function alternarStatusOrg(orgId: string, statusAtual: string) {
   const { error } = await supabase.from("orgs").update({ status: novoStatus }).eq("id", orgId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/empresas");
@@ -94,7 +95,7 @@ export async function atualizarCobrancaOrg(
     .eq("id", orgId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/empresas");
@@ -109,7 +110,7 @@ export async function marcarOrgComoPaga(orgId: string) {
   const { error } = await supabase.rpc("marcar_org_como_paga", { p_org_id: orgId });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath("/empresas");
@@ -194,7 +195,7 @@ export async function removerPessoaOrg(
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(traduzirErro(error.message));
   }
 
   revalidatePath(`/empresas/${orgId}`);

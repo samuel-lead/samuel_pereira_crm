@@ -7,6 +7,7 @@ import { createClient, usuarioDoToken } from "@/lib/supabase/server";
 import { normalizarTelefone } from "@/lib/telefone";
 import { slugificar } from "@/lib/texto";
 import { normalizarPerguntas } from "@/lib/iscas/perguntas";
+import { traduzirErro } from "@/lib/traduzir-erro";
 
 export type EstadoFormulario = { erro: string | null };
 
@@ -78,7 +79,7 @@ async function subirMaterialSeTiverArquivo(
     .from("materiais-iscas")
     .upload(caminho, arquivo, { upsert: true, contentType: arquivo.type || "application/pdf" });
 
-  if (error) return { url: null, erro: error.message };
+  if (error) return { url: null, erro: traduzirErro(error.message) };
 
   const { data } = supabase.storage.from("materiais-iscas").getPublicUrl(caminho);
   return { url: data.publicUrl, erro: null };
@@ -271,7 +272,7 @@ export async function atualizarIsca(
     .eq("id", iscaId)
     .eq("org_id", usuario.org_id);
 
-  if (error) return { erro: error.message };
+  if (error) return { erro: traduzirErro(error.message) };
 
   revalidatePath("/iscas");
   redirect("/iscas");
@@ -286,7 +287,7 @@ export async function arquivarIsca(iscaId: string) {
     .eq("id", iscaId)
     .eq("org_id", usuario.org_id);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(traduzirErro(error.message));
 
   revalidatePath("/iscas");
 }
@@ -391,7 +392,7 @@ export async function registrarLeadIsca(
   if (error) {
     // Fica no log da Vercel: antes o motivo real do erro sumia e ninguém
     // conseguia descobrir por que um cadastro falhou.
-    console.error("[isca] falha ao cadastrar", { slug, erro: error.message });
+    console.error("[isca] falha ao cadastrar", { slug, erro: traduzirErro(error.message) });
     await supabase.rpc("registrar_erro_isca", {
       p_slug: slug,
       p_origem: "banco",
