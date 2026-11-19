@@ -942,7 +942,11 @@ export async function atualizarLead(
   );
   const novoNivel = Number(formData.get("nivel_ordem"));
   const reuniaoData = String(formData.get("reuniao_data") ?? "").trim() || null;
-  const reuniaoMarcadaEm = String(formData.get("marcada_em") ?? "").trim() || null;
+  // Samuel (19/11/26): só admin pode escolher a "data em que foi marcada" (pra
+  // registrar reunião antiga). SDR/vendedor: é sempre AGORA — mesmo que alguém
+  // force o campo, o servidor ignora. Evita a métrica "marcadas hoje" errada.
+  const reuniaoMarcadaEm =
+    usuario.papel === "admin" ? String(formData.get("marcada_em") ?? "").trim() || null : null;
   const closerId = String(formData.get("closer_id") ?? "").trim() || null;
   const motivoBaseForm = String(formData.get("motivo_base") ?? "").trim() || null;
   const motivoBaseDetalheForm = String(formData.get("motivo_base_detalhe") ?? "").trim() || null;

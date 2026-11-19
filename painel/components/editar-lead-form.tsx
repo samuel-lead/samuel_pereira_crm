@@ -869,7 +869,8 @@ export function EditarLeadForm({
               ref={camposReuniaoRef}
               className="mt-2 scroll-mt-40 space-y-3 rounded-md border border-green-200 bg-green-50 p-3"
             >
-              <div className="space-y-1">
+              {souAdmin ? (
+                <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="marcada_em">
                   Data em que foi marcada
                 </label>
@@ -885,6 +886,12 @@ export function EditarLeadForm({
                   uma {reuniao(publicoOrg)} que foi marcada em outro dia.
                 </p>
               </div>
+              ) : (
+                <p className="text-xs text-green-700">
+                  Essa {reuniao(publicoOrg)} fica registrada como marcada <strong>hoje, agora</strong>.
+                  Preencha só a data e hora de quando ela vai acontecer.
+                </p>
+              )}
 
               <div className="space-y-1">
                 <label className="text-sm font-medium text-green-800" htmlFor="reuniao_data">
