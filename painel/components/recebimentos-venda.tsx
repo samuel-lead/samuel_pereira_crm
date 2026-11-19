@@ -2,7 +2,7 @@
 
 import { useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { registrarRecebimento, removerRecebimento } from "@/lib/leads/actions";
+import { registrarRecebimento, removerRecebimento, editarRecebimento } from "@/lib/leads/actions";
 import { useLeadModalAtivo } from "@/components/contexto-lead-modal";
 import { ehImobiliario, Receita, usaComissaoDoVendedor } from "@/lib/terminologia";
 
@@ -39,6 +39,10 @@ export function RecebimentosVenda({
   const [dia, setDia] = useState(hoje);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  // Pagamento que está sendo editado agora (valor em centavos e dia).
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [centavosEdicao, setCentavosEdicao] = useState(0);
+  const [diaEdicao, setDiaEdicao] = useState(hoje);
 
   if (ehImobiliario(publicoOrg) || usaComissaoDoVendedor(publicoOrg)) return null;
 
@@ -67,6 +71,27 @@ export function RecebimentosVenda({
     atualizarTela();
   }
 
+  function comecarEdicao(r: Recebimento) {
+    setErro(null);
+    setEditandoId(r.id);
+    setCentavosEdicao(Math.round(r.valor * 100));
+    setDiaEdicao(new Date(r.recebido_em).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }));
+  }
+
+  async function salvarEdicao() {
+    if (!editandoId) return;
+    setErro(null);
+    setOcupado(true);
+    const resultado = await editarRecebimento(leadId, editandoId, centavosEdicao / 100, diaEdicao);
+    setOcupado(false);
+    if (resultado.erro) {
+      setErro(resultado.erro);
+      return;
+    }
+    setEditandoId(null);
+    atualizarTela();
+  }
+
   async function remover(id: string) {
     if (!window.confirm("Remover esse pagamento?")) return;
     setErro(null);
@@ -90,19 +115,81 @@ export function RecebimentosVenda({
       ) : (
         <ul className="mt-1 space-y-1">
           {recebimentos.map((r) => (
-            <li key={r.id} className="flex items-center justify-between gap-2 text-sm text-green-800">
-              <span>
-                {formatarReais(r.valor)} <span className="text-xs text-green-600">· caiu em {formatarDia(r.recebido_em)}</span>
-              </span>
-              {podeEditar && (
-                <button
-                  type="button"
-                  disabled={ocupado}
-                  onClick={() => remover(r.id)}
-                  className="text-xs text-green-700 underline hover:text-red-600 disabled:opacity-60"
-                >
-                  remover
-                </button>
+            <li key={r.id} className="text-sm text-green-800">
+              {editandoId === r.id ? (
+                <div className="space-y-2 rounded-md border border-green-300 bg-white/60 p-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-green-800">Valor que caiu (R$)</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={centavosEdicao ? formatarReais(centavosEdicao / 100) : ""}
+                      onChange={(e) => {
+                        const digitos = e.target.value.replace(/\D/g, "");
+                        setCentavosEdicao(digitos ? Number(digitos) : 0);
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                      className="w-full rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-green-800">Dia em que caiu</label>
+                    <input
+                      type="date"
+                      value={diaEdicao}
+                      max={hoje}
+                      onChange={(e) => setDiaEdicao(e.target.value)}
+                      onClick={(e) => e.currentTarget.showPicker?.()}
+                      className="w-full cursor-pointer rounded-md border border-green-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={ocupado || centavosEdicao === 0 || !diaEdicao}
+                      onClick={salvarEdicao}
+                      className="flex-1 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
+                    >
+                      {ocupado ? "Salvando..." : "Salvar pagamento"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditandoId(null);
+                        setErro(null);
+                      }}
+                      className="rounded-md border border-green-300 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <span>
+                    {formatarReais(r.valor)} <span className="text-xs text-green-600">· caiu em {formatarDia(r.recebido_em)}</span>
+                  </span>
+                  {podeEditar && (
+                    <span className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={ocupado}
+                        onClick={() => comecarEdicao(r)}
+                        className="rounded-md bg-green-600 px-2 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
+                      >
+                        ✏️ editar
+                      </button>
+                      <button
+                        type="button"
+                        disabled={ocupado}
+                        onClick={() => remover(r.id)}
+                        className="text-xs text-green-700 underline hover:text-red-600 disabled:opacity-60"
+                      >
+                        remover
+                      </button>
+                    </span>
+                  )}
+                </div>
               )}
             </li>
           ))}

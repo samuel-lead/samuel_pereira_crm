@@ -2282,6 +2282,47 @@ export async function registrarRecebimento(
   return { erro: null };
 }
 
+// Corrige valor e/ou dia de um pagamento já registrado (Samuel, 18/11/26: não dava pra
+// editar a receita do mês — só registrar e remover). O banco recalcula a receita da venda
+// sozinho (gatilho venda_recebimentos_sincroniza_receita).
+export async function editarRecebimento(
+  leadId: string,
+  recebimentoId: string,
+  valor: number,
+  dia: string
+): Promise<{ erro: string | null }> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) return { erro: erroPermissao };
+  if (!receitaEhPorPagamentos(usuario)) {
+    return { erro: "Nesse CRM a receita é calculada sozinha a partir da venda." };
+  }
+  if (!Number.isFinite(valor) || valor <= 0) return { erro: "Informe o valor recebido." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return { erro: "Informe o dia em que o dinheiro caiu." };
+
+  const hojeSp = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  if (dia > hojeSp) return { erro: "O dia do pagamento não pode ser no futuro." };
+
+  const { data, error } = await supabase
+    .from("venda_recebimentos")
+    .update({
+      valor: Math.round(valor * 100) / 100,
+      recebido_em: `${dia}T12:00:00-03:00`,
+    })
+    .eq("id", recebimentoId)
+    .eq("lead_id", leadId)
+    .is("excluido_em", null)
+    .select("id");
+  if (error) return { erro: error.message };
+  if (!data || data.length === 0) return { erro: "Não consegui salvar esse pagamento." };
+
+  revalidatePath("/leads/vendas");
+  revalidatePath("/dashboard");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
 // Remove um pagamento registrado errado. Fica só marcado como excluído.
 export async function removerRecebimento(
   leadId: string,

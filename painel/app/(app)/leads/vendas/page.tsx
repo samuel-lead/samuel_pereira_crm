@@ -6,7 +6,7 @@ import { IndicacaoPegaToggle } from "@/components/indicacao-pega-toggle";
 import { LinkLead } from "@/components/link-lead";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { AvatarLead } from "@/components/avatar-lead";
-import { IconeMoeda } from "@/components/icons";
+import { IconeMoeda, IconeLapis } from "@/components/icons";
 import { FiltroPeriodo } from "@/components/filtro-periodo";
 import { FiltroPessoaClientes } from "@/components/filtro-pessoa-clientes";
 import { EditarDataVendaInline } from "@/components/editar-data-venda-inline";
@@ -394,6 +394,17 @@ export default async function VendasPage({
                           classeBadge="bg-green-100 text-green-700"
                         />
                         <span className="font-medium text-neutral-900">{lead.nome}</span>
+                      </LinkLead>
+                      {/* Botão bem visível pra editar o cliente (Samuel, 18/11/26): antes só
+                          dava pra editar clicando no nome, e ninguém sabia. Abre o card, com
+                          os dados do lead e a edição da venda (valor, data e pagamentos). */}
+                      <LinkLead
+                        leadId={lead.id}
+                        title="Abrir o card pra editar o lead e a venda"
+                        className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm ring-1 ring-blue-500/40 transition hover:bg-blue-700"
+                      >
+                        <IconeLapis className="h-3.5 w-3.5" />
+                        Editar lead e venda
                       </LinkLead>
                     </td>
                     <td className="px-4 py-3 text-neutral-600">

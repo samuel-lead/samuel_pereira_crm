@@ -173,7 +173,12 @@ export function EditarVendaForm({
         />
       ) : imobiliario ? (
         <CampoMoeda name="receita_venda" label={`${Receita(publicoOrg)} recebida (R$)`} valorInicial={receitaVenda} />
-      ) : null}
+      ) : (
+        <p className="rounded-md border border-green-200 bg-green-100/60 px-3 py-2 text-xs text-green-800">
+          💡 A {Receita(publicoOrg).toLowerCase()} é a soma dos pagamentos que caíram. Pra corrigir o valor ou o dia,
+          use o botão <b>✏️ editar</b> em cada pagamento, na lista &quot;{Receita(publicoOrg)} recebida — pagamentos&quot; aqui em cima.
+        </p>
+      )}
       <div>
         <label className="mb-1 block text-xs font-medium text-green-800">
           {imobiliario ? "Imóvel vendido" : "Produto"}
