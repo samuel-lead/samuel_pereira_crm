@@ -269,8 +269,10 @@ export async function PaginaDeLeads({
   const consultaCallsMarcadasHoje = user
     ? supabase
         .from("reunioes")
-        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em, funil, farming_origem)", { count: "exact", head: true })
         .is("leads.arquivado_em", null)
+        .is("leads.funil", null)
+        .eq("leads.farming_origem", false)
         .eq("reagendada", false)
         .gte("marcada_em", inicioHoje.toISOString())
         .lt("marcada_em", amanha.toISOString())
@@ -279,8 +281,10 @@ export async function PaginaDeLeads({
   const consultaReagendamentosHoje = user
     ? supabase
         .from("reunioes")
-        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em, funil, farming_origem)", { count: "exact", head: true })
         .is("leads.arquivado_em", null)
+        .is("leads.funil", null)
+        .eq("leads.farming_origem", false)
         .eq("reagendada", true)
         .gte("marcada_em", inicioHoje.toISOString())
         .lt("marcada_em", amanha.toISOString())
@@ -289,9 +293,11 @@ export async function PaginaDeLeads({
   const consultaCallsRealizadasHoje = user
     ? supabase
         .from("reunioes")
-        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em, funil, farming_origem)", { count: "exact", head: true })
         .eq("status", "realizada")
         .is("leads.arquivado_em", null)
+        .is("leads.funil", null)
+        .eq("leads.farming_origem", false)
         .gte("agendada_para", inicioHoje.toISOString())
         .lt("agendada_para", amanha.toISOString())
     : null;
@@ -299,9 +305,11 @@ export async function PaginaDeLeads({
   const consultaNoShowHoje = user
     ? supabase
         .from("reunioes")
-        .select("id, leads!inner(arquivado_em)", { count: "exact", head: true })
+        .select("id, leads!inner(arquivado_em, funil, farming_origem)", { count: "exact", head: true })
         .eq("status", "nao_compareceu")
         .is("leads.arquivado_em", null)
+        .is("leads.funil", null)
+        .eq("leads.farming_origem", false)
         .gte("agendada_para", inicioHoje.toISOString())
         .lt("agendada_para", amanha.toISOString())
     : null;
