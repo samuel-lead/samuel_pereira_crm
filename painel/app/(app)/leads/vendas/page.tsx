@@ -353,39 +353,36 @@ export default async function VendasPage({
         </div>
 
         <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full text-left text-[13px]">
             <thead>
               <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
-                <th className="px-4 py-3 font-medium">Cliente</th>
-                <th className="px-4 py-3 font-medium">Telefone</th>
-                <th className="px-4 py-3 font-medium">Origem</th>
-                <th className="px-4 py-3 font-medium">Produto</th>
-                <th className="px-4 py-3 font-medium">Valor da venda</th>
+                <th className="px-2.5 py-3 font-medium">Cliente</th>
+                <th className="px-2.5 py-3 font-medium">Telefone</th>
+                <th className="px-2.5 py-3 font-medium">Origem</th>
+                <th className="px-2.5 py-3 font-medium">Produto</th>
+                <th className="px-2.5 py-3 font-medium">Valor da venda</th>
                 {!ehImobiliario(publicoOrg) && (
-                  <th className="px-4 py-3 font-medium">{Receita(publicoOrg)}</th>
+                  <th className="px-2.5 py-3 font-medium">{Receita(publicoOrg)}</th>
                 )}
-                <th className="px-4 py-3 font-medium">{Sdr(publicoOrg)}</th>
+                <th className="px-2.5 py-3 font-medium">{Sdr(publicoOrg)}</th>
                 {!semCloser(publicoOrg) && (
-                  <th className="px-4 py-3 font-medium">Closer</th>
+                  <th className="px-2.5 py-3 font-medium">Closer</th>
                 )}
-                <th className="px-4 py-3 font-medium">Entrou em</th>
-                <th className="px-4 py-3 font-medium">Vendido em</th>
-                {mostrarIndicacaoPega && (
-                  <th className="px-4 py-3 font-medium">Indicação pega</th>
-                )}
+                <th className="hidden px-2.5 py-3 font-medium xl:table-cell">Entrou em</th>
+                <th className="px-2.5 py-3 font-medium">Vendido em</th>
               </tr>
             </thead>
             <tbody>
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={(ehImobiliario(publicoOrg) ? 8 : semCloser(publicoOrg) ? 9 : 10) + (mostrarIndicacaoPega ? 1 : 0)} className="px-4 py-10 text-center text-sm text-neutral-400">
+                  <td colSpan={ehImobiliario(publicoOrg) ? 8 : semCloser(publicoOrg) ? 9 : 10} className="px-2.5 py-10 text-center text-sm text-neutral-400">
                     Nenhum cliente encontrado
                   </td>
                 </tr>
               ) : (
                 leads.map((lead) => (
                   <tr key={lead.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                    <td className="px-4 py-3">
+                    <td className="px-2.5 py-3">
                       <LinkLead leadId={lead.id} className="flex items-center gap-2.5 hover:underline">
                         <AvatarLead
                           nome={lead.nome}
@@ -398,16 +395,24 @@ export default async function VendasPage({
                       {/* Botão bem visível pra editar o cliente (Samuel, 18/11/26): antes só
                           dava pra editar clicando no nome, e ninguém sabia. Abre o card, com
                           os dados do lead e a edição da venda (valor, data e pagamentos). */}
-                      <LinkLead
-                        leadId={lead.id}
-                        title="Abrir o card pra editar o lead e a venda"
-                        className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm ring-1 ring-blue-500/40 transition hover:bg-blue-700"
-                      >
-                        <IconeLapis className="h-3.5 w-3.5" />
-                        Editar lead e venda
-                      </LinkLead>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <LinkLead
+                          leadId={lead.id}
+                          title="Abrir o card pra editar o lead e a venda"
+                          className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-1.5 py-0.5 text-[11px] font-medium text-blue-600 transition hover:border-blue-300 hover:bg-blue-50"
+                        >
+                          <IconeLapis className="h-3 w-3" />
+                          Editar
+                        </LinkLead>
+                        {mostrarIndicacaoPega && (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500">
+                            Indicação pega
+                            <IndicacaoPegaToggle leadId={lead.id} jaPegou={!!lead.indicacao_pega_em} />
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">
+                    <td className="px-2.5 py-3 text-neutral-600">
                       {lead.telefone_e164 ? (
                         <span className="flex items-center gap-1.5 whitespace-nowrap">
                           {lead.telefone_e164}
@@ -417,26 +422,26 @@ export default async function VendasPage({
                         "—"
                       )}
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">{lead.origem ?? "—"}</td>
-                    <td className="px-4 py-3 text-neutral-600">{lead.produto ?? "—"}</td>
-                    <td className="px-4 py-3 font-medium text-green-700">
+                    <td className="px-2.5 py-3 text-neutral-600">{lead.origem ?? "—"}</td>
+                    <td className="px-2.5 py-3 text-neutral-600">{lead.produto ?? "—"}</td>
+                    <td className="px-2.5 py-3 font-medium text-green-700">
                       {lead.valor_venda != null ? formatarMoeda(lead.valor_venda) : "—"}
                     </td>
                     {!ehImobiliario(publicoOrg) && (
-                      <td className="px-4 py-3 text-emerald-700">
+                      <td className="px-2.5 py-3 text-emerald-700">
                         {lead.receita_venda != null ? formatarMoeda(lead.receita_venda) : "—"}
                       </td>
                     )}
-                    <td className="px-4 py-3 text-neutral-600">
+                    <td className="px-2.5 py-3 text-neutral-600">
                       {sdrPorLead.has(lead.id) ? nomePorUsuario.get(sdrPorLead.get(lead.id)!) ?? "—" : "—"}
                     </td>
                     {!semCloser(publicoOrg) && (
-                      <td className="px-4 py-3 text-neutral-600">
+                      <td className="px-2.5 py-3 text-neutral-600">
                         {closerDoLead(lead) ? nomePorUsuario.get(closerDoLead(lead)!) ?? "—" : "—"}
                       </td>
                     )}
-                    <td className="px-4 py-3 text-neutral-600">{formatarData(lead.declarado_em)}</td>
-                    <td className="px-4 py-3 text-neutral-600">
+                    <td className="hidden px-2.5 py-3 text-neutral-600 xl:table-cell">{formatarData(lead.declarado_em)}</td>
+                    <td className="px-2.5 py-3 text-neutral-600">
                       <EditarDataVendaInline
                         leadId={lead.id}
                         vendidoEm={lead.vendido_em}
@@ -445,11 +450,6 @@ export default async function VendasPage({
                         produto={lead.produto}
                       />
                     </td>
-                    {mostrarIndicacaoPega && (
-                      <td className="px-4 py-3">
-                        <IndicacaoPegaToggle leadId={lead.id} jaPegou={!!lead.indicacao_pega_em} />
-                      </td>
-                    )}
                   </tr>
                 ))
               )}
