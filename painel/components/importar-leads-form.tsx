@@ -557,6 +557,14 @@ export function ImportarLeadsForm({
               </div>
 
               <BlocoLista
+                titulo="Entram, mas sem telefone válido"
+                motivo="Vão ser criados, mas o telefone está vazio ou não parece um WhatsApp do Brasil — o contato por WhatsApp não vai funcionar."
+                cor="ambar"
+                itens={novos
+                  .filter((item) => item.telefoneInvalido)
+                  .map((item) => ({ nome: item.nome, detalhe: item.telefone ?? "sem telefone" }))}
+              />
+              <BlocoLista
                 titulo="Já existem no CRM — não entram de novo"
                 motivo="O telefone desses contatos já está cadastrado (mesmo que com o 9 a mais ou a menos, ou que o lead esteja excluído)."
                 cor="azul"

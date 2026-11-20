@@ -672,7 +672,15 @@ type LinhaImportacao = {
   telefone: string | null;
   origemLinha: string | null;
   motivoInvalido?: string;
+  // Texto original da linha (pra mostrar na conferência quando ela é inválida).
+  nomeOriginal?: string;
 };
+
+// Nome de verdade: pelo menos 2 caracteres e alguma letra. "/" ou "&" sozinhos não
+// são nome (Samuel, 20/11/26: uma barra digitada virava lead "pronto pra importar").
+function nomeValido(nome: string): boolean {
+  return nome.trim().length >= 2 && /\p{L}/u.test(nome);
+}
 
 // Transforma o texto da lista em linhas "nome / telefone / origem". Usada
 // tanto na prévia quanto na importação de verdade, pra as duas sempre
@@ -702,10 +710,28 @@ function interpretarLinhasImportacao(lista: string): LinhaImportacao[] {
           motivoInvalido: "Código de grupo do WhatsApp (não é um telefone)",
         };
       }
+      const telefoneNormalizado = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
+      let nomeFinal = nome;
+      if (nomeFinal && !nomeValido(nomeFinal)) {
+        if (telefoneNormalizado && telefoneValido(telefoneNormalizado)) {
+          // Nome estranho mas o telefone é bom: entra como "Sem nome".
+          nomeFinal = "Sem nome";
+        } else {
+          return {
+            nome: null,
+            telefone: telefoneNormalizado,
+            origemLinha: null,
+            nomeOriginal: nome ?? undefined,
+            motivoInvalido:
+              "Não parece um lead: o nome precisa ter letras (ou a linha precisa ter um telefone válido)",
+          };
+        }
+      }
       return {
-        nome: nome || null,
-        telefone: telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null,
+        nome: nomeFinal || null,
+        telefone: telefoneNormalizado,
         origemLinha: partes[2] || null,
+        nomeOriginal: nome ?? undefined,
       };
     });
 }
@@ -747,6 +773,8 @@ export type ItemPreviaImportacao = {
   nome: string;
   telefone: string | null;
   motivo?: string;
+  // Entra, mas o telefone está vazio ou não parece um WhatsApp do Brasil.
+  telefoneInvalido?: boolean;
   situacao: "novo" | "ja_existe" | "repetido_na_lista" | "invalido";
   nomeExistente?: string;
   excluido?: boolean;
@@ -767,7 +795,7 @@ export async function conferirListaImportacao(
   const itens: ItemPreviaImportacao[] = linhas.map((linha) => {
     if (!linha.nome) {
       return {
-        nome: "(sem nome)",
+        nome: linha.nomeOriginal ?? "(sem nome)",
         telefone: linha.telefone,
         situacao: "invalido",
         motivo: linha.motivoInvalido ?? "Linha sem nome",
@@ -790,7 +818,12 @@ export async function conferirListaImportacao(
       }
       vistosNaLista.add(chave);
     }
-    return { nome: linha.nome, telefone: linha.telefone, situacao: "novo" };
+    return {
+      nome: linha.nome,
+      telefone: linha.telefone,
+      situacao: "novo",
+      telefoneInvalido: !linha.telefone || !telefoneValido(linha.telefone),
+    };
   });
 
   return { erro: null, itens };
@@ -853,7 +886,7 @@ export async function importarLeads(
     if (!linha.nome) {
       invalidos++;
       naoImportados.push({
-        nome: "(sem nome)",
+        nome: linha.nomeOriginal ?? "(sem nome)",
         telefone: linha.telefone,
         motivo: linha.motivoInvalido ?? "Linha sem nome",
       });
