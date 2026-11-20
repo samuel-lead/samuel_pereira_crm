@@ -109,7 +109,10 @@ export function ImportarLeadsForm({
   const [erroArquivo, setErroArquivo] = useState<string | null>(null);
   // Passo 1: como a pessoa vai enviar a lista (Samuel, 20/11/26).
   const [modo, setModo] = useState<"arquivo" | "colar">("arquivo");
-  const [origemAtual, setOrigemAtual] = useState("Prospecção fria");
+  // Sem origem padrão (Samuel, 20/11/26): as etapas só aparecem na ordem, quando a
+  // anterior foi preenchida — a origem precisa ser ESCOLHIDA pra liberar o passo 3.
+  const [origemAtual, setOrigemAtual] = useState("");
+  const [quemIndicouTexto, setQuemIndicouTexto] = useState("");
   const [previa, setPrevia] = useState<ItemPreviaImportacao[] | null>(null);
   const [conferindo, setConferindo] = useState(false);
   const [erroPrevia, setErroPrevia] = useState<string | null>(null);
@@ -289,6 +292,29 @@ export function ImportarLeadsForm({
   }
 
   const temLista = texto.trim().length > 0;
+  // Passo 1 preenchido: arquivo lido na hora; lista colada à mão só depois que a
+  // pessoa para de digitar (senão o passo 2 piscava na primeira letra).
+  const [colouParou, setColouParou] = useState(false);
+  useEffect(() => {
+    if (!texto.trim()) {
+      setColouParou(false);
+      return;
+    }
+    const t = setTimeout(() => setColouParou(true), 900);
+    return () => clearTimeout(t);
+  }, [texto]);
+  const listaPronta = temLista && (!!arquivoNome || colouParou);
+  // Se o passo 2 some (lista apagada ou importação concluída), a origem escolhida
+  // volta a vazio — senão a próxima importação já nasceria "preenchida".
+  useEffect(() => {
+    if (!listaPronta) {
+      setOrigemAtual("");
+      setQuemIndicouTexto("");
+    }
+  }, [listaPronta]);
+  // Passo 2 preenchido: origem escolhida (e, se for indicação, quem indicou).
+  const passo2Preenchido =
+    origemAtual.trim() !== "" && (!ehIndicacao || quemIndicouTexto.trim() !== "");
   const totalLinhas = texto.split("\n").filter((l) => l.trim()).length;
   const novos = previa?.filter((i) => i.situacao === "novo") ?? [];
   const jaExistem = previa?.filter((i) => i.situacao === "ja_existe") ?? [];
@@ -299,7 +325,7 @@ export function ImportarLeadsForm({
     <div
       ref={topoRef}
       className={`mx-auto w-full scroll-mt-24 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md transition-[max-width] duration-300 ${
-        temLista ? "max-w-6xl" : "max-w-2xl"
+        listaPronta ? "max-w-6xl" : "max-w-2xl"
       }`}
     >
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4">
@@ -362,14 +388,14 @@ export function ImportarLeadsForm({
             (Samuel, 20/11/26). No celular ficam uma embaixo da outra. */}
         <div
           className={
-            temLista
+            listaPronta
               ? "grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] lg:items-start"
               : ""
           }
         >
         {/* PASSO 1 — enviar a lista */}
         <div
-          className={`space-y-3 ${temLista ? "rounded-xl border border-neutral-200 bg-white p-4" : ""}`}
+          className={`space-y-3 ${listaPronta ? "rounded-xl border border-neutral-200 bg-white p-4" : ""}`}
         >
           <TituloPasso numero={1} titulo="Envie a lista de leads" />
           <div className="grid gap-2 sm:grid-cols-2">
@@ -476,15 +502,15 @@ export function ImportarLeadsForm({
         </div>
 
         {/* PASSO 2 e 3 — só aparecem depois que a lista chegou */}
-        {temLista && (
+        {listaPronta && (
           <>
             <div className="passo-aparece space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
               <TituloPasso numero={2} titulo="Defina como os leads entram" />
               <div className="space-y-1">
                 <label className="text-sm font-medium text-neutral-700">
-                  Origem (pra todos os leads dessa lista)
+                  Origem (pra todos os leads dessa lista) *
                 </label>
-                <OrigemSelect origens={origens} valorInicial="Prospecção fria" onChange={setOrigemAtual} />
+                <OrigemSelect origens={origens} onChange={setOrigemAtual} />
               </div>
 
               <div className="space-y-1">
@@ -529,15 +555,23 @@ export function ImportarLeadsForm({
                     id="quem_indicou"
                     name="quem_indicou"
                     placeholder="Nome de quem indicou essa lista"
+                    value={quemIndicouTexto}
+                    onChange={(e) => setQuemIndicouTexto(e.target.value)}
                     className="w-full rounded-md border border-amber-400 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
+              )}
+
+              {!passo2Preenchido && (
+                <p className="rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
+                  👉 Escolha a origem{ehIndicacao ? " e escreva quem indicou" : ""} pra continuar.
+                </p>
               )}
             </div>
           </>
         )}
 
-        {temLista && (
+        {listaPronta && passo2Preenchido && (
           <div className="passo-aparece passo-atrasado space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
             <TituloPasso numero={3} titulo="Confira e importe" />
         {previa && (
