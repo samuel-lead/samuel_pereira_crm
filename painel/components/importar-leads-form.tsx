@@ -311,6 +311,8 @@ export function ImportarLeadsForm({
     };
   }, [texto, arquivoNome]);
 
+  // A conferência abre AO LADO da lista (Samuel, 20/11/26) assim que há resultado.
+  const painelAberto = temLista && (previa !== null || erroPrevia !== null);
   const listaPronta = temLista && passo1Confirmado;
   // Se o passo 2 some (lista apagada ou importação concluída), a origem escolhida
   // volta a vazio — senão a próxima importação já nasceria "preenchida".
@@ -341,7 +343,7 @@ export function ImportarLeadsForm({
     <div
       ref={topoRef}
       className={`mx-auto w-full scroll-mt-24 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md transition-[max-width] duration-300 ${
-        listaPronta ? "max-w-6xl" : "max-w-2xl"
+        painelAberto ? "max-w-6xl" : "max-w-2xl"
       }`}
     >
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4">
@@ -405,13 +407,15 @@ export function ImportarLeadsForm({
         <div
           className={
             listaPronta
-              ? "grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] lg:items-start"
-              : ""
+              ? "grid gap-4 lg:grid-cols-3 lg:items-start"
+              : painelAberto
+                ? "grid gap-4 lg:grid-cols-2 lg:items-start"
+                : ""
           }
         >
         {/* PASSO 1 — enviar a lista */}
         <div
-          className={`space-y-3 ${listaPronta ? "rounded-xl border border-neutral-200 bg-white p-4" : ""}`}
+          className={`space-y-3 ${painelAberto ? "rounded-xl border border-neutral-200 bg-white p-4" : ""}`}
         >
           <TituloPasso numero={1} titulo="Envie a lista de leads" />
           <div className="grid gap-2 sm:grid-cols-2">
@@ -516,23 +520,32 @@ export function ImportarLeadsForm({
             </div>
           )}
 
-          {temLista && conferindo && (
+          {temLista && conferindo && previa === null && erroPrevia === null && (
             <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
               ⏳ Conferindo a lista...
             </p>
           )}
+        </div>
 
-          {erroPrevia && (
-            <div className="rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-              <p className="font-bold">❌ Não consegui conferir a lista</p>
-              <p className="mt-0.5">{erroPrevia}</p>
+        {/* CONFERÊNCIA — abre ao lado da lista assim que a lista é conferida */}
+        {painelAberto && (
+          <div className="passo-aparece space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-base font-bold text-neutral-900">🔎 Conferência da lista</h3>
+              {conferindo && <span className="text-xs text-neutral-500">⏳ atualizando...</span>}
             </div>
-          )}
+            <p className="text-xs text-neutral-500">Veja o que está certo e o que não está. Nada foi gravado ainda.</p>
 
-          {temLista && previa && !erroPrevia && (
-            <div className="space-y-3">
-              <p className="text-sm font-bold text-neutral-800">Resultado da conferência — nada foi gravado ainda</p>
-              <div className={`grid grid-cols-2 gap-2 ${passo1Confirmado ? "" : "sm:grid-cols-4"}`}>
+            {erroPrevia && (
+              <div className="rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <p className="font-bold">❌ Não consegui conferir a lista</p>
+                <p className="mt-0.5">{erroPrevia}</p>
+              </div>
+            )}
+
+            {previa && !erroPrevia && (
+              <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
                 <NumeroGrande valor={novos.length} rotulo="Vão entrar" cor="verde" />
                 <NumeroGrande valor={jaExistem.length} rotulo="Já existem no CRM" cor="ambar" />
                 <NumeroGrande valor={repetidos.length} rotulo="Repetidos na lista" cor="ambar" />
@@ -596,13 +609,14 @@ export function ImportarLeadsForm({
                   </div>
                 )
               )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* PASSO 2 e 3 — o 2 abre quando a pessoa confirma a lista, o 3 depois da origem e do responsável */}
         {listaPronta && (
-          <>
+          <div className="space-y-4">
             <div className="passo-aparece space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
               <TituloPasso numero={2} titulo="Defina como os leads entram" />
               <div className="space-y-1">
@@ -666,10 +680,8 @@ export function ImportarLeadsForm({
                 </p>
               )}
             </div>
-          </>
-        )}
 
-        {listaPronta && passo2Preenchido && (
+        {passo2Preenchido && (
           <div className="passo-aparece space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
             <TituloPasso numero={3} titulo="Importe" />
 
@@ -712,6 +724,8 @@ export function ImportarLeadsForm({
                       : `Importar ${novos.length} lead${novos.length === 1 ? "" : "s"}`}
               </button>
             </div>
+          </div>
+        )}
           </div>
         )}
         </div>
