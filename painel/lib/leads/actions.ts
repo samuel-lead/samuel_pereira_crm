@@ -711,24 +711,30 @@ function interpretarLinhasImportacao(lista: string): LinhaImportacao[] {
         };
       }
       const telefoneNormalizado = telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null;
-      let nomeFinal = nome;
-      if (nomeFinal && !nomeValido(nomeFinal)) {
-        if (telefoneNormalizado && telefoneValido(telefoneNormalizado)) {
-          // Nome estranho mas o telefone é bom: entra como "Sem nome".
-          nomeFinal = "Sem nome";
-        } else {
-          return {
-            nome: null,
-            telefone: telefoneNormalizado,
-            origemLinha: null,
-            nomeOriginal: nome ?? undefined,
-            motivoInvalido:
-              "Não parece um lead: o nome precisa ter letras (ou a linha precisa ter um telefone válido)",
-          };
-        }
+      // Samuel (20/11/26): lead SEM telefone (ou com telefone que não é um WhatsApp
+      // do Brasil) não entra — não tem como o time falar com ele.
+      if (!telefoneNormalizado) {
+        return {
+          nome: null,
+          telefone: null,
+          origemLinha: null,
+          nomeOriginal: nome ?? undefined,
+          motivoInvalido: "Sem telefone — todo lead precisa de um WhatsApp com DDD",
+        };
       }
+      if (!telefoneValido(telefoneNormalizado)) {
+        return {
+          nome: null,
+          telefone: telefoneNormalizado,
+          origemLinha: null,
+          nomeOriginal: nome ?? undefined,
+          motivoInvalido: "Telefone inválido — precisa ser um WhatsApp do Brasil com DDD",
+        };
+      }
+      // Nome estranho (ex.: só "&") mas o telefone é bom: entra como "Sem nome".
+      const nomeFinal = nome && nomeValido(nome) ? nome : "Sem nome";
       return {
-        nome: nomeFinal || null,
+        nome: nomeFinal,
         telefone: telefoneNormalizado,
         origemLinha: partes[2] || null,
         nomeOriginal: nome ?? undefined,
