@@ -343,6 +343,16 @@ export function ImportarLeadsForm({
     origemAtual.trim() !== "" &&
     responsavelSel !== NAO_ESCOLHIDO &&
     (!ehIndicacao || quemIndicouTexto.trim() !== "");
+  // Só o PRÓXIMO campo a preencher fica pulsando; ao preencher, o destaque vai pro seguinte
+  // (Samuel, 20/11/26).
+  const proximoCampo: "origem" | "responsavel" | "indicou" | null =
+    origemAtual.trim() === ""
+      ? "origem"
+      : responsavelSel === NAO_ESCOLHIDO
+        ? "responsavel"
+        : ehIndicacao && quemIndicouTexto.trim() === ""
+          ? "indicou"
+          : null;
   const nomeDoResponsavel =
     responsavelSel === SEM_RESPONSAVEL || responsavelSel === NAO_ESCOLHIDO
       ? "ninguém (fila de novos leads pra alguém pegar)"
@@ -668,14 +678,14 @@ export function ImportarLeadsForm({
                 </p>
               )}
 
-              <div className={`space-y-1 ${origemAtual.trim() === "" ? "campo-pendente" : ""}`}>
+              <div className={`space-y-1 ${proximoCampo === "origem" ? "campo-pendente" : ""}`}>
                 <label className="text-sm font-bold text-neutral-800">
                   Origem (pra todos os leads dessa lista) *
                 </label>
                 <OrigemSelect origens={origens} onChange={setOrigemAtual} />
               </div>
 
-              <div className={`space-y-1 ${responsavelSel === NAO_ESCOLHIDO ? "campo-pendente" : ""}`}>
+              <div className={`space-y-1 ${proximoCampo === "responsavel" ? "campo-pendente" : ""}`}>
                 <label className="text-sm font-bold text-neutral-800">Responsável pelos leads *</label>
                 {/* Escolha obrigatória pra liberar o passo 3 — "Sem responsável" também
                     conta como escolha (Samuel, 20/11/26). */}
@@ -705,7 +715,11 @@ export function ImportarLeadsForm({
 
               {/* Só aparece quando a origem escolhida é "Indicação" (Samuel, 20/11/26). */}
               {ehIndicacao && (
-                <div className="space-y-1 rounded-lg border-2 border-amber-400 bg-amber-50 p-3">
+                <div
+                  className={`space-y-1 rounded-lg border-2 border-amber-400 bg-amber-50 p-3 ${
+                    proximoCampo === "indicou" ? "campo-pendente" : ""
+                  }`}
+                >
                   <label className="text-sm font-bold text-amber-800" htmlFor="quem_indicou">
                     ⚠️ Escreva quem indicou
                   </label>
