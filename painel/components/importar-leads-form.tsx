@@ -296,7 +296,12 @@ export function ImportarLeadsForm({
   const invalidos = previa?.filter((i) => i.situacao === "invalido") ?? [];
 
   return (
-    <div ref={topoRef} className="scroll-mt-24 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
+    <div
+      ref={topoRef}
+      className={`mx-auto w-full scroll-mt-24 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md transition-[max-width] duration-300 ${
+        temLista ? "max-w-6xl" : "max-w-2xl"
+      }`}
+    >
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4">
         <h2 className="text-base font-semibold text-neutral-900">Importar leads</h2>
         <p className="mt-1 text-xs text-neutral-500">
@@ -353,8 +358,19 @@ export function ImportarLeadsForm({
           </div>
         )}
 
+        {/* As 3 etapas ficam lado a lado e a 2 e a 3 aparecem quando a lista chega
+            (Samuel, 20/11/26). No celular ficam uma embaixo da outra. */}
+        <div
+          className={
+            temLista
+              ? "grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] lg:items-start"
+              : ""
+          }
+        >
         {/* PASSO 1 — enviar a lista */}
-        <div className="space-y-3">
+        <div
+          className={`space-y-3 ${temLista ? "rounded-xl border border-neutral-200 bg-white p-4" : ""}`}
+        >
           <TituloPasso numero={1} titulo="Envie a lista de leads" />
           <div className="grid gap-2 sm:grid-cols-2">
             <OpcaoModo
@@ -462,7 +478,7 @@ export function ImportarLeadsForm({
         {/* PASSO 2 e 3 — só aparecem depois que a lista chegou */}
         {temLista && (
           <>
-            <div className="space-y-4 border-t border-neutral-200 pt-5">
+            <div className="passo-aparece space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
               <TituloPasso numero={2} titulo="Defina como os leads entram" />
               <div className="space-y-1">
                 <label className="text-sm font-medium text-neutral-700">
@@ -535,7 +551,7 @@ export function ImportarLeadsForm({
         )}
 
         {temLista && (
-          <div className="space-y-3 border-t border-neutral-200 pt-5">
+          <div className="passo-aparece passo-atrasado space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
             <TituloPasso numero={3} titulo="Confira e importe" />
         {previa && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
@@ -564,12 +580,12 @@ export function ImportarLeadsForm({
           </div>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex flex-col-reverse gap-2">
           <button
             type="button"
             onClick={cancelarImportacao}
             disabled={pendente}
-            className="rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50 disabled:opacity-60"
+            className="w-full rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50 disabled:opacity-60"
           >
             Cancelar importação
           </button>
@@ -577,7 +593,7 @@ export function ImportarLeadsForm({
             <button
               type="submit"
               disabled={pendente || novos.length === 0}
-              className="flex-1 rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+              className="w-full rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
             >
               {pendente
                 ? "Importando..."
@@ -590,7 +606,7 @@ export function ImportarLeadsForm({
               type="button"
               onClick={conferirLista}
               disabled={conferindo || !texto.trim()}
-              className="flex-1 rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+              className="w-full rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
             >
               {conferindo ? "Conferindo..." : "Conferir lista"}
             </button>
@@ -598,6 +614,7 @@ export function ImportarLeadsForm({
         </div>
           </div>
         )}
+        </div>
 
         {janelaConferencia && previa && (
           <JanelaImportacao

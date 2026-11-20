@@ -598,3 +598,12 @@ html:not(.dark) .destaque-meta {
 .dark .text-orange-700 {
   color: #fdba74;
 }
+
+
+/* Importar leads: as etapas 2 e 3 aparecem suavemente quando a lista chega. */
+@keyframes passoAparece {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.passo-aparece { animation: passoAparece 0.4s ease-out both; }
+.passo-atrasado { animation-delay: 0.2s; }
