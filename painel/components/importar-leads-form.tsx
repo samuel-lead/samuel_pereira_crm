@@ -10,7 +10,6 @@ import {
   type ItemPreviaImportacao,
 } from "@/lib/leads/actions";
 import { OrigemSelect } from "@/components/origem-select";
-import { ResponsavelSelect } from "@/components/responsavel-select";
 import { MenuSelect } from "@/components/menu-select";
 import { lerContatosVcf } from "@/lib/vcf";
 import { sdr } from "@/lib/terminologia";
@@ -41,6 +40,10 @@ function avisoDoQueFicouDeFora(r: ResultadoLista): string | null {
 function csvParaLista(textoCsv: string) {
   return linhasParaLista(analisarCsv(textoCsv));
 }
+
+// Valores internos do seletor de responsável: "ainda não escolheu" e "escolheu sem responsável".
+const NAO_ESCOLHIDO = "__nao_escolhido__";
+const SEM_RESPONSAVEL = "__sem_responsavel__";
 
 function TituloPasso({ numero, titulo }: { numero: number; titulo: string }) {
   return (
@@ -113,6 +116,7 @@ export function ImportarLeadsForm({
   // anterior foi preenchida — a origem precisa ser ESCOLHIDA pra liberar o passo 3.
   const [origemAtual, setOrigemAtual] = useState("");
   const [quemIndicouTexto, setQuemIndicouTexto] = useState("");
+  const [responsavelSel, setResponsavelSel] = useState<string>(NAO_ESCOLHIDO);
   const [previa, setPrevia] = useState<ItemPreviaImportacao[] | null>(null);
   const [conferindo, setConferindo] = useState(false);
   const [erroPrevia, setErroPrevia] = useState<string | null>(null);
@@ -310,11 +314,14 @@ export function ImportarLeadsForm({
     if (!listaPronta) {
       setOrigemAtual("");
       setQuemIndicouTexto("");
+      setResponsavelSel(NAO_ESCOLHIDO);
     }
   }, [listaPronta]);
   // Passo 2 preenchido: origem escolhida (e, se for indicação, quem indicou).
   const passo2Preenchido =
-    origemAtual.trim() !== "" && (!ehIndicacao || quemIndicouTexto.trim() !== "");
+    origemAtual.trim() !== "" &&
+    responsavelSel !== NAO_ESCOLHIDO &&
+    (!ehIndicacao || quemIndicouTexto.trim() !== "");
   const totalLinhas = texto.split("\n").filter((l) => l.trim()).length;
   const novos = previa?.filter((i) => i.situacao === "novo") ?? [];
   const jaExistem = previa?.filter((i) => i.situacao === "ja_existe") ?? [];
@@ -514,31 +521,30 @@ export function ImportarLeadsForm({
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700">
-                  Responsável pelos leads <span className="font-normal text-neutral-400">(opcional)</span>
-                </label>
-                {souAdmin ? (
-                  <ResponsavelSelect
-                    usuarios={usuarios}
-                    funcaoFiltro="sdr"
-                    incluirAdmins
-                    permiteVazio
-                    placeholder="Sem responsável (fila de novos leads)"
-                  />
-                ) : (
-                  <MenuSelect
-                    name="responsavel_id"
-                    defaultValue=""
-                    placeholder="Sem responsável (fila de novos leads)"
-                    options={[
-                      { value: "", label: "— Sem responsável (fila de novos leads) —" },
-                      { value: usuarioId, label: "Eu" },
-                    ]}
-                  />
-                )}
+                <label className="text-sm font-medium text-neutral-700">Responsável pelos leads *</label>
+                {/* Escolha obrigatória pra liberar o passo 3 — "Sem responsável" também
+                    conta como escolha (Samuel, 20/11/26). */}
+                <MenuSelect
+                  value={responsavelSel}
+                  onChange={setResponsavelSel}
+                  placeholder="Escolha o responsável..."
+                  options={[
+                    { value: SEM_RESPONSAVEL, label: "— Sem responsável (fila de novos leads) —" },
+                    ...(souAdmin
+                      ? usuarios
+                          .filter((u) => u.funcao === "sdr" || u.papel === "admin")
+                          .map((u) => ({ value: u.id, label: u.nome }))
+                      : [{ value: usuarioId, label: "Eu" }]),
+                  ]}
+                />
+                <input
+                  type="hidden"
+                  name="responsavel_id"
+                  value={responsavelSel === SEM_RESPONSAVEL || responsavelSel === NAO_ESCOLHIDO ? "" : responsavelSel}
+                />
                 <p className="text-xs text-neutral-400">
-                  Todos os leads dessa lista ficam com essa pessoa. Se deixar sem
-                  responsável, caem na fila de novos leads para alguém pegar.
+                  Todos os leads dessa lista ficam com essa pessoa. Se escolher &quot;Sem responsável&quot;,
+                  caem na fila de novos leads para alguém pegar.
                 </p>
               </div>
 
@@ -564,7 +570,7 @@ export function ImportarLeadsForm({
 
               {!passo2Preenchido && (
                 <p className="rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
-                  👉 Escolha a origem{ehIndicacao ? " e escreva quem indicou" : ""} pra continuar.
+                  👉 Escolha a origem e o responsável{ehIndicacao ? " e escreva quem indicou" : ""} pra continuar.
                 </p>
               )}
             </div>
