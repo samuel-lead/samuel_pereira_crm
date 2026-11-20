@@ -506,6 +506,7 @@ export function ImportarLeadsForm({
               <NumeroGrande valor={invalidos.length + foraDoArquivo.length} rotulo="Ficam de fora" cor="vermelho" />
             </div>
 
+            {novos.length > 0 && (
             <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-900">
               <p className="font-bold">Como os {novos.length} vão entrar:</p>
               <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
@@ -522,6 +523,7 @@ export function ImportarLeadsForm({
                 </li>
               </ul>
             </div>
+            )}
 
             <BlocoLista
               titulo="Já existem no CRM — não entram de novo"
