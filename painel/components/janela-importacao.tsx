@@ -74,9 +74,10 @@ export function NumeroGrande({
 }: {
   valor: number;
   rotulo: string;
-  cor: "verde" | "ambar" | "vermelho" | "cinza";
+  cor: "verde" | "ambar" | "vermelho" | "cinza" | "azul";
 }) {
   const classes = {
+    azul: "border-blue-200 bg-blue-50 text-blue-800",
     verde: "border-green-200 bg-green-50 text-green-800",
     ambar: "border-amber-200 bg-amber-50 text-amber-800",
     vermelho: "border-red-200 bg-red-50 text-red-800",
@@ -100,10 +101,11 @@ export function BlocoLista({
   titulo: string;
   motivo?: string;
   itens: { nome: string; detalhe?: string }[];
-  cor: "ambar" | "vermelho" | "cinza";
+  cor: "ambar" | "vermelho" | "cinza" | "azul";
 }) {
   if (itens.length === 0) return null;
   const classes = {
+    azul: "border-blue-200 bg-blue-50 text-blue-900",
     ambar: "border-amber-200 bg-amber-50 text-amber-900",
     vermelho: "border-red-200 bg-red-50 text-red-900",
     cinza: "border-neutral-200 bg-neutral-50 text-neutral-800",

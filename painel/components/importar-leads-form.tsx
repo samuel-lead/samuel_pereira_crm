@@ -547,15 +547,15 @@ export function ImportarLeadsForm({
               <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <NumeroGrande valor={novos.length} rotulo="Vão entrar" cor="verde" />
-                <NumeroGrande valor={jaExistem.length} rotulo="Já existem no CRM" cor="ambar" />
-                <NumeroGrande valor={repetidos.length} rotulo="Repetidos na lista" cor="ambar" />
+                <NumeroGrande valor={jaExistem.length} rotulo="Já existem no CRM" cor="azul" />
+                <NumeroGrande valor={repetidos.length} rotulo="Repetidos na lista" cor="cinza" />
                 <NumeroGrande valor={invalidos.length + foraDoArquivo.length} rotulo="Ficam de fora" cor="vermelho" />
               </div>
 
               <BlocoLista
                 titulo="Já existem no CRM — não entram de novo"
                 motivo="O telefone desses contatos já está cadastrado (mesmo que com o 9 a mais ou a menos, ou que o lead esteja excluído)."
-                cor="ambar"
+                cor="azul"
                 itens={jaExistem.map((item) => ({
                   nome: item.nome,
                   detalhe:
@@ -567,7 +567,7 @@ export function ImportarLeadsForm({
               <BlocoLista
                 titulo="Repetidos dentro da própria lista"
                 motivo="O mesmo telefone aparece mais de uma vez — entra só uma vez."
-                cor="ambar"
+                cor="cinza"
                 itens={repetidos.map((item) => ({ nome: item.nome, detalhe: item.telefone ?? undefined }))}
               />
               <BlocoLista
@@ -586,11 +586,11 @@ export function ImportarLeadsForm({
               />
 
               {novos.length === 0 ? (
-                <div className="rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  <p className="font-bold">⚠️ Nenhum lead novo pra importar</p>
-                  <p className="mt-0.5">
-                    Todos os contatos dessa lista já existem no CRM ou têm algum problema (veja os motivos
-                    acima). Corrija a lista ou envie outro arquivo.
+                <div className="rounded-xl border-2 border-red-400 bg-red-50 px-4 py-4 text-red-900">
+                  <p className="text-base font-extrabold">⛔ Não dá pra importar essa lista</p>
+                  <p className="mt-1 text-sm">
+                    Nenhum contato é novo: todos já existem no CRM ou têm algum problema (os motivos estão
+                    nas caixas acima). Corrija a lista ou envie outro arquivo.
                   </p>
                 </div>
               ) : (
@@ -767,7 +767,7 @@ export function ImportarLeadsForm({
               <>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <NumeroGrande valor={estado.criados} rotulo="Importados" cor="verde" />
-                  <NumeroGrande valor={estado.duplicados} rotulo="Já existiam" cor="ambar" />
+                  <NumeroGrande valor={estado.duplicados} rotulo="Já existiam" cor="azul" />
                   <NumeroGrande valor={estado.invalidos} rotulo="Não entraram (erro)" cor="vermelho" />
                   <NumeroGrande valor={estado.total} rotulo="Linhas na lista" cor="cinza" />
                 </div>
