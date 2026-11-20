@@ -516,36 +516,23 @@ export function ImportarLeadsForm({
                 </p>
               </div>
 
-              <div
-                className={`space-y-1 ${
-                  ehIndicacao
-                    ? "rounded-lg border-2 border-amber-400 bg-amber-50 p-3 dark:border-amber-500 dark:bg-amber-950/30"
-                    : ""
-                }`}
-              >
-                <label
-                  className={`text-sm font-medium ${
-                    ehIndicacao ? "font-bold text-amber-800 dark:text-amber-300" : "text-neutral-700"
-                  }`}
-                  htmlFor="quem_indicou"
-                >
-                  {ehIndicacao ? "⚠️ Escreva quem indicou" : "Quem indicou? (opcional)"}
-                </label>
-                {ehIndicacao && (
-                  <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+              {/* Só aparece quando a origem escolhida é "Indicação" (Samuel, 20/11/26). */}
+              {ehIndicacao && (
+                <div className="space-y-1 rounded-lg border-2 border-amber-400 bg-amber-50 p-3">
+                  <label className="text-sm font-bold text-amber-800" htmlFor="quem_indicou">
+                    ⚠️ Escreva quem indicou
+                  </label>
+                  <p className="text-xs font-medium text-amber-700">
                     O nome aparece no card de cada lead dessa lista, na frente da origem.
                   </p>
-                )}
-                <input
-                  id="quem_indicou"
-                  name="quem_indicou"
-                  placeholder="Nome de quem indicou essa lista"
-                  className={`w-full rounded-md border px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-                    ehIndicacao ? "border-amber-400 bg-white" : "border-neutral-300"
-                  }`}
-                />
-              </div>
-
+                  <input
+                    id="quem_indicou"
+                    name="quem_indicou"
+                    placeholder="Nome de quem indicou essa lista"
+                    className="w-full rounded-md border border-amber-400 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              )}
             </div>
           </>
         )}
