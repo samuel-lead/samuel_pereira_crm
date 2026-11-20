@@ -683,6 +683,11 @@ function interpretarLinhasImportacao(lista: string): LinhaImportacao[] {
       const soTelefone = partes.length === 1 && pareceTelefone(partes[0]);
       const nome = soTelefone ? "Sem nome" : (partes[0] ?? null);
       const telefoneDigitado = soTelefone ? partes[0] : partes[1];
+      // Código de grupo do WhatsApp (18+ dígitos) não é telefone — linha inválida,
+      // não vira lead (Samuel, 20/11/26: grupos entravam como leads do Glauber).
+      if (telefoneDigitado && telefoneDigitado.replace(/\D/g, "").length > 15) {
+        return { nome: null, telefone: null, origemLinha: null };
+      }
       return {
         nome: nome || null,
         telefone: telefoneDigitado ? normalizarTelefone(telefoneDigitado) : null,

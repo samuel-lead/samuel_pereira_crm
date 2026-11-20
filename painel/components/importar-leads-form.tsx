@@ -15,6 +15,7 @@ import { MenuSelect } from "@/components/menu-select";
 import { lerContatosVcf } from "@/lib/vcf";
 import { sdr } from "@/lib/terminologia";
 import { analisarCsv, xlsxParaLinhas } from "@/lib/planilha";
+import { linhasParaLista, type ResultadoLista } from "@/lib/lista-importacao";
 
 const estadoInicial: ResultadoImportacao = {
   erro: null,
@@ -24,112 +25,16 @@ const estadoInicial: ResultadoImportacao = {
   total: 0,
 };
 
-// Palavras que aparecem no cabeçalho de uma planilha de leads. A comparação é
-// por PALAVRA inteira dentro de cada célula ("Nome Fantasia" tem a palavra
-// "nome"), senão cabeçalho com mais de uma palavra virava um lead de verdade
-// (foi o que aconteceu na Inove Gôndolas: "Nome Fantasia" entrou como lead).
-const PALAVRAS_NOME = ["nome", "name", "empresa", "fantasia"];
-const PALAVRAS_TELEFONE = ["telefone", "fone", "celular", "whatsapp", "phone", "numero", "número"];
-const PALAVRAS_ORIGEM = ["origem"];
-const PALAVRAS_OUTRAS_COLUNAS = ["razao", "razão", "social", "cnpj", "email", "e-mail", "cidade", "estado", "uf", "endereco", "endereço"];
-
-function palavrasDaCelula(celula: string) {
-  return celula
-    .toLowerCase()
-    .split(/[^a-zà-úç0-9-]+/i)
-    .filter(Boolean);
-}
-
-function celulaTemPalavra(celula: string, lista: string[]) {
-  return palavrasDaCelula(celula).some((p) => lista.includes(p));
-}
-
-function linhaPareceCabecalho(celulas: string[]) {
-  // Só é cabeçalho se as células forem curtas (títulos de coluna) e alguma
-  // tiver uma palavra de coluna conhecida — um nome de empresa comprido na
-  // primeira linha não vira cabeçalho só por ter "empresa" no meio.
-  const todasCurtas = celulas.every((c) => c.trim().length <= 40);
-  return (
-    todasCurtas &&
-    celulas.some(
-      (c) =>
-        celulaTemPalavra(c, PALAVRAS_NOME) ||
-        celulaTemPalavra(c, PALAVRAS_TELEFONE) ||
-        celulaTemPalavra(c, PALAVRAS_ORIGEM) ||
-        celulaTemPalavra(c, PALAVRAS_OUTRAS_COLUNAS)
-    )
-  );
-}
-
-// Compartilhada entre o CSV (analisarCsv) e o .xlsx (xlsxParaLinhas) — os
-// dois terminam nesse mesmo formato de "linhas de células" antes de virar
-// texto pro campo da lista. Se a primeira linha for cabeçalho, usa ela pra
-// descobrir em qual coluna está o nome, o telefone e (se existir) a origem.
-//
-// Só essas colunas seguem pra lista. As OUTRAS (Razão Social, CNPJ...) são
-// descartadas: antes elas iam coladas atrás do telefone e a terceira virava
-// a ORIGEM de cada lead (na Inove Gôndolas, 600 leads ficaram com a razão
-// social da empresa como origem). Também não some mais com a célula vazia do
-// telefone — isso empurrava o CNPJ pra dentro do campo de telefone.
-function linhasParaLista(linhas: string[][]) {
-  if (linhas.length === 0) return "";
-
-  let dados = linhas;
-  let indicesNome = [0];
-  let indicesTelefone = [1];
-  let indiceOrigem = -1;
-
-  const primeiraLinha = linhas[0];
-  if (linhaPareceCabecalho(primeiraLinha)) {
-    const minusculas = primeiraLinha.map((c) => c.trim().toLowerCase());
-    const posOrigem = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_ORIGEM));
-    if (posOrigem !== -1) indiceOrigem = posOrigem;
-
-    // Exportação do Google Contatos (Samuel, 18/11/26): o nome vem partido em
-    // "First Name / Middle Name / Last Name" e cada telefone tem DUAS colunas —
-    // "Phone 1 - Label" (só a palavra "Mobile") e "Phone 1 - Value" (o número).
-    // Antes pegava a coluna "Label" e o telefone de todos os leads sumia.
-    const partesDoNome = ["first name", "middle name", "last name"]
-      .map((t) => minusculas.indexOf(t))
-      .filter((i) => i !== -1);
-    if (partesDoNome.length > 0) {
-      indicesNome = partesDoNome;
-    } else {
-      const posNome = primeiraLinha.findIndex((c) => celulaTemPalavra(c, PALAVRAS_NOME));
-      if (posNome !== -1) indicesNome = [posNome];
-    }
-
-    const colunasTelefone = primeiraLinha
-      .map((c, i) => ({ c, i }))
-      .filter(({ c }) => celulaTemPalavra(c, PALAVRAS_TELEFONE));
-    // Colunas de telefone que NÃO são "Label"/"Type" (rótulo do tipo de telefone).
-    const soNumeros = colunasTelefone.filter(({ c }) => !celulaTemPalavra(c, ["label", "type", "tipo"]));
-    const escolhidas = soNumeros.length > 0 ? soNumeros : colunasTelefone;
-    if (escolhidas.length > 0) indicesTelefone = escolhidas.map(({ i }) => i);
-    dados = linhas.slice(1);
-  }
-
-  return dados
-    .filter((linha) => linha.some((celula) => celula.trim()))
-    .map((linha) => {
-      const nome = indicesNome
-        .map((i) => (linha[i] ?? "").trim())
-        .filter(Boolean)
-        .join(" ");
-      // Vários telefones na mesma linha (Phone 1/2/3) ou na mesma célula
-      // ("a ::: b"): usa o primeiro que tiver algum dígito.
-      const telefone =
-        indicesTelefone
-          .flatMap((i) => (linha[i] ?? "").split(":::"))
-          .map((t) => t.trim())
-          .find((t) => /\d/.test(t)) ?? "";
-      const origem = indiceOrigem !== -1 ? (linha[indiceOrigem] ?? "").trim() : "";
-      // Telefone vazio vira só o nome (sem coluna vazia no meio).
-      if (!telefone) return nome;
-      return origem ? [nome, telefone, origem].join("\t") : [nome, telefone].join("\t");
-    })
-    .filter(Boolean)
-    .join("\n");
+// Quantos contatos foram deixados de fora de propósito (grupos do WhatsApp,
+// números de outro país, "Meu número"/"Meta AI") — vira um aviso na tela.
+function avisoDoQueFicouDeFora(r: ResultadoLista): string | null {
+  const partes: string[] = [];
+  if (r.gruposIgnorados > 0) partes.push(`${r.gruposIgnorados} grupo${r.gruposIgnorados === 1 ? "" : "s"} do WhatsApp`);
+  if (r.estrangeirosIgnorados > 0)
+    partes.push(`${r.estrangeirosIgnorados} número${r.estrangeirosIgnorados === 1 ? "" : "s"} de fora do Brasil`);
+  if (r.sistemaIgnorados > 0)
+    partes.push(`${r.sistemaIgnorados} contato${r.sistemaIgnorados === 1 ? "" : "s"} do próprio WhatsApp (Meu número / Meta AI)`);
+  return partes.length > 0 ? `Deixei de fora: ${partes.join(", ")}. Não são leads.` : null;
 }
 
 function csvParaLista(textoCsv: string) {
@@ -225,13 +130,16 @@ export function ImportarLeadsForm({
     if (nomeMinusculo.endsWith(".xlsx")) {
       try {
         const linhas = await xlsxParaLinhas(await arquivo.arrayBuffer());
-        const listaConvertida = linhasParaLista(linhas);
-        if (!listaConvertida) {
-          setAvisoArquivo("Não encontrei nenhuma linha com dado nessa planilha.");
+        const convertida = linhasParaLista(linhas);
+        if (!convertida.lista) {
+          setAvisoArquivo(
+            avisoDoQueFicouDeFora(convertida) ?? "Não encontrei nenhuma linha com dado nessa planilha."
+          );
           return;
         }
-        setTexto(listaConvertida);
+        setTexto(convertida.lista);
         setArquivoNome(arquivo.name);
+        setAvisoArquivo(avisoDoQueFicouDeFora(convertida));
       } catch {
         setAvisoArquivo(
           'Não consegui ler esse .xlsx — confere se não tá corrompido, ou exporta como CSV (Arquivo → Fazer download → "Valores separados por vírgula") e solta aqui.'
@@ -249,15 +157,16 @@ export function ImportarLeadsForm({
     } catch {
       textoArquivo = new TextDecoder("windows-1252").decode(bytes);
     }
-    const listaConvertida = csvParaLista(textoArquivo);
+    const convertida = csvParaLista(textoArquivo);
 
-    if (!listaConvertida) {
-      setAvisoArquivo("Não encontrei nenhuma linha com dado nesse arquivo.");
+    if (!convertida.lista) {
+      setAvisoArquivo(avisoDoQueFicouDeFora(convertida) ?? "Não encontrei nenhuma linha com dado nesse arquivo.");
       return;
     }
 
-    setTexto(listaConvertida);
+    setTexto(convertida.lista);
     setArquivoNome(arquivo.name);
+    setAvisoArquivo(avisoDoQueFicouDeFora(convertida));
   }
 
   async function conferirLista() {
