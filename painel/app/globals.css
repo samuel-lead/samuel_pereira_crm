@@ -607,3 +607,21 @@ html:not(.dark) .destaque-meta {
 }
 .passo-aparece { animation: passoAparece 0.4s ease-out both; }
 .passo-atrasado { animation-delay: 0.2s; }
+
+/* Textos escuros (blue-800/900, green-900, red-800/900) que ficam em cima de
+   fundos tingidos (bg-blue-50, bg-green-50, bg-red-50...) ficavam quase
+   invisíveis no modo escuro — foi o que apareceu na tela de importar leads
+   (Samuel, 20/11/26). Aqui viram tons claros, mesma família de cor. */
+.dark .text-blue-800,
+.dark .text-blue-900 {
+  color: #bfdbfe;
+}
+
+.dark .text-green-900 {
+  color: #bbf7d0;
+}
+
+.dark .text-red-800,
+.dark .text-red-900 {
+  color: #fecaca;
+}
