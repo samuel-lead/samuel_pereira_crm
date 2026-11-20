@@ -15,7 +15,8 @@ import { MenuSelect } from "@/components/menu-select";
 import { lerContatosVcf } from "@/lib/vcf";
 import { sdr } from "@/lib/terminologia";
 import { analisarCsv, xlsxParaLinhas } from "@/lib/planilha";
-import { linhasParaLista, type ResultadoLista } from "@/lib/lista-importacao";
+import { linhasParaLista, type ResultadoLista, type ItemIgnorado } from "@/lib/lista-importacao";
+import { JanelaImportacao, NumeroGrande, BlocoLista } from "@/components/janela-importacao";
 
 const estadoInicial: ResultadoImportacao = {
   erro: null,
@@ -65,7 +66,14 @@ export function ImportarLeadsForm({
   const [conferindo, setConferindo] = useState(false);
   const [erroPrevia, setErroPrevia] = useState<string | null>(null);
   const inputArquivoRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const enviandoRef = useRef(false);
+  // Janelas (popup) da conferência e do resultado — Samuel (20/11/26): o aviso
+  // pequeno lá embaixo passava despercebido.
+  const [janelaConferencia, setJanelaConferencia] = useState(false);
+  const [janelaResultado, setJanelaResultado] = useState(false);
+  const [foraDoArquivo, setForaDoArquivo] = useState<ItemIgnorado[]>([]);
+  const [responsavelEscolhido, setResponsavelEscolhido] = useState<string>("");
   const resultadoRef = useRef<HTMLDivElement>(null);
   // Samuel (16/11/26): depois de importar, o resultado ficava só lá embaixo
   // (e erro nem aparecia). Agora vira um cartão grande no topo, sempre visível.
@@ -81,6 +89,8 @@ export function ImportarLeadsForm({
     if (enviandoRef.current) {
       enviandoRef.current = false;
       setResultadoVisivel(true);
+      setJanelaConferencia(false);
+      setJanelaResultado(true);
       if (!estado.erro && estado.criados > 0) {
         setTexto("");
         setArquivoNome(null);
@@ -104,6 +114,7 @@ export function ImportarLeadsForm({
     setAvisoArquivo(null);
     setPrevia(null);
     setErroPrevia(null);
+    setForaDoArquivo([]);
 
     const nomeMinusculo = arquivo.name.toLowerCase();
 
@@ -140,6 +151,7 @@ export function ImportarLeadsForm({
         setTexto(convertida.lista);
         setArquivoNome(arquivo.name);
         setAvisoArquivo(avisoDoQueFicouDeFora(convertida));
+        setForaDoArquivo(convertida.ignorados);
       } catch {
         setAvisoArquivo(
           'Não consegui ler esse .xlsx — confere se não tá corrompido, ou exporta como CSV (Arquivo → Fazer download → "Valores separados por vírgula") e solta aqui.'
@@ -167,6 +179,7 @@ export function ImportarLeadsForm({
     setTexto(convertida.lista);
     setArquivoNome(arquivo.name);
     setAvisoArquivo(avisoDoQueFicouDeFora(convertida));
+    setForaDoArquivo(convertida.ignorados);
   }
 
   async function conferirLista() {
@@ -179,6 +192,9 @@ export function ImportarLeadsForm({
         return;
       }
       setPrevia(resultado.itens);
+      const escolhido = formRef.current ? new FormData(formRef.current).get("responsavel_id") : "";
+      setResponsavelEscolhido(String(escolhido ?? ""));
+      setJanelaConferencia(true);
     } catch {
       setErroPrevia("Não consegui conferir a lista agora. Tente de novo.");
     } finally {
@@ -193,6 +209,7 @@ export function ImportarLeadsForm({
     setArquivoNome(null);
     setAvisoArquivo(null);
     setPrevia(null);
+    setForaDoArquivo([]);
     if (inputArquivoRef.current) inputArquivoRef.current.value = "";
     router.push("/leads");
   }
@@ -226,7 +243,7 @@ export function ImportarLeadsForm({
         </p>
       </div>
 
-      <form action={acaoFormulario} className="space-y-4 p-6">
+      <form ref={formRef} action={acaoFormulario} className="space-y-4 p-6">
         {resultadoVisivel && (estado.erro || estado.total > 0) && (
           <div
             ref={resultadoRef}
@@ -400,37 +417,22 @@ export function ImportarLeadsForm({
         </div>
 
         {previa && (
-          <div className="space-y-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
             <p className="font-semibold">
               {novos.length} lead{novos.length === 1 ? "" : "s"} vão entrar
               {jaExistem.length + repetidos.length > 0 &&
-                ` · ${jaExistem.length + repetidos.length} serão ignorado${
-                  jaExistem.length + repetidos.length === 1 ? "" : "s"
-                }`}
-              {invalidos.length > 0 && ` · ${invalidos.length} sem nome`}
+                ` · ${jaExistem.length + repetidos.length} já existe${
+                  jaExistem.length + repetidos.length === 1 ? "" : "m"
+                }/repetido${jaExistem.length + repetidos.length === 1 ? "" : "s"}`}
+              {invalidos.length > 0 && ` · ${invalidos.length} inválido${invalidos.length === 1 ? "" : "s"}`}
             </p>
-            {jaExistem.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-amber-800">Já existem no CRM:</p>
-                <ul className="mt-1 space-y-0.5 text-xs text-amber-800">
-                  {jaExistem.map((item, indice) => (
-                    <li key={`${item.telefone}-${indice}`}>
-                      {item.nome}
-                      {item.nomeExistente && item.nomeExistente !== item.nome
-                        ? ` (já cadastrado como ${item.nomeExistente})`
-                        : ""}
-                      {item.excluido ? " — estava excluído" : ""}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {repetidos.length > 0 && (
-              <p className="text-xs text-amber-800">
-                {repetidos.length} repetido{repetidos.length === 1 ? "" : "s"} dentro da própria
-                lista (entra só uma vez).
-              </p>
-            )}
+            <button
+              type="button"
+              onClick={() => setJanelaConferencia(true)}
+              className="rounded-md border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-800 shadow-sm transition hover:bg-blue-100"
+            >
+              Ver detalhes
+            </button>
           </div>
         )}
 
@@ -468,6 +470,182 @@ export function ImportarLeadsForm({
             </button>
           )}
         </div>
+
+        {janelaConferencia && previa && (
+          <JanelaImportacao
+            titulo="Conferência da lista — nada foi gravado ainda"
+            tom="azul"
+            aoFechar={() => setJanelaConferencia(false)}
+            rodape={
+              <>
+                <button
+                  type="button"
+                  onClick={() => setJanelaConferencia(false)}
+                  className="rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+                >
+                  Voltar e editar a lista
+                </button>
+                <button
+                  type="submit"
+                  disabled={pendente || novos.length === 0}
+                  className="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {pendente
+                    ? "Importando..."
+                    : novos.length === 0
+                      ? "Nenhum lead novo para importar"
+                      : `Importar ${novos.length} lead${novos.length === 1 ? "" : "s"}`}
+                </button>
+              </>
+            }
+          >
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <NumeroGrande valor={novos.length} rotulo="Vão entrar" cor="verde" />
+              <NumeroGrande valor={jaExistem.length} rotulo="Já existem no CRM" cor="ambar" />
+              <NumeroGrande valor={repetidos.length} rotulo="Repetidos na lista" cor="ambar" />
+              <NumeroGrande valor={invalidos.length + foraDoArquivo.length} rotulo="Ficam de fora" cor="vermelho" />
+            </div>
+
+            <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-900">
+              <p className="font-bold">Como os {novos.length} vão entrar:</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+                <li>Na coluna &quot;Leads&quot; do funil</li>
+                <li>Origem: <strong>{origemAtual || "Prospecção fria"}</strong></li>
+                <li>
+                  Responsável:{" "}
+                  <strong>
+                    {responsavelEscolhido
+                      ? (usuarios.find((u) => u.id === responsavelEscolhido)?.nome ??
+                        (responsavelEscolhido === usuarioId ? "Você" : "a pessoa escolhida"))
+                      : "ninguém (fila de novos leads pra alguém pegar)"}
+                  </strong>
+                </li>
+              </ul>
+            </div>
+
+            <BlocoLista
+              titulo="Já existem no CRM — não entram de novo"
+              motivo="O telefone desses contatos já está cadastrado (mesmo que com o 9 a mais ou a menos, ou que o lead esteja excluído)."
+              cor="ambar"
+              itens={jaExistem.map((item) => ({
+                nome: item.nome,
+                detalhe:
+                  (item.nomeExistente && item.nomeExistente !== item.nome
+                    ? `já cadastrado como ${item.nomeExistente}`
+                    : "mesmo nome") + (item.excluido ? " (estava excluído)" : ""),
+              }))}
+            />
+            <BlocoLista
+              titulo="Repetidos dentro da própria lista"
+              motivo="O mesmo telefone aparece mais de uma vez — entra só uma vez."
+              cor="ambar"
+              itens={repetidos.map((item) => ({ nome: item.nome, detalhe: item.telefone ?? undefined }))}
+            />
+            <BlocoLista
+              titulo="Linhas inválidas — não entram"
+              cor="vermelho"
+              itens={invalidos.map((item) => ({
+                nome: item.nome,
+                detalhe: [item.motivo, item.telefone].filter(Boolean).join(" · "),
+              }))}
+            />
+            <BlocoLista
+              titulo="Deixados de fora do arquivo"
+              motivo="Não são leads: grupos do WhatsApp, números de outro país e contatos do próprio WhatsApp."
+              cor="cinza"
+              itens={foraDoArquivo.map((item) => ({ nome: item.nome, detalhe: item.motivo }))}
+            />
+          </JanelaImportacao>
+        )}
+
+        {janelaResultado && resultadoVisivel && (estado.erro || estado.total > 0) && (
+          <JanelaImportacao
+            titulo={
+              estado.erro
+                ? "❌ A importação não foi feita"
+                : estado.criados === 0
+                  ? "⚠️ Nenhum lead novo foi importado"
+                  : "✅ Importação concluída"
+            }
+            tom={estado.erro ? "vermelho" : estado.criados === 0 ? "ambar" : "verde"}
+            aoFechar={() => setJanelaResultado(false)}
+            rodape={
+              <>
+                <button
+                  type="button"
+                  onClick={() => setJanelaResultado(false)}
+                  className="rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+                >
+                  Fechar
+                </button>
+                {!estado.erro && estado.criados > 0 && (
+                  <Link
+                    href="/leads"
+                    className="rounded-md bg-green-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800"
+                  >
+                    Ver os leads →
+                  </Link>
+                )}
+              </>
+            }
+          >
+            {estado.erro ? (
+              <p className="text-sm font-medium text-red-800">Motivo: {estado.erro}</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <NumeroGrande valor={estado.criados} rotulo="Importados" cor="verde" />
+                  <NumeroGrande valor={estado.duplicados} rotulo="Já existiam" cor="ambar" />
+                  <NumeroGrande valor={estado.invalidos} rotulo="Não entraram (erro)" cor="vermelho" />
+                  <NumeroGrande valor={estado.total} rotulo="Linhas na lista" cor="cinza" />
+                </div>
+
+                {estado.criados > 0 && (
+                  <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-900">
+                    <p className="font-bold">Como foram importados:</p>
+                    <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+                      <li>Na coluna &quot;Leads&quot; do funil</li>
+                      <li>Origem: <strong>{estado.origemUsada ?? "Prospecção fria"}</strong></li>
+                      <li>
+                        Responsável:{" "}
+                        <strong>
+                          {estado.responsavelId
+                            ? (usuarios.find((u) => u.id === estado.responsavelId)?.nome ??
+                              (estado.responsavelId === usuarioId ? "Você" : "a pessoa escolhida"))
+                            : "ninguém (fila de novos leads pra alguém pegar)"}
+                        </strong>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                <BlocoLista
+                  titulo="Não entraram"
+                  motivo="Cada um com o motivo ao lado."
+                  cor="vermelho"
+                  itens={(estado.naoImportados ?? []).map((item) => ({
+                    nome: item.nome,
+                    detalhe: [item.motivo, item.telefone].filter(Boolean).join(" · "),
+                  }))}
+                />
+                <BlocoLista
+                  titulo="Entraram, mas sem telefone válido"
+                  motivo="Foram criados, mas o telefone não parece um WhatsApp do Brasil — o contato por WhatsApp não vai funcionar. Corrija o número no lead."
+                  cor="ambar"
+                  itens={(estado.semTelefoneNomes ?? []).map((nome) => ({ nome }))}
+                />
+                {foraDoArquivo.length > 0 && (
+                  <BlocoLista
+                    titulo="Deixados de fora do arquivo"
+                    motivo="Não são leads: grupos do WhatsApp, números de outro país e contatos do próprio WhatsApp."
+                    cor="cinza"
+                    itens={foraDoArquivo.map((item) => ({ nome: item.nome, detalhe: item.motivo }))}
+                  />
+                )}
+              </>
+            )}
+          </JanelaImportacao>
+        )}
       </form>
     </div>
   );

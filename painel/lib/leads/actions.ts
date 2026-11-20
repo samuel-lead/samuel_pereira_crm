@@ -639,7 +639,15 @@ export type ResultadoImportacao = {
   total: number;
   // Leads que entraram, mas sem telefone (ou com um número que não parece de WhatsApp).
   semTelefone?: number;
+  // Detalhes pra janela de resultado (Samuel, 20/11/26): quem NÃO entrou e por quê,
+  // quem entrou sem telefone válido, e com que origem/responsável foi gravado.
+  naoImportados?: ItemNaoImportado[];
+  semTelefoneNomes?: string[];
+  origemUsada?: string;
+  responsavelId?: string | null;
 };
+
+export type ItemNaoImportado = { nome: string; telefone: string | null; motivo: string };
 
 // Cola de planilha (Excel/Sheets) manda TAB entre colunas — prioriza isso,
 // e cai pra vírgula/ponto-e-vírgula/pipe se a pessoa digitou a lista à mão.
@@ -663,6 +671,7 @@ type LinhaImportacao = {
   nome: string | null;
   telefone: string | null;
   origemLinha: string | null;
+  motivoInvalido?: string;
 };
 
 // Transforma o texto da lista em linhas "nome / telefone / origem". Usada
@@ -686,7 +695,12 @@ function interpretarLinhasImportacao(lista: string): LinhaImportacao[] {
       // Código de grupo do WhatsApp (18+ dígitos) não é telefone — linha inválida,
       // não vira lead (Samuel, 20/11/26: grupos entravam como leads do Glauber).
       if (telefoneDigitado && telefoneDigitado.replace(/\D/g, "").length > 15) {
-        return { nome: null, telefone: null, origemLinha: null };
+        return {
+          nome: null,
+          telefone: telefoneDigitado,
+          origemLinha: null,
+          motivoInvalido: "Código de grupo do WhatsApp (não é um telefone)",
+        };
       }
       return {
         nome: nome || null,
@@ -732,6 +746,7 @@ async function telefonesQueJaExistem(
 export type ItemPreviaImportacao = {
   nome: string;
   telefone: string | null;
+  motivo?: string;
   situacao: "novo" | "ja_existe" | "repetido_na_lista" | "invalido";
   nomeExistente?: string;
   excluido?: boolean;
@@ -751,7 +766,12 @@ export async function conferirListaImportacao(
   const vistosNaLista = new Set<string>();
   const itens: ItemPreviaImportacao[] = linhas.map((linha) => {
     if (!linha.nome) {
-      return { nome: "(sem nome)", telefone: linha.telefone, situacao: "invalido" };
+      return {
+        nome: "(sem nome)",
+        telefone: linha.telefone,
+        situacao: "invalido",
+        motivo: linha.motivoInvalido ?? "Linha sem nome",
+      };
     }
     if (linha.telefone) {
       const chave = chaveTelefone(linha.telefone);
@@ -824,19 +844,34 @@ export async function importarLeads(
   let duplicados = 0;
   let invalidos = 0;
   let semTelefone = 0;
+  const naoImportados: ItemNaoImportado[] = [];
+  const semTelefoneNomes: string[] = [];
   const vistosNaLista = new Set<string>();
   const notas: { lead_id: string; conteudo: string }[] = [];
 
   for (const linha of linhas) {
     if (!linha.nome) {
       invalidos++;
+      naoImportados.push({
+        nome: "(sem nome)",
+        telefone: linha.telefone,
+        motivo: linha.motivoInvalido ?? "Linha sem nome",
+      });
       continue;
     }
 
     if (linha.telefone) {
       const chave = chaveTelefone(linha.telefone);
-      if (existentes.has(chave) || vistosNaLista.has(chave)) {
+      const jaNoCrm = existentes.get(chave);
+      if (jaNoCrm || vistosNaLista.has(chave)) {
         duplicados++;
+        naoImportados.push({
+          nome: linha.nome,
+          telefone: linha.telefone,
+          motivo: jaNoCrm
+            ? `Já existe no CRM${jaNoCrm.nome && jaNoCrm.nome !== linha.nome ? ` (cadastrado como ${jaNoCrm.nome})` : ""}${jaNoCrm.excluido ? " — estava excluído" : ""}`
+            : "Repetido dentro da própria lista (entrou só uma vez)",
+        });
         continue;
       }
       vistosNaLista.add(chave);
@@ -869,14 +904,27 @@ export async function importarLeads(
     if (error || !novoLead) {
       if (error?.code === "23505") {
         duplicados++;
+        naoImportados.push({
+          nome: linha.nome,
+          telefone: linha.telefone,
+          motivo: "Já existe um lead com esse telefone",
+        });
       } else {
         invalidos++;
+        naoImportados.push({
+          nome: linha.nome,
+          telefone: linha.telefone,
+          motivo: `Erro ao gravar: ${traduzirErro(error?.message ?? "erro desconhecido")}`,
+        });
       }
       continue;
     }
 
     criados++;
-    if (!linha.telefone || !telefoneValido(linha.telefone)) semTelefone++;
+    if (!linha.telefone || !telefoneValido(linha.telefone)) {
+      semTelefone++;
+      semTelefoneNomes.push(linha.nome);
+    }
     await garantirOrigem(supabase, usuario.org_id, origemLinha);
 
     if (quemIndicou && origemLinha.toLowerCase().includes("indica")) {
@@ -912,7 +960,18 @@ export async function importarLeads(
 
   revalidatePath("/leads");
 
-  return { erro: null, criados, duplicados, invalidos, total: linhas.length, semTelefone };
+  return {
+    erro: null,
+    criados,
+    duplicados,
+    invalidos,
+    total: linhas.length,
+    semTelefone,
+    naoImportados: naoImportados.slice(0, 300),
+    semTelefoneNomes: semTelefoneNomes.slice(0, 300),
+    origemUsada: origemPadrao,
+    responsavelId,
+  };
 }
 
 // redirecionar=true (página cheia) volta pra /leads como sempre foi.

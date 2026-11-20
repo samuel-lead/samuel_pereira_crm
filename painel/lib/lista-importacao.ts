@@ -99,8 +99,12 @@ function pareceColunaDeTelefone(valores: string[]): boolean {
   return boas.length / preenchidos.length >= 0.6;
 }
 
+export type ItemIgnorado = { nome: string; telefone: string; motivo: string };
+
 export type ResultadoLista = {
   lista: string;
+  // Quem ficou de fora e por quê (a tela mostra na conferência).
+  ignorados: ItemIgnorado[];
   // O que ficou de fora de propósito, pra mostrar na tela.
   gruposIgnorados: number;
   estrangeirosIgnorados: number;
@@ -115,6 +119,7 @@ export type ResultadoLista = {
 export function linhasParaLista(linhas: string[][]): ResultadoLista {
   const vazio: ResultadoLista = {
     lista: "",
+    ignorados: [],
     gruposIgnorados: 0,
     estrangeirosIgnorados: 0,
     sistemaIgnorados: 0,
@@ -186,7 +191,7 @@ export function linhasParaLista(linhas: string[][]): ResultadoLista {
     dados = linhas.slice(1);
   }
 
-  const resultado = { ...vazio };
+  const resultado = { ...vazio, ignorados: [] as ItemIgnorado[] };
   const saida: string[] = [];
 
   for (const linha of dados) {
@@ -207,6 +212,7 @@ export function linhasParaLista(linhas: string[][]): ResultadoLista {
     if (telefone) {
       if (pareceGrupoDoWhatsapp(telefone)) {
         resultado.gruposIgnorados++;
+        resultado.ignorados.push({ nome: nome || "(sem nome)", telefone, motivo: "Grupo do WhatsApp (não é um contato)" });
         continue;
       }
       // Fora do Brasil (código do país diferente de 55, ou "+" com outro país):
@@ -219,12 +225,14 @@ export function linhasParaLista(linhas: string[][]): ResultadoLista {
         (pais !== "" && pais !== "55") || (comMais && !digitos.startsWith("55"));
       if (estrangeiro) {
         resultado.estrangeirosIgnorados++;
+        resultado.ignorados.push({ nome: nome || "(sem nome)", telefone, motivo: "Número de fora do Brasil" });
         continue;
       }
     }
 
     if (nome && ehContatoDoSistema(nome)) {
       resultado.sistemaIgnorados++;
+      resultado.ignorados.push({ nome, telefone, motivo: "Contato do próprio WhatsApp (Meu número / Meta AI)" });
       continue;
     }
 
