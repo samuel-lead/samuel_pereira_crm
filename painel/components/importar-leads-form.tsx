@@ -56,6 +56,21 @@ function TituloPasso({ numero, titulo }: { numero: number; titulo: string }) {
   );
 }
 
+function ItemTarefa({ feito, texto }: { feito: boolean; texto: string }) {
+  return (
+    <li className="flex items-center gap-2.5">
+      <span
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
+          feito ? "bg-white text-green-700" : "border-2 border-white"
+        }`}
+      >
+        {feito ? "✓" : ""}
+      </span>
+      <span className={feito ? "line-through opacity-70" : ""}>{texto}</span>
+    </li>
+  );
+}
+
 function OpcaoModo({
   ativo,
   icone,
@@ -625,17 +640,43 @@ export function ImportarLeadsForm({
         {/* PASSO 2 e 3 — o 2 abre quando a pessoa confirma a lista, o 3 depois da origem e do responsável */}
         {listaPronta && (
           <>
-            <div className="passo-aparece space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
+            <div
+              className={`passo-aparece space-y-4 rounded-xl border bg-white p-4 ${
+                passo2Preenchido
+                  ? "border-neutral-200"
+                  : "border-2 border-blue-500 shadow-lg ring-4 ring-blue-500/20"
+              }`}
+            >
               <TituloPasso numero={2} titulo="Defina como os leads entram" />
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700">
+
+              {/* O que falta fazer — fica bem destacado até tudo ser escolhido (Samuel, 20/11/26). */}
+              {!passo2Preenchido ? (
+                <div className="rounded-xl bg-blue-600 p-4 text-white shadow-md">
+                  <p className="text-base font-extrabold">👉 O que fazer agora</p>
+                  <ul className="mt-2 space-y-2 text-sm font-semibold">
+                    <ItemTarefa feito={origemAtual.trim() !== ""} texto="Escolher a origem dos leads" />
+                    <ItemTarefa feito={responsavelSel !== NAO_ESCOLHIDO} texto="Escolher o responsável" />
+                    {ehIndicacao && (
+                      <ItemTarefa feito={quemIndicouTexto.trim() !== ""} texto="Escrever quem indicou" />
+                    )}
+                  </ul>
+                  <p className="mt-2 text-xs text-blue-100">Quando escolher tudo, aparece o botão de importar.</p>
+                </div>
+              ) : (
+                <p className="rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm font-semibold text-green-900">
+                  ✅ Tudo escolhido. Confira o resumo e importe na etapa 3.
+                </p>
+              )}
+
+              <div className={`space-y-1 ${origemAtual.trim() === "" ? "campo-pendente" : ""}`}>
+                <label className="text-sm font-bold text-neutral-800">
                   Origem (pra todos os leads dessa lista) *
                 </label>
                 <OrigemSelect origens={origens} onChange={setOrigemAtual} />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-neutral-700">Responsável pelos leads *</label>
+              <div className={`space-y-1 ${responsavelSel === NAO_ESCOLHIDO ? "campo-pendente" : ""}`}>
+                <label className="text-sm font-bold text-neutral-800">Responsável pelos leads *</label>
                 {/* Escolha obrigatória pra liberar o passo 3 — "Sem responsável" também
                     conta como escolha (Samuel, 20/11/26). */}
                 <MenuSelect
@@ -682,11 +723,6 @@ export function ImportarLeadsForm({
                 </div>
               )}
 
-              {!passo2Preenchido && (
-                <p className="rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
-                  👉 Escolha a origem e o responsável{ehIndicacao ? " e escreva quem indicou" : ""} pra continuar.
-                </p>
-              )}
             </div>
 
         {passo2Preenchido && (
