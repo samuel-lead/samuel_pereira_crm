@@ -595,14 +595,18 @@ export function ImportarLeadsForm({
                 </div>
               ) : (
                 !passo1Confirmado && (
-                  <div className="passo-aparece flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-300 bg-green-50 px-4 py-3">
-                    <p className="text-sm font-semibold text-green-900">
-                      ✅ {novos.length} lead{novos.length === 1 ? "" : "s"} pronto{novos.length === 1 ? "" : "s"} pra importar
+                  <div className="passo-aparece rounded-2xl border-2 border-green-700 bg-green-600 p-5 text-center text-white shadow-lg">
+                    <p className="text-4xl font-extrabold leading-none">{novos.length}</p>
+                    <p className="mt-1 text-lg font-extrabold">
+                      lead{novos.length === 1 ? "" : "s"} pronto{novos.length === 1 ? "" : "s"} pra importar ✅
+                    </p>
+                    <p className="mt-1 text-sm text-green-50">
+                      Próximo passo: escolher a origem e o responsável.
                     </p>
                     <button
                       type="button"
                       onClick={() => setPasso1Confirmado(true)}
-                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                      className="botao-pulsa mt-4 w-full rounded-xl bg-white px-6 py-4 text-lg font-extrabold text-green-800 shadow-md transition hover:bg-green-50"
                     >
                       Continuar →
                     </button>

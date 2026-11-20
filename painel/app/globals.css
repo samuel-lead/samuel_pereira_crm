@@ -625,3 +625,11 @@ html:not(.dark) .destaque-meta {
 .dark .text-red-900 {
   color: #fecaca;
 }
+
+/* Botão "Continuar" da importação: pulsa de leve pra ninguém passar batido. */
+@keyframes botaoPulsa {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  70% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+.botao-pulsa { animation: botaoPulsa 1.6s ease-out infinite; }
