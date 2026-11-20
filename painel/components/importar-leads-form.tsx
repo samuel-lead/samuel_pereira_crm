@@ -407,7 +407,9 @@ export function ImportarLeadsForm({
         <div
           className={
             listaPronta
-              ? "grid gap-4 lg:grid-cols-3 lg:items-start"
+              ? passo2Preenchido
+                ? "grid gap-4 lg:grid-cols-3 lg:items-start"
+                : "grid gap-4 lg:grid-cols-2 lg:items-start"
               : painelAberto
                 ? "grid gap-4 lg:grid-cols-2 lg:items-start"
                 : ""
@@ -528,7 +530,8 @@ export function ImportarLeadsForm({
         </div>
 
         {/* CONFERÊNCIA — abre ao lado da lista assim que a lista é conferida */}
-        {painelAberto && (
+        {/* Depois do "Continuar" a conferência some — só ficam as etapas (Samuel, 20/11/26). */}
+        {painelAberto && !passo1Confirmado && (
           <div className="passo-aparece space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-base font-bold text-neutral-900">🔎 Conferência da lista</h3>
@@ -620,7 +623,7 @@ export function ImportarLeadsForm({
 
         {/* PASSO 2 e 3 — o 2 abre quando a pessoa confirma a lista, o 3 depois da origem e do responsável */}
         {listaPronta && (
-          <div className="space-y-4">
+          <>
             <div className="passo-aparece space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
               <TituloPasso numero={2} titulo="Defina como os leads entram" />
               <div className="space-y-1">
@@ -730,7 +733,7 @@ export function ImportarLeadsForm({
             </div>
           </div>
         )}
-          </div>
+          </>
         )}
         </div>
 
