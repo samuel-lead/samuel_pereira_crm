@@ -841,6 +841,9 @@ export async function conferirListaImportacao(
 // porque precisa contar quantos foram criados/ignorados, pra dar o resumo
 // pra quem importou. Quem já existe no CRM (mesmo número, com ou sem o 9
 // extra, mesmo excluído) e repetido dentro da própria lista é ignorado.
+// Linha que já passou pela checagem de nome (nunca vazio).
+type LinhaComNome = LinhaImportacao & { nome: string };
+
 export async function importarLeads(
   _estadoAnterior: ResultadoImportacao,
   formData: FormData
@@ -887,6 +890,7 @@ export async function importarLeads(
   const semTelefoneNomes: string[] = [];
   const vistosNaLista = new Set<string>();
   const notas: { lead_id: string; conteudo: string }[] = [];
+  const fila: { linha: LinhaComNome; origemLinha: string }[] = [];
 
   for (const linha of linhas) {
     if (!linha.nome) {
@@ -925,50 +929,84 @@ export async function importarLeads(
       origensExistentes.has(linha.origemLinha.trim().toLowerCase())
         ? linha.origemLinha.trim()
         : origemPadrao;
-    const { data: novoLead, error } = await supabase
-      .from("leads")
-      .insert({
-        org_id: usuario.org_id,
-        usuario_id: usuario.id,
+    fila.push({ linha: { ...linha, nome: linha.nome }, origemLinha });
+  }
+
+  // Grava em blocos de 100 (e não um lead por vez) — uma lista grande demorava
+  // tanto que podia estourar o tempo do servidor e parar no meio. Se um bloco
+  // falhar (ex.: um telefone repetido no banco), refaz aquele bloco lead por
+  // lead, então só o lead com problema fica de fora, com o motivo.
+  const registrarFalha = (linha: LinhaComNome, error: { code?: string; message?: string } | null) => {
+    if (error?.code === "23505") {
+      duplicados++;
+      naoImportados.push({
         nome: linha.nome,
-        telefone_e164: linha.telefone,
-        origem: origemLinha,
-        quem_indicou: quemIndicou || null,
-        nivel_ordem: NIVEL_LEADS,
-        responsavel_id: responsavelId,
-      })
-      .select("id")
-      .single();
-
-    if (error || !novoLead) {
-      if (error?.code === "23505") {
-        duplicados++;
-        naoImportados.push({
-          nome: linha.nome,
-          telefone: linha.telefone,
-          motivo: "Já existe um lead com esse telefone",
-        });
-      } else {
-        invalidos++;
-        naoImportados.push({
-          nome: linha.nome,
-          telefone: linha.telefone,
-          motivo: `Erro ao gravar: ${traduzirErro(error?.message ?? "erro desconhecido")}`,
-        });
-      }
-      continue;
+        telefone: linha.telefone,
+        motivo: "Já existe um lead com esse telefone",
+      });
+    } else {
+      invalidos++;
+      naoImportados.push({
+        nome: linha.nome,
+        telefone: linha.telefone,
+        motivo: `Erro ao gravar: ${traduzirErro(error?.message ?? "erro desconhecido")}`,
+      });
     }
-
+  };
+  const registrarCriado = (linha: LinhaComNome, origemLinha: string, leadId: string) => {
     criados++;
     if (!linha.telefone || !telefoneValido(linha.telefone)) {
       semTelefone++;
       semTelefoneNomes.push(linha.nome);
     }
-    await garantirOrigem(supabase, usuario.org_id, origemLinha);
-
     if (quemIndicou && origemLinha.toLowerCase().includes("indica")) {
-      notas.push({ lead_id: novoLead.id, conteudo: `Indicação — quem indicou: ${quemIndicou}` });
+      notas.push({ lead_id: leadId, conteudo: `Indicação — quem indicou: ${quemIndicou}` });
     }
+  };
+  const montarLinhaBanco = (item: { linha: LinhaComNome; origemLinha: string }) => ({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    nome: item.linha.nome,
+    telefone_e164: item.linha.telefone,
+    origem: item.origemLinha,
+    quem_indicou: quemIndicou || null,
+    nivel_ordem: NIVEL_LEADS,
+    responsavel_id: responsavelId,
+  });
+
+  const TAMANHO_BLOCO = 100;
+  for (let i = 0; i < fila.length; i += TAMANHO_BLOCO) {
+    const bloco = fila.slice(i, i + TAMANHO_BLOCO);
+    const { data: gravados, error: erroBloco } = await supabase
+      .from("leads")
+      .insert(bloco.map(montarLinhaBanco))
+      .select("id");
+
+    if (!erroBloco && gravados && gravados.length === bloco.length) {
+      bloco.forEach((item, j) => registrarCriado(item.linha, item.origemLinha, gravados[j].id));
+      continue;
+    }
+
+    // O bloco inteiro é desfeito pelo banco quando falha — então aqui nada
+    // foi gravado ainda; tenta um por um pra achar quem deu problema.
+    for (const item of bloco) {
+      const { data: novoLead, error } = await supabase
+        .from("leads")
+        .insert(montarLinhaBanco(item))
+        .select("id")
+        .single();
+      if (error || !novoLead) {
+        registrarFalha(item.linha, error);
+        continue;
+      }
+      registrarCriado(item.linha, item.origemLinha, novoLead.id);
+    }
+  }
+
+  // Cada origem usada é garantida uma vez só (antes era uma ida ao banco por lead).
+  const origensUsadas = new Set(fila.map((item) => item.origemLinha));
+  for (const nomeOrigem of origensUsadas) {
+    await garantirOrigem(supabase, usuario.org_id, nomeOrigem);
   }
 
   // Um aviso resumo (e não um por lead) pra quem recebeu os leads — o aviso

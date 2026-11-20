@@ -2,6 +2,10 @@ import { PageHeader } from "@/components/page-header";
 import { ImportarLeadsForm } from "@/components/importar-leads-form";
 import { createClient, usuarioAutenticado } from "@/lib/supabase/server";
 
+// A importação (conferir e gravar) roda como ação desta página: dá mais tempo
+// pro servidor aguentar listas grandes sem cortar no meio.
+export const maxDuration = 60;
+
 export default async function ImportarLeadsPage() {
   const { usuario } = await usuarioAutenticado();
   const supabase = await createClient();
