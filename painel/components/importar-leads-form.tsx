@@ -42,6 +42,50 @@ function csvParaLista(textoCsv: string) {
   return linhasParaLista(analisarCsv(textoCsv));
 }
 
+function TituloPasso({ numero, titulo }: { numero: number; titulo: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+        {numero}
+      </span>
+      <h3 className="text-base font-bold text-neutral-900">{titulo}</h3>
+    </div>
+  );
+}
+
+function OpcaoModo({
+  ativo,
+  icone,
+  titulo,
+  descricao,
+  aoClicar,
+}: {
+  ativo: boolean;
+  icone: string;
+  titulo: string;
+  descricao: string;
+  aoClicar: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={aoClicar}
+      aria-pressed={ativo}
+      className={`flex items-start gap-3 rounded-xl border-2 px-4 py-3 text-left transition ${
+        ativo
+          ? "border-blue-500 bg-blue-50 shadow-sm"
+          : "border-neutral-200 bg-white hover:border-blue-300 hover:bg-neutral-50"
+      }`}
+    >
+      <span className="text-2xl leading-none">{icone}</span>
+      <span>
+        <span className={`block text-sm font-bold ${ativo ? "text-blue-900" : "text-neutral-800"}`}>{titulo}</span>
+        <span className="mt-0.5 block text-xs text-neutral-500">{descricao}</span>
+      </span>
+    </button>
+  );
+}
+
 export function ImportarLeadsForm({
   publicoOrg = "mentoria",
   origens = [],
@@ -61,6 +105,10 @@ export function ImportarLeadsForm({
   const [arquivoNome, setArquivoNome] = useState<string | null>(null);
   const [arrastando, setArrastando] = useState(false);
   const [avisoArquivo, setAvisoArquivo] = useState<string | null>(null);
+  // Erro de leitura do arquivo (vermelho, com o motivo) — separado do aviso (amarelo).
+  const [erroArquivo, setErroArquivo] = useState<string | null>(null);
+  // Passo 1: como a pessoa vai enviar a lista (Samuel, 20/11/26).
+  const [modo, setModo] = useState<"arquivo" | "colar">("arquivo");
   const [origemAtual, setOrigemAtual] = useState("Prospecção fria");
   const [previa, setPrevia] = useState<ItemPreviaImportacao[] | null>(null);
   const [conferindo, setConferindo] = useState(false);
@@ -112,6 +160,7 @@ export function ImportarLeadsForm({
 
   async function processarArquivo(arquivo: File) {
     setAvisoArquivo(null);
+    setErroArquivo(null);
     setPrevia(null);
     setErroPrevia(null);
     setForaDoArquivo([]);
@@ -119,8 +168,8 @@ export function ImportarLeadsForm({
     const nomeMinusculo = arquivo.name.toLowerCase();
 
     if (nomeMinusculo.endsWith(".xls")) {
-      setAvisoArquivo(
-        'Esse formato antigo (.xls) eu ainda não leio — só .xlsx, .csv e .vcf. Abre no Excel ou Google Planilhas e exporta como .xlsx ou CSV.'
+      setErroArquivo(
+        'Esse formato antigo (.xls) não é lido. Abra o arquivo no Excel ou no Google Planilhas e salve como .xlsx ou CSV. Aceitamos só .xlsx, .csv e .vcf.'
       );
       return;
     }
@@ -130,7 +179,7 @@ export function ImportarLeadsForm({
     if (nomeMinusculo.endsWith(".vcf")) {
       const contatos = lerContatosVcf(await arquivo.text());
       if (contatos.length === 0) {
-        setAvisoArquivo("Não encontrei nenhum contato com telefone nesse arquivo .vcf.");
+        setErroArquivo("Não encontrei nenhum contato com telefone nesse arquivo .vcf. Confira se o arquivo é mesmo a lista de contatos exportada do celular.");
         return;
       }
       setTexto(contatos.map((c) => `${c.nome}\t${c.telefone}`).join("\n"));
@@ -143,8 +192,8 @@ export function ImportarLeadsForm({
         const linhas = await xlsxParaLinhas(await arquivo.arrayBuffer());
         const convertida = linhasParaLista(linhas);
         if (!convertida.lista) {
-          setAvisoArquivo(
-            avisoDoQueFicouDeFora(convertida) ?? "Não encontrei nenhuma linha com dado nessa planilha."
+          setErroArquivo(
+            `Não encontrei nenhum lead nessa planilha. ${avisoDoQueFicouDeFora(convertida) ?? "Ela parece estar vazia ou sem uma coluna de nome/telefone."}`
           );
           return;
         }
@@ -153,8 +202,8 @@ export function ImportarLeadsForm({
         setAvisoArquivo(avisoDoQueFicouDeFora(convertida));
         setForaDoArquivo(convertida.ignorados);
       } catch {
-        setAvisoArquivo(
-          'Não consegui ler esse .xlsx — confere se não tá corrompido, ou exporta como CSV (Arquivo → Fazer download → "Valores separados por vírgula") e solta aqui.'
+        setErroArquivo(
+          'Não consegui ler esse .xlsx. O arquivo pode estar corrompido. Exporte como CSV (Arquivo → Fazer download → "Valores separados por vírgula") e envie de novo.'
         );
       }
       return;
@@ -172,7 +221,9 @@ export function ImportarLeadsForm({
     const convertida = csvParaLista(textoArquivo);
 
     if (!convertida.lista) {
-      setAvisoArquivo(avisoDoQueFicouDeFora(convertida) ?? "Não encontrei nenhuma linha com dado nesse arquivo.");
+      setErroArquivo(
+        `Não encontrei nenhum lead nesse arquivo. ${avisoDoQueFicouDeFora(convertida) ?? "Ele parece estar vazio ou sem uma coluna de nome/telefone."}`
+      );
       return;
     }
 
@@ -208,6 +259,7 @@ export function ImportarLeadsForm({
     setTexto("");
     setArquivoNome(null);
     setAvisoArquivo(null);
+    setErroArquivo(null);
     setPrevia(null);
     setForaDoArquivo([]);
     if (inputArquivoRef.current) inputArquivoRef.current.value = "";
@@ -226,6 +278,8 @@ export function ImportarLeadsForm({
     if (arquivo) processarArquivo(arquivo);
   }
 
+  const temLista = texto.trim().length > 0;
+  const totalLinhas = texto.split("\n").filter((l) => l.trim()).length;
   const novos = previa?.filter((i) => i.situacao === "novo") ?? [];
   const jaExistem = previa?.filter((i) => i.situacao === "ja_existe") ?? [];
   const repetidos = previa?.filter((i) => i.situacao === "repetido_na_lista") ?? [];
@@ -236,10 +290,8 @@ export function ImportarLeadsForm({
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4">
         <h2 className="text-base font-semibold text-neutral-900">Importar leads</h2>
         <p className="mt-1 text-xs text-neutral-500">
-          Arraste uma planilha (.xlsx ou .csv) ou uma lista de contatos (.vcf),
-          ou cole a lista à mão — um lead por linha. Cada um entra direto na
-          coluna &quot;Leads&quot;, sem responsável, pronto pro {sdr(publicoOrg)} pegar
-          e começar a abordar.
+          Envie a lista, escolha como os leads entram e confira antes de gravar.
+          Cada um entra na coluna &quot;Leads&quot; do funil, pronto pro {sdr(publicoOrg)} abordar.
         </p>
       </div>
 
@@ -291,131 +343,190 @@ export function ImportarLeadsForm({
           </div>
         )}
 
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setArrastando(true);
-          }}
-          onDragLeave={() => setArrastando(false)}
-          onDrop={aoSoltarArquivo}
-          onClick={() => inputArquivoRef.current?.click()}
-          role="button"
-          tabIndex={0}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-6 text-center transition ${
-            arrastando
-              ? "border-blue-500 bg-blue-50"
-              : "border-neutral-300 bg-neutral-50 hover:border-blue-400 hover:bg-blue-50/60"
-          }`}
-        >
-          <input
-            ref={inputArquivoRef}
-            type="file"
-            accept=".xlsx,.csv,.vcf,text/csv,text/vcard,text/x-vcard,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            onChange={aoSelecionarArquivo}
-            className="hidden"
-          />
-          <p className="text-sm font-medium text-neutral-700">
-            {arquivoNome
-              ? `📄 ${arquivoNome}`
-              : "Arraste a planilha (.xlsx, .csv) ou os contatos (.vcf) aqui, ou clique pra selecionar"}
-          </p>
-          <p className="text-xs text-neutral-400">Colunas: nome, telefone</p>
+        {/* PASSO 1 — enviar a lista */}
+        <div className="space-y-3">
+          <TituloPasso numero={1} titulo="Envie a lista de leads" />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <OpcaoModo
+              ativo={modo === "arquivo"}
+              icone="📄"
+              titulo="Arrastar planilha"
+              descricao="Arquivo .xlsx, .csv ou .vcf (contatos do celular)"
+              aoClicar={() => setModo("arquivo")}
+            />
+            <OpcaoModo
+              ativo={modo === "colar"}
+              icone="✍️"
+              titulo="Colar manualmente"
+              descricao="Copie de uma planilha ou digite: um lead por linha"
+              aoClicar={() => setModo("colar")}
+            />
+          </div>
+
+          {modo === "arquivo" && (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setArrastando(true);
+              }}
+              onDragLeave={() => setArrastando(false)}
+              onDrop={aoSoltarArquivo}
+              onClick={() => inputArquivoRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 text-center transition ${
+                arquivoNome ? "py-4" : "py-12"
+              } ${
+                arrastando
+                  ? "border-blue-500 bg-blue-50"
+                  : arquivoNome
+                    ? "border-green-300 bg-green-50 hover:border-green-400"
+                    : "border-neutral-300 bg-neutral-50 hover:border-blue-400 hover:bg-blue-50/60"
+              }`}
+            >
+              <input
+                ref={inputArquivoRef}
+                type="file"
+                accept=".xlsx,.csv,.vcf,text/csv,text/vcard,text/x-vcard,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                onChange={aoSelecionarArquivo}
+                className="hidden"
+              />
+              {arquivoNome ? (
+                <>
+                  <p className="text-sm font-semibold text-green-800">✅ {arquivoNome}</p>
+                  <p className="text-xs text-green-700">
+                    {totalLinhas} lead{totalLinhas === 1 ? "" : "s"} lido{totalLinhas === 1 ? "" : "s"} · clique aqui pra trocar de arquivo
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-3xl">📄</p>
+                  <p className="text-base font-semibold text-neutral-800">Arraste a planilha aqui</p>
+                  <p className="text-xs text-neutral-500">
+                    ou clique pra escolher o arquivo · .xlsx, .csv ou .vcf · colunas: nome e telefone
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {erroArquivo && (
+            <div className="rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <p className="font-bold">❌ Não consegui ler o arquivo</p>
+              <p className="mt-0.5">{erroArquivo}</p>
+            </div>
+          )}
+
+          {avisoArquivo && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p className="font-bold">⚠️ Atenção</p>
+              <p className="mt-0.5">{avisoArquivo}</p>
+            </div>
+          )}
+
+          {(modo === "colar" || temLista) && (
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-neutral-700" htmlFor="lista">
+                {modo === "colar" && !temLista
+                  ? "Cole a lista aqui (um lead por linha: nome e telefone)"
+                  : `Lista de leads (${totalLinhas}) — confira e, se precisar, edite aqui`}
+              </label>
+              <textarea
+                id="lista"
+                name="lista"
+                required
+                rows={temLista ? 12 : 8}
+                value={texto}
+                onChange={(evento) => aoMudarTexto(evento.target.value)}
+                placeholder={"Maria Silva, 11 99999-1234\nJoão Souza, 21 98888-4321"}
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+              <p className="text-xs text-neutral-400">
+                Nome e telefone separados por vírgula (ou cole direto de uma planilha, funciona igual).
+                Telefone é opcional, mas sem ele o {sdr(publicoOrg)} não consegue ligar.
+              </p>
+            </div>
+          )}
         </div>
 
-        {avisoArquivo && (
-          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            {avisoArquivo}
-          </p>
+        {/* PASSO 2 e 3 — só aparecem depois que a lista chegou */}
+        {temLista && (
+          <>
+            <div className="space-y-4 border-t border-neutral-200 pt-5">
+              <TituloPasso numero={2} titulo="Defina como os leads entram" />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-neutral-700">
+                  Origem (pra todos os leads dessa lista)
+                </label>
+                <OrigemSelect origens={origens} valorInicial="Prospecção fria" onChange={setOrigemAtual} />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-neutral-700">
+                  Responsável pelos leads <span className="font-normal text-neutral-400">(opcional)</span>
+                </label>
+                {souAdmin ? (
+                  <ResponsavelSelect
+                    usuarios={usuarios}
+                    funcaoFiltro="sdr"
+                    incluirAdmins
+                    permiteVazio
+                    placeholder="Sem responsável (fila de novos leads)"
+                  />
+                ) : (
+                  <MenuSelect
+                    name="responsavel_id"
+                    defaultValue=""
+                    placeholder="Sem responsável (fila de novos leads)"
+                    options={[
+                      { value: "", label: "— Sem responsável (fila de novos leads) —" },
+                      { value: usuarioId, label: "Eu" },
+                    ]}
+                  />
+                )}
+                <p className="text-xs text-neutral-400">
+                  Todos os leads dessa lista ficam com essa pessoa. Se deixar sem
+                  responsável, caem na fila de novos leads para alguém pegar.
+                </p>
+              </div>
+
+              <div
+                className={`space-y-1 ${
+                  ehIndicacao
+                    ? "rounded-lg border-2 border-amber-400 bg-amber-50 p-3 dark:border-amber-500 dark:bg-amber-950/30"
+                    : ""
+                }`}
+              >
+                <label
+                  className={`text-sm font-medium ${
+                    ehIndicacao ? "font-bold text-amber-800 dark:text-amber-300" : "text-neutral-700"
+                  }`}
+                  htmlFor="quem_indicou"
+                >
+                  {ehIndicacao ? "⚠️ Escreva quem indicou" : "Quem indicou? (opcional)"}
+                </label>
+                {ehIndicacao && (
+                  <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                    O nome aparece no card de cada lead dessa lista, na frente da origem.
+                  </p>
+                )}
+                <input
+                  id="quem_indicou"
+                  name="quem_indicou"
+                  placeholder="Nome de quem indicou essa lista"
+                  className={`w-full rounded-md border px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
+                    ehIndicacao ? "border-amber-400 bg-white" : "border-neutral-300"
+                  }`}
+                />
+              </div>
+
+            </div>
+          </>
         )}
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700" htmlFor="lista">
-            Lista (um lead por linha)
-          </label>
-          <textarea
-            id="lista"
-            name="lista"
-            required
-            rows={12}
-            value={texto}
-            onChange={(evento) => aoMudarTexto(evento.target.value)}
-            placeholder={"Nome da empresa, telefone\nOutra empresa, telefone"}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 font-mono text-xs text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          />
-          <p className="text-xs text-neutral-400">
-            Formato: nome e telefone separados por vírgula (ou cole direto de
-            uma planilha — funciona igual). Telefone é opcional, mas sem ele
-            o {sdr(publicoOrg)} não consegue ligar. Confere a lista antes de importar — dá
-            pra editar direto aqui se algo vier errado.
-          </p>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700">
-            Origem (pra todos os leads dessa lista)
-          </label>
-          <OrigemSelect origens={origens} valorInicial="Prospecção fria" onChange={setOrigemAtual} />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-neutral-700">
-            Responsável pelos leads <span className="font-normal text-neutral-400">(opcional)</span>
-          </label>
-          {souAdmin ? (
-            <ResponsavelSelect
-              usuarios={usuarios}
-              funcaoFiltro="sdr"
-              incluirAdmins
-              permiteVazio
-              placeholder="Sem responsável (fila de novos leads)"
-            />
-          ) : (
-            <MenuSelect
-              name="responsavel_id"
-              defaultValue=""
-              placeholder="Sem responsável (fila de novos leads)"
-              options={[
-                { value: "", label: "— Sem responsável (fila de novos leads) —" },
-                { value: usuarioId, label: "Eu" },
-              ]}
-            />
-          )}
-          <p className="text-xs text-neutral-400">
-            Todos os leads dessa lista ficam com essa pessoa. Se deixar sem
-            responsável, caem na fila de novos leads para alguém pegar.
-          </p>
-        </div>
-
-        <div
-          className={`space-y-1 ${
-            ehIndicacao
-              ? "rounded-lg border-2 border-amber-400 bg-amber-50 p-3 dark:border-amber-500 dark:bg-amber-950/30"
-              : ""
-          }`}
-        >
-          <label
-            className={`text-sm font-medium ${
-              ehIndicacao ? "font-bold text-amber-800 dark:text-amber-300" : "text-neutral-700"
-            }`}
-            htmlFor="quem_indicou"
-          >
-            {ehIndicacao ? "⚠️ Escreva quem indicou" : "Quem indicou? (opcional)"}
-          </label>
-          {ehIndicacao && (
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
-              O nome aparece no card de cada lead dessa lista, na frente da origem.
-            </p>
-          )}
-          <input
-            id="quem_indicou"
-            name="quem_indicou"
-            placeholder="Nome de quem indicou essa lista"
-            className={`w-full rounded-md border px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-              ehIndicacao ? "border-amber-400 bg-white" : "border-neutral-300"
-            }`}
-          />
-        </div>
-
+        {temLista && (
+          <div className="space-y-3 border-t border-neutral-200 pt-5">
+            <TituloPasso numero={3} titulo="Confira e importe" />
         {previa && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
             <p className="font-semibold">
@@ -436,7 +547,12 @@ export function ImportarLeadsForm({
           </div>
         )}
 
-        {erroPrevia && <p className="text-xs text-red-600">{erroPrevia}</p>}
+        {erroPrevia && (
+          <div className="rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <p className="font-bold">❌ Não consegui conferir a lista</p>
+            <p className="mt-0.5">{erroPrevia}</p>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <button
@@ -470,6 +586,8 @@ export function ImportarLeadsForm({
             </button>
           )}
         </div>
+          </div>
+        )}
 
         {janelaConferencia && previa && (
           <JanelaImportacao
