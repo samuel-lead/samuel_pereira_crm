@@ -115,6 +115,7 @@ export function ImportarLeadsForm({
   const [erroPrevia, setErroPrevia] = useState<string | null>(null);
   const inputArquivoRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const topoRef = useRef<HTMLDivElement>(null);
   const enviandoRef = useRef(false);
   // Janelas (popup) da conferência e do resultado — Samuel (20/11/26): o aviso
   // pequeno lá embaixo passava despercebido.
@@ -233,6 +234,15 @@ export function ImportarLeadsForm({
     setForaDoArquivo(convertida.ignorados);
   }
 
+  // "Voltar e editar a lista": fecha a janela e sobe sozinho pro topo da tela
+  // (Samuel, 20/11/26), onde está a lista pra editar.
+  function voltarEEditarLista() {
+    setJanelaConferencia(false);
+    setTimeout(() => {
+      topoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
+
   async function conferirLista() {
     setErroPrevia(null);
     setConferindo(true);
@@ -286,7 +296,7 @@ export function ImportarLeadsForm({
   const invalidos = previa?.filter((i) => i.situacao === "invalido") ?? [];
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
+    <div ref={topoRef} className="scroll-mt-24 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md">
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4">
         <h2 className="text-base font-semibold text-neutral-900">Importar leads</h2>
         <p className="mt-1 text-xs text-neutral-500">
@@ -598,7 +608,7 @@ export function ImportarLeadsForm({
               <>
                 <button
                   type="button"
-                  onClick={() => setJanelaConferencia(false)}
+                  onClick={voltarEEditarLista}
                   className="rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
                 >
                   Voltar e editar a lista
