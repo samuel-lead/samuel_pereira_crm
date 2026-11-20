@@ -116,6 +116,10 @@ export function ImportarLeadsForm({
   // anterior foi preenchida — a origem precisa ser ESCOLHIDA pra liberar o passo 3.
   const [origemAtual, setOrigemAtual] = useState("");
   const [quemIndicouTexto, setQuemIndicouTexto] = useState("");
+  // Passo 1 só termina quando a pessoa CONFERE a lista e clica em "Continuar"
+  // (Samuel, 20/11/26: a etapa 2 abria sozinha assim que o arquivo carregava e
+  // ele não conseguia nem olhar a lista).
+  const [passo1Confirmado, setPasso1Confirmado] = useState(false);
   const [responsavelSel, setResponsavelSel] = useState<string>(NAO_ESCOLHIDO);
   const [previa, setPrevia] = useState<ItemPreviaImportacao[] | null>(null);
   const [conferindo, setConferindo] = useState(false);
@@ -172,6 +176,7 @@ export function ImportarLeadsForm({
     setPrevia(null);
     setErroPrevia(null);
     setForaDoArquivo([]);
+    setPasso1Confirmado(false);
 
     const nomeMinusculo = arquivo.name.toLowerCase();
 
@@ -302,12 +307,14 @@ export function ImportarLeadsForm({
   useEffect(() => {
     if (!texto.trim()) {
       setColouParou(false);
+      setPasso1Confirmado(false);
       return;
     }
     const t = setTimeout(() => setColouParou(true), 900);
     return () => clearTimeout(t);
   }, [texto]);
-  const listaPronta = temLista && (!!arquivoNome || colouParou);
+  const listaLida = temLista && (!!arquivoNome || colouParou);
+  const listaPronta = listaLida && passo1Confirmado;
   // Se o passo 2 some (lista apagada ou importação concluída), a origem escolhida
   // volta a vazio — senão a próxima importação já nasceria "preenchida".
   useEffect(() => {
@@ -506,9 +513,24 @@ export function ImportarLeadsForm({
               </p>
             </div>
           )}
+
+          {listaLida && !passo1Confirmado && (
+            <div className="passo-aparece flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <p className="text-sm font-medium text-blue-900">
+                👀 Confira a lista acima ({totalLinhas} lead{totalLinhas === 1 ? "" : "s"}). Está certa?
+              </p>
+              <button
+                type="button"
+                onClick={() => setPasso1Confirmado(true)}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                Continuar →
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* PASSO 2 e 3 — só aparecem depois que a lista chegou */}
+        {/* PASSO 2 e 3 — o 2 abre quando a pessoa confirma a lista, o 3 depois da origem e do responsável */}
         {listaPronta && (
           <>
             <div className="passo-aparece space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
