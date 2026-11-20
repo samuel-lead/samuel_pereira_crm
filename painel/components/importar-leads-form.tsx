@@ -116,9 +116,9 @@ export function ImportarLeadsForm({
   // anterior foi preenchida — a origem precisa ser ESCOLHIDA pra liberar o passo 3.
   const [origemAtual, setOrigemAtual] = useState("");
   const [quemIndicouTexto, setQuemIndicouTexto] = useState("");
-  // Passo 1 só termina quando a pessoa CONFERE a lista e clica em "Continuar"
-  // (Samuel, 20/11/26: a etapa 2 abria sozinha assim que o arquivo carregava e
-  // ele não conseguia nem olhar a lista).
+  // Ao subir a lista, a conferência roda sozinha e mostra tudo (já existe, repetido,
+  // inválido...). A etapa 2 só abre quando a pessoa clica em "Continuar" (Samuel,
+  // 20/11/26) — e só dá pra continuar se tiver lead novo pra importar.
   const [passo1Confirmado, setPasso1Confirmado] = useState(false);
   const [responsavelSel, setResponsavelSel] = useState<string>(NAO_ESCOLHIDO);
   const [previa, setPrevia] = useState<ItemPreviaImportacao[] | null>(null);
@@ -128,12 +128,10 @@ export function ImportarLeadsForm({
   const formRef = useRef<HTMLFormElement>(null);
   const topoRef = useRef<HTMLDivElement>(null);
   const enviandoRef = useRef(false);
-  // Janelas (popup) da conferência e do resultado — Samuel (20/11/26): o aviso
-  // pequeno lá embaixo passava despercebido.
-  const [janelaConferencia, setJanelaConferencia] = useState(false);
+  // Janela (popup) do resultado — Samuel (20/11/26): o aviso pequeno lá embaixo
+  // passava despercebido.
   const [janelaResultado, setJanelaResultado] = useState(false);
   const [foraDoArquivo, setForaDoArquivo] = useState<ItemIgnorado[]>([]);
-  const [responsavelEscolhido, setResponsavelEscolhido] = useState<string>("");
   const resultadoRef = useRef<HTMLDivElement>(null);
   // Samuel (16/11/26): depois de importar, o resultado ficava só lá embaixo
   // (e erro nem aparecia). Agora vira um cartão grande no topo, sempre visível.
@@ -149,7 +147,6 @@ export function ImportarLeadsForm({
     if (enviandoRef.current) {
       enviandoRef.current = false;
       setResultadoVisivel(true);
-      setJanelaConferencia(false);
       setJanelaResultado(true);
       if (!estado.erro && estado.criados > 0) {
         setTexto("");
@@ -163,11 +160,9 @@ export function ImportarLeadsForm({
     }
   }, [pendente, estado]);
 
-  // Mexeu na lista depois de conferir: a prévia antiga deixou de valer.
+  // Mexeu na lista: a conferência roda de novo sozinha (ver o efeito abaixo).
   function aoMudarTexto(novo: string) {
     setTexto(novo);
-    setPrevia(null);
-    setErroPrevia(null);
   }
 
   async function processarArquivo(arquivo: File) {
@@ -246,35 +241,6 @@ export function ImportarLeadsForm({
     setForaDoArquivo(convertida.ignorados);
   }
 
-  // "Voltar e editar a lista": fecha a janela e sobe sozinho pro topo da tela
-  // (Samuel, 20/11/26), onde está a lista pra editar.
-  function voltarEEditarLista() {
-    setJanelaConferencia(false);
-    setTimeout(() => {
-      topoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
-  }
-
-  async function conferirLista() {
-    setErroPrevia(null);
-    setConferindo(true);
-    try {
-      const resultado = await conferirListaImportacao(texto);
-      if (resultado.erro) {
-        setErroPrevia(resultado.erro);
-        return;
-      }
-      setPrevia(resultado.itens);
-      const escolhido = formRef.current ? new FormData(formRef.current).get("responsavel_id") : "";
-      setResponsavelEscolhido(String(escolhido ?? ""));
-      setJanelaConferencia(true);
-    } catch {
-      setErroPrevia("Não consegui conferir a lista agora. Tente de novo.");
-    } finally {
-      setConferindo(false);
-    }
-  }
-
   // Desistiu da importação: limpa a lista e o arquivo e volta pro funil —
   // nada foi gravado até clicar em "Importar".
   function cancelarImportacao() {
@@ -284,6 +250,7 @@ export function ImportarLeadsForm({
     setErroArquivo(null);
     setPrevia(null);
     setForaDoArquivo([]);
+    setPasso1Confirmado(false);
     if (inputArquivoRef.current) inputArquivoRef.current.value = "";
     router.push("/leads");
   }
@@ -301,20 +268,50 @@ export function ImportarLeadsForm({
   }
 
   const temLista = texto.trim().length > 0;
-  // Passo 1 preenchido: arquivo lido na hora; lista colada à mão só depois que a
-  // pessoa para de digitar (senão o passo 2 piscava na primeira letra).
-  const [colouParou, setColouParou] = useState(false);
+
+  // Conferência automática: assim que a lista chega (arquivo na hora; colada à mão
+  // depois de parar de digitar) o servidor diz quem entra, quem já existe, quem é
+  // repetido e quem é inválido — nada é gravado.
   useEffect(() => {
     if (!texto.trim()) {
-      setColouParou(false);
+      setPrevia(null);
+      setErroPrevia(null);
+      setConferindo(false);
       setPasso1Confirmado(false);
       return;
     }
-    const t = setTimeout(() => setColouParou(true), 900);
-    return () => clearTimeout(t);
-  }, [texto]);
-  const listaLida = temLista && (!!arquivoNome || colouParou);
-  const listaPronta = listaLida && passo1Confirmado;
+    let cancelado = false;
+    setConferindo(true);
+    const t = setTimeout(
+      async () => {
+        try {
+          const resultado = await conferirListaImportacao(texto);
+          if (cancelado) return;
+          if (resultado.erro) {
+            setErroPrevia(resultado.erro);
+            setPrevia(null);
+          } else {
+            setErroPrevia(null);
+            setPrevia(resultado.itens);
+          }
+        } catch {
+          if (!cancelado) {
+            setErroPrevia("Não consegui conferir a lista agora. Tente de novo.");
+            setPrevia(null);
+          }
+        } finally {
+          if (!cancelado) setConferindo(false);
+        }
+      },
+      arquivoNome ? 0 : 900
+    );
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+    };
+  }, [texto, arquivoNome]);
+
+  const listaPronta = temLista && passo1Confirmado;
   // Se o passo 2 some (lista apagada ou importação concluída), a origem escolhida
   // volta a vazio — senão a próxima importação já nasceria "preenchida".
   useEffect(() => {
@@ -329,6 +326,11 @@ export function ImportarLeadsForm({
     origemAtual.trim() !== "" &&
     responsavelSel !== NAO_ESCOLHIDO &&
     (!ehIndicacao || quemIndicouTexto.trim() !== "");
+  const nomeDoResponsavel =
+    responsavelSel === SEM_RESPONSAVEL || responsavelSel === NAO_ESCOLHIDO
+      ? "ninguém (fila de novos leads pra alguém pegar)"
+      : (usuarios.find((u) => u.id === responsavelSel)?.nome ??
+        (responsavelSel === usuarioId ? "Você" : "a pessoa escolhida"));
   const totalLinhas = texto.split("\n").filter((l) => l.trim()).length;
   const novos = previa?.filter((i) => i.situacao === "novo") ?? [];
   const jaExistem = previa?.filter((i) => i.situacao === "ja_existe") ?? [];
@@ -345,7 +347,7 @@ export function ImportarLeadsForm({
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-4">
         <h2 className="text-base font-semibold text-neutral-900">Importar leads</h2>
         <p className="mt-1 text-xs text-neutral-500">
-          Envie a lista, escolha como os leads entram e confira antes de gravar.
+          Envie a lista, veja o que está certo e o que não está, escolha como os leads entram e importe.
           Cada um entra na coluna &quot;Leads&quot; do funil, pronto pro {sdr(publicoOrg)} abordar.
         </p>
       </div>
@@ -514,18 +516,86 @@ export function ImportarLeadsForm({
             </div>
           )}
 
-          {listaLida && !passo1Confirmado && (
-            <div className="passo-aparece flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-              <p className="text-sm font-medium text-blue-900">
-                👀 Confira a lista acima ({totalLinhas} lead{totalLinhas === 1 ? "" : "s"}). Está certa?
-              </p>
-              <button
-                type="button"
-                onClick={() => setPasso1Confirmado(true)}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                Continuar →
-              </button>
+          {temLista && conferindo && (
+            <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+              ⏳ Conferindo a lista...
+            </p>
+          )}
+
+          {erroPrevia && (
+            <div className="rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <p className="font-bold">❌ Não consegui conferir a lista</p>
+              <p className="mt-0.5">{erroPrevia}</p>
+            </div>
+          )}
+
+          {temLista && previa && !erroPrevia && (
+            <div className="space-y-3">
+              <p className="text-sm font-bold text-neutral-800">Resultado da conferência — nada foi gravado ainda</p>
+              <div className={`grid grid-cols-2 gap-2 ${passo1Confirmado ? "" : "sm:grid-cols-4"}`}>
+                <NumeroGrande valor={novos.length} rotulo="Vão entrar" cor="verde" />
+                <NumeroGrande valor={jaExistem.length} rotulo="Já existem no CRM" cor="ambar" />
+                <NumeroGrande valor={repetidos.length} rotulo="Repetidos na lista" cor="ambar" />
+                <NumeroGrande valor={invalidos.length + foraDoArquivo.length} rotulo="Ficam de fora" cor="vermelho" />
+              </div>
+
+              <BlocoLista
+                titulo="Já existem no CRM — não entram de novo"
+                motivo="O telefone desses contatos já está cadastrado (mesmo que com o 9 a mais ou a menos, ou que o lead esteja excluído)."
+                cor="ambar"
+                itens={jaExistem.map((item) => ({
+                  nome: item.nome,
+                  detalhe:
+                    (item.nomeExistente && item.nomeExistente !== item.nome
+                      ? `já cadastrado como ${item.nomeExistente}`
+                      : "mesmo nome") + (item.excluido ? " (estava excluído)" : ""),
+                }))}
+              />
+              <BlocoLista
+                titulo="Repetidos dentro da própria lista"
+                motivo="O mesmo telefone aparece mais de uma vez — entra só uma vez."
+                cor="ambar"
+                itens={repetidos.map((item) => ({ nome: item.nome, detalhe: item.telefone ?? undefined }))}
+              />
+              <BlocoLista
+                titulo="Linhas inválidas — não entram"
+                cor="vermelho"
+                itens={invalidos.map((item) => ({
+                  nome: item.nome,
+                  detalhe: [item.motivo, item.telefone].filter(Boolean).join(" · "),
+                }))}
+              />
+              <BlocoLista
+                titulo="Deixados de fora do arquivo"
+                motivo="Não são leads: grupos do WhatsApp, números de outro país e contatos do próprio WhatsApp."
+                cor="cinza"
+                itens={foraDoArquivo.map((item) => ({ nome: item.nome, detalhe: item.motivo }))}
+              />
+
+              {novos.length === 0 ? (
+                <div className="rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  <p className="font-bold">⚠️ Nenhum lead novo pra importar</p>
+                  <p className="mt-0.5">
+                    Todos os contatos dessa lista já existem no CRM ou têm algum problema (veja os motivos
+                    acima). Corrija a lista ou envie outro arquivo.
+                  </p>
+                </div>
+              ) : (
+                !passo1Confirmado && (
+                  <div className="passo-aparece flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-300 bg-green-50 px-4 py-3">
+                    <p className="text-sm font-semibold text-green-900">
+                      ✅ {novos.length} lead{novos.length === 1 ? "" : "s"} pronto{novos.length === 1 ? "" : "s"} pra importar
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setPasso1Confirmado(true)}
+                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                    >
+                      Continuar →
+                    </button>
+                  </div>
+                )
+              )}
             </div>
           )}
         </div>
@@ -600,159 +670,51 @@ export function ImportarLeadsForm({
         )}
 
         {listaPronta && passo2Preenchido && (
-          <div className="passo-aparece passo-atrasado space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
-            <TituloPasso numero={3} titulo="Confira e importe" />
-        {previa && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
-            <p className="font-semibold">
-              {novos.length} lead{novos.length === 1 ? "" : "s"} vão entrar
-              {jaExistem.length + repetidos.length > 0 &&
-                ` · ${jaExistem.length + repetidos.length} já existe${
-                  jaExistem.length + repetidos.length === 1 ? "" : "m"
-                }/repetido${jaExistem.length + repetidos.length === 1 ? "" : "s"}`}
-              {invalidos.length > 0 && ` · ${invalidos.length} inválido${invalidos.length === 1 ? "" : "s"}`}
-            </p>
-            <button
-              type="button"
-              onClick={() => setJanelaConferencia(true)}
-              className="rounded-md border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-800 shadow-sm transition hover:bg-blue-100"
-            >
-              Ver detalhes
-            </button>
-          </div>
-        )}
+          <div className="passo-aparece space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
+            <TituloPasso numero={3} titulo="Importe" />
 
-        {erroPrevia && (
-          <div className="rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-            <p className="font-bold">❌ Não consegui conferir a lista</p>
-            <p className="mt-0.5">{erroPrevia}</p>
-          </div>
-        )}
-
-        <div className="flex flex-col-reverse gap-2">
-          <button
-            type="button"
-            onClick={cancelarImportacao}
-            disabled={pendente}
-            className="w-full rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50 disabled:opacity-60"
-          >
-            Cancelar importação
-          </button>
-          {previa ? (
-            <button
-              type="submit"
-              disabled={pendente || novos.length === 0}
-              className="w-full rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-            >
-              {pendente
-                ? "Importando..."
-                : novos.length === 0
-                  ? "Nenhum lead novo para importar"
-                  : `Importar ${novos.length} lead${novos.length === 1 ? "" : "s"}`}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={conferirLista}
-              disabled={conferindo || !texto.trim()}
-              className="w-full rounded-md bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-            >
-              {conferindo ? "Conferindo..." : "Conferir lista"}
-            </button>
-          )}
-        </div>
-          </div>
-        )}
-        </div>
-
-        {janelaConferencia && previa && (
-          <JanelaImportacao
-            titulo="Conferência da lista — nada foi gravado ainda"
-            tom="azul"
-            aoFechar={() => setJanelaConferencia(false)}
-            rodape={
-              <>
-                <button
-                  type="button"
-                  onClick={voltarEEditarLista}
-                  className="rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-                >
-                  Voltar e editar a lista
-                </button>
-                <button
-                  type="submit"
-                  disabled={pendente || novos.length === 0}
-                  className="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-                >
-                  {pendente
-                    ? "Importando..."
-                    : novos.length === 0
-                      ? "Nenhum lead novo para importar"
-                      : `Importar ${novos.length} lead${novos.length === 1 ? "" : "s"}`}
-                </button>
-              </>
-            }
-          >
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <NumeroGrande valor={novos.length} rotulo="Vão entrar" cor="verde" />
-              <NumeroGrande valor={jaExistem.length} rotulo="Já existem no CRM" cor="ambar" />
-              <NumeroGrande valor={repetidos.length} rotulo="Repetidos na lista" cor="ambar" />
-              <NumeroGrande valor={invalidos.length + foraDoArquivo.length} rotulo="Ficam de fora" cor="vermelho" />
-            </div>
-
-            {novos.length > 0 && (
             <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-900">
-              <p className="font-bold">Como os {novos.length} vão entrar:</p>
+              <p className="font-bold">
+                {novos.length} lead{novos.length === 1 ? "" : "s"} {novos.length === 1 ? "vai" : "vão"} entrar:
+              </p>
               <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
                 <li>Na coluna &quot;Leads&quot; do funil</li>
-                <li>Origem: <strong>{origemAtual || "Prospecção fria"}</strong></li>
                 <li>
-                  Responsável:{" "}
-                  <strong>
-                    {responsavelEscolhido
-                      ? (usuarios.find((u) => u.id === responsavelEscolhido)?.nome ??
-                        (responsavelEscolhido === usuarioId ? "Você" : "a pessoa escolhida"))
-                      : "ninguém (fila de novos leads pra alguém pegar)"}
-                  </strong>
+                  Origem: <strong>{origemAtual}</strong>
+                  {ehIndicacao && quemIndicouTexto.trim() ? ` (indicação de ${quemIndicouTexto.trim()})` : ""}
+                </li>
+                <li>
+                  Responsável: <strong>{nomeDoResponsavel}</strong>
                 </li>
               </ul>
             </div>
-            )}
 
-            <BlocoLista
-              titulo="Já existem no CRM — não entram de novo"
-              motivo="O telefone desses contatos já está cadastrado (mesmo que com o 9 a mais ou a menos, ou que o lead esteja excluído)."
-              cor="ambar"
-              itens={jaExistem.map((item) => ({
-                nome: item.nome,
-                detalhe:
-                  (item.nomeExistente && item.nomeExistente !== item.nome
-                    ? `já cadastrado como ${item.nomeExistente}`
-                    : "mesmo nome") + (item.excluido ? " (estava excluído)" : ""),
-              }))}
-            />
-            <BlocoLista
-              titulo="Repetidos dentro da própria lista"
-              motivo="O mesmo telefone aparece mais de uma vez — entra só uma vez."
-              cor="ambar"
-              itens={repetidos.map((item) => ({ nome: item.nome, detalhe: item.telefone ?? undefined }))}
-            />
-            <BlocoLista
-              titulo="Linhas inválidas — não entram"
-              cor="vermelho"
-              itens={invalidos.map((item) => ({
-                nome: item.nome,
-                detalhe: [item.motivo, item.telefone].filter(Boolean).join(" · "),
-              }))}
-            />
-            <BlocoLista
-              titulo="Deixados de fora do arquivo"
-              motivo="Não são leads: grupos do WhatsApp, números de outro país e contatos do próprio WhatsApp."
-              cor="cinza"
-              itens={foraDoArquivo.map((item) => ({ nome: item.nome, detalhe: item.motivo }))}
-            />
-          </JanelaImportacao>
+            <div className="flex flex-col-reverse gap-2">
+              <button
+                type="button"
+                onClick={cancelarImportacao}
+                disabled={pendente}
+                className="w-full rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition hover:bg-neutral-50 disabled:opacity-60"
+              >
+                Cancelar importação
+              </button>
+              <button
+                type="submit"
+                disabled={pendente || conferindo || novos.length === 0}
+                className="w-full rounded-md bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+              >
+                {pendente
+                  ? "Importando..."
+                  : conferindo
+                    ? "Conferindo a lista..."
+                    : novos.length === 0
+                      ? "Nenhum lead novo para importar"
+                      : `Importar ${novos.length} lead${novos.length === 1 ? "" : "s"}`}
+              </button>
+            </div>
+          </div>
         )}
+        </div>
 
         {janelaResultado && resultadoVisivel && (estado.erro || estado.total > 0) && (
           <JanelaImportacao
