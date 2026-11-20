@@ -81,9 +81,9 @@ function OpcaoModo({
       }`}
     >
       <span className="text-2xl leading-none">{icone}</span>
-      <span>
-        <span className={`block text-sm font-bold ${ativo ? "text-blue-900" : "text-neutral-800"}`}>{titulo}</span>
-        <span className="mt-0.5 block text-xs text-neutral-500">{descricao}</span>
+      <span className="min-w-0">
+        <span className={`block break-words text-sm font-bold ${ativo ? "text-blue-900" : "text-neutral-800"}`}>{titulo}</span>
+        <span className="mt-0.5 block break-words text-xs text-neutral-500">{descricao}</span>
       </span>
     </button>
   );
@@ -420,7 +420,8 @@ export function ImportarLeadsForm({
           className={`space-y-3 ${painelAberto ? "rounded-xl border border-neutral-200 bg-white p-4" : ""}`}
         >
           <TituloPasso numero={1} titulo="Envie a lista de leads" />
-          <div className="grid gap-2 sm:grid-cols-2">
+          {/* Com as colunas abertas o espaço é curto: as duas opções ficam uma em cima da outra, sem cortar o nome. */}
+          <div className={`grid gap-2 ${painelAberto ? "" : "sm:grid-cols-2"}`}>
             <OpcaoModo
               ativo={modo === "arquivo"}
               icone="📄"
