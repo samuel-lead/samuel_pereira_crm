@@ -503,6 +503,9 @@ export default async function EditarLeadPage({
           ) : (
             podeEditar &&
             (ORGS_VENDA_DIRETA.includes(usuarioAtual?.org_id ?? "") ||
+              // Inove Gôndolas (sem reunião): o Elton fecha venda em qualquer
+              // etapa de Vendas, inclusive "Leads para o Elton" (nível 3).
+              (funilGondolas(publicoOrg) && [3, 4, 7].includes(leadTipado.nivel_ordem)) ||
               (posicaoNoFunil(leadTipado.nivel_ordem) >= NIVEL_REUNIAO_MARCADA &&
                 leadTipado.nivel_ordem !== NIVEL_NO_SHOW &&
                 leadTipado.nivel_ordem !== NIVEL_REAGENDAMENTO)) && (

@@ -349,6 +349,9 @@ export function LeadModalConteudo({
         ) : (
           podeEditar &&
           (ORGS_VENDA_DIRETA.includes(dados.orgId) ||
+            // Inove Gôndolas (sem reunião): o Elton fecha venda em qualquer
+            // etapa de Vendas, inclusive "Leads para o Elton" (nível 3).
+            (funilGondolas(publicoOrg) && [3, 4, 7].includes(lead.nivel_ordem)) ||
             (posicaoNoFunil(lead.nivel_ordem) >= NIVEL_REUNIAO_MARCADA &&
               lead.nivel_ordem !== NIVEL_NO_SHOW &&
               lead.nivel_ordem !== NIVEL_REAGENDAMENTO)) && (
