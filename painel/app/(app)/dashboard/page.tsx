@@ -8,8 +8,7 @@ import { VendasPorCanal } from "@/components/vendas-por-canal";
 import { VendasPorProduto } from "@/components/vendas-por-produto";
 import { CicloDeVendasCard } from "@/components/ciclo-de-vendas";
 import { PerformanceSdr } from "@/components/performance-sdr";
-import { PainelLigacoes } from "@/components/painel-ligacoes";
-import { ORG_ID_SAMUEL } from "@/lib/scripts-sdr";
+import { PainelLigacoes, META_LIGACOES_POR_DIA } from "@/components/painel-ligacoes";
 import { GraficoEnviadosPorMes } from "@/components/grafico-enviados-por-mes";
 import { PerformanceCloser } from "@/components/performance-closer";
 import { PerformanceCorretor } from "@/components/performance-corretor";
@@ -381,12 +380,14 @@ export default async function DashboardPage({
   }
   // Conversão do funil em barras: vendas fechadas dentro do período.
   const safraVenda = await safraP;
-  // Painel "Ligações" (Samuel, 18/11/26) — na Visão geral do CRM dele e, desde
-  // 24/11/26, em todo CRM imobiliário.
-  const mostraPainelLigacoes = usuario!.org_id === ORG_ID_SAMUEL || ehImobiliario(usuario!.publico_org);
-  const leadsDiferentesLigados = mostraPainelLigacoes
-    ? await contarLeadsDiferentesLigados(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
-    : 0;
+  // Painel "Ligações" (Samuel, 18/11/26 no CRM dele; 24/11/26: em todos os CRMs).
+  // A meta de 50 ligações por dia vem da rotina da empresa — a Banker tem rotina
+  // própria (80 prospecções), então fica sem meta de ligações.
+  const [leadsDiferentesLigados, { data: orgRotinaLigacoes }] = await Promise.all([
+    contarLeadsDiferentesLigados(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+    supabase.from("orgs").select("rotina_modelo").eq("id", usuario!.org_id).maybeSingle(),
+  ]);
+  const metaLigacoesPorDia = orgRotinaLigacoes?.rotina_modelo === "banker" ? null : META_LIGACOES_POR_DIA;
   const enviadosPorMes = ehGondolasCedo
     ? await calcularEnviadosPorMes(supabase, usuario!.org_id, anoEvolucaoResolvido)
     : [];
@@ -587,24 +588,33 @@ export default async function DashboardPage({
             nem Closer: só a tabela de performance do corretor, com todas as
             métricas (Samuel pediu de volta). Mentoria segue com os dois
             rankings lado a lado. */}
-        {mostraPainelLigacoes && (
-          <PainelLigacoes
-            titulo={`Ligações · ${periodoResolvido.titulo.toLowerCase()}`}
-            realizadas={metricas.ligacoes}
-            atendidas={metricas.ligacoesAtendidas}
-            realizadasAnterior={metricasAnteriores?.ligacoes}
-            atendidasAnterior={metricasAnteriores?.ligacoesAtendidas}
-            diasUteis={diasUteisPeriodo}
-            leadsDiferentes={leadsDiferentesLigados}
-            publicoOrg={publicoOrg}
-            // Todo SDR + qualquer outra pessoa (admin/closer) que tenha ligado, como no
-            // ranking — assim a soma da tabela bate com o total do painel. No imobiliário
-            // aparecem todos os corretores, mesmo quem ainda não ligou.
-            sdrs={performanceSdr
-              .filter((linha) => ehImobiliario(publicoOrg) || linha.funcao === "sdr" || linha.ligacoes > 0)
-              .map((linha) => ({ nome: linha.nome, realizadas: linha.ligacoes, atendidas: linha.ligacoesAtendidas }))}
-          />
-        )}
+        <PainelLigacoes
+          titulo={`Ligações · ${periodoResolvido.titulo.toLowerCase()}`}
+          // Inove Gôndolas não calcula o painel principal (metricas vem vazio): lá o total
+          // sai da soma da tabela, e sem comparação com o período anterior.
+          realizadas={
+            funilGondolas(publicoOrg)
+              ? performanceSdr.reduce((soma, linha) => soma + linha.ligacoes, 0)
+              : metricas.ligacoes
+          }
+          atendidas={
+            funilGondolas(publicoOrg)
+              ? performanceSdr.reduce((soma, linha) => soma + linha.ligacoesAtendidas, 0)
+              : metricas.ligacoesAtendidas
+          }
+          realizadasAnterior={metricasAnteriores?.ligacoes}
+          atendidasAnterior={metricasAnteriores?.ligacoesAtendidas}
+          diasUteis={diasUteisPeriodo}
+          leadsDiferentes={leadsDiferentesLigados}
+          publicoOrg={publicoOrg}
+          metaPorDia={metaLigacoesPorDia}
+          // Todo SDR + qualquer outra pessoa (admin/closer) que tenha ligado, como no
+          // ranking — assim a soma da tabela bate com o total do painel. No imobiliário
+          // aparecem todos os corretores, mesmo quem ainda não ligou.
+          sdrs={performanceSdr
+            .filter((linha) => ehImobiliario(publicoOrg) || linha.funcao === "sdr" || linha.ligacoes > 0)
+            .map((linha) => ({ nome: linha.nome, realizadas: linha.ligacoes, atendidas: linha.ligacoesAtendidas }))}
+        />
 
         {ehImobiliario(publicoOrg) ? (
           <PerformanceCorretor

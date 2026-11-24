@@ -2,7 +2,7 @@
 // atendidas e taxa de atendimento do período, mais a tabela por SDR com a meta
 // de ligações por dia útil (50, a mesma da tela "Minha rotina").
 
-import { Sdr, sdrs, ehImobiliario } from "@/lib/terminologia";
+import { Sdr, sdrs } from "@/lib/terminologia";
 
 export const META_LIGACOES_POR_DIA = 50;
 
@@ -70,6 +70,7 @@ export function PainelLigacoes({
   leadsDiferentes,
   sdrs: linhasSdr,
   publicoOrg = "mentoria",
+  metaPorDia = META_LIGACOES_POR_DIA,
 }: {
   titulo: string;
   realizadas: number;
@@ -80,10 +81,10 @@ export function PainelLigacoes({
   leadsDiferentes: number;
   sdrs: LinhaSdr[];
   publicoOrg?: string;
+  // Ligações por dia útil esperadas (rotina da empresa). null = sem meta (ex.: Banker).
+  metaPorDia?: number | null;
 }) {
-  // No imobiliário não existe meta de 50 ligações por dia (é regra do CRM do Samuel):
-  // a coluna "Por dia útil" aparece só com o número, sem meta nem cor.
-  const comMeta = !ehImobiliario(publicoOrg);
+  const comMeta = metaPorDia !== null;
   const naoAtendidas = Math.max(0, realizadas - atendidas);
   const taxa = realizadas > 0 ? (atendidas / realizadas) * 100 : null;
   const taxaAnterior =
@@ -160,7 +161,7 @@ export function PainelLigacoes({
                 const larguraTotal = (s.realizadas / maximo) * 100;
                 const larguraAtendidas = s.realizadas > 0 ? (s.atendidas / s.realizadas) * 100 : 0;
                 const dia = diasUteis > 0 ? s.realizadas / diasUteis : s.realizadas;
-                const bateu = dia >= META_LIGACOES_POR_DIA;
+                const bateu = metaPorDia !== null && dia >= metaPorDia;
                 return (
                   <tr key={s.nome} className="border-t border-neutral-100">
                     <td className="w-[38%] px-1 py-3">
@@ -180,7 +181,7 @@ export function PainelLigacoes({
                       <span className={`font-bold ${!comMeta ? "text-neutral-900" : bateu ? "text-green-600" : "text-amber-600"}`}>
                         {numero(dia, 1)}
                       </span>
-                      {comMeta && <span className="text-neutral-400"> / {META_LIGACOES_POR_DIA}</span>}
+                      {comMeta && <span className="text-neutral-400"> / {metaPorDia}</span>}
                     </td>
                   </tr>
                 );
