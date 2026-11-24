@@ -12,18 +12,24 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 // e contagem de vendas continuam pela data da venda.
 type Recebimento = { lead_id: string; valor: number };
 
+// semVendasExtras: deixa de fora os pagamentos das NOVAS vendas de cliente
+// (lead_vendas_extras). Use true em tudo que é bônus/atribuição a uma pessoa —
+// a nova venda do cliente não conta no bônus do SDR (Samuel, 24/11/26).
 async function recebimentosDaOrg(
   supabase: SupabaseServerClient,
   orgId: string,
   inicioISO: string,
-  fimISO: string
+  fimISO: string,
+  semVendasExtras = false
 ): Promise<Recebimento[]> {
-  const { data } = await buscarTodas<{ lead_id: string; valor: number | string }>((de, ate) =>
-    supabase
+  const { data } = await buscarTodas<{ lead_id: string; valor: number | string }>((de, ate) => {
+    let consulta = supabase
       .from("venda_recebimentos")
       .select("lead_id, valor, leads!inner(status, arquivado_em)")
       .eq("org_id", orgId)
-      .is("excluido_em", null)
+      .is("excluido_em", null);
+    if (semVendasExtras) consulta = consulta.is("venda_extra_id", null);
+    return consulta
       .eq("leads.status", "vendido")
       .is("leads.arquivado_em", null)
       .gte("recebido_em", inicioISO)
@@ -33,9 +39,50 @@ async function recebimentosDaOrg(
       .range(de, ate) as unknown as PromiseLike<{
       data: { lead_id: string; valor: number | string }[] | null;
       error: unknown;
-    }>
-  );
+    }>;
+  });
   return data.map((r) => ({ lead_id: r.lead_id, valor: Number(r.valor) }));
+}
+
+// Novas vendas de cliente (lead_vendas_extras) feitas no período. Entram no
+// faturamento e na contagem de vendas da EMPRESA; ficam fora de tudo que é
+// atribuído a uma pessoa (bônus, SDR, Closer).
+type VendaExtraDoPeriodo = { produto: string; valor_venda: number; origem: string | null; vendido_em: string };
+
+async function vendasExtrasDaOrg(
+  supabase: SupabaseServerClient,
+  orgId: string,
+  inicioISO: string,
+  fimISO: string
+): Promise<VendaExtraDoPeriodo[]> {
+  type Linha = {
+    produto: string;
+    valor_venda: number | string;
+    vendido_em: string;
+    leads: { origem: string | null } | { origem: string | null }[];
+  };
+  const { data } = await buscarTodas<Linha>((de, ate) =>
+    supabase
+      .from("lead_vendas_extras")
+      .select("produto, valor_venda, vendido_em, leads!inner(origem, status, arquivado_em)")
+      .eq("org_id", orgId)
+      .is("excluido_em", null)
+      .eq("leads.status", "vendido")
+      .is("leads.arquivado_em", null)
+      .gte("vendido_em", inicioISO)
+      .lt("vendido_em", fimISO)
+      .order("vendido_em")
+      .order("id")
+      .range(de, ate) as unknown as PromiseLike<{ data: Linha[] | null; error: unknown }>
+  );
+  return data.map((v) => {
+    const lead = Array.isArray(v.leads) ? v.leads[0] : v.leads;
+    return { produto: v.produto, valor_venda: Number(v.valor_venda), origem: lead?.origem ?? null, vendido_em: v.vendido_em };
+  });
+}
+
+function somarVendasExtras(lista: VendaExtraDoPeriodo[]): number {
+  return lista.reduce((soma, v) => soma + v.valor_venda, 0);
 }
 
 function somarRecebimentos(lista: Recebimento[]): number {
@@ -69,6 +116,7 @@ async function receitaRecebidaDe(
         .select("valor")
         .in("lead_id", pedaco)
         .is("excluido_em", null)
+        .is("venda_extra_id", null)
         .gte("recebido_em", inicioISO)
         .lt("recebido_em", fimISO);
       return (data ?? []).reduce((soma, r) => soma + Number(r.valor), 0);
@@ -431,6 +479,7 @@ export async function calcularMetricasOrg(
     { count: noShow },
     { data: vendasData },
     recebimentosOrg,
+    vendasExtrasOrg,
   ] = await Promise.all([
     // Mesma exceção da versão por usuário acima: lead em Farming não conta
     // como "lead novo".
@@ -574,14 +623,18 @@ export async function calcularMetricasOrg(
       .gte("vendido_em", inicioISO)
       .lt("vendido_em", fimISO),
     recebimentosDaOrg(supabase, orgId, inicioISO, fimISO),
+    vendasExtrasDaOrg(supabase, orgId, inicioISO, fimISO),
   ]);
 
-  const vendas = vendasData?.length ?? 0;
+  // Vendas "de reunião" (1ª venda do lead) e novas vendas de cliente: as duas
+  // entram no total da empresa, mas a taxa de venda só olha as 1ªs (nova venda
+  // de cliente antigo não vem de reunião).
+  const vendasPrimeiras = vendasData?.length ?? 0;
+  const vendas = vendasPrimeiras + vendasExtrasOrg.length;
   const receita = somarRecebimentos(recebimentosOrg);
-  const faturamento = (vendasData ?? []).reduce(
-    (soma, l) => soma + Number(l.valor_venda ?? 0),
-    0
-  );
+  const faturamento =
+    (vendasData ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0) +
+    somarVendasExtras(vendasExtrasOrg);
 
   const idsTrabalhados = new Set<string>([
     ...(leadsDeclarados ?? []).map((l) => l.id),
@@ -613,7 +666,7 @@ export async function calcularMetricasOrg(
     ticketMedio: vendas > 0 ? faturamento / vendas : null,
     taxaAgendamento: leads > 0 ? marcadas / leads : null,
     taxaComparecimento: devidas > 0 ? realizadas / devidas : null,
-    taxaVenda: comPitch > 0 ? vendas / comPitch : null,
+    taxaVenda: comPitch > 0 ? vendasPrimeiras / comPitch : null,
     diasUteis: diasUteisEntre(inicio, fim < new Date() ? fim : new Date()),
   };
 }
@@ -632,7 +685,7 @@ export async function calcularVendasHoje(
   inicioHoje: Date,
   amanha: Date
 ): Promise<VendasHoje> {
-  const [{ data }, recebimentosHoje] = await Promise.all([
+  const [{ data }, recebimentosHoje, vendasExtrasHoje] = await Promise.all([
     supabase
       .from("leads")
       .select("valor_venda")
@@ -642,13 +695,13 @@ export async function calcularVendasHoje(
       .gte("vendido_em", inicioHoje.toISOString())
       .lt("vendido_em", amanha.toISOString()),
     recebimentosDaOrg(supabase, orgId, inicioHoje.toISOString(), amanha.toISOString()),
+    vendasExtrasDaOrg(supabase, orgId, inicioHoje.toISOString(), amanha.toISOString()),
   ]);
 
-  const vendas = data?.length ?? 0;
-  const faturamento = (data ?? []).reduce(
-    (soma, l) => soma + Number(l.valor_venda ?? 0),
-    0
-  );
+  const vendas = (data?.length ?? 0) + vendasExtrasHoje.length;
+  const faturamento =
+    (data ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0) +
+    somarVendasExtras(vendasExtrasHoje);
   const receita = somarRecebimentos(recebimentosHoje);
 
   return { vendas, faturamento, receita };
@@ -688,21 +741,28 @@ export async function calcularVendasPorCanal(
   inicio: Date,
   fim: Date
 ): Promise<VendaPorCanal[]> {
-  const { data } = await supabase
-    .from("leads")
-    .select("origem, valor_venda")
-    .eq("org_id", orgId)
-    .eq("status", "vendido")
-    .is("arquivado_em", null)
-    .gte("vendido_em", inicio.toISOString())
-    .lt("vendido_em", fim.toISOString());
+  const [{ data }, extras] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("origem, valor_venda")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicio.toISOString())
+      .lt("vendido_em", fim.toISOString()),
+    vendasExtrasDaOrg(supabase, orgId, inicio.toISOString(), fim.toISOString()),
+  ]);
 
   const porCanal = new Map<string, VendaPorCanal>();
-  for (const lead of data ?? []) {
-    const canal = lead.origem?.trim() || "Sem origem";
+  const vendasParaSomar = [
+    ...(data ?? []).map((l) => ({ origem: l.origem as string | null, valor: Number(l.valor_venda ?? 0) })),
+    ...extras.map((v) => ({ origem: v.origem, valor: v.valor_venda })),
+  ];
+  for (const venda of vendasParaSomar) {
+    const canal = venda.origem?.trim() || "Sem origem";
     const atual = porCanal.get(canal) ?? { canal, quantidade: 0, faturamento: 0 };
     atual.quantidade += 1;
-    atual.faturamento += Number(lead.valor_venda ?? 0);
+    atual.faturamento += venda.valor;
     porCanal.set(canal, atual);
   }
 
@@ -786,21 +846,28 @@ export async function calcularVendasPorProduto(
   inicio: Date,
   fim: Date
 ): Promise<VendaPorProduto[]> {
-  const { data } = await supabase
-    .from("leads")
-    .select("produto, valor_venda")
-    .eq("org_id", orgId)
-    .eq("status", "vendido")
-    .is("arquivado_em", null)
-    .gte("vendido_em", inicio.toISOString())
-    .lt("vendido_em", fim.toISOString());
+  const [{ data }, extras] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("produto, valor_venda")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicio.toISOString())
+      .lt("vendido_em", fim.toISOString()),
+    vendasExtrasDaOrg(supabase, orgId, inicio.toISOString(), fim.toISOString()),
+  ]);
 
   const porProduto = new Map<string, VendaPorProduto>();
-  for (const lead of data ?? []) {
-    const produto = lead.produto?.trim() || "Sem produto";
+  const vendasParaSomar = [
+    ...(data ?? []).map((l) => ({ produto: l.produto as string | null, valor: Number(l.valor_venda ?? 0) })),
+    ...extras.map((v) => ({ produto: v.produto as string | null, valor: v.valor_venda })),
+  ];
+  for (const venda of vendasParaSomar) {
+    const produto = venda.produto?.trim() || "Sem produto";
     const atual = porProduto.get(produto) ?? { produto, quantidade: 0, faturamento: 0 };
     atual.quantidade += 1;
-    atual.faturamento += Number(lead.valor_venda ?? 0);
+    atual.faturamento += venda.valor;
     porProduto.set(produto, atual);
   }
 
@@ -979,16 +1046,19 @@ export async function calcularFaturamentoOrg(
   inicio: Date,
   fim: Date
 ): Promise<number> {
-  const { data } = await supabase
-    .from("leads")
-    .select("valor_venda")
-    .eq("org_id", orgId)
-    .eq("status", "vendido")
-    .is("arquivado_em", null)
-    .gte("vendido_em", inicio.toISOString())
-    .lt("vendido_em", fim.toISOString());
+  const [{ data }, extras] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("valor_venda")
+      .eq("org_id", orgId)
+      .eq("status", "vendido")
+      .is("arquivado_em", null)
+      .gte("vendido_em", inicio.toISOString())
+      .lt("vendido_em", fim.toISOString()),
+    vendasExtrasDaOrg(supabase, orgId, inicio.toISOString(), fim.toISOString()),
+  ]);
 
-  return (data ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
+  return (data ?? []).reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0) + somarVendasExtras(extras);
 }
 
 export type NegociacoesAbertas = {
@@ -1221,7 +1291,7 @@ export async function calcularMetricasPorUsuario(
       .is("arquivado_em", null)
       .gte("vendido_em", inicioISO)
       .lt("vendido_em", fimISO),
-    recebimentosDaOrg(supabase, orgId, inicioISO, fimISO),
+    recebimentosDaOrg(supabase, orgId, inicioISO, fimISO, true),
   ]);
 
   const idsLeads = [
@@ -1525,7 +1595,7 @@ export async function calcularBonusPorSdr(
       .in("status", ["realizada", "nao_compareceu"])
       .gte("agendada_para", inicioISO)
       .lt("agendada_para", limiteDevidasISO),
-    recebimentosDaOrg(supabase, orgId, inicioISO, fimISO),
+    recebimentosDaOrg(supabase, orgId, inicioISO, fimISO, true),
   ]);
   const funcaoPorUsuario = new Map((funcoesData ?? []).map((u) => [u.id, u.funcao as string | null]));
   const comissaoPercentualPorUsuario = new Map(
@@ -1845,7 +1915,7 @@ export async function calcularResumoAno(
   if (mesesParaSomar.length > 0) {
     const inicioAno = new Date(ano, 0, 1);
     const fimAno = new Date(ano + 1, 0, 1);
-    const [{ data: vendas }, { data: recebimentos }] = await Promise.all([
+    const [{ data: vendas }, { data: recebimentos }, vendasExtrasAno] = await Promise.all([
       buscarTodas<{ valor_venda: number | string | null; vendido_em: string }>((de, ate) =>
         supabase
           .from("leads")
@@ -1879,12 +1949,17 @@ export async function calcularResumoAno(
           error: unknown;
         }>
       ),
+      vendasExtrasDaOrg(supabase, orgId, inicioAno.toISOString(), fimAno.toISOString()),
     ]);
 
     const achaMes = (instante: number) => limites.findIndex((l) => instante >= l.inicio && instante < l.fim);
     for (const v of vendas) {
       const i = achaMes(new Date(v.vendido_em).getTime());
       if (i >= 0) faturamentoPorMes[i] += Number(v.valor_venda ?? 0);
+    }
+    for (const v of vendasExtrasAno) {
+      const i = achaMes(new Date(v.vendido_em).getTime());
+      if (i >= 0) faturamentoPorMes[i] += v.valor_venda;
     }
     for (const r of recebimentos) {
       const i = achaMes(new Date(r.recebido_em).getTime());

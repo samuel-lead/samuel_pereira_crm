@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { EditarLeadForm } from "@/components/editar-lead-form";
 import { EditarVendaForm } from "@/components/editar-venda-form";
 import { RecebimentosVenda } from "@/components/recebimentos-venda";
+import { NovasVendasCliente } from "@/components/novas-vendas-cliente";
 import { PropostaVendaCard } from "@/components/proposta-venda-card";
 import { ORGS_VENDA_DIRETA } from "@/lib/scripts-sdr";
 import { ProximoContatoForm } from "@/components/proximo-contato-form";
@@ -21,7 +22,7 @@ import { AvatarUsuario } from "@/components/avatar-usuario";
 import { AvatarLead } from "@/components/avatar-lead";
 import { numerarNiveis, type NivelResumo, ordenarNiveisDoFunil, posicaoNoFunil } from "@/lib/niveis";
 import type { PropostaConsorcio } from "@/lib/proposta-consorcio";
-import { Reuniao, Sdr, Receita, ehImobiliario, funilGondolas } from "@/lib/terminologia";
+import { Reuniao, Sdr, Receita, ehImobiliario, funilGondolas, usaComissaoDoVendedor } from "@/lib/terminologia";
 
 const NIVEL_REUNIAO_MARCADA = 4;
 const NIVEL_NO_SHOW = 5;
@@ -211,11 +212,37 @@ export default async function EditarLeadPage({
     .select("id, valor, recebido_em")
     .eq("lead_id", leadTipado.id)
     .is("excluido_em", null)
+    .is("venda_extra_id", null)
     .order("recebido_em", { ascending: true });
   const recebimentos = (recebimentosData ?? []).map((r) => ({
     id: r.id as string,
     valor: Number(r.valor),
     recebido_em: r.recebido_em as string,
+  }));
+  // Novas compras do mesmo cliente (além da 1ª venda), cada uma com seus pagamentos.
+  const [{ data: vendasExtrasData }, { data: recebimentosExtrasData }] = await Promise.all([
+    supabase
+      .from("lead_vendas_extras")
+      .select("id, produto, valor_venda, vendido_em")
+      .eq("lead_id", leadTipado.id)
+      .is("excluido_em", null)
+      .order("vendido_em", { ascending: true }),
+    supabase
+      .from("venda_recebimentos")
+      .select("id, valor, recebido_em, venda_extra_id")
+      .eq("lead_id", leadTipado.id)
+      .is("excluido_em", null)
+      .not("venda_extra_id", "is", null)
+      .order("recebido_em", { ascending: true }),
+  ]);
+  const vendasExtras = (vendasExtrasData ?? []).map((v) => ({
+    id: v.id as string,
+    produto: v.produto as string,
+    valor_venda: Number(v.valor_venda),
+    vendido_em: v.vendido_em as string,
+    recebimentos: (recebimentosExtrasData ?? [])
+      .filter((r) => r.venda_extra_id === v.id)
+      .map((r) => ({ id: r.id as string, valor: Number(r.valor), recebido_em: r.recebido_em as string })),
   }));
   const niveis = ordenarNiveisDoFunil((niveisData ?? []) as NivelResumo[]);
   const interacoes = (interacoesData ?? []) as Interacao[];
@@ -479,6 +506,15 @@ export default async function EditarLeadPage({
                 publicoOrg={publicoOrg}
                 podeEditar={podeEditar}
               />
+              {!ehImobiliario(publicoOrg) && !usaComissaoDoVendedor(publicoOrg) && (
+                <NovasVendasCliente
+                  leadId={leadTipado.id}
+                  vendasExtras={vendasExtras}
+                  produtos={produtos}
+                  publicoOrg={publicoOrg}
+                  podeEditar={podeEditar}
+                />
+              )}
               {podeEditar && (
                 <div className="mt-3">
                   <EditarVendaForm

@@ -222,8 +222,27 @@ export default async function VendasPage({
   }
   const mostrarSplitReceita =
     receitaPorPagamentos && !buscaFiltro && !sdrFiltroAtivo && !closerFiltroAtivo && !!usuario;
-  const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0);
-  const ticketMedio = leads.length > 0 ? totalFaturamento / leads.length : 0;
+  // Novas vendas de clientes que já tinham comprado (Samuel, 24/11/26): entram no
+  // faturamento e na contagem de vendas do período. Com busca/filtro ativo ficam
+  // de fora (não pertencem a um SDR/Closer).
+  let vendasNovasQtd = 0;
+  let vendasNovasValor = 0;
+  if (receitaPorPagamentos && !buscaFiltro && !sdrFiltroAtivo && !closerFiltroAtivo && usuario) {
+    const { data: novasVendas } = await supabase
+      .from("lead_vendas_extras")
+      .select("valor_venda, leads!inner(status, arquivado_em)")
+      .eq("org_id", usuario.org_id)
+      .is("excluido_em", null)
+      .eq("leads.status", "vendido")
+      .is("leads.arquivado_em", null)
+      .gte("vendido_em", periodoResolvido.inicio.toISOString())
+      .lt("vendido_em", periodoResolvido.fim.toISOString());
+    vendasNovasQtd = novasVendas?.length ?? 0;
+    vendasNovasValor = (novasVendas ?? []).reduce((soma, v) => soma + Number(v.valor_venda ?? 0), 0);
+  }
+  const totalVendas = leads.length + vendasNovasQtd;
+  const totalFaturamento = leads.reduce((soma, l) => soma + Number(l.valor_venda ?? 0), 0) + vendasNovasValor;
+  const ticketMedio = totalVendas > 0 ? totalFaturamento / totalVendas : 0;
   const filtroAtivo = Boolean(
     periodoFiltro || mesAnoFiltro || deFiltro || ateFiltro || buscaFiltro || sdrFiltroAtivo || closerFiltroAtivo
   );
@@ -316,9 +335,10 @@ export default async function VendasPage({
             {formatarMoeda(totalReceita)}
           </p>
           <p className="relative mt-2 text-sm font-medium text-green-100">
-            {leads.length} venda{leads.length === 1 ? "" : "s"} fechada
-            {leads.length === 1 ? "" : "s"}
-            {leads.length > 0 && ` · ticket médio ${formatarMoeda(ticketMedio)}`}
+            {totalVendas} venda{totalVendas === 1 ? "" : "s"} fechada
+            {totalVendas === 1 ? "" : "s"}
+            {totalVendas > 0 && ` · ticket médio ${formatarMoeda(ticketMedio)}`}
+            {vendasNovasQtd > 0 && ` · ${vendasNovasQtd} de clientes que já tinham comprado`}
           </p>
           <p className="relative mt-1 text-xs text-green-200/80">
             {Faturamento(publicoOrg)}: {formatarMoeda(totalFaturamento)}

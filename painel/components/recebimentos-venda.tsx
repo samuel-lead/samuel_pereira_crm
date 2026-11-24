@@ -25,11 +25,14 @@ export function RecebimentosVenda({
   recebimentos,
   publicoOrg,
   podeEditar,
+  vendaExtraId,
 }: {
   leadId: string;
   recebimentos: Recebimento[];
   publicoOrg: string;
   podeEditar: boolean;
+  // Quando preenchido, os pagamentos são de uma NOVA venda do cliente (não da 1ª).
+  vendaExtraId?: string;
 }) {
   const router = useRouter();
   const modalAtivo = useLeadModalAtivo();
@@ -59,7 +62,7 @@ export function RecebimentosVenda({
   async function salvar() {
     setErro(null);
     setOcupado(true);
-    const resultado = await registrarRecebimento(leadId, centavos / 100, dia);
+    const resultado = await registrarRecebimento(leadId, centavos / 100, dia, vendaExtraId);
     setOcupado(false);
     if (resultado.erro) {
       setErro(resultado.erro);
@@ -108,7 +111,7 @@ export function RecebimentosVenda({
   return (
     <div className="mt-3 border-t border-green-200 pt-3">
       <p className="text-xs font-semibold text-green-800">
-        {Receita(publicoOrg)} recebida — pagamentos
+        {vendaExtraId ? "Pagamentos desta venda" : `${Receita(publicoOrg)} recebida — pagamentos`}
       </p>
       {recebimentos.length === 0 ? (
         <p className="mt-1 text-xs text-green-700">Nenhum pagamento registrado ainda.</p>
@@ -252,9 +255,11 @@ export function RecebimentosVenda({
           </button>
         ))}
       {erro && <p className="mt-1 text-sm text-red-600">{erro}</p>}
-      <p className="mt-2 text-[11px] text-green-600">
-        A {Receita(publicoOrg).toLowerCase()} conta no mês do dia em que o dinheiro caiu, não no mês da venda.
-      </p>
+      {!vendaExtraId && (
+        <p className="mt-2 text-[11px] text-green-600">
+          A {Receita(publicoOrg).toLowerCase()} conta no mês do dia em que o dinheiro caiu, não no mês da venda.
+        </p>
+      )}
     </div>
   );
 }

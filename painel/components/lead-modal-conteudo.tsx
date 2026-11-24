@@ -17,10 +17,11 @@ import { PassarLeadParaSdr } from "@/components/passar-lead-para-sdr";
 import { DiaFollowSelector } from "@/components/dia-follow-selector";
 import { QualificadaReuniao } from "@/components/qualificada-reuniao";
 import { RecebimentosVenda } from "@/components/recebimentos-venda";
+import { NovasVendasCliente } from "@/components/novas-vendas-cliente";
 import { EditarMotivoRepescagem } from "@/components/editar-motivo-repescagem";
 import { AvatarUsuario } from "@/components/avatar-usuario";
 import { IconeLapis } from "@/components/icons";
-import { Reuniao, Sdr, Receita, ehImobiliario, funilGondolas, semCloser } from "@/lib/terminologia";
+import { Reuniao, Sdr, Receita, ehImobiliario, funilGondolas, semCloser, usaComissaoDoVendedor } from "@/lib/terminologia";
 import type { DetalhesLead } from "@/lib/leads/actions";
 
 const NIVEL_REUNIAO_MARCADA = 4;
@@ -114,6 +115,7 @@ export function LeadModalConteudo({
     interacoes,
     reunioes,
     recebimentos,
+    vendasExtras,
     nivelHistorico,
     usuarios,
     origens,
@@ -320,6 +322,15 @@ export function LeadModalConteudo({
               publicoOrg={publicoOrg}
               podeEditar={podeEditar}
             />
+            {!ehImobiliario(publicoOrg) && !usaComissaoDoVendedor(publicoOrg) && (
+              <NovasVendasCliente
+                leadId={lead.id}
+                vendasExtras={vendasExtras}
+                produtos={produtos}
+                publicoOrg={publicoOrg}
+                podeEditar={podeEditar}
+              />
+            )}
             {podeEditar && (
               <div className="mt-3">
                 <EditarVendaForm

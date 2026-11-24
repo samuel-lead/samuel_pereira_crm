@@ -2199,6 +2199,17 @@ export async function cancelarVenda(
   if (!lead) return "Lead não encontrado.";
   if (lead.status !== "vendido") return "Esse lead não está com venda registrada.";
 
+  // Cliente com novas vendas registradas: cancelar a 1ª venda deixaria as outras
+  // soltas (somem dos relatórios sem aviso). Pede pra remover antes.
+  const { count: qtdNovasVendas } = await supabase
+    .from("lead_vendas_extras")
+    .select("id", { count: "exact", head: true })
+    .eq("lead_id", leadId)
+    .is("excluido_em", null);
+  if ((qtdNovasVendas ?? 0) > 0) {
+    return "Esse cliente tem novas vendas registradas. Remova as novas vendas antes de cancelar a venda.";
+  }
+
   const { data: atualizado, error } = await supabase
     .from("leads")
     .update({
@@ -2398,7 +2409,9 @@ export async function editarVenda(
 export async function registrarRecebimento(
   leadId: string,
   valor: number,
-  dia: string
+  dia: string,
+  // Preenchido quando o pagamento é de uma NOVA venda do cliente (não da 1ª).
+  vendaExtraId?: string
 ): Promise<{ erro: string | null }> {
   const { supabase, usuario } = await contextoUsuario();
 
@@ -2416,14 +2429,152 @@ export async function registrarRecebimento(
   const { data: lead } = await supabase.from("leads").select("status").eq("id", leadId).single();
   if (!lead || lead.status !== "vendido") return { erro: "Esse lead não está com venda registrada." };
 
+  if (vendaExtraId) {
+    const { data: extra } = await supabase
+      .from("lead_vendas_extras")
+      .select("id")
+      .eq("id", vendaExtraId)
+      .eq("lead_id", leadId)
+      .is("excluido_em", null)
+      .maybeSingle();
+    if (!extra) return { erro: "Não encontrei essa venda do cliente." };
+  }
+
   const { error } = await supabase.from("venda_recebimentos").insert({
     org_id: usuario.org_id,
     usuario_id: usuario.id,
     lead_id: leadId,
     valor: Math.round(valor * 100) / 100,
     recebido_em: `${dia}T12:00:00-03:00`,
+    venda_extra_id: vendaExtraId ?? null,
   });
   if (error) return { erro: traduzirErro(error.message) };
+
+  revalidatePath("/leads/vendas");
+  revalidatePath("/dashboard");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
+// Samuel (24/11/26): cliente que já comprou e compra OUTRO produto. A nova venda
+// fica numa lista própria (lead_vendas_extras) e a 1ª venda não é mexida. Conta
+// no faturamento, nas vendas e na receita da empresa, mas NÃO no bônus do SDR.
+// Só nos CRMs de serviço/mentoria (receita por pagamento).
+export async function registrarNovaVenda(
+  leadId: string,
+  produto: string,
+  valor: number,
+  dia: string,
+  valorRecebido: number
+): Promise<{ erro: string | null }> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) return { erro: erroPermissao };
+  if (!receitaEhPorPagamentos(usuario)) {
+    return { erro: "Nova venda do cliente só existe nos CRMs de serviço." };
+  }
+
+  const produtoLimpo = produto.trim();
+  if (!produtoLimpo) return { erro: "Selecione o produto que o cliente comprou." };
+  if (!Number.isFinite(valor) || valor <= 0) return { erro: "Informe o valor da nova venda." };
+  if (!Number.isFinite(valorRecebido) || valorRecebido < 0) return { erro: "Valor recebido inválido." };
+  if (valorRecebido > valor) return { erro: "O valor recebido não pode ser maior que o valor da venda." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return { erro: "Informe a data em que a venda aconteceu." };
+
+  const hojeSp = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  if (dia > hojeSp) return { erro: "A data da venda não pode ser no futuro." };
+
+  const { data: lead } = await supabase.from("leads").select("status").eq("id", leadId).single();
+  if (!lead || lead.status !== "vendido") {
+    return { erro: "Esse lead ainda não é cliente. Use \"Marcar como vendido\" na primeira venda." };
+  }
+
+  const valorArredondado = Math.round(valor * 100) / 100;
+  const vendidoEm = `${dia}T12:00:00-03:00`;
+  const { data: extra, error } = await supabase
+    .from("lead_vendas_extras")
+    .insert({
+      org_id: usuario.org_id,
+      usuario_id: usuario.id,
+      lead_id: leadId,
+      produto: produtoLimpo,
+      valor_venda: valorArredondado,
+      vendido_em: vendidoEm,
+    })
+    .select("id")
+    .single();
+  if (error || !extra) return { erro: traduzirErro(error?.message ?? "Não consegui registrar a venda.") };
+
+  if (valorRecebido > 0) {
+    const { error: erroPagamento } = await supabase.from("venda_recebimentos").insert({
+      org_id: usuario.org_id,
+      usuario_id: usuario.id,
+      lead_id: leadId,
+      valor: Math.round(valorRecebido * 100) / 100,
+      recebido_em: vendidoEm,
+      venda_extra_id: extra.id,
+    });
+    if (erroPagamento) {
+      return {
+        erro: `Venda registrada, mas não consegui salvar o pagamento: ${traduzirErro(erroPagamento.message)}`,
+      };
+    }
+  }
+
+  await supabase.from("interacoes").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    tipo: "nota",
+    canal: "manual",
+    conteudo: `Nova venda do cliente: ${produtoLimpo}, ${valorArredondado.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.`,
+    ocorreu_em: new Date().toISOString(),
+    origem: "declarado",
+  });
+
+  revalidatePath("/leads/vendas");
+  revalidatePath("/dashboard");
+  revalidatePath(`/leads/${leadId}`);
+  return { erro: null };
+}
+
+// Remove uma nova venda registrada errada (e os pagamentos dela). Nada é
+// apagado de verdade: fica só marcada como excluída.
+export async function removerNovaVenda(leadId: string, vendaExtraId: string): Promise<{ erro: string | null }> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) return { erro: erroPermissao };
+
+  const agora = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("lead_vendas_extras")
+    .update({ excluido_em: agora })
+    .eq("id", vendaExtraId)
+    .eq("lead_id", leadId)
+    .is("excluido_em", null)
+    .select("id, produto");
+  if (error) return { erro: traduzirErro(error.message) };
+  if (!data || data.length === 0) return { erro: "Não consegui remover essa venda." };
+
+  await supabase
+    .from("venda_recebimentos")
+    .update({ excluido_em: agora })
+    .eq("lead_id", leadId)
+    .eq("venda_extra_id", vendaExtraId)
+    .is("excluido_em", null);
+
+  await supabase.from("interacoes").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    tipo: "nota",
+    canal: "manual",
+    conteudo: `Nova venda do cliente removida: ${data[0].produto}.`,
+    ocorreu_em: agora,
+    origem: "declarado",
+  });
 
   revalidatePath("/leads/vendas");
   revalidatePath("/dashboard");
@@ -3375,6 +3526,14 @@ export async function reivindicarLead(
   return { erro: null };
 }
 
+export type VendaExtra = {
+  id: string;
+  produto: string;
+  valor_venda: number;
+  vendido_em: string;
+  recebimentos: { id: string; valor: number; recebido_em: string }[];
+};
+
 export type DetalhesLead = {
   lead: {
     id: string;
@@ -3437,6 +3596,8 @@ export type DetalhesLead = {
   }[];
   // Pagamentos já recebidos da venda (só CRMs em que a receita é por pagamento).
   recebimentos: { id: string; valor: number; recebido_em: string }[];
+  // Novas compras do mesmo cliente (além da 1ª venda), cada uma com seus pagamentos.
+  vendasExtras: VendaExtra[];
   nivelHistorico: {
     id: string;
     de_ordem: number;
@@ -3521,6 +3682,8 @@ export async function buscarDetalhesDoLead(
     { data: iscaRespostaData },
     { data: googleCalendarConectadoData },
     { data: recebimentosData },
+    { data: vendasExtrasData },
+    { data: recebimentosExtrasData },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -3568,6 +3731,20 @@ export async function buscarDetalhesDoLead(
       .select("id, valor, recebido_em")
       .eq("lead_id", leadId)
       .is("excluido_em", null)
+      .is("venda_extra_id", null)
+      .order("recebido_em", { ascending: true }),
+    supabase
+      .from("lead_vendas_extras")
+      .select("id, produto, valor_venda, vendido_em")
+      .eq("lead_id", leadId)
+      .is("excluido_em", null)
+      .order("vendido_em", { ascending: true }),
+    supabase
+      .from("venda_recebimentos")
+      .select("id, valor, recebido_em, venda_extra_id")
+      .eq("lead_id", leadId)
+      .is("excluido_em", null)
+      .not("venda_extra_id", "is", null)
       .order("recebido_em", { ascending: true }),
   ]);
 
@@ -3578,6 +3755,15 @@ export async function buscarDetalhesDoLead(
     id: r.id as string,
     valor: Number(r.valor),
     recebido_em: r.recebido_em as string,
+  }));
+  const vendasExtras: VendaExtra[] = (vendasExtrasData ?? []).map((v) => ({
+    id: v.id as string,
+    produto: v.produto as string,
+    valor_venda: Number(v.valor_venda),
+    vendido_em: v.vendido_em as string,
+    recebimentos: (recebimentosExtrasData ?? [])
+      .filter((r) => r.venda_extra_id === v.id)
+      .map((r) => ({ id: r.id as string, valor: Number(r.valor), recebido_em: r.recebido_em as string })),
   }));
 
   const googleCalendarConectado = googleCalendarConectadoData === true;
@@ -3644,6 +3830,7 @@ export async function buscarDetalhesDoLead(
       interacoes,
       reunioes,
       recebimentos,
+      vendasExtras,
       nivelHistorico,
       usuarios,
       origens,
