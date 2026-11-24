@@ -381,8 +381,9 @@ export default async function DashboardPage({
   }
   // Conversão do funil em barras: vendas fechadas dentro do período.
   const safraVenda = await safraP;
-  // Painel "Ligações" (Samuel, 18/11/26) — por enquanto só na Visão geral do CRM dele.
-  const mostraPainelLigacoes = usuario!.org_id === ORG_ID_SAMUEL;
+  // Painel "Ligações" (Samuel, 18/11/26) — na Visão geral do CRM dele e, desde
+  // 24/11/26, em todo CRM imobiliário.
+  const mostraPainelLigacoes = usuario!.org_id === ORG_ID_SAMUEL || ehImobiliario(usuario!.publico_org);
   const leadsDiferentesLigados = mostraPainelLigacoes
     ? await contarLeadsDiferentesLigados(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
     : 0;
@@ -595,10 +596,12 @@ export default async function DashboardPage({
             atendidasAnterior={metricasAnteriores?.ligacoesAtendidas}
             diasUteis={diasUteisPeriodo}
             leadsDiferentes={leadsDiferentesLigados}
+            publicoOrg={publicoOrg}
             // Todo SDR + qualquer outra pessoa (admin/closer) que tenha ligado, como no
-            // ranking — assim a soma da tabela bate com o total do painel.
+            // ranking — assim a soma da tabela bate com o total do painel. No imobiliário
+            // aparecem todos os corretores, mesmo quem ainda não ligou.
             sdrs={performanceSdr
-              .filter((linha) => linha.funcao === "sdr" || linha.ligacoes > 0)
+              .filter((linha) => ehImobiliario(publicoOrg) || linha.funcao === "sdr" || linha.ligacoes > 0)
               .map((linha) => ({ nome: linha.nome, realizadas: linha.ligacoes, atendidas: linha.ligacoesAtendidas }))}
           />
         )}

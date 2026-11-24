@@ -2,6 +2,8 @@
 // atendidas e taxa de atendimento do período, mais a tabela por SDR com a meta
 // de ligações por dia útil (50, a mesma da tela "Minha rotina").
 
+import { Sdr, sdrs, ehImobiliario } from "@/lib/terminologia";
+
 export const META_LIGACOES_POR_DIA = 50;
 
 type LinhaSdr = { nome: string; realizadas: number; atendidas: number };
@@ -66,7 +68,8 @@ export function PainelLigacoes({
   atendidasAnterior,
   diasUteis,
   leadsDiferentes,
-  sdrs,
+  sdrs: linhasSdr,
+  publicoOrg = "mentoria",
 }: {
   titulo: string;
   realizadas: number;
@@ -76,20 +79,24 @@ export function PainelLigacoes({
   diasUteis: number;
   leadsDiferentes: number;
   sdrs: LinhaSdr[];
+  publicoOrg?: string;
 }) {
+  // No imobiliário não existe meta de 50 ligações por dia (é regra do CRM do Samuel):
+  // a coluna "Por dia útil" aparece só com o número, sem meta nem cor.
+  const comMeta = !ehImobiliario(publicoOrg);
   const naoAtendidas = Math.max(0, realizadas - atendidas);
   const taxa = realizadas > 0 ? (atendidas / realizadas) * 100 : null;
   const taxaAnterior =
     realizadasAnterior && realizadasAnterior > 0 ? ((atendidasAnterior ?? 0) / realizadasAnterior) * 100 : null;
   const porDia = diasUteis > 0 ? realizadas / diasUteis : realizadas;
-  const maximo = Math.max(1, ...sdrs.map((s) => s.realizadas));
-  const lista = [...sdrs].sort((a, b) => b.realizadas - a.realizadas);
+  const maximo = Math.max(1, ...linhasSdr.map((s) => s.realizadas));
+  const lista = [...linhasSdr].sort((a, b) => b.realizadas - a.realizadas);
 
   return (
     <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
       <h2 className="text-lg font-bold text-neutral-900">{titulo}</h2>
       <p className="mt-0.5 text-sm text-neutral-500">
-        Registradas pelos SDRs
+        Registradas pelos {sdrs(publicoOrg)}
       </p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -134,7 +141,7 @@ export function PainelLigacoes({
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead>
             <tr className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              <th className="px-1 py-2 font-semibold">SDR</th>
+              <th className="px-1 py-2 font-semibold">{Sdr(publicoOrg)}</th>
               <th className="px-3 py-2 font-semibold">Realizadas</th>
               <th className="px-3 py-2 font-semibold">Atendidas</th>
               <th className="px-3 py-2 font-semibold">Atendimento</th>
@@ -170,8 +177,10 @@ export function PainelLigacoes({
                       {s.realizadas > 0 ? `${numero((s.atendidas / s.realizadas) * 100, 1)}%` : "0%"}
                     </td>
                     <td className="px-3 py-3 tabular-nums">
-                      <span className={`font-bold ${bateu ? "text-green-600" : "text-amber-600"}`}>{numero(dia, 1)}</span>
-                      <span className="text-neutral-400"> / {META_LIGACOES_POR_DIA}</span>
+                      <span className={`font-bold ${!comMeta ? "text-neutral-900" : bateu ? "text-green-600" : "text-amber-600"}`}>
+                        {numero(dia, 1)}
+                      </span>
+                      {comMeta && <span className="text-neutral-400"> / {META_LIGACOES_POR_DIA}</span>}
                     </td>
                   </tr>
                 );
