@@ -511,6 +511,7 @@ export default async function EditarLeadPage({
                 leadTipado.nivel_ordem !== NIVEL_REAGENDAMENTO)) && (
               <PropostaVendaCard
                 vendaDireta={ORGS_VENDA_DIRETA.includes(usuarioAtual?.org_id ?? "")}
+                orgId={usuarioAtual?.org_id}
                 leadId={leadTipado.id}
                 propostaAtual={{
                   valor: leadTipado.proposta_valor,

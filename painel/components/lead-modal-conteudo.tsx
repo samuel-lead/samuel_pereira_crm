@@ -365,6 +365,7 @@ export function LeadModalConteudo({
             >
               <PropostaVendaCard
                 vendaDireta={ORGS_VENDA_DIRETA.includes(dados.orgId)}
+                orgId={dados.orgId}
                 leadId={lead.id}
                 propostaAtual={{
                   valor: lead.proposta_valor,

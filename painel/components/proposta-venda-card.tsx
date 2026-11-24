@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { RegistrarPropostaForm } from "@/components/registrar-proposta-form";
 import { MarcarVendidoForm } from "@/components/marcar-vendido-form";
-import { funilConsorcio } from "@/lib/terminologia";
+import { PropostaPdf } from "@/components/proposta-pdf";
+import { funilConsorcio, funilGondolas } from "@/lib/terminologia";
 
 // Proposta e venda não são passos obrigatórios em sequência — às vezes a
 // reunião já fecha na hora, sem proposta nenhuma registrada antes (Samuel
@@ -22,9 +23,12 @@ export function PropostaVendaCard({
   imoveis,
   imovelIdAtual,
   vendaDireta = false,
+  orgId,
 }: {
   // CRM do Glauber: venda direta — o cartão já abre na aba "Venda".
   vendaDireta?: boolean;
+  // Usado pra guardar o PDF da proposta (Inove Gôndolas).
+  orgId?: string;
   leadId: string;
   propostaAtual: {
     valor: number | null;
@@ -80,6 +84,7 @@ export function PropostaVendaCard({
 
       <div className="p-4">
         <div className={aba === "proposta" && !soVenda ? "" : "hidden"}>
+          {funilGondolas(publicoOrg) && orgId && <PropostaPdf leadId={leadId} orgId={orgId} />}
           <RegistrarPropostaForm leadId={leadId} propostaAtual={propostaAtual} />
         </div>
         <div className={aba === "venda" ? "" : "hidden"}>

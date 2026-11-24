@@ -2553,6 +2553,109 @@ export async function registrarProposta(
   return { erro: null };
 }
 
+// Inove Gôndolas (Samuel, 24/11/26): proposta em PDF. O arquivo sobe direto do
+// navegador pro espaço privado 'propostas-pdf' (o PDF pode passar do limite de
+// envio das ações do servidor); aqui só registramos que ele existe, abrimos com
+// link temporário e "removemos" (some da lista, o arquivo fica guardado).
+export type PropostaPdf = {
+  id: string;
+  nome_arquivo: string;
+  tamanho_bytes: number | null;
+  criado_em: string;
+};
+
+export async function registrarPropostaPdf(
+  leadId: string,
+  caminho: string,
+  nomeArquivo: string,
+  tamanhoBytes: number
+): Promise<string | null> {
+  const { supabase, usuario } = await contextoUsuario();
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, leadId);
+  if (erroPermissao) return erroPermissao;
+
+  if (!funilGondolas(usuario.publico_org_completo)) {
+    return "Proposta em PDF ainda não está disponível pra essa empresa.";
+  }
+  if (!caminho.startsWith(`${usuario.org_id}/${leadId}/`) || !caminho.toLowerCase().endsWith(".pdf")) {
+    return "Arquivo inválido.";
+  }
+  const nome = nomeArquivo.trim().slice(0, 200) || "proposta.pdf";
+
+  const { error } = await supabase.from("lead_propostas_pdf").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    caminho,
+    nome_arquivo: nome,
+    tamanho_bytes: Number.isFinite(tamanhoBytes) ? Math.round(tamanhoBytes) : null,
+  });
+  if (error) return traduzirErro(error.message);
+
+  await supabase.from("interacoes").insert({
+    org_id: usuario.org_id,
+    usuario_id: usuario.id,
+    lead_id: leadId,
+    tipo: "nota",
+    canal: "manual",
+    conteudo: `Proposta em PDF anexada: ${nome}`,
+    ocorreu_em: new Date().toISOString(),
+    origem: "declarado",
+  });
+
+  revalidatePath(`/leads/${leadId}`);
+  return null;
+}
+
+export async function listarPropostasPdf(leadId: string): Promise<PropostaPdf[]> {
+  const { supabase } = await contextoUsuario();
+  const { data } = await supabase
+    .from("lead_propostas_pdf")
+    .select("id, nome_arquivo, tamanho_bytes, criado_em")
+    .eq("lead_id", leadId)
+    .is("excluido_em", null)
+    .order("criado_em", { ascending: false });
+  return (data ?? []) as PropostaPdf[];
+}
+
+export async function urlPropostaPdf(id: string): Promise<{ url: string | null; erro: string | null }> {
+  const { supabase } = await contextoUsuario();
+  const { data: linha } = await supabase
+    .from("lead_propostas_pdf")
+    .select("caminho")
+    .eq("id", id)
+    .is("excluido_em", null)
+    .maybeSingle();
+  if (!linha) return { url: null, erro: "PDF não encontrado." };
+  const { data, error } = await supabase.storage.from("propostas-pdf").createSignedUrl(linha.caminho, 600);
+  if (error || !data?.signedUrl) return { url: null, erro: "Não consegui abrir o PDF. Tente de novo." };
+  return { url: data.signedUrl, erro: null };
+}
+
+export async function removerPropostaPdf(id: string): Promise<string | null> {
+  const { supabase, usuario } = await contextoUsuario();
+  const { data: linha } = await supabase
+    .from("lead_propostas_pdf")
+    .select("lead_id, nome_arquivo")
+    .eq("id", id)
+    .is("excluido_em", null)
+    .maybeSingle();
+  if (!linha) return "PDF não encontrado.";
+
+  const erroPermissao = await garantirPodeEditar(supabase, usuario, linha.lead_id);
+  if (erroPermissao) return erroPermissao;
+
+  const { error } = await supabase
+    .from("lead_propostas_pdf")
+    .update({ excluido_em: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return traduzirErro(error.message);
+
+  revalidatePath(`/leads/${linha.lead_id}`);
+  return null;
+}
+
 export async function marcarProximoContato(leadId: string, formData: FormData) {
   const { supabase, usuario } = await contextoUsuario();
 
