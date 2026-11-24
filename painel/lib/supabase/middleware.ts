@@ -57,7 +57,7 @@ export async function updateSession(request: NextRequest) {
   // /whatsapp é o link das campanhas que distribui o lead pro vendedor —
   // quem clica no anúncio nunca está logado e cada milissegundo conta. Sai
   // antes de qualquer checagem de login (que pode ir até o Supabase).
-  if (request.nextUrl.pathname === "/whatsapp") {
+  if (request.nextUrl.pathname === "/whatsapp" || request.nextUrl.pathname === "/aula") {
     return NextResponse.next({ request });
   }
 
