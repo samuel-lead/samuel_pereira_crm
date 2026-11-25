@@ -76,10 +76,21 @@ export default async function DashboardPage({
   searchParams: Promise<{ periodo?: string; mesAno?: string; de?: string; ate?: string; anoEvolucao?: string; origemTrafego?: string }>;
 }) {
   const { periodo, mesAno, de, ate, anoEvolucao, origemTrafego } = await searchParams;
+  const tempoAuth0 = Date.now();
   const supabase = await createClient();
   const { usuario } = await usuarioAutenticado();
+  const autenticacaoMs = Date.now() - tempoAuth0;
 
   const agora = new Date();
+  // Diagnóstico de lentidão (Samuel, 25/11/26): marca quanto cada pedaço da página levou.
+  // Só é gravado (tabela tempos_pagina) quando a tela inteira demora mais de 2s.
+  const tempoInicio = Date.now();
+  const tempos: Record<string, number> = {};
+  const medir = <T,>(nome: string, promessa: PromiseLike<T>): Promise<T> =>
+    Promise.resolve(promessa).then((valor) => {
+      tempos[nome] = Date.now() - tempoInicio;
+      return valor;
+    });
   const inicioHoje = inicioDoDia(agora);
   const amanha = new Date(inicioHoje.getTime() + UM_DIA_MS);
   const inicioMesAtual = inicioDoMes(agora);
@@ -110,6 +121,15 @@ export default async function DashboardPage({
   // Contagens extras e conversão por safra não dependem do resto: saem já,
   // junto com tudo, em vez de esperar o bloco grande terminar (antes eram
   // mais 1 ou 2 esperas em fila depois dele).
+  // Painel "Ligações": leads diferentes ligados + rotina da empresa. Antes saía DEPOIS
+  // do bloco grande (mais uma espera em fila); agora corre junto com tudo.
+  const ligacoesExtrasP = medir(
+    "ligacoes_extras",
+    Promise.all([
+      contarLeadsDiferentesLigados(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+      supabase.from("orgs").select("rotina_modelo").eq("id", usuario!.org_id).maybeSingle(),
+    ])
+  );
   const contagemConsorcioP = funilConsorcio(publicoCedo)
     ? Promise.all([
         souAdmin
@@ -148,7 +168,7 @@ export default async function DashboardPage({
       ? calcularSafraVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
       : Promise.resolve(undefined);
   // Ciclo de vendas (Samuel, 12/11/26): dias entre o lead entrar e comprar.
-  const cicloP = calcularCicloDeVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim);
+  const cicloP = medir("ciclo_vendas", calcularCicloDeVendas(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim));
   // Samuel (13/11/26): no quadro verde da receita, separa o que veio de
   // clientes deste período do que veio de clientes de períodos anteriores.
   // Só serviço/mentoria.
@@ -157,7 +177,7 @@ export default async function DashboardPage({
     !usaComissaoDoVendedor(usuario!.publico_org) &&
     !funilGondolas(usuario!.publico_org);
   const receitaAnteriorP = mostrarSplitMeta
-    ? calcularReceitaDeMesesAnteriores(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
+    ? medir("receita_meses_anteriores", calcularReceitaDeMesesAnteriores(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim))
     : Promise.resolve(undefined);
 
   const [
@@ -196,32 +216,38 @@ export default async function DashboardPage({
     // Inove Gôndolas não mostra o painel principal: pula essas 24 consultas.
     ehGondolasCedo
       ? Promise.resolve(null as unknown as Metricas)
-      : calcularMetricasOrg(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+      : medir("metricas_periodo", calcularMetricasOrg(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)),
     ehGondolasCedo
       ? Promise.resolve(null as unknown as Metricas)
-      : calcularMetricasOrg(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim),
+      : medir("metricas_anterior", calcularMetricasOrg(supabase, usuario!.org_id, anteriorResolvido.inicio, anteriorResolvido.fim)),
     ehGondolasCedo
       ? Promise.resolve([] as Awaited<ReturnType<typeof calcularVendasPorCanal>>)
-      : calcularVendasPorCanal(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+      : medir("vendas_por_canal", calcularVendasPorCanal(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)),
     ehGondolasCedo
       ? Promise.resolve([] as Awaited<ReturnType<typeof calcularVendasPorProduto>>)
-      : calcularVendasPorProduto(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
+      : medir("vendas_por_produto", calcularVendasPorProduto(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)),
     // "Leads Novos" da tabela também precisa ser estrito, mesmo motivo do
     // card acima — sem isso, a coluna mostrava o número largo (com
     // carry-forward) embaixo de um título que promete "novos".
-    calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
-      apenasDeclaradosNoPeriodo: true,
-    }),
+    medir(
+      "metricas_por_usuario",
+      calcularMetricasPorUsuario(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
+        apenasDeclaradosNoPeriodo: true,
+      })
+    ),
     mostraRankingCloser
-      ? calcularMetricasPorCloser(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim)
+      ? medir("metricas_por_closer", calcularMetricasPorCloser(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim))
       : Promise.resolve([] as Awaited<ReturnType<typeof calcularMetricasPorCloser>>),
-    calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
-      apenasDeclaradosNoPeriodo: true,
-    }),
+    medir(
+      "leads_por_origem",
+      calcularLeadsPorOrigem(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim, {
+        apenasDeclaradosNoPeriodo: true,
+      })
+    ),
     // Inove Gôndolas: a evolução é de leads enviados pro Elton (ver mais abaixo).
     ehGondolasCedo
       ? Promise.resolve([] as Awaited<ReturnType<typeof calcularResumoAno>>)
-      : calcularResumoAno(supabase, usuario!.org_id, anoEvolucaoResolvido),
+      : medir("resumo_ano", calcularResumoAno(supabase, usuario!.org_id, anoEvolucaoResolvido)),
     // Meta de receita é sempre do mês civil corrente — não depende do
     // filtro. Imobiliário acompanha VGV (valor_venda), não receita
     // (dinheiro recebido) — Samuel pediu essa troca.
@@ -231,7 +257,7 @@ export default async function DashboardPage({
     buscarMetaReceitaMes(supabase, usuario!.org_id, inicioMesAtual.getUTCFullYear(), inicioMesAtual.getUTCMonth() + 1),
     ehGondolasCedo
       ? Promise.resolve({ quantidade: 0, valor: 0 } as NegociacoesAbertas)
-      : calcularNegociacoesAbertas(supabase, usuario!.org_id),
+      : medir("negociacoes_abertas", calcularNegociacoesAbertas(supabase, usuario!.org_id)),
     supabase
       .from("metas_config")
       .select(
@@ -309,6 +335,7 @@ export default async function DashboardPage({
     supabase.from("usuarios").select("id, nome"),
   ]);
 
+  tempos["bloco_principal_pronto"] = Date.now() - tempoInicio;
   const idsLeadsAtrasados = (leadsAtrasadosData ?? []).map((l) => l.id);
   // idsLeadsReunioes não depende do resultado da consulta de reuniões dos
   // atrasados abaixo (só de idsLeadsAtrasados, já conhecido) — as duas
@@ -389,10 +416,7 @@ export default async function DashboardPage({
   // Painel "Ligações" (Samuel, 18/11/26 no CRM dele; 24/11/26: em todos os CRMs).
   // A meta de 50 ligações por dia vem da rotina da empresa — a Banker tem rotina
   // própria (80 prospecções), então fica sem meta de ligações.
-  const [leadsDiferentesLigados, { data: orgRotinaLigacoes }] = await Promise.all([
-    contarLeadsDiferentesLigados(supabase, usuario!.org_id, periodoResolvido.inicio, periodoResolvido.fim),
-    supabase.from("orgs").select("rotina_modelo").eq("id", usuario!.org_id).maybeSingle(),
-  ]);
+  const [leadsDiferentesLigados, { data: orgRotinaLigacoes }] = await ligacoesExtrasP;
   const metaLigacoesPorDia = orgRotinaLigacoes?.rotina_modelo === "banker" ? null : META_LIGACOES_POR_DIA;
   const enviadosPorMes = ehGondolasCedo
     ? await calcularEnviadosPorMes(supabase, usuario!.org_id, anoEvolucaoResolvido)
@@ -474,6 +498,22 @@ export default async function DashboardPage({
     .sort((a, b) => new Date(a.agendadaPara).getTime() - new Date(b.agendadaPara).getTime());
 
   const dadosTrafego = await trafegoP;
+  // Diagnóstico: só grava quando a tela inteira passou de 2s (ver comentário no topo).
+  const tempoTotal = Date.now() - tempoInicio;
+  if (tempoTotal + autenticacaoMs > 2000) {
+    try {
+      await supabase.from("tempos_pagina").insert({
+        org_id: usuario!.org_id,
+        usuario_id: usuario!.id,
+        pagina: "dashboard",
+        periodo: periodoResolvido.chave,
+        total_ms: tempoTotal + autenticacaoMs,
+        partes: { autenticacao: autenticacaoMs, ...tempos, dados_prontos: tempoTotal },
+      });
+    } catch {
+      // diagnóstico nunca pode derrubar a tela
+    }
+  }
   const paramsDash = { periodo, mesAno, de, ate, anoEvolucao };
   const hrefOrigemTrafego = (origem: string) =>
     `/dashboard?${new URLSearchParams({
