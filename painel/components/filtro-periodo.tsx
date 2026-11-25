@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { NOMES_MES, type ChavePeriodo } from "@/lib/periodo";
 import { MenuSelect } from "@/components/menu-select";
@@ -66,6 +66,11 @@ export function FiltroPeriodo({
 }) {
   const opcoesVisiveis = atalhos ? OPCOES.filter((o) => atalhos.includes(o.valor)) : OPCOES;
   const router = useRouter();
+  // Samuel (25/11/26): clicar num filtro parecia não fazer nada — a tela só mudava
+  // quando o servidor terminava de calcular (vários segundos), e o botão nem acendia.
+  // Agora o botão acende na hora e aparece "Atualizando…" até a tela nova chegar.
+  const [atualizando, iniciarTroca] = useTransition();
+  const [escolhido, setEscolhido] = useState<string | null>(null);
   const anoAtual = new Date().getFullYear();
   const [mostrarCustom, setMostrarCustom] = useState(periodoAtual === "custom");
   const [de, setDe] = useState(deAtual ?? "");
@@ -94,15 +99,24 @@ export function FiltroPeriodo({
   function irPara(valor: string) {
     setMostrarCustom(false);
     setMes("");
-    router.push(hrefDoAtalho(valor), { scroll: false });
+    setEscolhido(valor);
+    iniciarTroca(() => {
+      router.push(hrefDoAtalho(valor), { scroll: false });
+    });
   }
 
   function irParaMesEspecifico(anoEscolhido: number, mesEscolhido: string) {
     if (!mesEscolhido) return;
     const params = comOutrosParams(new URLSearchParams());
     params.set("mesAno", mesEscolhido === "ano" ? String(anoEscolhido) : `${anoEscolhido}-${mesEscolhido}`);
-    router.push(`${baseHref}?${params.toString()}`, { scroll: false });
+    setEscolhido("mes_especifico");
+    iniciarTroca(() => {
+      router.push(`${baseHref}?${params.toString()}`, { scroll: false });
+    });
   }
+
+  // Enquanto a tela nova não chega, vale o que a pessoa acabou de clicar.
+  const selecionado = atualizando && escolhido ? escolhido : periodoAtual;
 
   const classeAtalho = compacto
     ? "rounded-xl border border-neutral-200 px-3 py-2 text-sm font-medium shadow-sm transition"
@@ -116,11 +130,14 @@ export function FiltroPeriodo({
     const params = comOutrosParams(new URLSearchParams());
     params.set("de", de);
     params.set("ate", ate);
-    router.push(`${baseHref}?${params.toString()}`, { scroll: false });
+    setEscolhido("custom");
+    iniciarTroca(() => {
+      router.push(`${baseHref}?${params.toString()}`, { scroll: false });
+    });
   }
 
   return (
-    <div className={`flex flex-wrap gap-2 ${compacto ? "items-center" : "items-stretch"}`}>
+    <div className={`flex flex-wrap gap-2 ${compacto ? "items-center" : "items-stretch"}`} aria-busy={atualizando}>
       <div
         className={
           compacto
@@ -133,7 +150,7 @@ export function FiltroPeriodo({
             type="button"
             onClick={() => irPara("todos")}
             className={`${classeAtalho} ${
-              opcaoTodos.ativo ? ativoClasse : inativoClasse
+              opcaoTodos.ativo && !(atualizando && escolhido) ? ativoClasse : inativoClasse
             }`}
           >
             Todos
@@ -147,7 +164,7 @@ export function FiltroPeriodo({
             onMouseEnter={() => router.prefetch(hrefDoAtalho(opcao.valor))}
             onFocus={() => router.prefetch(hrefDoAtalho(opcao.valor))}
             onTouchStart={() => router.prefetch(hrefDoAtalho(opcao.valor))}
-            className={`${classeAtalho} ${periodoAtual === opcao.valor ? ativoClasse : inativoClasse}`}
+            className={`${classeAtalho} ${selecionado === opcao.valor ? ativoClasse : inativoClasse}`}
           >
             {opcao.label}
           </button>
@@ -204,7 +221,7 @@ export function FiltroPeriodo({
         type="button"
         onClick={() => setMostrarCustom((v) => !v)}
         className={`rounded-xl border border-neutral-200 px-3 py-2 text-sm font-medium shadow-sm transition ${
-          periodoAtual === "custom" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-100"
+          selecionado === "custom" ? "bg-blue-600 text-white" : "bg-white text-neutral-600 hover:bg-neutral-100"
         }`}
       >
         Período personalizado
@@ -252,6 +269,12 @@ export function FiltroPeriodo({
             Aplicar
           </button>
         </form>
+      )}
+      {atualizando && (
+        <span className="inline-flex items-center gap-2 self-center rounded-xl bg-white px-3 py-2 text-sm font-medium text-blue-600 shadow-sm">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+          Atualizando…
+        </span>
       )}
     </div>
   );
