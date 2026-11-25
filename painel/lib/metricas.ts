@@ -173,14 +173,21 @@ export function fimDaSemana(inicioSemana: Date) {
 
 // Quantos dias úteis (fuso Brasil) existem entre duas datas — usado pra
 // saber quanto já "andou" do piso de leads/reuniões no período.
+//
+// O dia em que o período termina conta se o período chegou a entrar nele: "fim"
+// é o instante em que acaba (meia-noite do dia seguinte, ou "agora" quando o
+// período ainda está rolando). Antes, o dia de HOJE nunca contava — em "Hoje" os
+// pisos de leads e reuniões davam 0, e em "Semana atual"/"Mês atual" faltava
+// sempre um dia (Samuel, 25/11/26: filtros de hoje/semana/mês errados).
 export function diasUteisEntre(inicio: Date, fim: Date) {
   const inicioLocal = new Date(inicio.getTime() - FUSO_BRASIL_MS);
-  const fimLocal = new Date(fim.getTime() - FUSO_BRASIL_MS);
+  // -1 ms: meia-noite exata do dia seguinte ainda é o dia anterior.
+  const fimLocal = new Date(fim.getTime() - 1 - FUSO_BRASIL_MS);
   const diaInicio = Date.UTC(inicioLocal.getUTCFullYear(), inicioLocal.getUTCMonth(), inicioLocal.getUTCDate());
   const diaFim = Date.UTC(fimLocal.getUTCFullYear(), fimLocal.getUTCMonth(), fimLocal.getUTCDate());
 
   let contador = 0;
-  for (let cursor = diaInicio; cursor < diaFim; cursor += UM_DIA_MS) {
+  for (let cursor = diaInicio; cursor <= diaFim; cursor += UM_DIA_MS) {
     const diaSemana = new Date(cursor).getUTCDay();
     if (diaSemana !== 0 && diaSemana !== 6) contador += 1;
   }

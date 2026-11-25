@@ -59,6 +59,12 @@ import { call, calls, reunioes, Reunioes, Sdr, ehImobiliario, semCloser, dashboa
 // (periodoAnteriorSemana/Mes, já existentes); os demais atalhos usam o
 // deslocamento genérico pela mesma duração.
 function resolverPeriodoAnterior(chave: ChavePeriodo, inicio: Date, fim: Date, agora: Date) {
+  // "Hoje" compara com ONTEM até a mesma hora — antes comparava o dia ainda
+  // pela metade com o dia de ontem inteiro, e tudo aparecia em queda (vermelho).
+  if (chave === "hoje") {
+    const anteriorInicio = new Date(inicio.getTime() - UM_DIA_MS);
+    return { inicio: anteriorInicio, fim: new Date(anteriorInicio.getTime() + (agora.getTime() - inicio.getTime())) };
+  }
   if (chave === "semana") return periodoAnteriorSemana(inicio, agora);
   if (chave === "mes") return periodoAnteriorMes(inicio, agora);
   return periodoAnterior(inicio, fim);
