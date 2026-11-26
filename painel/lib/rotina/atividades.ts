@@ -78,6 +78,34 @@ export const ATIVIDADES_ROTINA_BANKER = [
   },
 ] as const;
 
+// Rotina da Inove Gôndolas (26/11/26): sem reunião. Começa confirmando os leads
+// que já foram enviados pro Elton, depois follow nas abordagens dos dias 1, 2 e 3,
+// e o resto do dia é prospecção de novos leads. (Os horários 9:00, 9:30 e 10:30
+// são os mesmos dos avisos de WhatsApp; a prospecção vai até o fim do expediente.)
+export const ATIVIDADES_ROTINA_GONDOLAS = [
+  {
+    id: "confirmar_andamento_elton",
+    hora: "09:00–09:30",
+    titulo: "Confirmar o andamento dos leads enviados para o Elton",
+    desc: "Confirmar o andamento dos leads enviados para o Elton.",
+    cor: "blue",
+  },
+  {
+    id: "follow_abordagem_dias_1_2_3",
+    hora: "09:30–10:30",
+    titulo: "Follow com os leads da abordagem dos dias 1, 2 e 3",
+    desc: "Fazer follow com os leads da abordagem dos dias 1, 2 e 3 — pausa e atende na hora quem responder, e depois volte conforme a rotina.",
+    cor: "violet",
+  },
+  {
+    id: "prospeccao_novos_leads",
+    hora: "10:30–17:00",
+    titulo: "Iniciar a prospecção de novos leads",
+    desc: "Iniciar a prospecção de novos leads. Pausa assim que qualquer lead responder, e depois volte conforme a rotina.",
+    cor: "pink",
+  },
+] as const;
+
 export type AtividadeRotina = {
   id: string;
   hora: string;
@@ -86,8 +114,9 @@ export type AtividadeRotina = {
   cor: string;
 };
 
-// Rotina de cada empresa (orgs.rotina_modelo): 'padrao' ou 'banker'.
+// Rotina de cada empresa (orgs.rotina_modelo): 'padrao', 'banker' ou 'gondolas'.
 export function atividadesDaRotina(modelo: string | null | undefined): readonly AtividadeRotina[] {
+  if (modelo === "gondolas") return ATIVIDADES_ROTINA_GONDOLAS;
   return modelo === "banker" ? ATIVIDADES_ROTINA_BANKER : ATIVIDADES_ROTINA_PADRAO;
 }
 
