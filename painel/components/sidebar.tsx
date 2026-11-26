@@ -188,7 +188,10 @@ export function Sidebar({
                 {grupo.titulo}
               </p>
             )}
-            {grupo.itens.map(({ href, label, Icone }) => {
+            {grupo.itens.map(({ href, label: rotuloPadrao, Icone }) => {
+              // Inove Gôndolas (Samuel, 26/11/26): sem "Pré-vendas" — é só "Leads".
+              const label =
+                href === "/leads" && publicoOrg.split(":").includes("gond") ? "Leads" : rotuloPadrao;
               const ativo = pathname === href;
               const classe = `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
                 colapsado ? "justify-center" : ""

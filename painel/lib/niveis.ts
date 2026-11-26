@@ -189,7 +189,7 @@ export const ORDEM_DOCUMENTACAO = 10;
 // "Dia 1" e ganhou 4 colunas depois dela — Dia 2 a Dia 5. Mesmo motivo de
 // cima: os números no banco são 11 a 14 (não dá pra renumerar o resto), mas a
 // POSIÇÃO no funil é entre o 1 e o 2 (1,1 a 1,4).
-export const ORDENS_DIAS_GONDOLAS = [11, 12, 13, 14];
+export const ORDENS_DIAS_GONDOLAS = [11, 12];
 
 // Samuel (06/11/26): na Inove, "Em qualificação" passou pra logo depois de
 // "Novos Leads", antes do Dia 1. Como o nível 1 (Dia 1) vem antes do 2 em
@@ -199,7 +199,8 @@ export const ORDEM_QUALIFICACAO_GONDOLAS = 15;
 
 export function posicaoNoFunil(ordem: number) {
   if (ordem === ORDEM_DOCUMENTACAO) return 2.5;
-  if (ordem === ORDEM_QUALIFICACAO_GONDOLAS) return 0.5;
+  // Samuel (26/11/26): na Inove, "Em qualificação" fica depois do Dia 3 (Dia 4 e 5 acabaram).
+  if (ordem === ORDEM_QUALIFICACAO_GONDOLAS) return 1.5;
   const indiceDia = ORDENS_DIAS_GONDOLAS.indexOf(ordem);
   return indiceDia >= 0 ? 1 + (indiceDia + 1) / 10 : ordem;
 }
@@ -231,7 +232,8 @@ export const COLUNAS_PRE_VENDAS = [0, 1, 2, 3, 5, 6];
 
 // Inove Gôndolas: Novos Leads, Em qualificação (nível 15) e Dia 1 (nível 1) a
 // Dia 5 (níveis 11 a 14).
-const COLUNAS_PRE_VENDAS_GONDOLAS = [0, ORDEM_QUALIFICACAO_GONDOLAS, 1, ...ORDENS_DIAS_GONDOLAS];
+// Samuel (26/11/26): Novos Leads, Dia 1, Dia 2, Dia 3 e, por último, Em qualificação.
+const COLUNAS_PRE_VENDAS_GONDOLAS = [0, 1, ...ORDENS_DIAS_GONDOLAS, ORDEM_QUALIFICACAO_GONDOLAS];
 
 // Imobiliário ganhou "Documentação/Análise" logo depois de "Em qualificação".
 const COLUNAS_PRE_VENDAS_IMOBILIARIO = [0, 1, 2, ORDEM_DOCUMENTACAO, 3, 5, 6];
@@ -285,7 +287,7 @@ export const NIVEIS_REATIVACAO = [0, 1, 2, 3];
 // pra qualquer um dos outros (o lead que responde no Dia 3 volta pra
 // "Em qualificação"; quem esfria vai pro dia seguinte). Só "Novos Leads" não
 // aceita volta.
-const ABORDAGEM_GONDOLAS = [ORDEM_QUALIFICACAO_GONDOLAS, 1, ...ORDENS_DIAS_GONDOLAS];
+const ABORDAGEM_GONDOLAS = [1, ...ORDENS_DIAS_GONDOLAS, ORDEM_QUALIFICACAO_GONDOLAS];
 
 // A progressão Novos Leads → ... → Leads pro Elton é de mão única: não dá pra
 // ir pra um nível de antes. Única fonte dessa regra (menu, arrastar e servidor).
