@@ -80,8 +80,7 @@ export const ATIVIDADES_ROTINA_BANKER = [
 
 // Rotina da Inove Gôndolas (26/11/26): sem reunião. Começa confirmando os leads
 // que já foram enviados pro Elton, depois follow nas abordagens dos dias 1, 2 e 3,
-// e o resto do dia é prospecção de novos leads. (Os horários 9:00, 9:30 e 10:30
-// são os mesmos dos avisos de WhatsApp; a prospecção vai até o fim do expediente.)
+// e à tarde (13h–17h) é prospecção de novos leads. Horários definidos pelo Samuel em 26/11/26.
 export const ATIVIDADES_ROTINA_GONDOLAS = [
   {
     id: "confirmar_andamento_elton",
@@ -92,14 +91,14 @@ export const ATIVIDADES_ROTINA_GONDOLAS = [
   },
   {
     id: "follow_abordagem_dias_1_2_3",
-    hora: "09:30–10:30",
+    hora: "09:30–12:00",
     titulo: "Follow com os leads da abordagem dos dias 1, 2 e 3",
     desc: "Fazer follow com os leads da abordagem dos dias 1, 2 e 3 — pausa e atende na hora quem responder, e depois volte conforme a rotina.",
     cor: "violet",
   },
   {
     id: "prospeccao_novos_leads",
-    hora: "10:30–17:00",
+    hora: "13:00–17:00",
     titulo: "Iniciar a prospecção de novos leads",
     desc: "Iniciar a prospecção de novos leads. Pausa assim que qualquer lead responder, e depois volte conforme a rotina.",
     cor: "pink",
